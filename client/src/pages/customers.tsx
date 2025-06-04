@@ -14,12 +14,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2, Phone, Mail } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Phone, Mail, Wrench } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema, type Customer } from "@shared/schema";
 import { validateCPF, validateCNPJ, formatCPF, formatCNPJ } from "@/lib/cpf-cnpj";
 import { z } from "zod";
+import NewServiceModal from "@/components/modals/new-service-modal";
 
 const customerFormSchema = insertCustomerSchema.extend({
   document: z.string().min(1, "Documento é obrigatório").refine((doc) => {
@@ -34,6 +35,8 @@ export default function Customers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [isNewServiceModalOpen, setIsNewServiceModalOpen] = useState(false);
+  const [selectedCustomerForService, setSelectedCustomerForService] = useState<Customer | null>(null);
   const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof customerFormSchema>>({
@@ -200,6 +203,11 @@ export default function Customers() {
   const formatDocument = (document: string, type: string) => {
     const cleanDoc = document.replace(/\D/g, '');
     return type === 'cpf' ? formatCPF(cleanDoc) : formatCNPJ(cleanDoc);
+  };
+
+  const handleNewServiceForCustomer = (customer: Customer) => {
+    setSelectedCustomerForService(customer);
+    setIsNewServiceModalOpen(true);
   };
 
   const filteredCustomers = customers?.filter((customer: Customer) =>
@@ -437,6 +445,15 @@ export default function Customers() {
                         <Button
                           size="sm"
                           variant="ghost"
+                          onClick={() => handleNewServiceForCustomer(customer)}
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                          title="Novo serviço para este cliente"
+                        >
+                          <Wrench className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
                           onClick={() => handleEdit(customer)}
                         >
                           <Edit className="h-4 w-4" />
@@ -485,6 +502,14 @@ export default function Customers() {
           )}
         </main>
       </div>
+
+      <NewServiceModal
+        isOpen={isNewServiceModalOpen}
+        onClose={() => {
+          setIsNewServiceModalOpen(false);
+          setSelectedCustomerForService(null);
+        }}
+      />
     </div>
   );
 }

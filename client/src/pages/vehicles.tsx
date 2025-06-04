@@ -14,11 +14,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2, Car, User } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Car, User, Wrench } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertVehicleSchema, type Vehicle, type Customer } from "@shared/schema";
 import { z } from "zod";
+import NewServiceModal from "@/components/modals/new-service-modal";
 
 export default function Vehicles() {
   const { toast } = useToast();
@@ -26,6 +27,8 @@ export default function Vehicles() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [isNewServiceModalOpen, setIsNewServiceModalOpen] = useState(false);
+  const [selectedVehicleForService, setSelectedVehicleForService] = useState<Vehicle | null>(null);
   const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof insertVehicleSchema>>({
@@ -195,6 +198,11 @@ export default function Vehicles() {
   const getCustomerName = (customerId: number) => {
     const customer = customers?.find((c: Customer) => c.id === customerId);
     return customer?.name || "Cliente não encontrado";
+  };
+
+  const handleNewServiceForVehicle = (vehicle: Vehicle) => {
+    setSelectedVehicleForService(vehicle);
+    setIsNewServiceModalOpen(true);
   };
 
   const filteredVehicles = vehicles?.filter((vehicle: Vehicle) =>
@@ -428,6 +436,15 @@ export default function Vehicles() {
                         <Button
                           size="sm"
                           variant="ghost"
+                          onClick={() => handleNewServiceForVehicle(vehicle)}
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                          title="Novo serviço para este veículo"
+                        >
+                          <Wrench className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
                           onClick={() => handleEdit(vehicle)}
                         >
                           <Edit className="h-4 w-4" />
@@ -473,6 +490,14 @@ export default function Vehicles() {
           )}
         </main>
       </div>
+
+      <NewServiceModal
+        isOpen={isNewServiceModalOpen}
+        onClose={() => {
+          setIsNewServiceModalOpen(false);
+          setSelectedVehicleForService(null);
+        }}
+      />
     </div>
   );
 }
