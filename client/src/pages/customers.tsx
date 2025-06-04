@@ -259,7 +259,7 @@ export default function Customers() {
                   <span className="ml-1 text-sm">clientes</span>
                 </div>
               </div>
-              
+
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button 
