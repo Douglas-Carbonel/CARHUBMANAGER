@@ -38,7 +38,13 @@ const priorityColors = {
 export default function Schedule() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  });
   const [isNewServiceModalOpen, setIsNewServiceModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"timeline" | "grid">("timeline");
@@ -403,8 +409,31 @@ export default function Schedule() {
                           {hasServices ? (
                             <div className="space-y-3">
                               {slotServices.map((service) => (
-                                <div key={service.id} className="relative">
-                                  <ServiceCard service={service} isCompact />
+                                <div key={service.id} className="relative bg-white rounded-lg border border-gray-200 p-3 hover:shadow-md transition-shadow">
+                                  <div className="flex items-start justify-between mb-2">
+                                    <Badge className={`${statusColors[service.status as keyof typeof statusColors]} text-xs`}>
+                                      {statusLabels[service.status as keyof typeof statusLabels]}
+                                    </Badge>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <div className="flex items-center text-sm">
+                                      <User className="h-3 w-3 mr-2 text-gray-500" />
+                                      <span className="font-medium text-gray-900 truncate">{getCustomerName(service.customerId)}</span>
+                                    </div>
+                                    <div className="flex items-center text-sm">
+                                      <Car className="h-3 w-3 mr-2 text-gray-500" />
+                                      <span className="text-gray-700 truncate">{getVehicleInfo(service.vehicleId)}</span>
+                                    </div>
+                                    <div className="flex items-center text-sm">
+                                      <Wrench className="h-3 w-3 mr-2 text-gray-500" />
+                                      <span className="text-gray-700 truncate">{getServiceTypeName(service.serviceTypeId)}</span>
+                                    </div>
+                                    {service.estimatedValue && (
+                                      <div className="text-sm font-semibold text-green-600">
+                                        R$ {Number(service.estimatedValue).toFixed(2)}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               ))}
                             </div>
