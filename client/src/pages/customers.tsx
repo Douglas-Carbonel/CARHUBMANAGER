@@ -55,7 +55,7 @@ export default function Customers() {
     },
   });
 
-  // Redirect to home if not authenticated
+  // Redirect to login if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
@@ -76,17 +76,17 @@ export default function Customers() {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof customerFormSchema>) => {
-      await apiRequest("POST", "/api/customers", data);
+    mutationFn: async (customer: z.infer<typeof customerFormSchema>) => {
+      return apiRequest("/api/customers", "POST", customer);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
-      toast({
-        title: "Sucesso",
-        description: "Cliente criado com sucesso!",
-      });
       setIsDialogOpen(false);
       form.reset();
+      toast({
+        title: "Cliente criado",
+        description: "Cliente criado com sucesso",
+      });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -109,18 +109,18 @@ export default function Customers() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof customerFormSchema>) => {
-      await apiRequest("PUT", `/api/customers/${editingCustomer?.id}`, data);
+    mutationFn: async (customer: z.infer<typeof customerFormSchema>) => {
+      return apiRequest(`/api/customers/${editingCustomer?.id}`, "PATCH", customer);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
-      toast({
-        title: "Sucesso",
-        description: "Cliente atualizado com sucesso!",
-      });
       setIsDialogOpen(false);
-      setEditingCustomer(null);
       form.reset();
+      setEditingCustomer(null);
+      toast({
+        title: "Cliente atualizado",
+        description: "Cliente atualizado com sucesso",
+      });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -144,13 +144,13 @@ export default function Customers() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/customers/${id}`);
+      return apiRequest(`/api/customers/${id}`, "DELETE");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
       toast({
-        title: "Sucesso",
-        description: "Cliente removido com sucesso!",
+        title: "Cliente excluído",
+        description: "Cliente excluído com sucesso",
       });
     },
     onError: (error) => {
@@ -167,7 +167,7 @@ export default function Customers() {
       }
       toast({
         title: "Erro",
-        description: "Falha ao remover cliente",
+        description: "Falha ao excluir cliente",
         variant: "destructive",
       });
     },
@@ -196,10 +196,13 @@ export default function Customers() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm("Tem certeza que deseja remover este cliente?")) {
-      deleteMutation.mutate(id);
-    }
+  const handleNewServiceForCustomer = (customer: Customer) => {
+    setSelectedCustomerForService(customer);
+    setIsNewServiceModalOpen(true);
+  };
+
+  const handleViewReport = (customer: Customer) => {
+    setLocation(`/reports?customerId=${customer.id}`);
   };
 
   const formatDocument = (document: string, type: string) => {
@@ -207,60 +210,53 @@ export default function Customers() {
     return type === 'cpf' ? formatCPF(cleanDoc) : formatCNPJ(cleanDoc);
   };
 
-  const handleNewServiceForCustomer = (customer: Customer) => {
-    setSelectedCustomerForService(customer);
-    setIsNewServiceModalOpen(true);
-  };
-
-  const handleViewReport = (customer: Customer) => {
-    setLocation(`/reports?type=customer&customerId=${customer.id}`);
-  };
-
-  const filteredCustomers = customers?.filter((customer: Customer) =>
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.document.includes(searchTerm) ||
-    customer.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
-
-  if (isLoading || !isAuthenticated) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600"></div>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
       </div>
     );
   }
 
-  return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
+  if (!isAuthenticated) {
+    return null;
+  }
 
+  const filteredCustomers = customers?.filter((customer: Customer) =>
+    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.document.includes(searchTerm) ||
+    customer.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.phone?.includes(searchTerm)
+  ) || [];
+
+  return (
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
-          title="Clientes"
-          subtitle="Gerencie seus clientes"
+          title="Gestão de Clientes" 
+          subtitle="Gerencie clientes, dados de contato e histórico de serviços" 
         />
-
-        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/20">
-          {/* Header Section */}
-          <div className="bg-gradient-to-r from-white via-blue-50 to-white border-b border-blue-100 px-6 py-6 sticky top-0 z-10 shadow-lg backdrop-blur-sm bg-white/95">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <Input
-                    placeholder="Buscar clientes..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 w-80 h-12 border-2 border-gray-200 focus:border-blue-400 rounded-xl shadow-sm bg-white/80"
-                  />
-                </div>
-                <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg shadow-md">
-                  <span className="font-semibold">{filteredCustomers.length}</span>
-                  <span className="ml-1 text-sm">clientes</span>
-                </div>
+        
+        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-white/80 via-blue-50/50 to-indigo-50/30 backdrop-blur-sm">
+          <div className="p-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <Input
+                  placeholder="Buscar clientes..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-12 w-80 h-12 border-2 border-gray-200 focus:border-blue-400 rounded-xl shadow-sm bg-white/80"
+                />
+              </div>
+              <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg shadow-md">
+                <span className="font-semibold">{filteredCustomers.length}</span>
+                <span className="ml-1 text-sm">clientes</span>
               </div>
 
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button 
                     className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg h-12 px-6 rounded-xl font-semibold transition-all duration-200 hover:scale-105"
@@ -273,54 +269,52 @@ export default function Customers() {
                     Novo Cliente
                   </Button>
                 </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingCustomer ? "Editar Cliente" : "Novo Cliente"}
-                  </DialogTitle>
-                </DialogHeader>
-
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="code"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Código</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="documentType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Tipo de Documento</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingCustomer ? "Editar Cliente" : "Novo Cliente"}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="code"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Código</FormLabel>
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione" />
-                                </SelectTrigger>
+                                <Input placeholder="CLI001" {...field} />
                               </FormControl>
-                              <SelectContent>
-                                <SelectItem value="cpf">CPF</SelectItem>
-                                <SelectItem value="cnpj">CNPJ</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="documentType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Tipo de Documento</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione o tipo" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="cpf">CPF</SelectItem>
+                                  <SelectItem value="cnpj">CNPJ</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
 
-                    <div className="grid grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
                         name="document"
@@ -330,7 +324,10 @@ export default function Customers() {
                               {form.watch("documentType") === "cpf" ? "CPF" : "CNPJ"}
                             </FormLabel>
                             <FormControl>
-                              <Input {...field} />
+                              <Input 
+                                placeholder={form.watch("documentType") === "cpf" ? "000.000.000-00" : "00.000.000/0000-00"} 
+                                {...field} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -344,23 +341,51 @@ export default function Customers() {
                           <FormItem>
                             <FormLabel>Nome</FormLabel>
                             <FormControl>
-                              <Input {...field} />
+                              <Input placeholder="Nome do cliente" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="phone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Telefone</FormLabel>
+                              <FormControl>
+                                <Input placeholder="(11) 99999-9999" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input type="email" placeholder="email@exemplo.com" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
                       <FormField
                         control={form.control}
-                        name="phone"
+                        name="address"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Telefone</FormLabel>
+                            <FormLabel>Endereço</FormLabel>
                             <FormControl>
-                              <Input {...field} />
+                              <Textarea placeholder="Endereço completo" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -369,202 +394,173 @@ export default function Customers() {
 
                       <FormField
                         control={form.control}
-                        name="email"
+                        name="observations"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Email</FormLabel>
+                            <FormLabel>Observações</FormLabel>
                             <FormControl>
-                              <Input {...field} type="email" />
+                              <Textarea placeholder="Observações sobre o cliente" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                    </div>
 
-                    <FormField
-                      control={form.control}
-                      name="address"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Endereço</FormLabel>
-                          <FormControl>
-                            <Textarea {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="observations"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Observações</FormLabel>
-                          <FormControl>
-                            <Textarea {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="flex justify-end space-x-2">
-                      <Button 
-                        type="button" 
-                        variant="outline"
-                        onClick={() => setIsDialogOpen(false)}
-                      >
-                        Cancelar
-                      </Button>
-                      <Button 
-                        type="submit"
-                        className="bg-green-600 hover:bg-green-700"
-                        disabled={createMutation.isPending || updateMutation.isPending}
-                      >
-                        {editingCustomer ? "Atualizar" : "Criar"}
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          {customersLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                      <div className="flex justify-end space-x-2">
+                        <Button 
+                          type="button" 
+                          variant="outline"
+                          onClick={() => setIsDialogOpen(false)}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button 
+                          type="submit"
+                          className="bg-green-600 hover:bg-green-700"
+                          disabled={createMutation.isPending || updateMutation.isPending}
+                        >
+                          {editingCustomer ? "Atualizar" : "Criar"}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
             </div>
-          ) : (
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredCustomers.map((customer: Customer) => (
-                  <Card key={customer.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-white/90 backdrop-blur-sm hover:bg-white/95 hover:scale-[1.02]">
-                    <CardHeader className="pb-3 bg-gradient-to-r from-gray-50 via-blue-50 to-gray-50 rounded-t-lg">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center mb-3">
-                            <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-3 rounded-xl mr-4 shadow-lg">
-                              <User className="h-6 w-6 text-white" />
-                            </div>
-                            <div>
-                              <CardTitle className="text-xl font-bold text-gray-900 mb-1">{customer.name}</CardTitle>
-                              <div className="flex items-center space-x-2">
-                                <Badge className="bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 border-blue-200 font-medium">
-                                  {customer.code}
-                                </Badge>
-                                <Badge className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-green-200 font-medium">
-                                  {formatDocument(customer.document, customer.documentType)}
-                                </Badge>
+
+            {customersLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+              </div>
+            ) : (
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredCustomers.map((customer: Customer) => (
+                    <Card key={customer.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-white/90 backdrop-blur-sm hover:bg-white/95 hover:scale-[1.02]">
+                      <CardHeader className="pb-3 bg-gradient-to-r from-gray-50 via-blue-50 to-gray-50 rounded-t-lg">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center mb-3">
+                              <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-3 rounded-xl mr-4 shadow-lg">
+                                <User className="h-6 w-6 text-white" />
+                              </div>
+                              <div>
+                                <CardTitle className="text-xl font-bold text-gray-900 mb-1">{customer.name}</CardTitle>
+                                <div className="flex items-center space-x-2">
+                                  <Badge className="bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 border-blue-200 font-medium">
+                                    {customer.code}
+                                  </Badge>
+                                  <Badge className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-green-200 font-medium">
+                                    {formatDocument(customer.document, customer.documentType)}
+                                  </Badge>
+                                </div>
                               </div>
                             </div>
                           </div>
+                          <div className="flex flex-col space-y-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleNewServiceForCustomer(customer)}
+                              className="h-10 w-10 p-0 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 hover:from-green-200 hover:to-emerald-200 border border-green-200 shadow-md group-hover:scale-110 transition-all duration-200"
+                              title="Novo serviço para este cliente"
+                            >
+                              <Wrench className="h-4 w-4 text-green-700" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleViewReport(customer)}
+                              className="h-10 w-10 p-0 rounded-xl bg-gradient-to-br from-purple-100 to-pink-100 hover:from-purple-200 hover:to-pink-200 border border-purple-200 shadow-md group-hover:scale-110 transition-all duration-200"
+                              title="Ver relatório do cliente"
+                            >
+                              <BarChart3 className="h-4 w-4 text-purple-700" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEdit(customer)}
+                              className="h-10 w-10 p-0 rounded-xl bg-gradient-to-br from-blue-100 to-cyan-100 hover:from-blue-200 hover:to-cyan-200 border border-blue-200 shadow-md group-hover:scale-110 transition-all duration-200"
+                              title="Editar cliente"
+                            >
+                              <Edit className="h-4 w-4 text-blue-700" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => deleteMutation.mutate(customer.id)}
+                              className="h-10 w-10 p-0 rounded-xl bg-gradient-to-br from-red-100 to-pink-100 hover:from-red-200 hover:to-pink-200 border border-red-200 shadow-md group-hover:scale-110 transition-all duration-200"
+                              title="Excluir cliente"
+                            >
+                              <Trash2 className="h-4 w-4 text-red-700" />
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex flex-col space-y-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleNewServiceForCustomer(customer)}
-                            className="h-10 w-10 p-0 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 hover:from-green-200 hover:to-emerald-200 border border-green-200 shadow-md group-hover:scale-110 transition-all duration-200"
-                            title="Novo serviço para este cliente"
-                          >
-                            <Wrench className="h-4 w-4 text-green-700" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleViewReport(customer)}
-                            className="h-10 w-10 p-0 rounded-xl bg-gradient-to-br from-blue-100 to-purple-100 hover:from-blue-200 hover:to-purple-200 border border-blue-200 shadow-md group-hover:scale-110 transition-all duration-200"
-                            title="Ver relatório do cliente"
-                          >
-                            <BarChart3 className="h-4 w-4 text-blue-700" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleEdit(customer)}
-                            className="h-10 w-10 p-0 rounded-xl bg-gradient-to-br from-yellow-100 to-orange-100 hover:from-yellow-200 hover:to-orange-200 border border-yellow-200 shadow-md group-hover:scale-110 transition-all duration-200"
-                            title="Editar cliente"
-                          >
-                            <Edit className="h-4 w-4 text-orange-700" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDelete(customer.id)}
-                            className="h-10 w-10 p-0 rounded-xl bg-gradient-to-br from-red-100 to-rose-100 hover:from-red-200 hover:to-rose-200 border border-red-200 shadow-md group-hover:scale-110 transition-all duration-200"
-                            title="Remover cliente"
-                          >
-                            <Trash2 className="h-4 w-4 text-red-700" />
-                          </Button>
+                      </CardHeader>
+                      <CardContent className="pt-4">
+                        <div className="space-y-3">
+                          {customer.phone && (
+                            <div className="flex items-center bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 border border-green-100">
+                              <div className="bg-green-100 p-2 rounded-lg mr-3">
+                                <Phone className="h-4 w-4 text-green-600" />
+                              </div>
+                              <span className="text-sm font-medium text-gray-800">{customer.phone}</span>
+                            </div>
+                          )}
+                          {customer.email && (
+                            <div className="flex items-center bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-100">
+                              <div className="bg-blue-100 p-2 rounded-lg mr-3">
+                                <Mail className="h-4 w-4 text-blue-600" />
+                              </div>
+                              <span className="text-sm font-medium text-gray-800 truncate">{customer.email}</span>
+                            </div>
+                          )}
+                          {customer.observations && (
+                            <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg p-3 border border-amber-100">
+                              <p className="text-sm font-medium text-amber-800">
+                                {customer.observations}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    </CardHeader>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
 
-                    <CardContent className="pt-4">
-                      <div className="space-y-3">
-                        {customer.phone && (
-                          <div className="flex items-center bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 border border-green-100">
-                            <div className="bg-green-100 p-2 rounded-lg mr-3">
-                              <Phone className="h-4 w-4 text-green-600" />
-                            </div>
-                            <span className="text-sm font-medium text-gray-800">{customer.phone}</span>
-                          </div>
+                {filteredCustomers.length === 0 && !customersLoading && (
+                  <div className="p-6">
+                    <Card className="border-dashed border-2 border-gray-300 bg-white/50 backdrop-blur-sm">
+                      <CardContent className="text-center py-16">
+                        <div className="bg-gradient-to-br from-blue-100 to-purple-100 p-6 rounded-full mx-auto mb-6 w-24 h-24 flex items-center justify-center">
+                          <User className="h-12 w-12 text-blue-600" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-3">
+                          Nenhum cliente encontrado
+                        </h3>
+                        <p className="text-gray-600 mb-6">
+                          {searchTerm ? 'Tente ajustar os termos de busca.' : 'Comece adicionando seu primeiro cliente.'}
+                        </p>
+                        {!searchTerm && (
+                          <Button
+                            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg"
+                            onClick={() => {
+                              setEditingCustomer(null);
+                              form.reset();
+                              setIsDialogOpen(true);
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Adicionar Primeiro Cliente
+                          </Button>
                         )}
-                        {customer.email && (
-                          <div className="flex items-center bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-100">
-                            <div className="bg-blue-100 p-2 rounded-lg mr-3">
-                              <Mail className="h-4 w-4 text-blue-600" />
-                            </div>
-                            <span className="text-sm font-medium text-gray-800 truncate">{customer.email}</span>
-                          </div>
-                        )}
-                        {customer.observations && (
-                          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg p-3 border border-amber-100">
-                            <p className="text-sm font-medium text-amber-800">
-                              {customer.observations}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-            {filteredCustomers.length === 0 && !customersLoading && (
-              <div className="p-6">
-                <Card className="border-dashed border-2 border-gray-300 bg-white/50 backdrop-blur-sm">
-                  <CardContent className="text-center py-16">
-                    <div className="bg-gradient-to-br from-blue-100 to-purple-100 p-6 rounded-full mx-auto mb-6 w-24 h-24 flex items-center justify-center">
-                      <User className="h-12 w-12 text-blue-600" />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-3">
-                      Nenhum cliente encontrado
-                    </h3>
-                    <p className="text-gray-600 mb-6">
-                      {searchTerm ? 'Tente ajustar os termos de busca.' : 'Comece adicionando seu primeiro cliente.'}
-                    </p>
-                    {!searchTerm && (
-                      <Button
-                        className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg"
-                        onClick={() => {
-                          setEditingCustomer(null);
-                          form.reset();
-                          setIsDialogOpen(true);
-                        }}
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Adicionar Primeiro Cliente
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
               </div>
             )}
+          </div>
         </main>
       </div>
 
