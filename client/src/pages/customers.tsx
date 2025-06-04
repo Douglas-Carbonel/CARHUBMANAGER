@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2, Phone, Mail, Wrench, BarChart3 } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Phone, Mail, Wrench, BarChart3, User } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema, type Customer } from "@shared/schema";
@@ -233,13 +233,13 @@ export default function Customers() {
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
-      
+
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
           title="Clientes"
           subtitle="Gerencie seus clientes"
         />
-        
+
         <main className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/20">
           {/* Header Section */}
           <div className="bg-gradient-to-r from-white via-blue-50 to-white border-b border-blue-100 px-6 py-6 sticky top-0 z-10 shadow-lg backdrop-blur-sm bg-white/95">
@@ -258,8 +258,8 @@ export default function Customers() {
                   <span className="font-semibold">{filteredCustomers.length}</span>
                   <span className="ml-1 text-sm">clientes</span>
                 </div>
-              </div></div_str>
-            
+              </div>
+              
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button 
@@ -272,14 +272,14 @@ export default function Customers() {
                     <Plus className="h-5 w-5 mr-2" />
                     Novo Cliente
                   </Button>
-                </DialogTrigger></old_str>
+                </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>
                     {editingCustomer ? "Editar Cliente" : "Novo Cliente"}
                   </DialogTitle>
                 </DialogHeader>
-                
+
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -296,7 +296,7 @@ export default function Customers() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={form.control}
                         name="documentType"
@@ -319,7 +319,7 @@ export default function Customers() {
                         )}
                       />
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
@@ -336,7 +336,7 @@ export default function Customers() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={form.control}
                         name="name"
@@ -351,7 +351,7 @@ export default function Customers() {
                         )}
                       />
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
@@ -366,7 +366,7 @@ export default function Customers() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={form.control}
                         name="email"
@@ -381,7 +381,7 @@ export default function Customers() {
                         )}
                       />
                     </div>
-                    
+
                     <FormField
                       control={form.control}
                       name="address"
@@ -395,7 +395,7 @@ export default function Customers() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="observations"
@@ -409,7 +409,7 @@ export default function Customers() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <div className="flex justify-end space-x-2">
                       <Button 
                         type="button" 
@@ -431,7 +431,7 @@ export default function Customers() {
               </DialogContent>
             </Dialog>
           </div>
-          
+
           {customersLoading ? (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
@@ -460,7 +460,7 @@ export default function Customers() {
                               </div>
                             </div>
                           </div>
-                        </div></old_str>
+                        </div>
                       <div className="flex flex-col space-y-2">
                           <Button
                             size="sm"
@@ -498,10 +498,10 @@ export default function Customers() {
                           >
                             <Trash2 className="h-4 w-4 text-red-700" />
                           </Button>
-                        </div></old_str>
+                        </div>
                     </div>
                   </CardHeader>
-                  
+
                   <CardContent className="pt-4">
                       <div className="space-y-3">
                         {customer.phone && (
@@ -528,15 +528,15 @@ export default function Customers() {
                           </div>
                         )}
                       </div>
-                    </CardContent></old_str>
+                    </CardContent>
                 </Card>
               ))}
             </div>
           )}
-          
+
           </div>
             )}
-            
+
             {filteredCustomers.length === 0 && !customersLoading && (
               <div className="p-6">
                 <Card className="border-dashed border-2 border-gray-300 bg-white/50 backdrop-blur-sm">
@@ -566,7 +566,7 @@ export default function Customers() {
                   </CardContent>
                 </Card>
               </div>
-            )}</old_str>
+            )}
         </main>
       </div>
 
