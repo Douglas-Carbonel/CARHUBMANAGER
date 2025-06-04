@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2, Phone, Mail, Wrench } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Phone, Mail, Wrench, BarChart3 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema, type Customer } from "@shared/schema";
@@ -450,6 +450,15 @@ export default function Customers() {
                           title="Novo serviço para este cliente"
                         >
                           <Wrench className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {}}
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          title="Ver relatório do cliente"
+                        >
+                          <BarChart3 className="h-4 w-4" />
                         </Button>
                         <Button
                           size="sm"
