@@ -565,13 +565,13 @@ export default function Services() {
                               </span>
                             </div>
                           )}
-                          {service.estimatedValue && service.estimatedValue > 0 && (
+                          {service.estimatedValue && Number(service.estimatedValue) > 0 && (
                             <div className="flex items-center bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg p-3 border border-amber-100">
                               <div className="bg-amber-100 p-2 rounded-lg mr-3">
                                 <DollarSign className="h-4 w-4 text-amber-600" />
                               </div>
                               <span className="text-sm font-medium text-gray-800">
-                                R$ {service.estimatedValue.toFixed(2)}
+                                R$ {Number(service.estimatedValue).toFixed(2)}
                               </span>
                             </div>
                           )}
