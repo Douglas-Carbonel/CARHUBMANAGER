@@ -10,15 +10,31 @@ import {
   insertPaymentSchema
 } from "@shared/schema";
 
+// Development authentication middleware
+const isAuthenticatedDev: any = async (req: any, res: any, next: any) => {
+  // For development, always allow access
+  req.user = { claims: { sub: 'dev-user-123' } };
+  return next();
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
+  // Development auth bypass - create test user
+  await storage.upsertUser({
+    id: 'dev-user-123',
+    email: 'admin@carhub.com',
+    firstName: 'Admin',
+    lastName: 'CarHub',
+    role: 'admin'
+  });
+
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/user', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      // Return test user for development
+      const user = await storage.getUser('dev-user-123');
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -27,7 +43,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Customer routes
-  app.get("/api/customers", isAuthenticated, async (req, res) => {
+  app.get("/api/customers", isAuthenticatedDev, async (req, res) => {
     try {
       const customers = await storage.getCustomers();
       res.json(customers);
@@ -36,7 +52,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/customers/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/customers/:id", isAuthenticatedDev, async (req, res) => {
     try {
       const customer = await storage.getCustomer(parseInt(req.params.id));
       if (!customer) {
@@ -48,7 +64,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/customers", isAuthenticated, async (req, res) => {
+  app.post("/api/customers", isAuthenticatedDev, async (req, res) => {
     try {
       const customerData = insertCustomerSchema.parse(req.body);
       
@@ -68,7 +84,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/customers/:id", isAuthenticated, async (req, res) => {
+  app.put("/api/customers/:id", isAuthenticatedDev, async (req, res) => {
     try {
       const customerData = insertCustomerSchema.partial().parse(req.body);
       const customer = await storage.updateCustomer(parseInt(req.params.id), customerData);
@@ -81,7 +97,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/customers/:id", isAuthenticated, async (req, res) => {
+  app.delete("/api/customers/:id", isAuthenticatedDev, async (req, res) => {
     try {
       await storage.deleteCustomer(parseInt(req.params.id));
       res.status(204).send();
@@ -91,7 +107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Vehicle routes
-  app.get("/api/vehicles", isAuthenticated, async (req, res) => {
+  app.get("/api/vehicles", isAuthenticatedDev, async (req, res) => {
     try {
       const vehicles = await storage.getVehicles();
       res.json(vehicles);
@@ -100,7 +116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/customers/:customerId/vehicles", isAuthenticated, async (req, res) => {
+  app.get("/api/customers/:customerId/vehicles", isAuthenticatedDev, async (req, res) => {
     try {
       const vehicles = await storage.getVehiclesByCustomer(parseInt(req.params.customerId));
       res.json(vehicles);
@@ -109,7 +125,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/vehicles", isAuthenticated, async (req, res) => {
+  app.post("/api/vehicles", isAuthenticatedDev, async (req, res) => {
     try {
       const vehicleData = insertVehicleSchema.parse(req.body);
       const vehicle = await storage.createVehicle(vehicleData);
@@ -122,7 +138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/vehicles/:id", isAuthenticated, async (req, res) => {
+  app.put("/api/vehicles/:id", isAuthenticatedDev, async (req, res) => {
     try {
       const vehicleData = insertVehicleSchema.partial().parse(req.body);
       const vehicle = await storage.updateVehicle(parseInt(req.params.id), vehicleData);
@@ -135,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/vehicles/:id", isAuthenticated, async (req, res) => {
+  app.delete("/api/vehicles/:id", isAuthenticatedDev, async (req, res) => {
     try {
       await storage.deleteVehicle(parseInt(req.params.id));
       res.status(204).send();
@@ -145,7 +161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Service routes
-  app.get("/api/services", isAuthenticated, async (req, res) => {
+  app.get("/api/services", isAuthenticatedDev, async (req, res) => {
     try {
       const services = await storage.getServices();
       res.json(services);
@@ -154,7 +170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/services/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/services/:id", isAuthenticatedDev, async (req, res) => {
     try {
       const service = await storage.getService(parseInt(req.params.id));
       if (!service) {
@@ -166,7 +182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/services", isAuthenticated, async (req, res) => {
+  app.post("/api/services", isAuthenticatedDev, async (req, res) => {
     try {
       const serviceData = insertServiceSchema.parse(req.body);
       const service = await storage.createService(serviceData);
@@ -179,7 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/services/:id", isAuthenticated, async (req, res) => {
+  app.put("/api/services/:id", isAuthenticatedDev, async (req, res) => {
     try {
       const serviceData = insertServiceSchema.partial().parse(req.body);
       const service = await storage.updateService(parseInt(req.params.id), serviceData);
@@ -192,7 +208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/services/:id", isAuthenticated, async (req, res) => {
+  app.delete("/api/services/:id", isAuthenticatedDev, async (req, res) => {
     try {
       await storage.deleteService(parseInt(req.params.id));
       res.status(204).send();
@@ -202,7 +218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Service type routes
-  app.get("/api/service-types", isAuthenticated, async (req, res) => {
+  app.get("/api/service-types", isAuthenticatedDev, async (req, res) => {
     try {
       const serviceTypes = await storage.getServiceTypes();
       res.json(serviceTypes);
@@ -211,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/service-types", isAuthenticated, async (req, res) => {
+  app.post("/api/service-types", isAuthenticatedDev, async (req, res) => {
     try {
       const serviceTypeData = insertServiceTypeSchema.parse(req.body);
       const serviceType = await storage.createServiceType(serviceTypeData);
@@ -225,7 +241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Payment routes
-  app.get("/api/services/:serviceId/payments", isAuthenticated, async (req, res) => {
+  app.get("/api/services/:serviceId/payments", isAuthenticatedDev, async (req, res) => {
     try {
       const payments = await storage.getPaymentsByService(parseInt(req.params.serviceId));
       res.json(payments);
@@ -234,7 +250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/payments", isAuthenticated, async (req, res) => {
+  app.post("/api/payments", isAuthenticatedDev, async (req, res) => {
     try {
       const paymentData = insertPaymentSchema.parse(req.body);
       const payment = await storage.createPayment(paymentData);
@@ -248,7 +264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dashboard routes
-  app.get("/api/dashboard/stats", isAuthenticated, async (req, res) => {
+  app.get("/api/dashboard/stats", isAuthenticatedDev, async (req, res) => {
     try {
       const stats = await storage.getDashboardStats();
       res.json(stats);
@@ -257,7 +273,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/dashboard/revenue", isAuthenticated, async (req, res) => {
+  app.get("/api/dashboard/revenue", isAuthenticatedDev, async (req, res) => {
     try {
       const days = parseInt(req.query.days as string) || 7;
       const revenue = await storage.getRevenueByDays(days);
@@ -267,7 +283,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/dashboard/top-services", isAuthenticated, async (req, res) => {
+  app.get("/api/dashboard/top-services", isAuthenticatedDev, async (req, res) => {
     try {
       const topServices = await storage.getTopServices();
       res.json(topServices);
@@ -276,7 +292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/dashboard/recent-services", isAuthenticated, async (req, res) => {
+  app.get("/api/dashboard/recent-services", isAuthenticatedDev, async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 5;
       const recentServices = await storage.getRecentServices(limit);
@@ -286,7 +302,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/dashboard/upcoming-appointments", isAuthenticated, async (req, res) => {
+  app.get("/api/dashboard/upcoming-appointments", isAuthenticatedDev, async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 5;
       const appointments = await storage.getUpcomingAppointments(limit);

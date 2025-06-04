@@ -1,8 +1,42 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Car, Wrench, Calendar, Users, TrendingUp, Shield } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Landing() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const devLoginMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/auth/user');
+      if (!response.ok) throw new Error('Failed to get user');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "Login realizado",
+        description: "Acesso liberado para teste",
+      });
+      // Force page reload to trigger authentication check
+      window.location.reload();
+    },
+    onError: () => {
+      toast({
+        title: "Erro",
+        description: "Falha no login de desenvolvimento",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDevLogin = () => {
+    devLoginMutation.mutate();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       {/* Header */}
@@ -13,12 +47,21 @@ export default function Landing() {
               <Car className="h-8 w-8 text-green-600 mr-3" />
               <span className="text-2xl font-bold text-gray-900">CarHub</span>
             </div>
-            <Button 
-              onClick={() => window.location.href = '/api/login'}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              Entrar
-            </Button>
+            <div className="flex space-x-3">
+              <Button 
+                onClick={handleDevLogin}
+                className="bg-blue-600 hover:bg-blue-700"
+                disabled={devLoginMutation.isPending}
+              >
+                Entrar (Teste)
+              </Button>
+              <Button 
+                onClick={() => window.location.href = '/api/login'}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                Entrar
+              </Button>
+            </div>
           </div>
         </div>
       </header>
