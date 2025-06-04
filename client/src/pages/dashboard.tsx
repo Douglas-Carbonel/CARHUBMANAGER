@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -31,14 +32,17 @@ export default function Dashboard() {
 
   if (isLoading || !isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-gray-100">
+        <div className="relative">
+          <div className="animate-spin rounded-full h-12 w-12 border-2 border-green-600 border-t-transparent"></div>
+          <div className="absolute inset-0 animate-ping rounded-full h-12 w-12 border-2 border-green-600 opacity-20"></div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100">
       <Sidebar />
       
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -47,19 +51,23 @@ export default function Dashboard() {
           subtitle="Visão geral da sua oficina"
         />
         
-        <main className="flex-1 overflow-y-auto p-6">
-          <StatsCards />
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <div className="lg:col-span-2">
-              <RevenueChart />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-8 space-y-8">
+            <StatsCards />
+            
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+              <div className="xl:col-span-8">
+                <RevenueChart />
+              </div>
+              <div className="xl:col-span-4">
+                <TopServices />
+              </div>
             </div>
-            <TopServices />
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <RecentServices />
-            <UpcomingAppointments />
+            
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+              <RecentServices />
+              <UpcomingAppointments />
+            </div>
           </div>
         </main>
       </div>

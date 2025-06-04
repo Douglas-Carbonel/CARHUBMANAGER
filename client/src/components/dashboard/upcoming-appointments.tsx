@@ -1,7 +1,8 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Phone } from "lucide-react";
+import { Phone, Calendar, ArrowRight } from "lucide-react";
 
 export default function UpcomingAppointments() {
   const { data: upcomingAppointments, isLoading } = useQuery({
@@ -10,14 +11,14 @@ export default function UpcomingAppointments() {
 
   if (isLoading) {
     return (
-      <Card className="animate-pulse">
-        <CardHeader>
-          <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+      <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm animate-pulse">
+        <CardHeader className="pb-3">
+          <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-1/2"></div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-16 bg-gray-200 rounded"></div>
+              <div key={i} className="h-20 bg-gradient-to-r from-gray-200 to-gray-300 rounded-xl"></div>
             ))}
           </div>
         </CardContent>
@@ -36,26 +37,34 @@ export default function UpcomingAppointments() {
   };
 
   return (
-    <Card>
-      <CardHeader className="border-b border-gray-100">
-        <CardTitle className="text-lg font-semibold text-gray-900">
-          Próximos Agendamentos
-        </CardTitle>
+    <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-shadow duration-300">
+      <CardHeader className="pb-3 border-b border-gray-50">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
+            <Calendar className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <CardTitle className="text-xl font-bold text-gray-900">
+              Próximos Agendamentos
+            </CardTitle>
+            <p className="text-sm text-gray-500 mt-1">Agenda das próximas horas</p>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="p-6">
+      <CardContent className="pt-6">
         <div className="space-y-4">
           {upcomingAppointments?.map((appointment: any, index: number) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-primary text-white rounded-lg flex items-center justify-center mr-3 text-sm font-medium">
+            <div key={index} className="flex items-center justify-between p-4 bg-gray-50/80 rounded-xl hover:bg-gray-100/80 transition-colors duration-200 group">
+              <div className="flex items-center space-x-4">
+                <div className="w-14 h-14 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">
                   {getTimeNumber(appointment.scheduledTime)}
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{appointment.customerName}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="font-semibold text-gray-900">{appointment.customerName}</p>
+                  <p className="text-sm text-gray-600 font-medium">
                     {formatTime(appointment.scheduledTime)} - {appointment.serviceTypeName}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-sm text-gray-500">
                     {appointment.vehicleBrand} {appointment.vehicleModel} • {appointment.vehiclePlate}
                   </p>
                 </div>
@@ -63,7 +72,7 @@ export default function UpcomingAppointments() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-primary hover:text-primary/80"
+                className="text-green-600 hover:text-green-700 hover:bg-green-50 rounded-xl"
               >
                 <Phone className="h-4 w-4" />
               </Button>
@@ -71,8 +80,11 @@ export default function UpcomingAppointments() {
           ))}
           
           {(!upcomingAppointments || upcomingAppointments.length === 0) && (
-            <div className="text-center py-4">
-              <p className="text-gray-500 text-sm">Nenhum agendamento próximo</p>
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Calendar className="h-8 w-8 text-gray-400" />
+              </div>
+              <p className="text-gray-500">Nenhum agendamento próximo</p>
             </div>
           )}
         </div>
@@ -80,9 +92,10 @@ export default function UpcomingAppointments() {
         {upcomingAppointments && upcomingAppointments.length > 0 && (
           <Button 
             variant="ghost" 
-            className="w-full mt-4 text-sm text-primary hover:text-primary/80 font-medium"
+            className="w-full mt-6 text-sm text-purple-600 hover:text-purple-700 hover:bg-purple-50 font-medium group"
           >
             Ver agenda completa
+            <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
           </Button>
         )}
       </CardContent>
