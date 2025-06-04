@@ -21,6 +21,7 @@ import { insertCustomerSchema, type Customer } from "@shared/schema";
 import { validateCPF, validateCNPJ, formatCPF, formatCNPJ } from "@/lib/cpf-cnpj";
 import { z } from "zod";
 import NewServiceModal from "@/components/modals/new-service-modal";
+import { useLocation } from "wouter";
 
 const customerFormSchema = insertCustomerSchema.extend({
   document: z.string().min(1, "Documento é obrigatório").refine((doc) => {
@@ -38,6 +39,7 @@ export default function Customers() {
   const [isNewServiceModalOpen, setIsNewServiceModalOpen] = useState(false);
   const [selectedCustomerForService, setSelectedCustomerForService] = useState<Customer | null>(null);
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
 
   const form = useForm<z.infer<typeof customerFormSchema>>({
     resolver: zodResolver(customerFormSchema),
@@ -208,6 +210,10 @@ export default function Customers() {
   const handleNewServiceForCustomer = (customer: Customer) => {
     setSelectedCustomerForService(customer);
     setIsNewServiceModalOpen(true);
+  };
+
+  const handleViewReport = (customer: Customer) => {
+    setLocation(`/reports?type=customer&customerId=${customer.id}`);
   };
 
   const filteredCustomers = customers?.filter((customer: Customer) =>
@@ -454,7 +460,7 @@ export default function Customers() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => {}}
+                          onClick={() => handleViewReport(customer)}
                           className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                           title="Ver relatório do cliente"
                         >

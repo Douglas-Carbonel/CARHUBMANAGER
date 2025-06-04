@@ -20,6 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertVehicleSchema, type Vehicle, type Customer } from "@shared/schema";
 import { z } from "zod";
 import NewServiceModal from "@/components/modals/new-service-modal";
+import { useLocation } from "wouter";
 
 export default function Vehicles() {
   const { toast } = useToast();
@@ -30,6 +31,7 @@ export default function Vehicles() {
   const [isNewServiceModalOpen, setIsNewServiceModalOpen] = useState(false);
   const [selectedVehicleForService, setSelectedVehicleForService] = useState<Vehicle | null>(null);
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
 
   const form = useForm<z.infer<typeof insertVehicleSchema>>({
     resolver: zodResolver(insertVehicleSchema),
@@ -203,6 +205,10 @@ export default function Vehicles() {
   const handleNewServiceForVehicle = (vehicle: Vehicle) => {
     setSelectedVehicleForService(vehicle);
     setIsNewServiceModalOpen(true);
+  };
+
+  const handleViewVehicleReport = (vehicle: Vehicle) => {
+    setLocation(`/reports?type=vehicle&vehicleId=${vehicle.id}`);
   };
 
   const filteredVehicles = vehicles?.filter((vehicle: Vehicle) =>
@@ -445,7 +451,7 @@ export default function Vehicles() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => {}}
+                          onClick={() => handleViewVehicleReport(vehicle)}
                           className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                           title="Ver histórico do veículo"
                         >
