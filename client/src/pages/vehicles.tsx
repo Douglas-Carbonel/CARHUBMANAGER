@@ -236,33 +236,39 @@ export default function Vehicles() {
           subtitle="Gerencie os veículos dos clientes"
         />
         
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Buscar veículos..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-80"
-                />
-              </div>
-            </div>
+        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/20">
+          {/* Header Section */}
+          <div className="bg-gradient-to-r from-white via-blue-50 to-white border-b border-blue-100 px-6 py-6 sticky top-0 z-10 shadow-lg backdrop-blur-sm bg-white/95">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center space-x-4">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Input
+                    placeholder="Buscar veículos..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-12 w-80 h-12 border-2 border-gray-200 focus:border-blue-400 rounded-xl shadow-sm bg-white/80"
+                  />
+                </div>
+                <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg shadow-md">
+                  <span className="font-semibold">{filteredVehicles.length}</span>
+                  <span className="ml-1 text-sm">veículos</span>
+                </div>
+              </div></old_str>
             
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  className="bg-green-600 hover:bg-green-700"
-                  onClick={() => {
-                    setEditingVehicle(null);
-                    form.reset();
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo Veículo
-                </Button>
-              </DialogTrigger>
+                <DialogTrigger asChild>
+                  <Button 
+                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg h-12 px-6 rounded-xl font-semibold transition-all duration-200 hover:scale-105"
+                    onClick={() => {
+                      setEditingVehicle(null);
+                      form.reset();
+                    }}
+                  >
+                    <Plus className="h-5 w-5 mr-2" />
+                    Novo Veículo
+                  </Button>
+                </DialogTrigger></old_str>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>
@@ -419,90 +425,138 @@ export default function Vehicles() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredVehicles.map((vehicle: Vehicle) => (
-                <Card key={vehicle.id}>
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg flex items-center">
-                          <Car className="h-5 w-5 mr-2 text-green-600" />
-                          {vehicle.brand} {vehicle.model}
-                        </CardTitle>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <Badge variant="outline">
-                            {vehicle.plate}
-                          </Badge>
-                          <Badge variant="secondary">
-                            {vehicle.year}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="flex space-x-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleNewServiceForVehicle(vehicle)}
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                          title="Novo serviço para este veículo"
-                        >
-                          <Wrench className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleViewVehicleReport(vehicle)}
-                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                          title="Ver histórico do veículo"
-                        >
-                          <BarChart3 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEdit(vehicle)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDelete(vehicle.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredVehicles.map((vehicle: Vehicle) => (
+                  <Card key={vehicle.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-white/90 backdrop-blur-sm hover:bg-white/95 hover:scale-[1.02]">
+                    <CardHeader className="pb-3 bg-gradient-to-r from-gray-50 via-blue-50 to-gray-50 rounded-t-lg">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center mb-3">
+                            <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-xl mr-4 shadow-lg">
+                              <Car className="h-6 w-6 text-white" />
+                            </div>
+                            <div>
+                              <CardTitle className="text-xl font-bold text-gray-900 mb-1">
+                                {vehicle.brand} {vehicle.model}
+                              </CardTitle>
+                              <div className="flex items-center space-x-2">
+                                <Badge className="bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 border-blue-200 font-medium">
+                                  {vehicle.plate}
+                                </Badge>
+                                <Badge className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-green-200 font-medium">
+                                  {vehicle.year}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        </div></old_str>
+                      <div className="flex flex-col space-y-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleNewServiceForVehicle(vehicle)}
+                            className="h-10 w-10 p-0 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 hover:from-green-200 hover:to-emerald-200 border border-green-200 shadow-md group-hover:scale-110 transition-all duration-200"
+                            title="Novo serviço para este veículo"
+                          >
+                            <Wrench className="h-4 w-4 text-green-700" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleViewVehicleReport(vehicle)}
+                            className="h-10 w-10 p-0 rounded-xl bg-gradient-to-br from-blue-100 to-purple-100 hover:from-blue-200 hover:to-purple-200 border border-blue-200 shadow-md group-hover:scale-110 transition-all duration-200"
+                            title="Ver histórico do veículo"
+                          >
+                            <BarChart3 className="h-4 w-4 text-blue-700" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEdit(vehicle)}
+                            className="h-10 w-10 p-0 rounded-xl bg-gradient-to-br from-yellow-100 to-orange-100 hover:from-yellow-200 hover:to-orange-200 border border-yellow-200 shadow-md group-hover:scale-110 transition-all duration-200"
+                            title="Editar veículo"
+                          >
+                            <Edit className="h-4 w-4 text-orange-700" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDelete(vehicle.id)}
+                            className="h-10 w-10 p-0 rounded-xl bg-gradient-to-br from-red-100 to-rose-100 hover:from-red-200 hover:to-rose-200 border border-red-200 shadow-md group-hover:scale-110 transition-all duration-200"
+                            title="Remover veículo"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-700" />
+                          </Button>
+                        </div></old_str>
                     </div>
                   </CardHeader>
                   
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <User className="h-4 w-4 mr-2" />
-                        {getCustomerName(vehicle.customerId)}
+                  <CardContent className="pt-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-100">
+                          <div className="bg-blue-100 p-2 rounded-lg mr-3">
+                            <User className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <span className="text-sm font-medium text-gray-800">{getCustomerName(vehicle.customerId)}</span>
+                        </div>
+                        {vehicle.color && (
+                          <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-3 border border-purple-100">
+                            <div className="flex items-center">
+                              <div className="bg-purple-100 p-2 rounded-lg mr-3">
+                                <div className="h-4 w-4 rounded-full border-2 border-purple-600" style={{ backgroundColor: vehicle.color.toLowerCase() }}></div>
+                              </div>
+                              <span className="text-sm font-medium text-gray-800">{vehicle.color}</span>
+                            </div>
+                          </div>
+                        )}
+                        {vehicle.observations && (
+                          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg p-3 border border-amber-100">
+                            <p className="text-sm font-medium text-amber-800">
+                              {vehicle.observations}
+                            </p>
+                          </div>
+                        )}
                       </div>
-                      {vehicle.color && (
-                        <p className="text-sm text-gray-600">
-                          <strong>Cor:</strong> {vehicle.color}
-                        </p>
-                      )}
-                      {vehicle.observations && (
-                        <p className="text-sm text-gray-600 mt-2">
-                          {vehicle.observations}
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
+                    </CardContent></old_str>
                 </Card>
               ))}
             </div>
           )}
           
-          {filteredVehicles.length === 0 && !vehiclesLoading && (
-            <div className="text-center py-12">
-              <p className="text-gray-500">Nenhum veículo encontrado.</p>
-            </div>
-          )}
+          </div>
+            )}
+            
+            {filteredVehicles.length === 0 && !vehiclesLoading && (
+              <div className="p-6">
+                <Card className="border-dashed border-2 border-gray-300 bg-white/50 backdrop-blur-sm">
+                  <CardContent className="text-center py-16">
+                    <div className="bg-gradient-to-br from-green-100 to-emerald-100 p-6 rounded-full mx-auto mb-6 w-24 h-24 flex items-center justify-center">
+                      <Car className="h-12 w-12 text-green-600" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">
+                      Nenhum veículo encontrado
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      {searchTerm ? 'Tente ajustar os termos de busca.' : 'Comece adicionando o primeiro veículo.'}
+                    </p>
+                    {!searchTerm && (
+                      <Button
+                        className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg"
+                        onClick={() => {
+                          setEditingVehicle(null);
+                          form.reset();
+                          setIsDialogOpen(true);
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Adicionar Primeiro Veículo
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}</old_str>
         </main>
       </div>
 

@@ -207,43 +207,50 @@ export default function Services() {
           subtitle="Gerencie os serviços e ordens de trabalho"
         />
         
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Buscar serviços..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-80"
-                />
-              </div>
-              
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Filtrar por status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os status</SelectItem>
-                  <SelectItem value="scheduled">Agendado</SelectItem>
-                  <SelectItem value="in_progress">Em Andamento</SelectItem>
-                  <SelectItem value="completed">Concluído</SelectItem>
-                  <SelectItem value="cancelled">Cancelado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/20">
+          {/* Header Section */}
+          <div className="bg-gradient-to-r from-white via-blue-50 to-white border-b border-blue-100 px-6 py-6 sticky top-0 z-10 shadow-lg backdrop-blur-sm bg-white/95">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center space-x-4">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Input
+                    placeholder="Buscar serviços..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-12 w-80 h-12 border-2 border-gray-200 focus:border-blue-400 rounded-xl shadow-sm bg-white/80"
+                  />
+                </div>
+                
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-48 h-12 border-2 border-gray-200 focus:border-blue-400 rounded-xl shadow-sm bg-white/80">
+                    <SelectValue placeholder="Filtrar por status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os status</SelectItem>
+                    <SelectItem value="scheduled">Agendado</SelectItem>
+                    <SelectItem value="in_progress">Em Andamento</SelectItem>
+                    <SelectItem value="completed">Concluído</SelectItem>
+                    <SelectItem value="cancelled">Cancelado</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg shadow-md">
+                  <span className="font-semibold">{filteredServices.length}</span>
+                  <span className="ml-1 text-sm">serviços</span>
+                </div>
+              </div></old_str>
             
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  className="bg-green-600 hover:bg-green-700"
-                  onClick={() => form.reset()}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo Serviço
-                </Button>
-              </DialogTrigger>
+                <DialogTrigger asChild>
+                  <Button 
+                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg h-12 px-6 rounded-xl font-semibold transition-all duration-200 hover:scale-105"
+                    onClick={() => form.reset()}
+                  >
+                    <Plus className="h-5 w-5 mr-2" />
+                    Novo Serviço
+                  </Button>
+                </DialogTrigger></old_str>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Novo Serviço</DialogTitle>
@@ -426,20 +433,27 @@ export default function Services() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredServices.map((service: Service) => (
-                <Card key={service.id}>
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg flex items-center">
-                          <Wrench className="h-5 w-5 mr-2 text-green-600" />
-                          {getServiceTypeName(service.serviceTypeId)}
-                        </CardTitle>
-                        <Badge className={`mt-1 ${statusColors[service.status as keyof typeof statusColors]}`}>
-                          {statusLabels[service.status as keyof typeof statusLabels]}
-                        </Badge>
-                      </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredServices.map((service: Service) => (
+                  <Card key={service.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-white/90 backdrop-blur-sm hover:bg-white/95 hover:scale-[1.02]">
+                    <CardHeader className="pb-3 bg-gradient-to-r from-gray-50 via-blue-50 to-gray-50 rounded-t-lg">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center mb-3">
+                            <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-xl mr-4 shadow-lg">
+                              <Wrench className="h-6 w-6 text-white" />
+                            </div>
+                            <div>
+                              <CardTitle className="text-lg font-bold text-gray-900 mb-2">
+                                {getServiceTypeName(service.serviceTypeId)}
+                              </CardTitle>
+                              <Badge className={`${statusColors[service.status as keyof typeof statusColors]} font-medium px-3 py-1 shadow-sm border-2`}>
+                                {statusLabels[service.status as keyof typeof statusLabels]}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div></old_str>
                       <Select
                         value={service.status}
                         onValueChange={(status) => updateStatusMutation.mutate({ id: service.id, status })}
@@ -458,44 +472,81 @@ export default function Services() {
                     </div>
                   </CardHeader>
                   
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <User className="h-4 w-4 mr-2" />
-                        {getCustomerName(service.customerId)}
+                  <CardContent className="pt-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-100">
+                          <div className="bg-blue-100 p-2 rounded-lg mr-3">
+                            <User className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <span className="text-sm font-medium text-gray-800">{getCustomerName(service.customerId)}</span>
+                        </div>
+                        <div className="flex items-center bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 border border-green-100">
+                          <div className="bg-green-100 p-2 rounded-lg mr-3">
+                            <Car className="h-4 w-4 text-green-600" />
+                          </div>
+                          <span className="text-sm font-medium text-gray-800 truncate">{getVehicleInfo(service.vehicleId)}</span>
+                        </div>
+                        {service.scheduledDate && (
+                          <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-3 border border-purple-100">
+                            <p className="text-sm font-medium text-purple-800">
+                              <strong>Agendado:</strong> {new Date(service.scheduledDate).toLocaleDateString()} 
+                              {service.scheduledTime && ` às ${service.scheduledTime}`}
+                            </p>
+                          </div>
+                        )}
+                        {service.estimatedValue && (
+                          <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg p-3 border border-emerald-100">
+                            <p className="text-lg font-bold text-emerald-700">
+                              R$ {Number(service.estimatedValue).toFixed(2)}
+                            </p>
+                          </div>
+                        )}
+                        {service.notes && (
+                          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg p-3 border border-amber-100">
+                            <p className="text-sm font-medium text-amber-800">
+                              {service.notes}
+                            </p>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Car className="h-4 w-4 mr-2" />
-                        {getVehicleInfo(service.vehicleId)}
-                      </div>
-                      {service.scheduledDate && (
-                        <p className="text-sm text-gray-600">
-                          <strong>Agendado:</strong> {new Date(service.scheduledDate).toLocaleDateString()} 
-                          {service.scheduledTime && ` às ${service.scheduledTime}`}
-                        </p>
-                      )}
-                      {service.estimatedValue && (
-                        <p className="text-sm text-gray-600">
-                          <strong>Valor:</strong> R$ {Number(service.estimatedValue).toFixed(2)}
-                        </p>
-                      )}
-                      {service.notes && (
-                        <p className="text-sm text-gray-600 mt-2">
-                          {service.notes}
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
+                    </CardContent></old_str>
                 </Card>
               ))}
             </div>
           )}
           
-          {filteredServices.length === 0 && !servicesLoading && (
-            <div className="text-center py-12">
-              <p className="text-gray-500">Nenhum serviço encontrado.</p>
-            </div>
-          )}
+          </div>
+            )}
+            
+            {filteredServices.length === 0 && !servicesLoading && (
+              <div className="p-6">
+                <Card className="border-dashed border-2 border-gray-300 bg-white/50 backdrop-blur-sm">
+                  <CardContent className="text-center py-16">
+                    <div className="bg-gradient-to-br from-green-100 to-emerald-100 p-6 rounded-full mx-auto mb-6 w-24 h-24 flex items-center justify-center">
+                      <Wrench className="h-12 w-12 text-green-600" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">
+                      Nenhum serviço encontrado
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      {searchTerm || statusFilter !== "all" ? 'Tente ajustar os filtros de busca.' : 'Comece criando o primeiro serviço.'}
+                    </p>
+                    {!searchTerm && statusFilter === "all" && (
+                      <Button
+                        className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg"
+                        onClick={() => {
+                          form.reset();
+                          setIsDialogOpen(true);
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Criar Primeiro Serviço
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}</old_str>
         </main>
       </div>
     </div>
