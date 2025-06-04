@@ -461,7 +461,7 @@ export default function Customers() {
                             </div>
                           </div>
                         </div>
-                      <div className="flex flex-col space-y-2">
+                        <div className="flex flex-col space-y-2">
                           <Button
                             size="sm"
                             variant="ghost"
@@ -499,10 +499,10 @@ export default function Customers() {
                             <Trash2 className="h-4 w-4 text-red-700" />
                           </Button>
                         </div>
-                    </div>
-                  </CardHeader>
+                      </div>
+                    </CardHeader>
 
-                  <CardContent className="pt-4">
+                    <CardContent className="pt-4">
                       <div className="space-y-3">
                         {customer.phone && (
                           <div className="flex items-center bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 border border-green-100">
@@ -529,13 +529,11 @@ export default function Customers() {
                         )}
                       </div>
                     </CardContent>
-                </Card>
-              ))}
+                  </Card>
+                ))}
+              </div>
             </div>
           )}
-
-          </div>
-            )}
 
             {filteredCustomers.length === 0 && !customersLoading && (
               <div className="p-6">
