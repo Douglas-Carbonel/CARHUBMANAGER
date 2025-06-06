@@ -13,7 +13,7 @@ import SchedulePage from "./pages/schedule";
 import ReportsPage from "./pages/reports";
 import NotFound from "./pages/not-found";
 import LandingPage from "./pages/landing";
-import ProtectedRoute from "./lib/protected-route";
+import { ProtectedRoute } from "./lib/protected-route";
 
 import "./index.css";
 
