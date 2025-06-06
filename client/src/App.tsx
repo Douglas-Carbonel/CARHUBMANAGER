@@ -33,7 +33,7 @@ function App() {
         <TooltipProvider>
           <Router>
             <Switch>
-              <Route path="/" component={LandingPage} />
+              <Route path="/" component={AuthPage} />
               <Route path="/auth" component={AuthPage} />
               <Route path="/dashboard">
                 <ProtectedRoute>
