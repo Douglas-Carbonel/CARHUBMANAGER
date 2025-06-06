@@ -5,12 +5,20 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
-import { User } from "@shared/schema";
+import { User as DatabaseUser } from "@shared/schema";
 import connectPg from "connect-pg-simple";
 
 declare global {
   namespace Express {
-    interface User extends Omit<User, 'password'> {}
+    interface User {
+      id: number;
+      username: string;
+      email: string | null;
+      firstName: string | null;
+      lastName: string | null;
+      role: "admin" | "technician" | null;
+      isActive: boolean | null;
+    }
   }
 }
 
