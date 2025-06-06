@@ -115,7 +115,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     registerMutation,
   };
 
-  return React.createElement(AuthContext.Provider, { value: contextValue }, children);
+  return (
+    <AuthContext.Provider value={contextValue}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
