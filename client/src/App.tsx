@@ -1,47 +1,76 @@
-import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
+import { Router, Route, Switch } from "wouter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useAuth } from "@/hooks/useAuth";
-import NotFound from "@/pages/not-found";
-import Landing from "@/pages/landing";
-import Dashboard from "@/pages/dashboard";
-import Customers from "@/pages/customers";
-import Vehicles from "@/pages/vehicles";
-import Services from "@/pages/services";
-import Schedule from "@/pages/schedule";
-import Reports from "@/pages/reports";
+import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from "@/hooks/useAuth";
 
-function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+import Dashboard from "./pages/dashboard";
+import AuthPage from "./pages/auth-page";
+import CustomersPage from "./pages/customers";
+import VehiclesPage from "./pages/vehicles";
+import ServicesPage from "./pages/services";
+import SchedulePage from "./pages/schedule";
+import ReportsPage from "./pages/reports";
+import NotFound from "./pages/not-found";
+import LandingPage from "./pages/landing";
+import ProtectedRoute from "./lib/protected-route";
 
-  return (
-    <Switch>
-      {isLoading || !isAuthenticated ? (
-        <Route path="/" component={Landing} />
-      ) : (
-        <>
-          <Route path="/" component={Dashboard} />
-          <Route path="/customers" component={Customers} />
-          <Route path="/vehicles" component={Vehicles} />
-          <Route path="/services" component={Services} />
-          <Route path="/schedule" component={Schedule} />
-          <Route path="/reports" component={Reports} />
-        </>
-      )}
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
+import "./index.css";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Router>
+            <Switch>
+              <Route path="/" component={LandingPage} />
+              <Route path="/auth" component={AuthPage} />
+              <Route path="/dashboard">
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/customers">
+                <ProtectedRoute>
+                  <CustomersPage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/vehicles">
+                <ProtectedRoute>
+                  <VehiclesPage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/services">
+                <ProtectedRoute>
+                  <ServicesPage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/schedule">
+                <ProtectedRoute>
+                  <SchedulePage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/reports">
+                <ProtectedRoute>
+                  <ReportsPage />
+                </ProtectedRoute>
+              </Route>
+              <Route component={NotFound} />
+            </Switch>
+          </Router>
+          <Toaster />
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
