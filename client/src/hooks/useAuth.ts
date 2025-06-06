@@ -106,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const contextValue = {
+  const contextValue: AuthContextType = {
     user: user ?? null,
     isLoading,
     error,
