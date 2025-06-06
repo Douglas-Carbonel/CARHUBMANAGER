@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, createInitialAdmin } from "./auth";
 import { 
   insertCustomerSchema,
   insertVehicleSchema,
@@ -10,40 +10,23 @@ import {
   insertPaymentSchema
 } from "@shared/schema";
 
-// Development authentication middleware
-const isAuthenticatedDev: any = async (req: any, res: any, next: any) => {
-  // For development, always allow access
-  req.user = { claims: { sub: 'dev-user-123' } };
-  return next();
+// Authentication middleware
+const requireAuth = (req: any, res: any, next: any) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+  next();
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
+  // Set up authentication
+  setupAuth(app);
 
-  // Development auth bypass - create test user
-  await storage.upsertUser({
-    id: 'dev-user-123',
-    email: 'admin@carhub.com',
-    firstName: 'Admin',
-    lastName: 'CarHub',
-    role: 'admin'
-  });
-
-  // Auth routes
-  app.get('/api/auth/user', async (req: any, res) => {
-    try {
-      // Return test user for development
-      const user = await storage.getUser('dev-user-123');
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
+  // Create initial admin user
+  await createInitialAdmin();
 
   // Customer routes
-  app.get("/api/customers", isAuthenticatedDev, async (req, res) => {
+  app.get("/api/customers", requireAuth, async (req, res) => {
     try {
       const customers = await storage.getCustomers();
       res.json(customers);
@@ -52,7 +35,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/customers/:id", isAuthenticatedDev, async (req, res) => {
+  app.get("/api/customers/:id", requireAuth, async (req, res) => {
     try {
       const customer = await storage.getCustomer(parseInt(req.params.id));
       if (!customer) {
@@ -64,7 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/customers", isAuthenticatedDev, async (req, res) => {
+  app.post("/api/customers", requireAuth, async (req, res) => {
     try {
       const customerData = insertCustomerSchema.parse(req.body);
       
@@ -84,7 +67,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/customers/:id", isAuthenticatedDev, async (req, res) => {
+  app.put("/api/customers/:id", requireAuth, async (req, res) => {
     try {
       const customerData = insertCustomerSchema.partial().parse(req.body);
       const customer = await storage.updateCustomer(parseInt(req.params.id), customerData);
@@ -97,7 +80,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/customers/:id", isAuthenticatedDev, async (req, res) => {
+  app.delete("/api/customers/:id", requireAuth, async (req, res) => {
     try {
       await storage.deleteCustomer(parseInt(req.params.id));
       res.status(204).send();
@@ -107,7 +90,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Vehicle routes
-  app.get("/api/vehicles", isAuthenticatedDev, async (req, res) => {
+  app.get("/api/vehicles", requireAuth, async (req, res) => {
     try {
       const vehicles = await storage.getVehicles();
       res.json(vehicles);
@@ -116,7 +99,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/customers/:customerId/vehicles", isAuthenticatedDev, async (req, res) => {
+  app.get("/api/customers/:customerId/vehicles", requireAuth, async (req, res) => {
     try {
       const vehicles = await storage.getVehiclesByCustomer(parseInt(req.params.customerId));
       res.json(vehicles);
@@ -125,7 +108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/vehicles", isAuthenticatedDev, async (req, res) => {
+  app.post("/api/vehicles", requireAuth, async (req, res) => {
     try {
       const vehicleData = insertVehicleSchema.parse(req.body);
       const vehicle = await storage.createVehicle(vehicleData);
@@ -138,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/vehicles/:id", isAuthenticatedDev, async (req, res) => {
+  app.put("/api/vehicles/:id", requireAuth, async (req, res) => {
     try {
       const vehicleData = insertVehicleSchema.partial().parse(req.body);
       const vehicle = await storage.updateVehicle(parseInt(req.params.id), vehicleData);
@@ -151,7 +134,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/vehicles/:id", isAuthenticatedDev, async (req, res) => {
+  app.delete("/api/vehicles/:id", requireAuth, async (req, res) => {
     try {
       await storage.deleteVehicle(parseInt(req.params.id));
       res.status(204).send();
@@ -161,7 +144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Service routes
-  app.get("/api/services", isAuthenticatedDev, async (req, res) => {
+  app.get("/api/services", requireAuth, async (req, res) => {
     try {
       const services = await storage.getServices();
       res.json(services);
@@ -170,7 +153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/services/:id", isAuthenticatedDev, async (req, res) => {
+  app.get("/api/services/:id", requireAuth, async (req, res) => {
     try {
       const service = await storage.getService(parseInt(req.params.id));
       if (!service) {
@@ -182,7 +165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/services", isAuthenticatedDev, async (req, res) => {
+  app.post("/api/services", requireAuth, async (req, res) => {
     try {
       const serviceData = insertServiceSchema.parse(req.body);
       const service = await storage.createService(serviceData);
@@ -195,7 +178,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/services/:id", isAuthenticatedDev, async (req, res) => {
+  app.put("/api/services/:id", requireAuth, async (req, res) => {
     try {
       const serviceData = insertServiceSchema.partial().parse(req.body);
       const service = await storage.updateService(parseInt(req.params.id), serviceData);
@@ -208,7 +191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/services/:id", isAuthenticatedDev, async (req, res) => {
+  app.delete("/api/services/:id", requireAuth, async (req, res) => {
     try {
       await storage.deleteService(parseInt(req.params.id));
       res.status(204).send();
@@ -218,7 +201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Service type routes
-  app.get("/api/service-types", isAuthenticatedDev, async (req, res) => {
+  app.get("/api/service-types", requireAuth, async (req, res) => {
     try {
       const serviceTypes = await storage.getServiceTypes();
       res.json(serviceTypes);
@@ -227,7 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/service-types", isAuthenticatedDev, async (req, res) => {
+  app.post("/api/service-types", requireAuth, async (req, res) => {
     try {
       const serviceTypeData = insertServiceTypeSchema.parse(req.body);
       const serviceType = await storage.createServiceType(serviceTypeData);
@@ -241,7 +224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Payment routes
-  app.get("/api/services/:serviceId/payments", isAuthenticatedDev, async (req, res) => {
+  app.get("/api/services/:serviceId/payments", requireAuth, async (req, res) => {
     try {
       const payments = await storage.getPaymentsByService(parseInt(req.params.serviceId));
       res.json(payments);
@@ -250,7 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/payments", isAuthenticatedDev, async (req, res) => {
+  app.post("/api/payments", requireAuth, async (req, res) => {
     try {
       const paymentData = insertPaymentSchema.parse(req.body);
       const payment = await storage.createPayment(paymentData);
@@ -264,7 +247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dashboard routes
-  app.get("/api/dashboard/stats", isAuthenticatedDev, async (req, res) => {
+  app.get("/api/dashboard/stats", requireAuth, async (req, res) => {
     try {
       const stats = await storage.getDashboardStats();
       res.json(stats);
@@ -273,7 +256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/dashboard/revenue", isAuthenticatedDev, async (req, res) => {
+  app.get("/api/dashboard/revenue", requireAuth, async (req, res) => {
     try {
       const days = parseInt(req.query.days as string) || 7;
       const revenue = await storage.getRevenueByDays(days);
@@ -283,7 +266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/dashboard/top-services", isAuthenticatedDev, async (req, res) => {
+  app.get("/api/dashboard/top-services", requireAuth, async (req, res) => {
     try {
       const topServices = await storage.getTopServices();
       res.json(topServices);
@@ -292,7 +275,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/dashboard/recent-services", isAuthenticatedDev, async (req, res) => {
+  app.get("/api/dashboard/recent-services", requireAuth, async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 5;
       const recentServices = await storage.getRecentServices(limit);
@@ -302,7 +285,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/dashboard/upcoming-appointments", isAuthenticatedDev, async (req, res) => {
+  app.get("/api/dashboard/upcoming-appointments", requireAuth, async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 5;
       const appointments = await storage.getUpcomingAppointments(limit);
