@@ -70,7 +70,12 @@ async function setupDatabase() {
           'admin', 
           true, 
           ARRAY['admin', 'customers', 'vehicles', 'services', 'schedule', 'reports']
-        );
+        )
+        ON CONFLICT (username) DO UPDATE SET
+          permissions = ARRAY['admin', 'customers', 'vehicles', 'services', 'schedule', 'reports'],
+          role = 'admin',
+          first_name = 'Administrador',
+          last_name = 'Sistema';
       `);
     } else {
       // Verificar se a tabela users tem as colunas de permissões

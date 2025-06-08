@@ -302,7 +302,7 @@ export class DatabaseStorage implements IStorage {
     if (userData.password === '' || userData.password === undefined) {
       delete userData.password;
     }
-    
+
     const [updatedUser] = await db
       .update(users)
       .set(userData)
@@ -328,6 +328,7 @@ export class DatabaseStorage implements IStorage {
   // Dashboard statistics
   async getDashboardStats(): Promise<{
     dailyRevenue: number;
+    dailyServices: number;
     dailyServices: number;
     appointments: number;
     activeCustomers: number;
@@ -381,7 +382,7 @@ export class DatabaseStorage implements IStorage {
 
   async getRevenueByDays(days: number): Promise<{ date: string; revenue: number }[]> {
     const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    
+
     const results = await db
       .select({
         date: services.scheduledDate,
@@ -450,7 +451,7 @@ export class DatabaseStorage implements IStorage {
 
   async getUpcomingAppointments(limit: number): Promise<any[]> {
     const today = new Date().toISOString().split('T')[0];
-    
+
     const results = await db
       .select({
         id: services.id,
