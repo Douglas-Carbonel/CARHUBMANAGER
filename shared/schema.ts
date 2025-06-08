@@ -34,12 +34,13 @@ export const users = pgTable('users', {
   username: varchar('username', { length: 50 }).unique().notNull(),
   password: varchar('password', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }),
-  firstName: varchar('firstName', { length: 100 }),
-  lastName: varchar('lastName', { length: 100 }),
+  firstName: varchar('first_name', { length: 100 }),
+  lastName: varchar('last_name', { length: 100 }),
   role: varchar('role', { length: 20 }).default('technician'),
-  isActive: boolean('isActive').default(true),
+  isActive: boolean('is_active').default(true),
   permissions: text('permissions').array(),
   createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
 export const customers = pgTable("customers", {
