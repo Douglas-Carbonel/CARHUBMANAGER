@@ -22,11 +22,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
   setupAuth(app);
 
-  // Create initial admin user and permissions
+  // Create initial admin user
   await createInitialAdmin();
-  
-  const { createInitialPermissions } = await import("./auth");
-  await createInitialPermissions();
 
   // Customer routes
   app.get("/api/customers", requireAuth, async (req, res) => {
@@ -246,122 +243,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to create payment" });
-    }
-  });
-
-  // Admin routes
-  app.get("/api/admin/users", requireAuth, async (req, res) => {
-    try {
-      if ((req.user as any)?.role !== 'admin') {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-      const users = await storage.getAllUsers();
-      res.json(users);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch users" });
-    }
-  });
-
-  app.post("/api/admin/users", requireAuth, async (req, res) => {
-    try {
-      if ((req.user as any)?.role !== 'admin') {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-      const userData = insertUserSchema.parse(req.body);
-      
-      // Check if username already exists
-      const existingUser = await storage.getUserByUsername(userData.username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
-      }
-
-      // Hash password before storing
-      const bcrypt = require('bcrypt');
-      const hashedPassword = await bcrypt.hash(userData.password, 10);
-      
-      const user = await storage.createUser({
-        ...userData,
-        password: hashedPassword,
-      });
-      
-      res.status(201).json(user);
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to create user" });
-    }
-  });
-
-  app.put("/api/admin/users/:id", requireAuth, async (req, res) => {
-    try {
-      if ((req.user as any)?.role !== 'admin') {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-      const userData = insertUserSchema.partial().parse(req.body);
-      
-      // Hash password if provided
-      if (userData.password) {
-        const bcrypt = require('bcrypt');
-        userData.password = await bcrypt.hash(userData.password, 10);
-      }
-      
-      const user = await storage.updateUser(parseInt(req.params.id), userData);
-      res.json(user);
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to update user" });
-    }
-  });
-
-  app.delete("/api/admin/users/:id", requireAuth, async (req, res) => {
-    try {
-      if ((req.user as any)?.role !== 'admin') {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-      await storage.deleteUser(parseInt(req.params.id));
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete user" });
-    }
-  });
-
-  app.get("/api/admin/permissions", requireAuth, async (req, res) => {
-    try {
-      if ((req.user as any)?.role !== 'admin') {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-      const permissions = await storage.getAllPermissions();
-      res.json(permissions);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch permissions" });
-    }
-  });
-
-  app.get("/api/admin/users/:id/permissions", requireAuth, async (req, res) => {
-    try {
-      if ((req.user as any)?.role !== 'admin') {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-      const userPermissions = await storage.getUserPermissions(parseInt(req.params.id));
-      res.json(userPermissions);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch user permissions" });
-    }
-  });
-
-  app.put("/api/admin/users/:id/permissions", requireAuth, async (req, res) => {
-    try {
-      if ((req.user as any)?.role !== 'admin') {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-      const { permissionIds } = req.body;
-      await storage.setUserPermissions(parseInt(req.params.id), permissionIds);
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to update user permissions" });
     }
   });
 

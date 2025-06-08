@@ -1,3 +1,4 @@
+
 import { QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
@@ -15,7 +16,6 @@ import VehiclesPage from "@/pages/vehicles";
 import ServicesPage from "@/pages/services";
 import SchedulePage from "@/pages/schedule";
 import ReportsPage from "@/pages/reports";
-import AdminPanel from "@/pages/admin-panel";
 import NotFound from "@/pages/not-found";
 
 function App() {
@@ -29,12 +29,12 @@ function App() {
               <Route path="/">
                 <AuthGuard />
               </Route>
-
+              
               {/* Auth route - only accessible when not authenticated */}
               <Route path="/auth">
                 <AuthPage />
               </Route>
-
+              
               {/* Protected routes */}
               <Route path="/dashboard">
                 <ProtectedRoute>
@@ -66,12 +66,7 @@ function App() {
                   <ReportsPage />
                 </ProtectedRoute>
               </Route>
-              <Route path="/admin">
-                <ProtectedRoute>
-                  <AdminPanel />
-                </ProtectedRoute>
-              </Route>
-
+              
               {/* 404 page */}
               <Route component={NotFound} />
             </Switch>

@@ -36,25 +36,10 @@ export const users = pgTable("users", {
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
-  role: varchar("role", { enum: ["admin", "user"] }).default("user"),
+  role: varchar("role", { enum: ["admin", "technician"] }).default("technician"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export const permissions = pgTable("permissions", {
-  id: serial("id").primaryKey(),
-  key: varchar("key").unique().notNull(),
-  name: varchar("name").notNull(),
-  description: text("description"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const userPermissions = pgTable("user_permissions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  permissionId: integer("permission_id").references(() => permissions.id).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const customers = pgTable("customers", {
@@ -171,22 +156,6 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
 
 export const usersRelations = relations(users, ({ many }) => ({
   services: many(services),
-  userPermissions: many(userPermissions),
-}));
-
-export const permissionsRelations = relations(permissions, ({ many }) => ({
-  userPermissions: many(userPermissions),
-}));
-
-export const userPermissionsRelations = relations(userPermissions, ({ one }) => ({
-  user: one(users, {
-    fields: [userPermissions.userId],
-    references: [users.id],
-  }),
-  permission: one(permissions, {
-    fields: [userPermissions.permissionId],
-    references: [permissions.id],
-  }),
 }));
 
 // Insert schemas
@@ -224,22 +193,8 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
 });
 
-export const insertPermissionSchema = createInsertSchema(permissions).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertUserPermissionSchema = createInsertSchema(userPermissions).omit({
-  id: true,
-  createdAt: true,
-});
-
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
-export type InsertPermission = z.infer<typeof insertPermissionSchema>;
-export type Permission = typeof permissions.$inferSelect;
-export type InsertUserPermission = z.infer<typeof insertUserPermissionSchema>;
-export type UserPermission = typeof userPermissions.$inferSelect;
 export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
 export type Customer = typeof customers.$inferSelect;
 export type InsertVehicle = z.infer<typeof insertVehicleSchema>;
