@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { z } from "zod";
 import { 
   Users, 
@@ -19,7 +20,8 @@ import {
   Search,
   Filter,
   Eye,
-  EyeOff
+  EyeOff,
+  ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -359,33 +361,42 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-teal-50 to-cyan-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header executivo profissional */}
+        {/* Header executivo profissional otimizado */}
         <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl"></div>
-          <div className="absolute inset-0 opacity-10 bg-gradient-to-br from-white/5 to-transparent rounded-2xl"></div>
-          <div className="relative px-8 py-12">
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-xl"></div>
+          <div className="absolute inset-0 opacity-10 bg-gradient-to-br from-white/5 to-transparent rounded-xl"></div>
+          <div className="relative px-6 py-8">
             <div className="flex items-center justify-between">
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-gradient-to-r from-teal-400 to-emerald-400 rounded-2xl flex items-center justify-center shadow-2xl">
-                    <Shield className="h-8 w-8 text-white" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => window.location.href = '/dashboard'}
+                    className="text-white hover:bg-slate-700 mr-2 p-2"
+                    title="Voltar ao Dashboard"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                  <div className="w-12 h-12 bg-gradient-to-r from-teal-400 to-emerald-400 rounded-xl flex items-center justify-center shadow-xl">
+                    <Shield className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">
+                    <h1 className="text-3xl font-bold text-white mb-1 tracking-tight">
                       Central Administrativa
                     </h1>
-                    <p className="text-slate-300 text-lg font-medium">
+                    <p className="text-slate-300 text-base font-medium">
                       Controle total do sistema • Gestão de usuários e permissões
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-6 text-slate-400">
+                <div className="flex items-center space-x-6 text-slate-400 ml-20">
                   <div className="flex items-center space-x-2">
-                    <Users className="h-5 w-5" />
+                    <Users className="h-4 w-4" />
                     <span className="text-sm font-medium">{users.length} usuários</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Settings className="h-5 w-5" />
+                    <Settings className="h-4 w-4" />
                     <span className="text-sm font-medium">Sistema ativo</span>
                   </div>
                 </div>
@@ -395,9 +406,9 @@ export default function AdminPage() {
                   <Button 
                     onClick={resetForm} 
                     size="lg"
-                    className="bg-white text-slate-900 hover:bg-slate-100 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 font-semibold px-8 py-3"
+                    className="bg-white text-slate-900 hover:bg-slate-100 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 font-semibold px-6 py-3"
                   >
-                    <UserPlus className="h-5 w-5 mr-3" />
+                    <UserPlus className="h-5 w-5 mr-2" />
                     Adicionar Usuário
                   </Button>
                 </DialogTrigger>

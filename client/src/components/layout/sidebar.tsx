@@ -51,14 +51,6 @@ const getNavigation = (userRole: string | null) => {
     },
   ];
 
-  if (userRole === "admin") {
-    baseNavigation.push({
-      name: "Administração",
-      href: "/admin",
-      icon: Shield,
-    });
-  }
-
   return baseNavigation;
 };
 
