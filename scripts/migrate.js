@@ -1,6 +1,10 @@
 
-const { Pool } = require('pg');
-require('dotenv').config();
+import { Pool } from 'pg';
+import { config } from 'dotenv';
+import crypto from 'crypto';
+import { promisify } from 'util';
+
+config();
 
 async function runMigration() {
   const pool = new Pool({
@@ -59,8 +63,6 @@ async function runMigration() {
     
     if (adminCheck.rows.length === 0) {
       console.log('Criando usuário admin...');
-      const crypto = require('crypto');
-      const { promisify } = require('util');
       const scryptAsync = promisify(crypto.scrypt);
       
       const salt = crypto.randomBytes(16).toString("hex");
