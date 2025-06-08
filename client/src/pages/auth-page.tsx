@@ -11,7 +11,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { Car, Users, Wrench, Calendar } from "lucide-react";
+import { User, Lock, Car, Users, Wrench, Calendar } from "lucide-react";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Nome de usuário é obrigatório"),
@@ -62,7 +62,6 @@ export default function AuthPage() {
           title: "Login realizado com sucesso!",
           description: "Redirecionando para o dashboard...",
         });
-        // O AuthGuard irá lidar com o redirecionamento
       },
       onError: (error: any) => {
         toast({
@@ -81,7 +80,6 @@ export default function AuthPage() {
           title: "Registro realizado com sucesso!",
           description: "Você foi logado automaticamente.",
         });
-        // O AuthGuard irá lidar com o redirecionamento
       },
       onError: (error: any) => {
         toast({
@@ -94,217 +92,239 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50 p-4">
-      <div className="w-full max-w-6xl flex items-center justify-center gap-12">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-100 via-teal-50 to-emerald-100 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-20 -left-20 w-96 h-96 bg-gradient-to-br from-teal-200/30 to-cyan-300/30 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-gradient-to-br from-emerald-200/30 to-teal-300/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-gradient-to-br from-cyan-300/20 to-teal-400/20 rounded-full blur-2xl animate-pulse delay-500"></div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative z-10 w-full max-w-6xl flex items-center justify-center gap-16">
         {/* Left side - Branding */}
-        <div className="hidden lg:flex flex-col items-center space-y-8 flex-1">
+        <div className="hidden lg:flex flex-col items-center space-y-12 flex-1">
           <div className="text-center">
-            <h1 className="text-6xl font-bold text-teal-700 mb-4 tracking-wider">
+            <h1 className="text-7xl font-bold bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent mb-6 tracking-wider drop-shadow-lg">
               CARHUB
             </h1>
-            <p className="text-xl text-gray-600 mb-8">
+            <p className="text-2xl text-gray-700 mb-8 font-medium">
               Sistema de Gestão Automotiva
             </p>
           </div>
           
-          <div className="grid grid-cols-2 gap-6 w-full max-w-md">
-            <div className="text-center p-6 bg-white rounded-lg shadow-sm">
-              <Car className="h-12 w-12 text-teal-600 mx-auto mb-3" />
-              <h3 className="font-semibold text-gray-800">Veículos</h3>
-              <p className="text-sm text-gray-600">Gerencie frota</p>
+          <div className="grid grid-cols-2 gap-8 w-full max-w-md">
+            <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-white/20">
+              <Car className="h-14 w-14 text-teal-600 mx-auto mb-4 drop-shadow-md" />
+              <h3 className="font-bold text-gray-800 text-lg">Veículos</h3>
+              <p className="text-sm text-gray-600 mt-1">Gerencie frota</p>
             </div>
-            <div className="text-center p-6 bg-white rounded-lg shadow-sm">
-              <Users className="h-12 w-12 text-teal-600 mx-auto mb-3" />
-              <h3 className="font-semibold text-gray-800">Clientes</h3>
-              <p className="text-sm text-gray-600">Base de dados</p>
+            <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-white/20">
+              <Users className="h-14 w-14 text-teal-600 mx-auto mb-4 drop-shadow-md" />
+              <h3 className="font-bold text-gray-800 text-lg">Clientes</h3>
+              <p className="text-sm text-gray-600 mt-1">Base de dados</p>
             </div>
-            <div className="text-center p-6 bg-white rounded-lg shadow-sm">
-              <Wrench className="h-12 w-12 text-teal-600 mx-auto mb-3" />
-              <h3 className="font-semibold text-gray-800">Serviços</h3>
-              <p className="text-sm text-gray-600">Manutenções</p>
+            <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-white/20">
+              <Wrench className="h-14 w-14 text-teal-600 mx-auto mb-4 drop-shadow-md" />
+              <h3 className="font-bold text-gray-800 text-lg">Serviços</h3>
+              <p className="text-sm text-gray-600 mt-1">Manutenções</p>
             </div>
-            <div className="text-center p-6 bg-white rounded-lg shadow-sm">
-              <Calendar className="h-12 w-12 text-teal-600 mx-auto mb-3" />
-              <h3 className="font-semibold text-gray-800">Agenda</h3>
-              <p className="text-sm text-gray-600">Compromissos</p>
+            <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-white/20">
+              <Calendar className="h-14 w-14 text-teal-600 mx-auto mb-4 drop-shadow-md" />
+              <h3 className="font-bold text-gray-800 text-lg">Agenda</h3>
+              <p className="text-sm text-gray-600 mt-1">Compromissos</p>
             </div>
           </div>
         </div>
 
-        {/* Right side - Auth forms */}
-        <div className="w-full max-w-md">
-          <Card className="shadow-xl border-0">
-            <CardHeader className="text-center pb-2">
-              <CardTitle className="text-2xl font-bold text-gray-800">
-                Bem-vindo ao CARHUB
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-2 mb-6">
-                  <TabsTrigger value="login">Entrar</TabsTrigger>
-                  <TabsTrigger value="register">Registrar</TabsTrigger>
-                </TabsList>
+        {/* Right side - Login geometric form */}
+        <div className="w-full max-w-lg">
+          {/* Geometric login container inspired by the image */}
+          <div className="relative">
+            {/* Main hexagonal shape */}
+            <div 
+              className="relative bg-gradient-to-br from-teal-600 to-emerald-700 shadow-2xl transform rotate-0 hover:rotate-1 transition-all duration-700"
+              style={{
+                clipPath: "polygon(20% 0%, 80% 0%, 100% 35%, 80% 100%, 20% 100%, 0% 35%)",
+                padding: "60px 80px"
+              }}
+            >
+              {/* Inner container */}
+              <div className="bg-gradient-to-br from-teal-700 to-emerald-800 rounded-lg p-8 shadow-inner">
+                {/* Header */}
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl font-bold text-cyan-100 tracking-wider mb-2">
+                    MEMBER LOGIN
+                  </h2>
+                </div>
 
-                <TabsContent value="login">
-                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-                    <div>
-                      <Label htmlFor="username">Usuário</Label>
-                      <Input
-                        id="username"
-                        {...loginForm.register("username")}
-                        className="mt-1"
-                        placeholder="Digite seu usuário"
-                      />
-                      {loginForm.formState.errors.username && (
-                        <p className="text-sm text-red-600 mt-1">
-                          {loginForm.formState.errors.username.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label htmlFor="password">Senha</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        {...loginForm.register("password")}
-                        className="mt-1"
-                        placeholder="Digite sua senha"
-                      />
-                      {loginForm.formState.errors.password && (
-                        <p className="text-sm text-red-600 mt-1">
-                          {loginForm.formState.errors.password.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <Button
-                      type="submit"
-                      className="w-full bg-teal-600 hover:bg-teal-700"
-                      disabled={loginMutation.isPending}
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+                  <TabsList className="grid w-full grid-cols-2 bg-teal-800/50 border border-teal-600/30">
+                    <TabsTrigger 
+                      value="login" 
+                      className="text-cyan-100 data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
                     >
-                      {loginMutation.isPending ? "Entrando..." : "Entrar"}
-                    </Button>
-                  </form>
-                </TabsContent>
+                      Entrar
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="register" 
+                      className="text-cyan-100 data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
+                    >
+                      Registrar
+                    </TabsTrigger>
+                  </TabsList>
 
-                <TabsContent value="register">
-                  <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="firstName">Nome</Label>
+                  <TabsContent value="login">
+                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
+                      <div className="relative">
+                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                          <User className="h-5 w-5 text-cyan-300" />
+                        </div>
                         <Input
-                          id="firstName"
-                          {...registerForm.register("firstName")}
-                          className="mt-1"
-                          placeholder="Nome"
+                          {...loginForm.register("username")}
+                          placeholder="Username"
+                          className="pl-12 bg-teal-800/50 border-teal-600/50 text-cyan-100 placeholder:text-cyan-300 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg h-12"
                         />
-                        {registerForm.formState.errors.firstName && (
-                          <p className="text-sm text-red-600 mt-1">
-                            {registerForm.formState.errors.firstName.message}
+                        {loginForm.formState.errors.username && (
+                          <p className="text-sm text-red-300 mt-1">
+                            {loginForm.formState.errors.username.message}
                           </p>
                         )}
                       </div>
 
-                      <div>
-                        <Label htmlFor="lastName">Sobrenome</Label>
+                      <div className="relative">
+                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                          <Lock className="h-5 w-5 text-cyan-300" />
+                        </div>
                         <Input
-                          id="lastName"
-                          {...registerForm.register("lastName")}
-                          className="mt-1"
-                          placeholder="Sobrenome"
+                          type="password"
+                          {...loginForm.register("password")}
+                          placeholder="••••••••••"
+                          className="pl-12 bg-teal-800/50 border-teal-600/50 text-cyan-100 placeholder:text-cyan-300 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg h-12"
                         />
-                        {registerForm.formState.errors.lastName && (
-                          <p className="text-sm text-red-600 mt-1">
-                            {registerForm.formState.errors.lastName.message}
+                        {loginForm.formState.errors.password && (
+                          <p className="text-sm text-red-300 mt-1">
+                            {loginForm.formState.errors.password.message}
                           </p>
                         )}
                       </div>
-                    </div>
 
-                    <div>
-                      <Label htmlFor="regUsername">Usuário</Label>
-                      <Input
-                        id="regUsername"
-                        {...registerForm.register("username")}
-                        className="mt-1"
-                        placeholder="Digite um usuário"
-                      />
-                      {registerForm.formState.errors.username && (
-                        <p className="text-sm text-red-600 mt-1">
-                          {registerForm.formState.errors.username.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label htmlFor="email">Email (opcional)</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        {...registerForm.register("email")}
-                        className="mt-1"
-                        placeholder="Digite seu email"
-                      />
-                      {registerForm.formState.errors.email && (
-                        <p className="text-sm text-red-600 mt-1">
-                          {registerForm.formState.errors.email.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label htmlFor="regPassword">Senha</Label>
-                      <Input
-                        id="regPassword"
-                        type="password"
-                        {...registerForm.register("password")}
-                        className="mt-1"
-                        placeholder="Digite uma senha"
-                      />
-                      {registerForm.formState.errors.password && (
-                        <p className="text-sm text-red-600 mt-1">
-                          {registerForm.formState.errors.password.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label htmlFor="role">Função</Label>
-                      <Select
-                        value={registerForm.watch("role")}
-                        onValueChange={(value: "admin" | "technician") =>
-                          registerForm.setValue("role", value)
-                        }
+                      <Button
+                        type="submit"
+                        disabled={loginMutation.isPending}
+                        className="w-full bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-500 hover:to-cyan-500 text-teal-900 font-bold py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg tracking-wider"
                       >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Selecione uma função" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="technician">Técnico</SelectItem>
-                          <SelectItem value="admin">Administrador</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      {registerForm.formState.errors.role && (
-                        <p className="text-sm text-red-600 mt-1">
-                          {registerForm.formState.errors.role.message}
-                        </p>
-                      )}
-                    </div>
+                        {loginMutation.isPending ? "ENTRANDO..." : "LOGIN"}
+                      </Button>
+                    </form>
+                  </TabsContent>
 
-                    <Button
-                      type="submit"
-                      className="w-full bg-teal-600 hover:bg-teal-700"
-                      disabled={registerMutation.isPending}
-                    >
-                      {registerMutation.isPending ? "Registrando..." : "Registrar"}
-                    </Button>
-                  </form>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
+                  <TabsContent value="register">
+                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4 max-h-96 overflow-y-auto pr-2">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Input
+                            {...registerForm.register("firstName")}
+                            placeholder="Nome"
+                            className="bg-teal-800/50 border-teal-600/50 text-cyan-100 placeholder:text-cyan-300 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg"
+                          />
+                          {registerForm.formState.errors.firstName && (
+                            <p className="text-sm text-red-300 mt-1">
+                              {registerForm.formState.errors.firstName.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <Input
+                            {...registerForm.register("lastName")}
+                            placeholder="Sobrenome"
+                            className="bg-teal-800/50 border-teal-600/50 text-cyan-100 placeholder:text-cyan-300 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg"
+                          />
+                          {registerForm.formState.errors.lastName && (
+                            <p className="text-sm text-red-300 mt-1">
+                              {registerForm.formState.errors.lastName.message}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div>
+                        <Input
+                          {...registerForm.register("username")}
+                          placeholder="Digite um usuário"
+                          className="bg-teal-800/50 border-teal-600/50 text-cyan-100 placeholder:text-cyan-300 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg"
+                        />
+                        {registerForm.formState.errors.username && (
+                          <p className="text-sm text-red-300 mt-1">
+                            {registerForm.formState.errors.username.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <Input
+                          type="email"
+                          {...registerForm.register("email")}
+                          placeholder="Email (opcional)"
+                          className="bg-teal-800/50 border-teal-600/50 text-cyan-100 placeholder:text-cyan-300 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg"
+                        />
+                        {registerForm.formState.errors.email && (
+                          <p className="text-sm text-red-300 mt-1">
+                            {registerForm.formState.errors.email.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <Input
+                          type="password"
+                          {...registerForm.register("password")}
+                          placeholder="Digite uma senha"
+                          className="bg-teal-800/50 border-teal-600/50 text-cyan-100 placeholder:text-cyan-300 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg"
+                        />
+                        {registerForm.formState.errors.password && (
+                          <p className="text-sm text-red-300 mt-1">
+                            {registerForm.formState.errors.password.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <Select
+                          value={registerForm.watch("role")}
+                          onValueChange={(value: "admin" | "technician") =>
+                            registerForm.setValue("role", value)
+                          }
+                        >
+                          <SelectTrigger className="bg-teal-800/50 border-teal-600/50 text-cyan-100 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg">
+                            <SelectValue placeholder="Selecione uma função" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-teal-800 border-teal-600">
+                            <SelectItem value="technician" className="text-cyan-100">Técnico</SelectItem>
+                            <SelectItem value="admin" className="text-cyan-100">Administrador</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {registerForm.formState.errors.role && (
+                          <p className="text-sm text-red-300 mt-1">
+                            {registerForm.formState.errors.role.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <Button
+                        type="submit"
+                        disabled={registerMutation.isPending}
+                        className="w-full bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-500 hover:to-cyan-500 text-teal-900 font-bold py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg tracking-wider"
+                      >
+                        {registerMutation.isPending ? "REGISTRANDO..." : "REGISTRAR"}
+                      </Button>
+                    </form>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
