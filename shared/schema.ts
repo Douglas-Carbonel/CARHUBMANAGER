@@ -38,6 +38,7 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   role: varchar("role", { enum: ["admin", "technician"] }).default("technician"),
   isActive: boolean("is_active").default(true),
+  permissions: text("permissions").array().default([]),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

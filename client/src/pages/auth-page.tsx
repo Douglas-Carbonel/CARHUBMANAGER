@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -18,40 +18,17 @@ const loginSchema = z.object({
   password: z.string().min(1, "Senha é obrigatória"),
 });
 
-const registerSchema = z.object({
-  username: z.string().min(3, "Nome de usuário deve ter pelo menos 3 caracteres"),
-  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
-  email: z.string().email("Email inválido").optional().or(z.literal("")),
-  firstName: z.string().min(1, "Nome é obrigatório"),
-  lastName: z.string().min(1, "Sobrenome é obrigatório"),
-  role: z.enum(["admin", "technician"]),
-});
-
 type LoginFormData = z.infer<typeof loginSchema>;
-type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
-  const { loginMutation, registerMutation } = useAuth();
+  const { loginMutation } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("login");
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       username: "",
       password: "",
-    },
-  });
-
-  const registerForm = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-      email: "",
-      firstName: "",
-      lastName: "",
-      role: "technician",
     },
   });
 
@@ -67,24 +44,6 @@ export default function AuthPage() {
         toast({
           title: "Erro no login",
           description: error.message || "Credenciais inválidas",
-          variant: "destructive",
-        });
-      },
-    });
-  };
-
-  const onRegisterSubmit = (data: RegisterFormData) => {
-    registerMutation.mutate(data, {
-      onSuccess: () => {
-        toast({
-          title: "Registro realizado com sucesso!",
-          description: "Você foi logado automaticamente.",
-        });
-      },
-      onError: (error: any) => {
-        toast({
-          title: "Erro no registro",
-          description: error.message || "Erro ao criar conta",
           variant: "destructive",
         });
       },
@@ -158,170 +117,49 @@ export default function AuthPage() {
                   </h2>
                 </div>
 
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                  <TabsList className="grid w-full grid-cols-2 bg-teal-800/50 border border-teal-600/30">
-                    <TabsTrigger 
-                      value="login" 
-                      className="text-cyan-100 data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
-                    >
-                      Entrar
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="register" 
-                      className="text-cyan-100 data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
-                    >
-                      Registrar
-                    </TabsTrigger>
-                  </TabsList>
+                {/* Only login form now */}
+                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                      <User className="h-5 w-5 text-cyan-300" />
+                    </div>
+                    <Input
+                      {...loginForm.register("username")}
+                      placeholder="Username"
+                      className="pl-12 bg-teal-800/50 border-teal-600/50 text-cyan-100 placeholder:text-cyan-300 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg h-12"
+                    />
+                    {loginForm.formState.errors.username && (
+                      <p className="text-sm text-red-300 mt-1">
+                        {loginForm.formState.errors.username.message}
+                      </p>
+                    )}
+                  </div>
 
-                  <TabsContent value="login">
-                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
-                      <div className="relative">
-                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                          <User className="h-5 w-5 text-cyan-300" />
-                        </div>
-                        <Input
-                          {...loginForm.register("username")}
-                          placeholder="Username"
-                          className="pl-12 bg-teal-800/50 border-teal-600/50 text-cyan-100 placeholder:text-cyan-300 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg h-12"
-                        />
-                        {loginForm.formState.errors.username && (
-                          <p className="text-sm text-red-300 mt-1">
-                            {loginForm.formState.errors.username.message}
-                          </p>
-                        )}
-                      </div>
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                      <Lock className="h-5 w-5 text-cyan-300" />
+                    </div>
+                    <Input
+                      type="password"
+                      {...loginForm.register("password")}
+                      placeholder="••••••••••"
+                      className="pl-12 bg-teal-800/50 border-teal-600/50 text-cyan-100 placeholder:text-cyan-300 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg h-12"
+                    />
+                    {loginForm.formState.errors.password && (
+                      <p className="text-sm text-red-300 mt-1">
+                        {loginForm.formState.errors.password.message}
+                      </p>
+                    )}
+                  </div>
 
-                      <div className="relative">
-                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                          <Lock className="h-5 w-5 text-cyan-300" />
-                        </div>
-                        <Input
-                          type="password"
-                          {...loginForm.register("password")}
-                          placeholder="••••••••••"
-                          className="pl-12 bg-teal-800/50 border-teal-600/50 text-cyan-100 placeholder:text-cyan-300 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg h-12"
-                        />
-                        {loginForm.formState.errors.password && (
-                          <p className="text-sm text-red-300 mt-1">
-                            {loginForm.formState.errors.password.message}
-                          </p>
-                        )}
-                      </div>
-
-                      <Button
-                        type="submit"
-                        disabled={loginMutation.isPending}
-                        className="w-full bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-500 hover:to-cyan-500 text-teal-900 font-bold py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg tracking-wider"
-                      >
-                        {loginMutation.isPending ? "ENTRANDO..." : "LOGIN"}
-                      </Button>
-                    </form>
-                  </TabsContent>
-
-                  <TabsContent value="register">
-                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4 max-h-96 overflow-y-auto pr-2">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Input
-                            {...registerForm.register("firstName")}
-                            placeholder="Nome"
-                            className="bg-teal-800/50 border-teal-600/50 text-cyan-100 placeholder:text-cyan-300 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg"
-                          />
-                          {registerForm.formState.errors.firstName && (
-                            <p className="text-sm text-red-300 mt-1">
-                              {registerForm.formState.errors.firstName.message}
-                            </p>
-                          )}
-                        </div>
-
-                        <div>
-                          <Input
-                            {...registerForm.register("lastName")}
-                            placeholder="Sobrenome"
-                            className="bg-teal-800/50 border-teal-600/50 text-cyan-100 placeholder:text-cyan-300 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg"
-                          />
-                          {registerForm.formState.errors.lastName && (
-                            <p className="text-sm text-red-300 mt-1">
-                              {registerForm.formState.errors.lastName.message}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div>
-                        <Input
-                          {...registerForm.register("username")}
-                          placeholder="Digite um usuário"
-                          className="bg-teal-800/50 border-teal-600/50 text-cyan-100 placeholder:text-cyan-300 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg"
-                        />
-                        {registerForm.formState.errors.username && (
-                          <p className="text-sm text-red-300 mt-1">
-                            {registerForm.formState.errors.username.message}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <Input
-                          type="email"
-                          {...registerForm.register("email")}
-                          placeholder="Email (opcional)"
-                          className="bg-teal-800/50 border-teal-600/50 text-cyan-100 placeholder:text-cyan-300 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg"
-                        />
-                        {registerForm.formState.errors.email && (
-                          <p className="text-sm text-red-300 mt-1">
-                            {registerForm.formState.errors.email.message}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <Input
-                          type="password"
-                          {...registerForm.register("password")}
-                          placeholder="Digite uma senha"
-                          className="bg-teal-800/50 border-teal-600/50 text-cyan-100 placeholder:text-cyan-300 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg"
-                        />
-                        {registerForm.formState.errors.password && (
-                          <p className="text-sm text-red-300 mt-1">
-                            {registerForm.formState.errors.password.message}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <Select
-                          value={registerForm.watch("role")}
-                          onValueChange={(value: "admin" | "technician") =>
-                            registerForm.setValue("role", value)
-                          }
-                        >
-                          <SelectTrigger className="bg-teal-800/50 border-teal-600/50 text-cyan-100 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg">
-                            <SelectValue placeholder="Selecione uma função" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-teal-800 border-teal-600">
-                            <SelectItem value="technician" className="text-cyan-100">Técnico</SelectItem>
-                            <SelectItem value="admin" className="text-cyan-100">Administrador</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {registerForm.formState.errors.role && (
-                          <p className="text-sm text-red-300 mt-1">
-                            {registerForm.formState.errors.role.message}
-                          </p>
-                        )}
-                      </div>
-
-                      <Button
-                        type="submit"
-                        disabled={registerMutation.isPending}
-                        className="w-full bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-500 hover:to-cyan-500 text-teal-900 font-bold py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg tracking-wider"
-                      >
-                        {registerMutation.isPending ? "REGISTRANDO..." : "REGISTRAR"}
-                      </Button>
-                    </form>
-                  </TabsContent>
-                </Tabs>
+                  <Button
+                    type="submit"
+                    disabled={loginMutation.isPending}
+                    className="w-full bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-500 hover:to-cyan-500 text-teal-900 font-bold py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg tracking-wider"
+                  >
+                    {loginMutation.isPending ? "ENTRANDO..." : "LOGIN"}
+                  </Button>
+                </form>
               </div>
             </div>
           </div>
