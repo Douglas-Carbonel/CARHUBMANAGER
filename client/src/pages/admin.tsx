@@ -15,7 +15,11 @@ import {
   Settings,
   Key,
   Award,
-  Activity
+  Activity,
+  Search,
+  Filter,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 
 interface User {
@@ -48,42 +53,54 @@ const AVAILABLE_PERMISSIONS = [
     label: "Gerenciar Clientes", 
     description: "Criar, editar e visualizar clientes",
     icon: Users,
-    color: "bg-blue-500"
+    color: "from-blue-500 to-blue-600",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-200"
   },
   { 
     id: "vehicles", 
     label: "Gerenciar Veículos", 
     description: "Criar, editar e visualizar veículos",
     icon: Settings,
-    color: "bg-green-500"
+    color: "from-green-500 to-green-600",
+    bgColor: "bg-green-50",
+    borderColor: "border-green-200"
   },
   { 
     id: "services", 
     label: "Gerenciar Serviços", 
     description: "Criar, editar e visualizar serviços",
     icon: Activity,
-    color: "bg-orange-500"
+    color: "from-orange-500 to-orange-600",
+    bgColor: "bg-orange-50",
+    borderColor: "border-orange-200"
   },
   { 
     id: "schedule", 
     label: "Acessar Agenda", 
     description: "Visualizar e gerenciar agendamentos",
     icon: Calendar,
-    color: "bg-purple-500"
+    color: "from-purple-500 to-purple-600",
+    bgColor: "bg-purple-50",
+    borderColor: "border-purple-200"
   },
   { 
     id: "reports", 
     label: "Acessar Relatórios", 
     description: "Visualizar relatórios e estatísticas",
     icon: Award,
-    color: "bg-yellow-500"
+    color: "from-yellow-500 to-yellow-600",
+    bgColor: "bg-yellow-50",
+    borderColor: "border-yellow-200"
   },
   { 
     id: "admin", 
     label: "Painel Administrativo", 
     description: "Acesso total ao sistema",
     icon: Shield,
-    color: "bg-red-500"
+    color: "from-red-500 to-red-600",
+    bgColor: "bg-red-50",
+    borderColor: "border-red-200"
   },
 ];
 
@@ -103,6 +120,10 @@ type UserFormData = z.infer<typeof userSchema>;
 export default function AdminPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [formData, setFormData] = useState<UserFormData>({
     username: "",
     password: "",
@@ -206,6 +227,7 @@ export default function AdminPage() {
     });
     setEditingUser(null);
     setErrors({});
+    setShowPassword(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -267,332 +289,428 @@ export default function AdminPage() {
     }));
   };
 
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = 
+      user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesRole = roleFilter === "all" || user.role === roleFilter;
+    const matchesStatus = statusFilter === "all" || 
+      (statusFilter === "active" && user.isActive) ||
+      (statusFilter === "inactive" && !user.isActive);
+    
+    return matchesSearch && matchesRole && matchesStatus;
+  });
+
   const getPermissionBadge = (permissionId: string) => {
     const permission = AVAILABLE_PERMISSIONS.find(p => p.id === permissionId);
     if (!permission) return null;
     
     const Icon = permission.icon;
     return (
-      <Badge key={permissionId} variant="secondary" className="flex items-center gap-1">
+      <div key={permissionId} className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${permission.bgColor} ${permission.borderColor} border`}>
         <Icon className="h-3 w-3" />
         {permission.label}
-      </Badge>
+      </div>
     );
   };
 
   const getRoleBadge = (role: string) => {
     return role === "admin" ? (
-      <Badge variant="default" className="bg-red-500">
-        <Shield className="h-3 w-3 mr-1" />
+      <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-red-500 to-red-600 text-white">
+        <Shield className="h-3 w-3" />
         Administrador
-      </Badge>
+      </div>
     ) : (
-      <Badge variant="outline">
-        <Users className="h-3 w-3 mr-1" />
+      <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-teal-500 to-teal-600 text-white">
+        <Users className="h-3 w-3" />
         Técnico
-      </Badge>
+      </div>
     );
   };
 
   const getStatusBadge = (isActive: boolean) => {
     return isActive ? (
-      <Badge variant="default" className="bg-green-500">
-        <CheckCircle className="h-3 w-3 mr-1" />
+      <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-green-500 to-green-600 text-white">
+        <CheckCircle className="h-3 w-3" />
         Ativo
-      </Badge>
+      </div>
     ) : (
-      <Badge variant="destructive">
-        <XCircle className="h-3 w-3 mr-1" />
+      <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-gray-500 to-gray-600 text-white">
+        <XCircle className="h-3 w-3" />
         Inativo
-      </Badge>
+      </div>
     );
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Painel Administrativo</h1>
-          <p className="text-gray-600 mt-1">Gerencie usuários e permissões do sistema</p>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm} className="flex items-center gap-2">
-              <UserPlus className="h-4 w-4" />
-              Novo Usuário
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                {editingUser ? <Edit className="h-5 w-5" /> : <UserPlus className="h-5 w-5" />}
-                {editingUser ? "Editar Usuário" : "Novo Usuário"}
-              </DialogTitle>
-            </DialogHeader>
-            
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Informações Básicas */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Informações Básicas
-                </h3>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="firstName">Nome *</Label>
-                    <Input
-                      id="firstName"
-                      value={formData.firstName}
-                      onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-                      className={errors.firstName ? "border-red-500" : ""}
-                    />
-                    {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
-                  </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-teal-50 to-cyan-50 p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header moderno */}
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-600 to-emerald-600 rounded-3xl"></div>
+          <div className="absolute inset-0 bg-black/10 rounded-3xl"></div>
+          <div className="relative p-8 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-4xl font-bold mb-2 tracking-tight">Painel Administrativo</h1>
+                <p className="text-teal-100 text-lg">Gerencie usuários e permissões do sistema</p>
+              </div>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    onClick={resetForm} 
+                    size="lg"
+                    className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <UserPlus className="h-5 w-5 mr-2" />
+                    Novo Usuário
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-sm">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-3 text-2xl">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 flex items-center justify-center">
+                        {editingUser ? <Edit className="h-5 w-5 text-white" /> : <UserPlus className="h-5 w-5 text-white" />}
+                      </div>
+                      {editingUser ? "Editar Usuário" : "Novo Usuário"}
+                    </DialogTitle>
+                  </DialogHeader>
                   
-                  <div>
-                    <Label htmlFor="lastName">Sobrenome *</Label>
-                    <Input
-                      id="lastName"
-                      value={formData.lastName}
-                      onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-                      className={errors.lastName ? "border-red-500" : ""}
-                    />
-                    {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
-                  </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    className={errors.email ? "border-red-500" : ""}
-                  />
-                  {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-                </div>
-              </div>
+                  <form onSubmit={handleSubmit} className="space-y-8">
+                    <Tabs defaultValue="basic" className="w-full">
+                      <TabsList className="grid w-full grid-cols-3 bg-gray-100">
+                        <TabsTrigger value="basic" className="flex items-center gap-2">
+                          <Users className="h-4 w-4" />
+                          Informações
+                        </TabsTrigger>
+                        <TabsTrigger value="security" className="flex items-center gap-2">
+                          <Key className="h-4 w-4" />
+                          Segurança
+                        </TabsTrigger>
+                        <TabsTrigger value="permissions" className="flex items-center gap-2">
+                          <Shield className="h-4 w-4" />
+                          Permissões
+                        </TabsTrigger>
+                      </TabsList>
 
-              <Separator />
-
-              {/* Credenciais */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Key className="h-5 w-5" />
-                  Credenciais
-                </h3>
-                
-                <div>
-                  <Label htmlFor="username">Nome de Usuário *</Label>
-                  <Input
-                    id="username"
-                    value={formData.username}
-                    onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-                    className={errors.username ? "border-red-500" : ""}
-                    disabled={!!editingUser}
-                  />
-                  {errors.username && <p className="text-red-500 text-sm mt-1">{errors.username}</p>}
-                </div>
-                
-                <div>
-                  <Label htmlFor="password">
-                    {editingUser ? "Nova Senha (deixe em branco para não alterar)" : "Senha *"}
-                  </Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                    className={errors.password ? "border-red-500" : ""}
-                  />
-                  {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Configurações */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  Configurações
-                </h3>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="role">Função</Label>
-                    <Select value={formData.role} onValueChange={(value: "admin" | "technician") => 
-                      setFormData(prev => ({ ...prev, role: value }))
-                    }>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="technician">Técnico</SelectItem>
-                        <SelectItem value="admin">Administrador</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 pt-6">
-                    <Switch
-                      id="isActive"
-                      checked={formData.isActive}
-                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
-                    />
-                    <Label htmlFor="isActive">Usuário Ativo</Label>
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Permissões */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Permissões
-                </h3>
-                
-                <div className="grid grid-cols-1 gap-3">
-                  {AVAILABLE_PERMISSIONS.map((permission) => {
-                    const Icon = permission.icon;
-                    return (
-                      <div key={permission.id} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50">
-                        <Checkbox
-                          id={permission.id}
-                          checked={formData.permissions.includes(permission.id)}
-                          onCheckedChange={(checked) => handlePermissionChange(permission.id, !!checked)}
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-8 h-8 rounded-full ${permission.color} flex items-center justify-center`}>
-                              <Icon className="h-4 w-4 text-white" />
+                      <TabsContent value="basic" className="space-y-6 mt-6">
+                        <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50">
+                          <CardHeader className="pb-4">
+                            <CardTitle className="text-lg text-gray-800">Dados Pessoais</CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">Nome *</Label>
+                                <Input
+                                  id="firstName"
+                                  value={formData.firstName}
+                                  onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                                  className={`mt-1 ${errors.firstName ? "border-red-500" : "border-gray-200 focus:border-teal-500"}`}
+                                  placeholder="Digite o nome"
+                                />
+                                {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
+                              </div>
+                              
+                              <div>
+                                <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">Sobrenome *</Label>
+                                <Input
+                                  id="lastName"
+                                  value={formData.lastName}
+                                  onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+                                  className={`mt-1 ${errors.lastName ? "border-red-500" : "border-gray-200 focus:border-teal-500"}`}
+                                  placeholder="Digite o sobrenome"
+                                />
+                                {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
+                              </div>
                             </div>
+                            
                             <div>
-                              <Label htmlFor={permission.id} className="font-medium cursor-pointer">
-                                {permission.label}
-                              </Label>
-                              <p className="text-sm text-gray-500">{permission.description}</p>
+                              <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email</Label>
+                              <Input
+                                id="email"
+                                type="email"
+                                value={formData.email}
+                                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                                className={`mt-1 ${errors.email ? "border-red-500" : "border-gray-200 focus:border-teal-500"}`}
+                                placeholder="Digite o email"
+                              />
+                              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                             </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <Label htmlFor="role" className="text-sm font-medium text-gray-700">Função</Label>
+                                <Select value={formData.role} onValueChange={(value: "admin" | "technician") => 
+                                  setFormData(prev => ({ ...prev, role: value }))
+                                }>
+                                  <SelectTrigger className="mt-1 border-gray-200 focus:border-teal-500">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="technician">Técnico</SelectItem>
+                                    <SelectItem value="admin">Administrador</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              <div className="flex items-center space-x-3 pt-6">
+                                <Switch
+                                  id="isActive"
+                                  checked={formData.isActive}
+                                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
+                                />
+                                <Label htmlFor="isActive" className="text-sm font-medium text-gray-700">Usuário Ativo</Label>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </TabsContent>
+
+                      <TabsContent value="security" className="space-y-6 mt-6">
+                        <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50">
+                          <CardHeader className="pb-4">
+                            <CardTitle className="text-lg text-gray-800">Credenciais de Acesso</CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div>
+                              <Label htmlFor="username" className="text-sm font-medium text-gray-700">Nome de Usuário *</Label>
+                              <Input
+                                id="username"
+                                value={formData.username}
+                                onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                                className={`mt-1 ${errors.username ? "border-red-500" : "border-gray-200 focus:border-teal-500"}`}
+                                disabled={!!editingUser}
+                                placeholder="Digite o nome de usuário"
+                              />
+                              {errors.username && <p className="text-red-500 text-sm mt-1">{errors.username}</p>}
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                                {editingUser ? "Nova Senha (deixe em branco para não alterar)" : "Senha *"}
+                              </Label>
+                              <div className="relative mt-1">
+                                <Input
+                                  id="password"
+                                  type={showPassword ? "text" : "password"}
+                                  value={formData.password}
+                                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                                  className={`pr-10 ${errors.password ? "border-red-500" : "border-gray-200 focus:border-teal-500"}`}
+                                  placeholder="Digite a senha"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                  onClick={() => setShowPassword(!showPassword)}
+                                >
+                                  {showPassword ? (
+                                    <EyeOff className="h-4 w-4 text-gray-500" />
+                                  ) : (
+                                    <Eye className="h-4 w-4 text-gray-500" />
+                                  )}
+                                </Button>
+                              </div>
+                              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </TabsContent>
+
+                      <TabsContent value="permissions" className="space-y-6 mt-6">
+                        <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50">
+                          <CardHeader className="pb-4">
+                            <CardTitle className="text-lg text-gray-800">Controle de Permissões</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {AVAILABLE_PERMISSIONS.map((permission) => {
+                                const Icon = permission.icon;
+                                const isChecked = formData.permissions.includes(permission.id);
+                                
+                                return (
+                                  <div 
+                                    key={permission.id} 
+                                    className={`relative p-4 rounded-xl border-2 transition-all duration-300 cursor-pointer hover:shadow-lg ${
+                                      isChecked 
+                                        ? `${permission.bgColor} ${permission.borderColor} shadow-md` 
+                                        : 'bg-white border-gray-200 hover:border-gray-300'
+                                    }`}
+                                    onClick={() => handlePermissionChange(permission.id, !isChecked)}
+                                  >
+                                    <div className="flex items-start space-x-3">
+                                      <Checkbox
+                                        id={permission.id}
+                                        checked={isChecked}
+                                        onCheckedChange={(checked) => handlePermissionChange(permission.id, !!checked)}
+                                        className="mt-1"
+                                      />
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-3 mb-2">
+                                          <div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${permission.color} flex items-center justify-center shadow-lg`}>
+                                            <Icon className="h-5 w-5 text-white" />
+                                          </div>
+                                          <div>
+                                            <Label htmlFor={permission.id} className="font-semibold text-gray-800 cursor-pointer">
+                                              {permission.label}
+                                            </Label>
+                                            <p className="text-sm text-gray-600 mt-1">{permission.description}</p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </TabsContent>
+                    </Tabs>
+
+                    <div className="flex justify-end space-x-3 pt-6 border-t">
+                      <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                        Cancelar
+                      </Button>
+                      <Button 
+                        type="submit" 
+                        disabled={createUserMutation.isPending || updateUserMutation.isPending}
+                        className="bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600"
+                      >
+                        {editingUser ? "Atualizar" : "Criar"} Usuário
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+        </div>
+
+        {/* Filtros e pesquisa */}
+        <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Pesquisar usuários..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 border-gray-200 focus:border-teal-500"
+                />
+              </div>
+              <Select value={roleFilter} onValueChange={setRoleFilter}>
+                <SelectTrigger className="w-full sm:w-48 border-gray-200 focus:border-teal-500">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filtrar por função" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as funções</SelectItem>
+                  <SelectItem value="admin">Administrador</SelectItem>
+                  <SelectItem value="technician">Técnico</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-48 border-gray-200 focus:border-teal-500">
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="active">Ativo</SelectItem>
+                  <SelectItem value="inactive">Inativo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Lista de usuários modernizada */}
+        <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-3 text-xl">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-teal-500 to-emerald-500 flex items-center justify-center">
+                <Users className="h-4 w-4 text-white" />
+              </div>
+              Usuários do Sistema ({filteredUsers.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredUsers.map((user) => (
+                  <div key={user.id} className="p-6 bg-white rounded-xl border border-gray-200 hover:border-teal-300 hover:shadow-lg transition-all duration-300">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                          {user.firstName?.[0]}{user.lastName?.[0]}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="font-semibold text-lg text-gray-800">
+                              {user.firstName} {user.lastName}
+                            </h3>
+                            {getRoleBadge(user.role || "technician")}
+                            {getStatusBadge(user.isActive ?? true)}
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                            <span className="flex items-center gap-1">
+                              <Users className="h-4 w-4" />
+                              @{user.username}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Mail className="h-4 w-4" />
+                              {user.email || "Não informado"}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {user.permissions?.slice(0, 4).map(permission => 
+                              getPermissionBadge(permission)
+                            )}
+                            {user.permissions && user.permissions.length > 4 && (
+                              <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 border border-gray-300">
+                                +{user.permissions.length - 4} mais
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                      <div className="flex space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEdit(user)}
+                          className="hover:bg-teal-50 hover:border-teal-300"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDelete(user.id)}
+                          disabled={user.id === 1}
+                          className="hover:bg-red-50 hover:border-red-300 disabled:opacity-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={createUserMutation.isPending || updateUserMutation.isPending}
-                >
-                  {editingUser ? "Atualizar" : "Criar"} Usuário
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+            )}
+          </CardContent>
+        </Card>
       </div>
-
-      {/* Users Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Usuários do Sistema
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-4 font-semibold">Usuário</th>
-                    <th className="text-left p-4 font-semibold">Contato</th>
-                    <th className="text-left p-4 font-semibold">Função</th>
-                    <th className="text-left p-4 font-semibold">Status</th>
-                    <th className="text-left p-4 font-semibold">Permissões</th>
-                    <th className="text-left p-4 font-semibold">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((user) => (
-                    <tr key={user.id} className="border-b hover:bg-gray-50">
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
-                            {user.firstName?.[0]}{user.lastName?.[0]}
-                          </div>
-                          <div>
-                            <p className="font-medium">{user.firstName} {user.lastName}</p>
-                            <p className="text-sm text-gray-500">@{user.username}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-1 text-sm text-gray-600">
-                          <Mail className="h-4 w-4" />
-                          {user.email || "Não informado"}
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        {getRoleBadge(user.role || "technician")}
-                      </td>
-                      <td className="p-4">
-                        {getStatusBadge(user.isActive ?? true)}
-                      </td>
-                      <td className="p-4">
-                        <div className="flex flex-wrap gap-1 max-w-xs">
-                          {user.permissions?.slice(0, 3).map(permission => 
-                            getPermissionBadge(permission)
-                          )}
-                          {user.permissions && user.permissions.length > 3 && (
-                            <Badge variant="secondary">
-                              +{user.permissions.length - 3}
-                            </Badge>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(user)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDelete(user.id)}
-                            disabled={user.id === 1} // Protect the first admin
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }
