@@ -216,4 +216,3 @@ export async function createInitialPermissions() {
     console.error('Error creating initial permissions:', error);
   }
 }
-}
