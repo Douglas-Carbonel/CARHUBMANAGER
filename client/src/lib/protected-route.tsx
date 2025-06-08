@@ -15,28 +15,30 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   useEffect(() => {
     // Only redirect if we're sure there's no user and loading is complete
     if (!isLoading && !user) {
-      // Add a small delay to prevent race conditions
-      const timer = setTimeout(() => {
-        setLocation("/auth");
-      }, 100);
-      return () => clearTimeout(timer);
+      setLocation("/auth");
     }
   }, [user, isLoading, setLocation]);
 
   // Show loading spinner while checking authentication
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-border" />
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-gray-50">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-teal-600 mx-auto mb-4" />
+          <p className="text-gray-600">Verificando autenticação...</p>
+        </div>
       </div>
     );
   }
 
-  // If not authenticated, show nothing (redirect will happen via useEffect)
+  // If not authenticated, show loading while redirecting
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-border" />
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-gray-50">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-teal-600 mx-auto mb-4" />
+          <p className="text-gray-600">Redirecionando para login...</p>
+        </div>
       </div>
     );
   }

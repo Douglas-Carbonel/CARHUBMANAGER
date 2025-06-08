@@ -12,7 +12,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { Car, Users, Wrench, Calendar } from "lucide-react";
+import { Car, Users, Wrench, Calendar, Loader2 } from "lucide-react";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Nome de usuário é obrigatório"),
@@ -60,11 +60,7 @@ export default function AuthPage() {
   // Redirect to dashboard if already authenticated
   useEffect(() => {
     if (!isLoading && user) {
-      // Add delay to prevent race conditions
-      const timer = setTimeout(() => {
-        setLocation("/dashboard");
-      }, 100);
-      return () => clearTimeout(timer);
+      setLocation("/dashboard");
     }
   }, [user, isLoading, setLocation]);
 
@@ -73,8 +69,8 @@ export default function AuthPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando...</p>
+          <Loader2 className="h-12 w-12 animate-spin text-teal-600 mx-auto mb-4" />
+          <p className="text-gray-600">Verificando autenticação...</p>
         </div>
       </div>
     );
@@ -85,19 +81,49 @@ export default function AuthPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Redirecionando...</p>
+          <Loader2 className="h-12 w-12 animate-spin text-teal-600 mx-auto mb-4" />
+          <p className="text-gray-600">Redirecionando para dashboard...</p>
         </div>
       </div>
     );
   }
 
   const onLoginSubmit = (data: LoginFormData) => {
-    loginMutation.mutate(data);
+    loginMutation.mutate(data, {
+      onSuccess: () => {
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Redirecionando para o dashboard...",
+        });
+        // The useEffect will handle the redirect
+      },
+      onError: (error: any) => {
+        toast({
+          title: "Erro no login",
+          description: error.message || "Credenciais inválidas",
+          variant: "destructive",
+        });
+      },
+    });
   };
 
   const onRegisterSubmit = (data: RegisterFormData) => {
-    registerMutation.mutate(data);
+    registerMutation.mutate(data, {
+      onSuccess: () => {
+        toast({
+          title: "Registro realizado com sucesso!",
+          description: "Você foi logado automaticamente.",
+        });
+        // The useEffect will handle the redirect
+      },
+      onError: (error: any) => {
+        toast({
+          title: "Erro no registro",
+          description: error.message || "Erro ao criar conta",
+          variant: "destructive",
+        });
+      },
+    });
   };
 
   return (

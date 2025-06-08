@@ -2,7 +2,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
-import { Router, Route, Switch } from "wouter";
+import { Router, Route, Switch, Redirect } from "wouter";
 import { queryClient } from "@/lib/queryClient";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/lib/protected-route";
@@ -24,8 +24,15 @@ function App() {
         <AuthProvider>
           <Router>
             <Switch>
-              <Route path="/" component={AuthPage} />
+              {/* Redirect root to dashboard */}
+              <Route path="/">
+                <Redirect to="/dashboard" />
+              </Route>
+              
+              {/* Auth route - only accessible when not authenticated */}
               <Route path="/auth" component={AuthPage} />
+              
+              {/* Protected routes */}
               <Route path="/dashboard">
                 <ProtectedRoute>
                   <Dashboard />
@@ -56,6 +63,8 @@ function App() {
                   <ReportsPage />
                 </ProtectedRoute>
               </Route>
+              
+              {/* 404 page */}
               <Route component={NotFound} />
             </Switch>
           </Router>
