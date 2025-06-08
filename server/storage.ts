@@ -267,6 +267,64 @@ export class DatabaseStorage implements IStorage {
     return newPayment;
   }
 
+  // User management operations
+  async getAllUsers(): Promise<User[]> {
+    return await db.select({
+      id: users.id,
+      username: users.username,
+      email: users.email,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      role: users.role,
+      isActive: users.isActive,
+      permissions: users.permissions,
+      createdAt: users.createdAt,
+    }).from(users);
+  }
+
+  async createUser(userData: InsertUser): Promise<User> {
+    const [newUser] = await db.insert(users).values(userData).returning({
+      id: users.id,
+      username: users.username,
+      email: users.email,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      role: users.role,
+      isActive: users.isActive,
+      permissions: users.permissions,
+      createdAt: users.createdAt,
+    });
+    return newUser;
+  }
+
+  async updateUser(id: number, userData: Partial<InsertUser>): Promise<User> {
+    // Remove password from update if it's empty
+    if (userData.password === '' || userData.password === undefined) {
+      delete userData.password;
+    }
+    
+    const [updatedUser] = await db
+      .update(users)
+      .set(userData)
+      .where(eq(users.id, id))
+      .returning({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        role: users.role,
+        isActive: users.isActive,
+        permissions: users.permissions,
+        createdAt: users.createdAt,
+      });
+    return updatedUser;
+  }
+
+  async deleteUser(id: number): Promise<void> {
+    await db.delete(users).where(eq(users.id, id));
+  }
+
   // Dashboard statistics
   async getDashboardStats(): Promise<{
     dailyRevenue: number;
