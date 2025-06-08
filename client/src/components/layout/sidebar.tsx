@@ -66,12 +66,12 @@ export default function Sidebar() {
   return (
     <div
       className={cn(
-        "flex flex-col h-screen bg-gradient-to-b from-cyan-700 to-cyan-800 text-white transition-all duration-300",
+        "flex flex-col h-screen bg-gradient-to-b from-teal-700 to-teal-800 text-white transition-all duration-300",
         isCollapsed ? "w-16" : "w-64"
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-cyan-600">
+      <div className="flex items-center justify-between p-4 border-b border-teal-600">
         {!isCollapsed && (
           <h1 className="text-xl font-bold tracking-wider">CARHUB</h1>
         )}
@@ -79,7 +79,7 @@ export default function Sidebar() {
           variant="ghost"
           size="sm"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="text-white hover:bg-cyan-600"
+          className="text-white hover:bg-teal-600"
         >
           {isCollapsed ? <Menu className="h-4 w-4" /> : <X className="h-4 w-4" />}
         </Button>
@@ -94,8 +94,8 @@ export default function Sidebar() {
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full justify-start text-left text-white hover:bg-cyan-600",
-                  isActive && "bg-cyan-600",
+                  "w-full justify-start text-left text-white hover:bg-teal-600",
+                  isActive && "bg-teal-600",
                   isCollapsed && "px-2"
                 )}
               >
