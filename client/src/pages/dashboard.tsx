@@ -11,7 +11,7 @@ export default function Dashboard() {
   const { user } = useAuth();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-slate-50/90 via-emerald-50/30 to-slate-100/90">
+    <div className="flex h-screen overflow-hidden bg-gray-50">
       <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -20,7 +20,7 @@ export default function Dashboard() {
           subtitle={`Bem-vindo, ${user?.firstName || user?.username}!`}
         />
 
-        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-transparent via-emerald-50/20 to-transparent">
+        <main className="flex-1 overflow-y-auto bg-white">
           <div className="p-8 space-y-8">
             <StatsCards />
 

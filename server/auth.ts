@@ -183,3 +183,37 @@ export async function createInitialAdmin() {
     console.error('Error creating initial admin:', error);
   }
 }
+
+export async function createInitialPermissions() {
+  try {
+    const { permissions } = await import("@shared/schema");
+    const { storage } = await import("./storage");
+    const { db } = await import("./db");
+    const { eq } = await import("drizzle-orm");
+
+    const defaultPermissions = [
+      { key: "view_dashboard", name: "Visualizar Dashboard", description: "Acesso à página principal" },
+      { key: "manage_customers", name: "Gerenciar Clientes", description: "Criar, editar e visualizar clientes" },
+      { key: "manage_vehicles", name: "Gerenciar Veículos", description: "Criar, editar e visualizar veículos" },
+      { key: "manage_services", name: "Gerenciar Serviços", description: "Criar, editar e visualizar serviços" },
+      { key: "view_reports", name: "Visualizar Relatórios", description: "Acesso aos relatórios do sistema" },
+      { key: "view_schedule", name: "Visualizar Agenda", description: "Acesso à agenda de serviços" },
+      { key: "admin_panel", name: "Painel Administrativo", description: "Acesso ao painel administrativo" },
+    ];
+
+    for (const permission of defaultPermissions) {
+      const existing = await db.query.permissions.findFirst({
+        where: eq(permissions.key, permission.key),
+      });
+      
+      if (!existing) {
+        await storage.createPermission(permission);
+      }
+    }
+    
+    console.log('Initial permissions created');
+  } catch (error) {
+    console.error('Error creating initial permissions:', error);
+  }
+}
+}
