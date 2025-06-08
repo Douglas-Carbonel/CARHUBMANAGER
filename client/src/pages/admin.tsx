@@ -283,21 +283,20 @@ export default function AdminPage() {
   const handlePermissionChange = (permissionId: string, checked: boolean) => {
     setFormData(prev => {
       const currentPermissions = prev.permissions || [];
+      let newPermissions;
       
-      if (checked && !currentPermissions.includes(permissionId)) {
-        return {
-          ...prev,
-          permissions: [...currentPermissions, permissionId]
-        };
-      } else if (!checked && currentPermissions.includes(permissionId)) {
-        return {
-          ...prev,
-          permissions: currentPermissions.filter(p => p !== permissionId)
-        };
+      if (checked) {
+        newPermissions = currentPermissions.includes(permissionId) 
+          ? currentPermissions 
+          : [...currentPermissions, permissionId];
+      } else {
+        newPermissions = currentPermissions.filter(p => p !== permissionId);
       }
       
-      // Se não há mudança, retorna o estado anterior sem criar novo objeto
-      return prev;
+      return {
+        ...prev,
+        permissions: newPermissions
+      };
     });
   };
 
@@ -582,23 +581,18 @@ export default function AdminPage() {
                                         ? `${permission.bgColor} ${permission.borderColor} shadow-md` 
                                         : 'bg-white border-gray-200 hover:border-gray-300'
                                     }`}
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handlePermissionChange(permission.id, !isChecked);
-                                    }}
                                   >
                                     <div className="flex items-start space-x-3">
                                       <Checkbox
                                         id={permission.id}
                                         checked={isChecked}
-                                        onCheckedChange={(checked) => {
-                                          handlePermissionChange(permission.id, !!checked);
-                                        }}
-                                        onClick={(e) => e.stopPropagation()}
+                                        onCheckedChange={(checked) => handlePermissionChange(permission.id, !!checked)}
                                         className="mt-1"
                                       />
-                                      <div className="flex-1">
+                                      <div 
+                                        className="flex-1 cursor-pointer"
+                                        onClick={() => handlePermissionChange(permission.id, !isChecked)}
+                                      >
                                         <div className="flex items-center gap-3 mb-2">
                                           <div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${permission.color} flex items-center justify-center shadow-lg`}>
                                             <Icon className="h-5 w-5 text-white" />
