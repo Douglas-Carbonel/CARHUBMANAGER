@@ -72,11 +72,61 @@ async function runMigration() {
       await pool.query(`
         INSERT INTO users (username, password, email, first_name, last_name, role, is_active, permissions)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      `, ['admin', hashedPassword, 'admin@carhub.com', 'Administrator', 'System', 'admin', true, ['all']]);
+      `, ['admin', hashedPassword, 'admin@carhub.com', 'Administrador', 'Sistema', 'admin', true, ['admin', 'customers', 'vehicles', 'services', 'schedule', 'reports']]);
       
       console.log('Usuário admin criado com sucesso!');
     } else {
       console.log('Usuário admin já existe.');
+      
+      // Verificar se o usuário admin tem todas as novas colunas preenchidas
+      const adminUser = adminCheck.rows[0];
+      let needsUpdate = false;
+      const updates = [];
+      const values = [];
+      let paramCount = 1;
+      
+      if (!adminUser.first_name) {
+        updates.push(`first_name = $${paramCount++}`);
+        values.push('Administrador');
+        needsUpdate = true;
+      }
+      
+      if (!adminUser.last_name) {
+        updates.push(`last_name = $${paramCount++}`);
+        values.push('Sistema');
+        needsUpdate = true;
+      }
+      
+      if (!adminUser.role || adminUser.role !== 'admin') {
+        updates.push(`role = $${paramCount++}`);
+        values.push('admin');
+        needsUpdate = true;
+      }
+      
+      if (adminUser.is_active !== true) {
+        updates.push(`is_active = $${paramCount++}`);
+        values.push(true);
+        needsUpdate = true;
+      }
+      
+      if (!adminUser.permissions || adminUser.permissions.length === 0) {
+        updates.push(`permissions = $${paramCount++}`);
+        values.push(['admin', 'customers', 'vehicles', 'services', 'schedule', 'reports']);
+        needsUpdate = true;
+      }
+      
+      if (needsUpdate) {
+        values.push(adminUser.id);
+        await pool.query(`
+          UPDATE users 
+          SET ${updates.join(', ')}, updated_at = NOW()
+          WHERE id = $${paramCount}
+        `, values);
+        
+        console.log('Usuário admin atualizado com novas colunas!');
+      } else {
+        console.log('Usuário admin já possui todas as colunas preenchidas.');
+      }
     }
     
     // Mostrar estrutura final da tabela
@@ -89,6 +139,11 @@ async function runMigration() {
     
     console.log('Estrutura final da tabela users:');
     console.table(finalStructure.rows);
+    
+    // Mostrar dados do usuário admin
+    const adminData = await pool.query("SELECT id, username, email, first_name, last_name, role, is_active, permissions FROM users WHERE username = 'admin'");
+    console.log('Dados do usuário admin:');
+    console.table(adminData.rows);
     
   } catch (error) {
     console.error('Erro durante a migração:', error);
