@@ -16,6 +16,7 @@ import VehiclesPage from "@/pages/vehicles";
 import ServicesPage from "@/pages/services";
 import SchedulePage from "@/pages/schedule";
 import ReportsPage from "@/pages/reports";
+import AdminPage from "@/pages/admin";
 import NotFound from "@/pages/not-found";
 
 function App() {
@@ -64,6 +65,11 @@ function App() {
               <Route path="/reports">
                 <ProtectedRoute>
                   <ReportsPage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/admin">
+                <ProtectedRoute>
+                  <AdminPage />
                 </ProtectedRoute>
               </Route>
               
