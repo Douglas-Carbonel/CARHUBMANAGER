@@ -13,11 +13,17 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [, setLocation] = useLocation();
 
   useEffect(() => {
+    // Only redirect if we're sure there's no user and loading is complete
     if (!isLoading && !user) {
-      setLocation("/auth");
+      // Add a small delay to prevent race conditions
+      const timer = setTimeout(() => {
+        setLocation("/auth");
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [user, isLoading, setLocation]);
 
+  // Show loading spinner while checking authentication
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -26,8 +32,13 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
+  // If not authenticated, show nothing (redirect will happen via useEffect)
   if (!user) {
-    return null;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-border" />
+      </div>
+    );
   }
 
   return <>{children}</>;
