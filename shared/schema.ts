@@ -83,7 +83,7 @@ export const services = pgTable("services", {
   customerId: integer("customer_id").references(() => customers.id).notNull(),
   vehicleId: integer("vehicle_id").references(() => vehicles.id).notNull(),
   serviceTypeId: integer("service_type_id").references(() => serviceTypes.id).notNull(),
-  technicianId: varchar("technician_id").references(() => users.id),
+  technicianId: integer("technician_id").references(() => users.id),
   status: varchar("status", { 
     enum: ["scheduled", "in_progress", "completed", "cancelled"] 
   }).default("scheduled"),
