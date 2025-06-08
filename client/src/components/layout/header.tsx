@@ -2,16 +2,26 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Bell, Search } from "lucide-react";
 
-export default function Header() {
+interface HeaderProps {
+  title: string;
+  subtitle?: string;
+}
+
+export default function Header({ title, subtitle }: HeaderProps) {
   const { user } = useAuth();
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <h2 className="text-2xl font-semibold text-gray-900">
-            Dashboard
-          </h2>
+          <div>
+            <h2 className="text-2xl font-semibold text-gray-900">
+              {title}
+            </h2>
+            {subtitle && (
+              <p className="text-sm text-gray-600">{subtitle}</p>
+            )}
+          </div>
         </div>
         
         <div className="flex items-center space-x-4">
