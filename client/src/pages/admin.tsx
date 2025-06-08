@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
@@ -137,7 +136,7 @@ export default function AdminPage() {
     permissions: []
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -238,7 +237,7 @@ export default function AdminPage() {
 
     try {
       const validatedData = userSchema.parse(formData);
-      
+
       if (editingUser) {
         const { password, ...updateData } = validatedData;
         updateUserMutation.mutate({ 
@@ -286,7 +285,7 @@ export default function AdminPage() {
     setFormData(prev => {
       const currentPermissions = prev.permissions || [];
       let newPermissions;
-      
+
       if (checked) {
         newPermissions = currentPermissions.includes(permissionId) 
           ? currentPermissions 
@@ -294,7 +293,7 @@ export default function AdminPage() {
       } else {
         newPermissions = currentPermissions.filter(p => p !== permissionId);
       }
-      
+
       return {
         ...prev,
         permissions: newPermissions
@@ -308,19 +307,19 @@ export default function AdminPage() {
       user.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesRole = roleFilter === "all" || user.role === roleFilter;
     const matchesStatus = statusFilter === "all" || 
       (statusFilter === "active" && user.isActive) ||
       (statusFilter === "inactive" && !user.isActive);
-    
+
     return matchesSearch && matchesRole && matchesStatus;
   });
 
   const getPermissionBadge = (permissionId: string) => {
     const permission = AVAILABLE_PERMISSIONS.find(p => p.id === permissionId);
     if (!permission) return null;
-    
+
     const Icon = permission.icon;
     return (
       <div key={permissionId} className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${permission.bgColor} ${permission.borderColor} border`}>
@@ -365,7 +364,7 @@ export default function AdminPage() {
         <div className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-xl"></div>
           <div className="absolute inset-0 opacity-10 bg-gradient-to-br from-white/5 to-transparent rounded-xl"></div>
-          <div className="relative px-6 py-8">
+          <div className="relative px-8 py-8">
             <div className="flex items-center justify-between">
               <div className="space-y-3">
                 <div className="flex items-center space-x-4">
@@ -426,7 +425,7 @@ export default function AdminPage() {
                       </div>
                     </DialogTitle>
                   </DialogHeader>
-                  
+
                   <form onSubmit={handleSubmit} className="space-y-8 pt-6">
                     <Tabs defaultValue="basic" className="w-full">
                       <TabsList className="grid w-full grid-cols-3 bg-slate-50 border border-slate-200 p-1">
@@ -465,7 +464,7 @@ export default function AdminPage() {
                                 />
                                 {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
                               </div>
-                              
+
                               <div>
                                 <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">Sobrenome *</Label>
                                 <Input
@@ -478,7 +477,7 @@ export default function AdminPage() {
                                 {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
                               </div>
                             </div>
-                            
+
                             <div>
                               <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email</Label>
                               <Input
@@ -507,7 +506,7 @@ export default function AdminPage() {
                                   </SelectContent>
                                 </Select>
                               </div>
-                              
+
                               <div className="flex items-center space-x-3 pt-6">
                                 <Switch
                                   id="isActive"
@@ -539,7 +538,7 @@ export default function AdminPage() {
                               />
                               {errors.username && <p className="text-red-500 text-sm mt-1">{errors.username}</p>}
                             </div>
-                            
+
                             <div>
                               <Label htmlFor="password" className="text-sm font-medium text-gray-700">
                                 {editingUser ? "Nova Senha (deixe em branco para não alterar)" : "Senha *"}
@@ -583,7 +582,7 @@ export default function AdminPage() {
                               {AVAILABLE_PERMISSIONS.map((permission) => {
                                 const Icon = permission.icon;
                                 const isChecked = formData.permissions.includes(permission.id);
-                                
+
                                 return (
                                   <div 
                                     key={permission.id} 
@@ -728,6 +727,7 @@ export default function AdminPage() {
                                 <span className="font-medium">@{user.username}</span>
                               </div>
                               <div className="flex items-center gap-2">
+```text
                                 <Mail className="h-4 w-4 text-slate-400" />
                                 <span>{user.email || "Email não informado"}</span>
                               </div>

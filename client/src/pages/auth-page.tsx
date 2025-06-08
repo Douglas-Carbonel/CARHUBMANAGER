@@ -64,10 +64,25 @@ export default function AuthPage() {
         {/* Left side - Branding */}
         <div className="hidden lg:flex flex-col items-center space-y-12 flex-1">
           <div className="text-center">
-            <h1 className="text-7xl font-bold bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent mb-6 tracking-wider drop-shadow-lg">
-              CARHUB
-            </h1>
-            <p className="text-2xl text-gray-700 mb-8 font-medium">
+            {/* Stylized CARHUB Logo */}
+            <div className="relative mb-6">
+              <div className="absolute inset-0 blur-lg opacity-30">
+                <h1 className="text-7xl font-black bg-gradient-to-r from-cyan-400 via-teal-500 to-emerald-500 bg-clip-text text-transparent tracking-wider">
+                  CARHUB
+                </h1>
+              </div>
+              <h1 className="relative text-7xl font-black bg-gradient-to-r from-cyan-600 via-teal-600 to-emerald-600 bg-clip-text text-transparent tracking-wider drop-shadow-2xl transform hover:scale-105 transition-all duration-500">
+                <span className="relative">
+                  CAR
+                  <span className="absolute -top-2 -right-1 w-3 h-3 bg-gradient-to-r from-cyan-400 to-teal-400 rounded-full animate-pulse"></span>
+                </span>
+                <span className="relative ml-1 font-light italic">
+                  Hub
+                  <div className="absolute -bottom-1 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-full"></div>
+                </span>
+              </h1>
+            </div>
+            <p className="text-2xl text-gray-700 mb-8 font-medium tracking-wide">
               Sistema de Gestão Automotiva
             </p>
           </div>
