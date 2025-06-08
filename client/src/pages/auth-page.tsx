@@ -1,93 +1,306 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useLocation } from "wouter";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { User, Lock, Loader2 } from "lucide-react";
-import { useLocation } from "wouter";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useToast } from "@/hooks/use-toast";
+import { Car, Users, Wrench, Calendar } from "lucide-react";
+
+const loginSchema = z.object({
+  username: z.string().min(1, "Nome de usuário é obrigatório"),
+  password: z.string().min(1, "Senha é obrigatória"),
+});
+
+const registerSchema = z.object({
+  username: z.string().min(3, "Nome de usuário deve ter pelo menos 3 caracteres"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+  email: z.string().email("Email inválido").optional().or(z.literal("")),
+  firstName: z.string().min(1, "Nome é obrigatório"),
+  lastName: z.string().min(1, "Sobrenome é obrigatório"),
+  role: z.enum(["admin", "technician"]),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
+type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
-  const { user, loginMutation } = useAuth();
+  const { user, isLoading, loginMutation, registerMutation } = useAuth();
   const [, setLocation] = useLocation();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("login");
 
+  const loginForm = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+  });
+
+  const registerForm = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+      email: "",
+      firstName: "",
+      lastName: "",
+      role: "technician",
+    },
+  });
+
+  // Redirect to dashboard if already authenticated
   useEffect(() => {
-    if (user) {
+    if (!isLoading && user) {
       setLocation("/dashboard");
     }
-  }, [user, setLocation]);
+  }, [user, isLoading, setLocation]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!username || !password) return;
-    
-    try {
-      await loginMutation.mutateAsync({ username, password });
-      setLocation("/dashboard");
-    } catch (error) {
-      console.error("Login failed:", error);
-    }
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render auth form if user is already authenticated
+  if (user) {
+    return null;
+  }
+
+  const onLoginSubmit = (data: LoginFormData) => {
+    loginMutation.mutate(data);
+  };
+
+  const onRegisterSubmit = (data: RegisterFormData) => {
+    registerMutation.mutate(data);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-300 via-teal-100 to-cyan-200 flex items-center justify-center p-4">
-      <div className="relative">
-        {/* Background geometric shape */}
-        <div className="absolute inset-0 transform rotate-12">
-          <div className="w-96 h-64 bg-gradient-to-r from-teal-600 to-teal-500 rounded-lg shadow-2xl opacity-80"></div>
-        </div>
-        
-        {/* Login container */}
-        <div className="relative z-10 w-96 bg-gradient-to-b from-teal-700 to-teal-800 rounded-lg shadow-2xl overflow-hidden">
-          {/* Header */}
-          <div className="bg-teal-600 text-center py-6">
-            <h1 className="text-white text-xl font-light tracking-wider">MEMBER LOGIN</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50 p-4">
+      <div className="w-full max-w-6xl flex items-center justify-center gap-12">
+        {/* Left side - Branding */}
+        <div className="hidden lg:flex flex-col items-center space-y-8 flex-1">
+          <div className="text-center">
+            <h1 className="text-6xl font-bold text-teal-700 mb-4 tracking-wider">
+              CARHUB
+            </h1>
+            <p className="text-xl text-gray-600 mb-8">
+              Sistema de Gestão Automotiva
+            </p>
           </div>
           
-          {/* Form */}
-          <div className="p-8 space-y-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Username field */}
-              <div className="relative">
-                <User className="absolute left-3 top-3 h-5 w-5 text-white/70" />
-                <Input
-                  type="text"
-                  placeholder="Username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="bg-transparent border-0 border-b-2 border-white/30 rounded-none pl-12 pr-4 py-3 text-white placeholder:text-white/70 focus:border-white focus:ring-0 focus-visible:ring-0"
-                />
-              </div>
-
-              {/* Password field */}
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-5 w-5 text-white/70" />
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-transparent border-0 border-b-2 border-white/30 rounded-none pl-12 pr-4 py-3 text-white placeholder:text-white/70 focus:border-white focus:ring-0 focus-visible:ring-0"
-                />
-              </div>
-
-              {/* Login button */}
-              <Button
-                type="submit"
-                disabled={loginMutation.isPending || !username || !password}
-                className="w-full bg-emerald-400 hover:bg-emerald-500 text-teal-800 font-semibold py-4 rounded-none text-lg tracking-wider transition-colors"
-              >
-                {loginMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    ENTRANDO...
-                  </>
-                ) : (
-                  "LOGIN"
-                )}
-              </Button>
-            </form>
+          <div className="grid grid-cols-2 gap-6 w-full max-w-md">
+            <div className="text-center p-6 bg-white rounded-lg shadow-sm">
+              <Car className="h-12 w-12 text-teal-600 mx-auto mb-3" />
+              <h3 className="font-semibold text-gray-800">Veículos</h3>
+              <p className="text-sm text-gray-600">Gerencie frota</p>
+            </div>
+            <div className="text-center p-6 bg-white rounded-lg shadow-sm">
+              <Users className="h-12 w-12 text-teal-600 mx-auto mb-3" />
+              <h3 className="font-semibold text-gray-800">Clientes</h3>
+              <p className="text-sm text-gray-600">Base de dados</p>
+            </div>
+            <div className="text-center p-6 bg-white rounded-lg shadow-sm">
+              <Wrench className="h-12 w-12 text-teal-600 mx-auto mb-3" />
+              <h3 className="font-semibold text-gray-800">Serviços</h3>
+              <p className="text-sm text-gray-600">Manutenções</p>
+            </div>
+            <div className="text-center p-6 bg-white rounded-lg shadow-sm">
+              <Calendar className="h-12 w-12 text-teal-600 mx-auto mb-3" />
+              <h3 className="font-semibold text-gray-800">Agenda</h3>
+              <p className="text-sm text-gray-600">Compromissos</p>
+            </div>
           </div>
+        </div>
+
+        {/* Right side - Auth forms */}
+        <div className="w-full max-w-md">
+          <Card className="shadow-xl border-0">
+            <CardHeader className="text-center pb-2">
+              <CardTitle className="text-2xl font-bold text-gray-800">
+                Bem-vindo ao CARHUB
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid w-full grid-cols-2 mb-6">
+                  <TabsTrigger value="login">Entrar</TabsTrigger>
+                  <TabsTrigger value="register">Registrar</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="login">
+                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                    <div>
+                      <Label htmlFor="username">Usuário</Label>
+                      <Input
+                        id="username"
+                        {...loginForm.register("username")}
+                        className="mt-1"
+                        placeholder="Digite seu usuário"
+                      />
+                      {loginForm.formState.errors.username && (
+                        <p className="text-sm text-red-600 mt-1">
+                          {loginForm.formState.errors.username.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="password">Senha</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        {...loginForm.register("password")}
+                        className="mt-1"
+                        placeholder="Digite sua senha"
+                      />
+                      {loginForm.formState.errors.password && (
+                        <p className="text-sm text-red-600 mt-1">
+                          {loginForm.formState.errors.password.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <Button
+                      type="submit"
+                      className="w-full bg-teal-600 hover:bg-teal-700"
+                      disabled={loginMutation.isPending}
+                    >
+                      {loginMutation.isPending ? "Entrando..." : "Entrar"}
+                    </Button>
+                  </form>
+                </TabsContent>
+
+                <TabsContent value="register">
+                  <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="firstName">Nome</Label>
+                        <Input
+                          id="firstName"
+                          {...registerForm.register("firstName")}
+                          className="mt-1"
+                          placeholder="Nome"
+                        />
+                        {registerForm.formState.errors.firstName && (
+                          <p className="text-sm text-red-600 mt-1">
+                            {registerForm.formState.errors.firstName.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <Label htmlFor="lastName">Sobrenome</Label>
+                        <Input
+                          id="lastName"
+                          {...registerForm.register("lastName")}
+                          className="mt-1"
+                          placeholder="Sobrenome"
+                        />
+                        {registerForm.formState.errors.lastName && (
+                          <p className="text-sm text-red-600 mt-1">
+                            {registerForm.formState.errors.lastName.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="regUsername">Usuário</Label>
+                      <Input
+                        id="regUsername"
+                        {...registerForm.register("username")}
+                        className="mt-1"
+                        placeholder="Digite um usuário"
+                      />
+                      {registerForm.formState.errors.username && (
+                        <p className="text-sm text-red-600 mt-1">
+                          {registerForm.formState.errors.username.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="email">Email (opcional)</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        {...registerForm.register("email")}
+                        className="mt-1"
+                        placeholder="Digite seu email"
+                      />
+                      {registerForm.formState.errors.email && (
+                        <p className="text-sm text-red-600 mt-1">
+                          {registerForm.formState.errors.email.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="regPassword">Senha</Label>
+                      <Input
+                        id="regPassword"
+                        type="password"
+                        {...registerForm.register("password")}
+                        className="mt-1"
+                        placeholder="Digite uma senha"
+                      />
+                      {registerForm.formState.errors.password && (
+                        <p className="text-sm text-red-600 mt-1">
+                          {registerForm.formState.errors.password.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="role">Função</Label>
+                      <Select
+                        value={registerForm.watch("role")}
+                        onValueChange={(value: "admin" | "technician") =>
+                          registerForm.setValue("role", value)
+                        }
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Selecione uma função" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="technician">Técnico</SelectItem>
+                          <SelectItem value="admin">Administrador</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {registerForm.formState.errors.role && (
+                        <p className="text-sm text-red-600 mt-1">
+                          {registerForm.formState.errors.role.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <Button
+                      type="submit"
+                      className="w-full bg-teal-600 hover:bg-teal-700"
+                      disabled={registerMutation.isPending}
+                    >
+                      {registerMutation.isPending ? "Registrando..." : "Registrar"}
+                    </Button>
+                  </form>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
