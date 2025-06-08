@@ -1,15 +1,11 @@
-import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Car, Lock } from "lucide-react";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { User, Lock, Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
 
 const loginSchema = z.object({
@@ -17,26 +13,15 @@ const loginSchema = z.object({
   password: z.string().min(1, "Senha é obrigatória"),
 });
 
-const registerSchema = z.object({
-  username: z.string().min(3, "Nome de usuário deve ter pelo menos 3 caracteres"),
-  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
-  email: z.string().email("Email inválido").optional().or(z.literal("")),
-  firstName: z.string().min(1, "Nome é obrigatório"),
-  lastName: z.string().min(1, "Sobrenome é obrigatório"),
-  role: z.enum(["admin", "technician"]),
-});
-
 type LoginData = z.infer<typeof loginSchema>;
-type RegisterData = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
-  const { user, loginMutation, registerMutation } = useAuth();
+  const { user, loginMutation } = useAuth();
   const [, setLocation] = useLocation();
-  const [activeTab, setActiveTab] = useState("login");
 
   // Redirect if already logged in
   if (user) {
-    setLocation("/");
+    setLocation("/dashboard");
     return null;
   }
 
@@ -48,218 +33,96 @@ export default function AuthPage() {
     },
   });
 
-  const registerForm = useForm<RegisterData>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-      email: "",
-      firstName: "",
-      lastName: "",
-      role: "technician",
-    },
-  });
-
   const onLogin = async (data: LoginData) => {
     try {
       await loginMutation.mutateAsync(data);
-      setLocation("/");
+      setLocation("/dashboard");
     } catch (error) {
-      // Error handling is done in the mutation
-    }
-  };
-
-  const onRegister = async (data: RegisterData) => {
-    try {
-      await registerMutation.mutateAsync(data);
-      setLocation("/");
-    } catch (error) {
-      // Error handling is done in the mutation
+      console.error("Login failed:", error);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="flex items-center justify-center space-x-2 mb-8">
-          <Car className="h-10 w-10 text-blue-600" />
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white">CarHub</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-300 via-teal-100 to-cyan-200 flex items-center justify-center p-4">
+      <div className="relative">
+        {/* Background geometric shape */}
+        <div className="absolute inset-0 transform rotate-12">
+          <div className="w-96 h-64 bg-gradient-to-r from-teal-600 to-teal-500 rounded-lg shadow-2xl opacity-80"></div>
         </div>
+        
+        {/* Login container */}
+        <div className="relative z-10 w-96 bg-gradient-to-b from-teal-700 to-teal-800 rounded-lg shadow-2xl overflow-hidden">
+          {/* Header */}
+          <div className="bg-teal-600 text-center py-6">
+            <h1 className="text-white text-xl font-light tracking-wider">MEMBER LOGIN</h1>
+          </div>
+          
+          {/* Form */}
+          <div className="p-8 space-y-6">
+            <Form {...loginForm}>
+              <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-6">
+                {/* Username field */}
+                <FormField
+                  control={loginForm.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="relative">
+                        <User className="absolute left-3 top-3 h-5 w-5 text-white/70" />
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="text"
+                            placeholder="Username"
+                            className="bg-transparent border-0 border-b-2 border-white/30 rounded-none pl-12 pr-4 py-3 text-white placeholder:text-white/70 focus:border-white focus:ring-0 focus-visible:ring-0"
+                          />
+                        </FormControl>
+                      </div>
+                      <FormMessage className="text-red-300" />
+                    </FormItem>
+                  )}
+                />
 
-        <Card className="shadow-xl">
-          <CardHeader className="text-center">
-            <div className="flex items-center justify-center space-x-2 mb-2">
-              <Lock className="h-6 w-6 text-blue-600" />
-              <CardTitle className="text-2xl">Acesso ao Sistema</CardTitle>
-            </div>
-            <CardDescription>
-              Entre com suas credenciais ou registre uma nova conta
-            </CardDescription>
-          </CardHeader>
+                {/* Password field */}
+                <FormField
+                  control={loginForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 h-5 w-5 text-white/70" />
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="password"
+                            placeholder="Password"
+                            className="bg-transparent border-0 border-b-2 border-white/30 rounded-none pl-12 pr-4 py-3 text-white placeholder:text-white/70 focus:border-white focus:ring-0 focus-visible:ring-0"
+                          />
+                        </FormControl>
+                      </div>
+                      <FormMessage className="text-red-300" />
+                    </FormItem>
+                  )}
+                />
 
-          <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Entrar</TabsTrigger>
-                <TabsTrigger value="register">Registrar</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="login" className="mt-6">
-                <Form {...loginForm}>
-                  <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
-                    <FormField
-                      control={loginForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nome de Usuário</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Digite seu usuário" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={loginForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Senha</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="Digite sua senha" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
-                      disabled={loginMutation.isPending}
-                    >
-                      {loginMutation.isPending ? "Entrando..." : "Entrar"}
-                    </Button>
-                  </form>
-                </Form>
-              </TabsContent>
-
-              <TabsContent value="register" className="mt-6">
-                <Form {...registerForm}>
-                  <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={registerForm.control}
-                        name="firstName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Nome</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Nome" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={registerForm.control}
-                        name="lastName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Sobrenome</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Sobrenome" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <FormField
-                      control={registerForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nome de Usuário</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Escolha um usuário" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={registerForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email (opcional)</FormLabel>
-                          <FormControl>
-                            <Input type="email" placeholder="seu@email.com" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={registerForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Senha</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="Crie uma senha forte" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={registerForm.control}
-                      name="role"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Tipo de Usuário</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione o tipo" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="technician">Técnico</SelectItem>
-                              <SelectItem value="admin">Administrador</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
-                      disabled={registerMutation.isPending}
-                    >
-                      {registerMutation.isPending ? "Registrando..." : "Registrar"}
-                    </Button>
-                  </form>
-                </Form>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-
-        <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-          <p>Usuário padrão: <strong>admin</strong> | Senha: <strong>admin123</strong></p>
+                {/* Login button */}
+                <Button
+                  type="submit"
+                  disabled={loginMutation.isPending}
+                  className="w-full bg-emerald-400 hover:bg-emerald-500 text-teal-800 font-semibold py-4 rounded-none text-lg tracking-wider transition-colors"
+                >
+                  {loginMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      ENTRANDO...
+                    </>
+                  ) : (
+                    "LOGIN"
+                  )}
+                </Button>
+              </form>
+            </Form>
+          </div>
         </div>
       </div>
     </div>
