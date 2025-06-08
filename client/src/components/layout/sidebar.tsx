@@ -47,6 +47,12 @@ const navigation = [
     href: "/reports",
     icon: BarChart3,
   },
+  {
+    name: "Administração",
+    href: "/admin",
+    icon: Settings,
+    adminOnly: true,
+  },
 ];
 
 export default function Sidebar() {
@@ -61,20 +67,20 @@ export default function Sidebar() {
   return (
     <div
       className={cn(
-        "flex flex-col h-screen bg-gradient-to-b from-teal-700 to-teal-800 text-white transition-all duration-300",
+        "flex flex-col h-screen bg-gradient-to-b from-emerald-600/90 to-emerald-700/95 text-white transition-all duration-300 shadow-2xl shadow-emerald-900/20 backdrop-blur-sm border-r border-emerald-500/20",
         isCollapsed ? "w-16" : "w-64"
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-teal-600">
+      <div className="flex items-center justify-between p-4 border-b border-emerald-500/30 bg-gradient-to-r from-emerald-600/50 to-emerald-700/50 backdrop-blur-sm">
         {!isCollapsed && (
-          <h1 className="text-xl font-bold tracking-wider">CARHUB</h1>
+          <h1 className="text-xl font-bold tracking-wider bg-gradient-to-r from-white to-emerald-100 bg-clip-text text-transparent drop-shadow-sm">CARHUB</h1>
         )}
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="text-white hover:bg-teal-600"
+          className="text-white hover:bg-emerald-600/60 transition-all duration-200 shadow-lg hover:shadow-emerald-500/20"
         >
           {isCollapsed ? <Menu className="h-4 w-4" /> : <X className="h-4 w-4" />}
         </Button>
@@ -82,15 +88,15 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
-        {navigation.map((item) => {
+        {navigation.filter(item => !item.adminOnly || user?.role === 'admin').map((item) => {
           const isActive = location === item.href;
           return (
             <Link key={item.name} href={item.href}>
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full justify-start text-left text-white hover:bg-teal-600",
-                  isActive && "bg-teal-600",
+                  "w-full justify-start text-left text-white hover:bg-emerald-600/40 transition-all duration-200 hover:shadow-lg hover:shadow-emerald-500/20 hover:translate-x-1",
+                  isActive && "bg-emerald-600/60 shadow-lg shadow-emerald-500/30 border-l-2 border-emerald-300",
                   isCollapsed && "px-2"
                 )}
               >
@@ -103,18 +109,18 @@ export default function Sidebar() {
       </nav>
 
       {/* User info and logout */}
-      <div className="p-4 border-t border-teal-600">
+      <div className="p-4 border-t border-emerald-500/30 bg-gradient-to-t from-emerald-700/50 to-transparent">
         {!isCollapsed && user && (
-          <div className="mb-3">
-            <p className="text-sm font-medium">{user.firstName} {user.lastName}</p>
-            <p className="text-xs text-teal-200">{user.role}</p>
+          <div className="mb-3 p-3 bg-emerald-600/20 rounded-lg backdrop-blur-sm shadow-lg">
+            <p className="text-sm font-medium text-emerald-100">{user.firstName} {user.lastName}</p>
+            <p className="text-xs text-emerald-200/80">{user.role}</p>
           </div>
         )}
         <Button
           variant="ghost"
           onClick={handleLogout}
           className={cn(
-            "w-full justify-start text-white hover:bg-red-600",
+            "w-full justify-start text-white hover:bg-red-500/80 transition-all duration-200 hover:shadow-lg hover:shadow-red-500/20",
             isCollapsed && "px-2"
           )}
         >
