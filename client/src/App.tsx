@@ -8,6 +8,7 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import { AuthGuard } from "@/lib/auth-guard";
 
 // Import pages
+import AuthPage from "@/pages/auth-page";
 import Dashboard from "@/pages/dashboard";
 import CustomersPage from "@/pages/customers";
 import VehiclesPage from "@/pages/vehicles";
