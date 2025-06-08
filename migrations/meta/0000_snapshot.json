@@ -1,5 +1,5 @@
 {
-  "id": "921f9373-a484-4ef3-9880-80fd4f812a27",
+  "id": "39e09e86-9799-4570-82d0-d130ac835634",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -244,7 +244,7 @@
         },
         "technician_id": {
           "name": "technician_id",
-          "type": "varchar",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },

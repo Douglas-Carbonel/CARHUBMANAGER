@@ -37,7 +37,7 @@ CREATE TABLE "services" (
 	"customer_id" integer NOT NULL,
 	"vehicle_id" integer NOT NULL,
 	"service_type_id" integer NOT NULL,
-	"technician_id" varchar,
+	"technician_id" integer,
 	"status" varchar DEFAULT 'scheduled',
 	"scheduled_date" date,
 	"scheduled_time" time,
