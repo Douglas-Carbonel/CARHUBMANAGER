@@ -1,7 +1,6 @@
-
-
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { apiRequest } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import Sidebar from "@/components/layout/sidebar";
@@ -17,7 +16,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Users, UserPlus, Shield, Eye, Edit, Trash2, Settings, Lock } from "lucide-react";
-import { apiRequest } from "@/lib/authUtils";
 
 interface User {
   id: number;
@@ -42,6 +40,7 @@ interface UserPermission {
   userId: number;
   permissionId: number;
   permission: Permission;
+  permission: Permission;
 }
 
 export default function AdminPanel() {
@@ -52,7 +51,7 @@ export default function AdminPanel() {
   const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedUserPermissions, setSelectedUserPermissions] = useState<number[]>([]);
-  
+
   const [newUser, setNewUser] = useState({
     username: "",
     email: "",
@@ -562,4 +561,3 @@ export default function AdminPanel() {
     </div>
   );
 }
-
