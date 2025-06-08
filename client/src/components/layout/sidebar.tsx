@@ -17,38 +17,50 @@ import {
   Shield,
 } from "lucide-react";
 
-const navigation = [
-  {
-    name: "Dashboard",
-    href: "/dashboard",
-    icon: Home,
-  },
-  {
-    name: "Clientes",
-    href: "/customers",
-    icon: Users,
-  },
-  {
-    name: "Veículos",
-    href: "/vehicles",
-    icon: Car,
-  },
-  {
-    name: "Serviços",
-    href: "/services",
-    icon: Wrench,
-  },
-  {
-    name: "Agenda",
-    href: "/schedule",
-    icon: Calendar,
-  },
-  {
-    name: "Relatórios",
-    href: "/reports",
-    icon: BarChart3,
-  },
-];
+const getNavigation = (userRole: string | null) => {
+  const baseNavigation = [
+    {
+      name: "Dashboard",
+      href: "/dashboard",
+      icon: Home,
+    },
+    {
+      name: "Clientes",
+      href: "/customers",
+      icon: Users,
+    },
+    {
+      name: "Veículos",
+      href: "/vehicles",
+      icon: Car,
+    },
+    {
+      name: "Serviços",
+      href: "/services",
+      icon: Wrench,
+    },
+    {
+      name: "Agenda",
+      href: "/schedule",
+      icon: Calendar,
+    },
+    {
+      name: "Relatórios",
+      href: "/reports",
+      icon: BarChart3,
+    },
+  ];
+
+  if (userRole === "admin") {
+    baseNavigation.push({
+      name: "Administração",
+      href: "/admin",
+      icon: Shield,
+    });
+  }
+
+  return baseNavigation;
+};
 
 export default function Sidebar() {
   const [location] = useLocation();
@@ -83,7 +95,7 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
-        {navigation.map((item) => {
+        {getNavigation(user?.role || null).map((item) => {
           const isActive = location === item.href;
           return (
             <Link key={item.name} href={item.href}>
