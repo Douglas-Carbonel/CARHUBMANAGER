@@ -281,12 +281,24 @@ export default function AdminPage() {
   };
 
   const handlePermissionChange = (permissionId: string, checked: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      permissions: checked 
-        ? [...prev.permissions, permissionId]
-        : prev.permissions.filter(p => p !== permissionId)
-    }));
+    setFormData(prev => {
+      const currentPermissions = prev.permissions || [];
+      
+      if (checked && !currentPermissions.includes(permissionId)) {
+        return {
+          ...prev,
+          permissions: [...currentPermissions, permissionId]
+        };
+      } else if (!checked && currentPermissions.includes(permissionId)) {
+        return {
+          ...prev,
+          permissions: currentPermissions.filter(p => p !== permissionId)
+        };
+      }
+      
+      // Se não há mudança, retorna o estado anterior sem criar novo objeto
+      return prev;
+    });
   };
 
   const filteredUsers = users.filter(user => {
@@ -570,13 +582,20 @@ export default function AdminPage() {
                                         ? `${permission.bgColor} ${permission.borderColor} shadow-md` 
                                         : 'bg-white border-gray-200 hover:border-gray-300'
                                     }`}
-                                    onClick={() => handlePermissionChange(permission.id, !isChecked)}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handlePermissionChange(permission.id, !isChecked);
+                                    }}
                                   >
                                     <div className="flex items-start space-x-3">
                                       <Checkbox
                                         id={permission.id}
                                         checked={isChecked}
-                                        onCheckedChange={(checked) => handlePermissionChange(permission.id, !!checked)}
+                                        onCheckedChange={(checked) => {
+                                          handlePermissionChange(permission.id, !!checked);
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
                                         className="mt-1"
                                       />
                                       <div className="flex-1">
