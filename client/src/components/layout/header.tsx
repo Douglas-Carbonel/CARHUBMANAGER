@@ -1,6 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, Shield, Settings } from "lucide-react";
+import { Link } from "wouter";
 
 interface HeaderProps {
   title: string;
@@ -25,23 +26,42 @@ export default function Header({ title, subtitle }: HeaderProps) {
         </div>
         
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm" className="text-gray-600">
+          <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800 hover:bg-gray-100">
             <Search className="h-5 w-5" />
           </Button>
           
-          <Button variant="ghost" size="sm" className="text-gray-600">
+          <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800 hover:bg-gray-100">
             <Bell className="h-5 w-5" />
           </Button>
           
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center">
+          {user?.role === "admin" && (
+            <Link href="/admin">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-teal-600 hover:text-teal-700 hover:bg-teal-50 border border-teal-200 shadow-sm"
+                title="Painel Administrativo"
+              >
+                <Shield className="h-5 w-5 mr-2" />
+                <span className="hidden md:inline">Admin</span>
+              </Button>
+            </Link>
+          )}
+          
+          <div className="flex items-center space-x-3 pl-2 border-l border-gray-200">
+            <div className="w-9 h-9 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full flex items-center justify-center shadow-md">
               <span className="text-white text-sm font-medium">
                 {user?.firstName?.[0]}{user?.lastName?.[0]}
               </span>
             </div>
-            <span className="text-sm font-medium text-gray-700">
-              {user?.firstName} {user?.lastName}
-            </span>
+            <div className="hidden sm:block">
+              <p className="text-sm font-medium text-gray-800">
+                {user?.firstName} {user?.lastName}
+              </p>
+              <p className="text-xs text-gray-500 capitalize">
+                {user?.role === "admin" ? "Administrador" : "Técnico"}
+              </p>
+            </div>
           </div>
         </div>
       </div>

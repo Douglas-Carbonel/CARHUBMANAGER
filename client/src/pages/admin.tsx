@@ -348,51 +348,80 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-teal-50 to-cyan-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header moderno */}
+        {/* Header executivo profissional */}
         <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-teal-600 to-emerald-600 rounded-3xl"></div>
-          <div className="absolute inset-0 bg-black/10 rounded-3xl"></div>
-          <div className="relative p-8 text-white">
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl"></div>
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] rounded-2xl"></div>
+          <div className="relative px-8 py-12">
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-4xl font-bold mb-2 tracking-tight">Painel Administrativo</h1>
-                <p className="text-teal-100 text-lg">Gerencie usuários e permissões do sistema</p>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-4">
+                  <div className="w-16 h-16 bg-gradient-to-r from-teal-400 to-emerald-400 rounded-2xl flex items-center justify-center shadow-2xl">
+                    <Shield className="h-8 w-8 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">
+                      Central Administrativa
+                    </h1>
+                    <p className="text-slate-300 text-lg font-medium">
+                      Controle total do sistema • Gestão de usuários e permissões
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-6 text-slate-400">
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-5 w-5" />
+                    <span className="text-sm font-medium">{users.length} usuários</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Settings className="h-5 w-5" />
+                    <span className="text-sm font-medium">Sistema ativo</span>
+                  </div>
+                </div>
               </div>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button 
                     onClick={resetForm} 
                     size="lg"
-                    className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300"
+                    className="bg-white text-slate-900 hover:bg-slate-100 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 font-semibold px-8 py-3"
                   >
-                    <UserPlus className="h-5 w-5 mr-2" />
-                    Novo Usuário
+                    <UserPlus className="h-5 w-5 mr-3" />
+                    Adicionar Usuário
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-sm">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-3 text-2xl">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 flex items-center justify-center">
-                        {editingUser ? <Edit className="h-5 w-5 text-white" /> : <UserPlus className="h-5 w-5 text-white" />}
+                <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-white border-0 shadow-2xl">
+                  <DialogHeader className="pb-6 border-b border-gray-100">
+                    <DialogTitle className="flex items-center gap-4 text-2xl font-bold text-slate-800">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-700 flex items-center justify-center shadow-lg">
+                        {editingUser ? <Edit className="h-6 w-6 text-white" /> : <UserPlus className="h-6 w-6 text-white" />}
                       </div>
-                      {editingUser ? "Editar Usuário" : "Novo Usuário"}
+                      <div>
+                        {editingUser ? "Editar Usuário" : "Novo Usuário"}
+                        <p className="text-sm font-normal text-slate-500 mt-1">
+                          {editingUser ? "Atualize as informações do usuário" : "Crie um novo usuário para o sistema"}
+                        </p>
+                      </div>
                     </DialogTitle>
                   </DialogHeader>
                   
-                  <form onSubmit={handleSubmit} className="space-y-8">
+                  <form onSubmit={handleSubmit} className="space-y-8 pt-6">
                     <Tabs defaultValue="basic" className="w-full">
-                      <TabsList className="grid w-full grid-cols-3 bg-gray-100">
-                        <TabsTrigger value="basic" className="flex items-center gap-2">
+                      <TabsList className="grid w-full grid-cols-3 bg-slate-50 border border-slate-200 p-1">
+                        <TabsTrigger value="basic" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
                           <Users className="h-4 w-4" />
-                          Informações
+                          <span className="hidden sm:inline">Informações Pessoais</span>
+                          <span className="sm:hidden">Info</span>
                         </TabsTrigger>
-                        <TabsTrigger value="security" className="flex items-center gap-2">
+                        <TabsTrigger value="security" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
                           <Key className="h-4 w-4" />
-                          Segurança
+                          <span className="hidden sm:inline">Credenciais</span>
+                          <span className="sm:hidden">Login</span>
                         </TabsTrigger>
-                        <TabsTrigger value="permissions" className="flex items-center gap-2">
+                        <TabsTrigger value="permissions" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
                           <Shield className="h-4 w-4" />
-                          Permissões
+                          <span className="hidden sm:inline">Permissões</span>
+                          <span className="sm:hidden">Acesso</span>
                         </TabsTrigger>
                       </TabsList>
 
@@ -648,63 +677,79 @@ export default function AdminPage() {
             ) : (
               <div className="space-y-4">
                 {filteredUsers.map((user) => (
-                  <div key={user.id} className="p-6 bg-white rounded-xl border border-gray-200 hover:border-teal-300 hover:shadow-lg transition-all duration-300">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                          {user.firstName?.[0]}{user.lastName?.[0]}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="font-semibold text-lg text-gray-800">
-                              {user.firstName} {user.lastName}
-                            </h3>
-                            {getRoleBadge(user.role || "technician")}
-                            {getStatusBadge(user.isActive ?? true)}
-                          </div>
-                          <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
-                            <span className="flex items-center gap-1">
-                              <Users className="h-4 w-4" />
-                              @{user.username}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Mail className="h-4 w-4" />
-                              {user.email || "Não informado"}
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {user.permissions?.slice(0, 4).map(permission => 
-                              getPermissionBadge(permission)
-                            )}
-                            {user.permissions && user.permissions.length > 4 && (
-                              <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 border border-gray-300">
-                                +{user.permissions.length - 4} mais
+                  <Card key={user.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md bg-gradient-to-r from-white to-slate-50">
+                    <CardContent className="p-8">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-6">
+                          <div className="relative">
+                            <div className="w-20 h-20 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-700 flex items-center justify-center text-white font-bold text-xl shadow-2xl group-hover:scale-105 transition-transform duration-300">
+                              {user.firstName?.[0]}{user.lastName?.[0]}
+                            </div>
+                            {user.isActive && (
+                              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white shadow-lg">
+                                <CheckCircle className="h-3 w-3 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
                               </div>
                             )}
                           </div>
+                          <div className="flex-1 space-y-3">
+                            <div className="flex items-center gap-4">
+                              <h3 className="font-bold text-xl text-slate-800">
+                                {user.firstName} {user.lastName}
+                              </h3>
+                              {getRoleBadge(user.role || "technician")}
+                            </div>
+                            <div className="flex items-center gap-6 text-slate-600">
+                              <div className="flex items-center gap-2">
+                                <Users className="h-4 w-4 text-slate-400" />
+                                <span className="font-medium">@{user.username}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Mail className="h-4 w-4 text-slate-400" />
+                                <span>{user.email || "Email não informado"}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-slate-400" />
+                                <span className="text-sm">
+                                  Criado em {new Date(user.createdAt).toLocaleDateString('pt-BR')}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {user.permissions?.slice(0, 5).map(permission => 
+                                getPermissionBadge(permission)
+                              )}
+                              {user.permissions && user.permissions.length > 5 && (
+                                <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 border border-slate-300 text-slate-600">
+                                  +{user.permissions.length - 5} permissões
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex space-x-3">
+                          <Button
+                            size="lg"
+                            variant="outline"
+                            onClick={() => handleEdit(user)}
+                            className="h-12 w-12 p-0 hover:bg-blue-50 hover:border-blue-300 border-slate-200"
+                            title="Editar usuário"
+                          >
+                            <Edit className="h-5 w-5 text-blue-600" />
+                          </Button>
+                          <Button
+                            size="lg"
+                            variant="outline"
+                            onClick={() => handleDelete(user.id)}
+                            disabled={user.id === 1}
+                            className="h-12 w-12 p-0 hover:bg-red-50 hover:border-red-300 disabled:opacity-50 border-slate-200"
+                            title={user.id === 1 ? "Usuário admin principal não pode ser excluído" : "Excluir usuário"}
+                          >
+                            <Trash2 className="h-5 w-5 text-red-600" />
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEdit(user)}
-                          className="hover:bg-teal-50 hover:border-teal-300"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDelete(user.id)}
-                          disabled={user.id === 1}
-                          className="hover:bg-red-50 hover:border-red-300 disabled:opacity-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             )}
