@@ -1,7 +1,6 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +11,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { Car, Users, Wrench, Calendar, Loader2 } from "lucide-react";
+import { Car, Users, Wrench, Calendar } from "lucide-react";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Nome de usuário é obrigatório"),
@@ -32,8 +31,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
-  const { user, isLoading, loginMutation, registerMutation } = useAuth();
-  const [, setLocation] = useLocation();
+  const { loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("login");
 
@@ -57,37 +55,6 @@ export default function AuthPage() {
     },
   });
 
-  // Redirect to dashboard if already authenticated
-  useEffect(() => {
-    if (!isLoading && user) {
-      setLocation("/dashboard");
-    }
-  }, [user, isLoading, setLocation]);
-
-  // Show loading while checking authentication
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-teal-600 mx-auto mb-4" />
-          <p className="text-gray-600">Verificando autenticação...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render auth form if user is already authenticated
-  if (user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-teal-600 mx-auto mb-4" />
-          <p className="text-gray-600">Redirecionando para dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
   const onLoginSubmit = (data: LoginFormData) => {
     loginMutation.mutate(data, {
       onSuccess: () => {
@@ -95,7 +62,7 @@ export default function AuthPage() {
           title: "Login realizado com sucesso!",
           description: "Redirecionando para o dashboard...",
         });
-        // The useEffect will handle the redirect
+        // O AuthGuard irá lidar com o redirecionamento
       },
       onError: (error: any) => {
         toast({
@@ -114,7 +81,7 @@ export default function AuthPage() {
           title: "Registro realizado com sucesso!",
           description: "Você foi logado automaticamente.",
         });
-        // The useEffect will handle the redirect
+        // O AuthGuard irá lidar com o redirecionamento
       },
       onError: (error: any) => {
         toast({
