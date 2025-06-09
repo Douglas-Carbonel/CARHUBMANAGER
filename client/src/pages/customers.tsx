@@ -72,7 +72,6 @@ export default function Customers() {
 
   const { data: customers, isLoading: customersLoading } = useQuery({
     queryKey: ["/api/customers"],
-    enabled: isAuthenticated,
   });
 
   const createMutation = useMutation({

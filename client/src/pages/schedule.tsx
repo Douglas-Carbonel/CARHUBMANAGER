@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
@@ -49,39 +47,20 @@ export default function Schedule() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"timeline" | "grid">("timeline");
 
-  // Redirect to home if not authenticated
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/auth";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
-
-  const { data: services, isLoading: servicesLoading } = useQuery({
+  const { data: services = [], isLoading: servicesLoading } = useQuery({
     queryKey: ["/api/services"],
-    enabled: isAuthenticated,
   });
 
-  const { data: customers } = useQuery({
+  const { data: customers = [] } = useQuery({
     queryKey: ["/api/customers"],
-    enabled: isAuthenticated,
   });
 
-  const { data: vehicles } = useQuery({
+  const { data: vehicles = [] } = useQuery({
     queryKey: ["/api/vehicles"],
-    enabled: isAuthenticated,
   });
 
-  const { data: serviceTypes } = useQuery({
+  const { data: serviceTypes = [] } = useQuery({
     queryKey: ["/api/service-types"],
-    enabled: isAuthenticated,
   });
 
   const getCustomerName = (customerId: number) => {
@@ -171,7 +150,7 @@ export default function Schedule() {
                 {statusLabels[service.status as keyof typeof statusLabels]}
               </Badge>
             </div>
-            
+
             <div className={`${isCompact ? 'space-y-3' : 'grid grid-cols-1 lg:grid-cols-2 gap-6'}`}>
               <div className="space-y-2">
                 <div className="flex items-center text-gray-700 bg-gray-50 rounded-lg p-3">
@@ -189,7 +168,7 @@ export default function Schedule() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <div className="bg-blue-50 rounded-lg p-3">
                   <div className="flex items-center text-gray-700 mb-2">
@@ -205,7 +184,7 @@ export default function Schedule() {
                 </div>
               </div>
             </div>
-            
+
             {service.estimatedValue && !isCompact && (
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 border border-green-100">
@@ -216,7 +195,7 @@ export default function Schedule() {
                 </div>
               </div>
             )}
-            
+
             {service.notes && !isCompact && (
               <div className="mt-4">
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
@@ -230,7 +209,7 @@ export default function Schedule() {
               </div>
             )}
           </div>
-          
+
           <div className="flex flex-col space-y-2 ml-4">
             <Button 
               size="sm" 
@@ -259,13 +238,13 @@ export default function Schedule() {
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
       <Sidebar />
-      
+
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
           title="Agenda"
           subtitle="Visualize e gerencie os agendamentos"
         />
-        
+
         <main className="flex-1 overflow-y-auto">
           {/* Enhanced Header */}
           <div className="bg-gradient-to-r from-white via-blue-50 to-white border-b border-blue-100 px-6 py-6 sticky top-0 z-10 shadow-lg backdrop-blur-sm bg-white/95">
@@ -280,7 +259,7 @@ export default function Schedule() {
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  
+
                   <div className="text-center min-w-[200px]">
                     <h2 className="text-xl font-semibold text-gray-900">
                       {new Date(selectedDate).toLocaleDateString('pt-BR', { 
@@ -293,7 +272,7 @@ export default function Schedule() {
                       {dayServices.length} {dayServices.length === 1 ? 'agendamento' : 'agendamentos'}
                     </p>
                   </div>
-                  
+
                   <Button
                     variant="outline"
                     size="sm"
@@ -303,7 +282,7 @@ export default function Schedule() {
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
-                
+
                 <div className="flex items-center space-x-3">
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger className="w-40">
@@ -318,7 +297,7 @@ export default function Schedule() {
                       <SelectItem value="cancelled">Cancelado</SelectItem>
                     </SelectContent>
                   </Select>
-                  
+
                   <div className="flex bg-gray-100 rounded-lg p-1">
                     <Button
                       size="sm"
@@ -339,7 +318,7 @@ export default function Schedule() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-3">
                 {!isToday && (
                   <Button
@@ -350,14 +329,14 @@ export default function Schedule() {
                     Hoje
                   </Button>
                 )}
-                
+
                 <input
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
                   className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
                 />
-                
+
                 <Button
                   className="bg-green-600 hover:bg-green-700"
                   onClick={() => setIsNewServiceModalOpen(true)}
@@ -483,4 +462,3 @@ export default function Schedule() {
     </div>
   );
 }
-
