@@ -67,7 +67,7 @@ export default function AuthPage() {
             <h1 className="text-7xl font-extrabold bg-gradient-to-r from-teal-600 via-cyan-500 to-emerald-600 bg-clip-text text-transparent mb-6 tracking-[0.15em] drop-shadow-2xl transform hover:scale-105 transition-transform duration-300 font-sans">
               CAR<span className="font-light">HUB</span>
             </h1>
-            <p className="text-xl text-gray-600 mb-8 font-light tracking-wide">
+            <p className="text-2xl text-gray-700 mb-8 font-medium tracking-wider bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent">
               Sistema de Gestão Automotiva
             </p>
           </div>
@@ -75,23 +75,23 @@ export default function AuthPage() {
           <div className="grid grid-cols-2 gap-8 w-full max-w-md">
             <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-white/20">
               <Car className="h-14 w-14 text-teal-600 mx-auto mb-4 drop-shadow-md" />
-              <h3 className="font-bold text-gray-800 text-lg">Veículos</h3>
-              <p className="text-sm text-gray-600 mt-1">Gerencie frota</p>
+              <h3 className="font-semibold text-gray-800 text-xl tracking-wide">Veículos</h3>
+              <p className="text-base text-gray-600 mt-2 font-medium">Gerencie frota</p>
             </div>
             <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-white/20">
               <Users className="h-14 w-14 text-teal-600 mx-auto mb-4 drop-shadow-md" />
-              <h3 className="font-bold text-gray-800 text-lg">Clientes</h3>
-              <p className="text-sm text-gray-600 mt-1">Base de dados</p>
+              <h3 className="font-semibold text-gray-800 text-xl tracking-wide">Clientes</h3>
+              <p className="text-base text-gray-600 mt-2 font-medium">Base de dados</p>
             </div>
             <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-white/20">
               <Wrench className="h-14 w-14 text-teal-600 mx-auto mb-4 drop-shadow-md" />
-              <h3 className="font-bold text-gray-800 text-lg">Serviços</h3>
-              <p className="text-sm text-gray-600 mt-1">Manutenções</p>
+              <h3 className="font-semibold text-gray-800 text-xl tracking-wide">Serviços</h3>
+              <p className="text-base text-gray-600 mt-2 font-medium">Manutenções</p>
             </div>
             <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-white/20">
               <Calendar className="h-14 w-14 text-teal-600 mx-auto mb-4 drop-shadow-md" />
-              <h3 className="font-bold text-gray-800 text-lg">Agenda</h3>
-              <p className="text-sm text-gray-600 mt-1">Compromissos</p>
+              <h3 className="font-semibold text-gray-800 text-xl tracking-wide">Agenda</h3>
+              <p className="text-base text-gray-600 mt-2 font-medium">Compromissos</p>
             </div>
           </div>
         </div>
