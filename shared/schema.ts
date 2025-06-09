@@ -60,12 +60,15 @@ export const customers = pgTable("customers", {
 export const vehicles = pgTable("vehicles", {
   id: serial("id").primaryKey(),
   customerId: integer("customer_id").references(() => customers.id).notNull(),
-  plate: varchar("plate").unique().notNull(),
+  licensePlate: varchar("license_plate").unique().notNull(),
   brand: varchar("brand").notNull(),
   model: varchar("model").notNull(),
   year: integer("year").notNull(),
   color: varchar("color"),
-  observations: text("observations"),
+  chassis: varchar("chassis"),
+  engine: varchar("engine"),
+  fuelType: varchar("fuel_type"),
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
