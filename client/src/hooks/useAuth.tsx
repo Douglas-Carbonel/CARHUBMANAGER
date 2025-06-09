@@ -1,12 +1,15 @@
+
 import React, { createContext, ReactNode, useContext } from "react";
 import {
   useQuery,
   useMutation,
   UseMutationResult,
+  QueryClient,
 } from "@tanstack/react-query";
 import { User } from "@shared/schema";
-import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+
+const queryClient = new QueryClient();
 
 type LoginData = {
   username: string;
@@ -31,17 +34,56 @@ type AuthContextType = {
   registerMutation: UseMutationResult<User, Error, RegisterData>;
 };
 
-export const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+async function apiRequest(
+  method: string,
+  url: string,
+  data?: unknown | undefined,
+): Promise<Response> {
+  const res = await fetch(url, {
+    method,
+    headers: data ? { "Content-Type": "application/json" } : {},
+    body: data ? JSON.stringify(data) : undefined,
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const text = (await res.text()) || res.statusText;
+    throw new Error(`${res.status}: ${text}`);
+  }
+  return res;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  
   const {
     data: user,
     error,
     isLoading,
-  } = useQuery<User | undefined, Error>({
+  } = useQuery<User | null, Error>({
     queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+    queryFn: async () => {
+      try {
+        const res = await fetch("/api/user", {
+          credentials: "include",
+        });
+        
+        if (res.status === 401) {
+          return null;
+        }
+        
+        if (!res.ok) {
+          throw new Error(`${res.status}: ${res.statusText}`);
+        }
+        
+        return await res.json();
+      } catch (error) {
+        console.error("Auth check failed:", error);
+        return null;
+      }
+    },
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: false,
   });
@@ -126,7 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;

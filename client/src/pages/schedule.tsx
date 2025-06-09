@@ -1,22 +1,47 @@
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Clock, User, Car, Wrench, Phone, Plus, ChevronLeft, ChevronRight, Filter, Eye } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { type Service, type Customer, type Vehicle, type ServiceType } from "@shared/schema";
-import NewServiceModal from "@/components/modals/new-service-modal";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Search, Edit, Trash2, Calendar, Clock, User, Car } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { insertServiceSchema, type Service, type Customer, type Vehicle } from "@shared/schema";
+import { z } from "zod";
+
+async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
+  const res = await fetch(url, {
+    method,
+    headers: data ? { "Content-Type": "application/json" } : {},
+    body: data ? JSON.stringify(data) : undefined,
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const text = (await res.text()) || res.statusText;
+    throw new Error(`${res.status}: ${text}`);
+  }
+  return res;
+}
+
+const serviceFormSchema = insertServiceSchema;
+type ServiceFormData = z.infer<typeof serviceFormSchema>;
 
 const statusColors = {
-  scheduled: "bg-blue-100 text-blue-800 border-blue-200",
-  in_progress: "bg-orange-100 text-orange-800 border-orange-200", 
-  completed: "bg-green-100 text-green-800 border-green-200",
-  cancelled: "bg-red-100 text-red-800 border-red-200",
+  scheduled: "bg-blue-100 text-blue-800",
+  in_progress: "bg-yellow-100 text-yellow-800", 
+  completed: "bg-green-100 text-green-800",
+  cancelled: "bg-red-100 text-red-800",
 };
 
 const statusLabels = {
@@ -26,439 +51,503 @@ const statusLabels = {
   cancelled: "Cancelado",
 };
 
-const priorityColors = {
-  high: "border-l-red-500 bg-red-50",
-  medium: "border-l-yellow-500 bg-yellow-50",
-  low: "border-l-green-500 bg-green-50",
-  normal: "border-l-blue-500 bg-blue-50",
-};
-
-export default function Schedule() {
+export default function SchedulePage() {
+  const { user } = useAuth();
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
-  const [selectedDate, setSelectedDate] = useState(() => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  });
-  const [isNewServiceModalOpen, setIsNewServiceModalOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [viewMode, setViewMode] = useState<"timeline" | "grid">("timeline");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingService, setEditingService] = useState<Service | null>(null);
 
-  const { data: services = [], isLoading: servicesLoading } = useQuery({
+  const form = useForm<ServiceFormData>({
+    resolver: zodResolver(serviceFormSchema),
+    defaultValues: {
+      customerId: 0,
+      vehicleId: 0,
+      description: "",
+      status: "scheduled",
+      scheduledDate: "",
+      estimatedHours: 1,
+      hourlyRate: 0,
+      notes: "",
+    },
+  });
+
+  const { data: services = [], isLoading } = useQuery<(Service & { customer: Customer; vehicle: Vehicle })[]>({
     queryKey: ["/api/services"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/services");
+      return await res.json();
+    },
   });
 
-  const { data: customers = [] } = useQuery({
+  const { data: customers = [] } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/customers");
+      return await res.json();
+    },
   });
 
-  const { data: vehicles = [] } = useQuery({
+  const { data: vehicles = [] } = useQuery<(Vehicle & { customer: Customer })[]>({
     queryKey: ["/api/vehicles"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/vehicles");
+      return await res.json();
+    },
   });
 
-  const { data: serviceTypes = [] } = useQuery({
-    queryKey: ["/api/service-types"],
+  const createMutation = useMutation({
+    mutationFn: async (data: ServiceFormData) => {
+      const res = await apiRequest("POST", "/api/services", data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/services"] });
+      setIsModalOpen(false);
+      setEditingService(null);
+      form.reset();
+      toast({
+        title: "Serviço agendado",
+        description: "Serviço foi agendado com sucesso.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
-  const getCustomerName = (customerId: number) => {
-    const customer = customers?.find((c: Customer) => c.id === customerId);
-    return customer?.name || "Cliente não encontrado";
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: ServiceFormData }) => {
+      const res = await apiRequest("PUT", `/api/services/${id}`, data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/services"] });
+      setIsModalOpen(false);
+      setEditingService(null);
+      form.reset();
+      toast({
+        title: "Serviço atualizado",
+        description: "Serviço foi atualizado com sucesso.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/services/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/services"] });
+      toast({
+        title: "Serviço removido",
+        description: "Serviço foi removido com sucesso.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: ServiceFormData) => {
+    if (editingService) {
+      updateMutation.mutate({ id: editingService.id, data });
+    } else {
+      createMutation.mutate(data);
+    }
   };
 
-  const getCustomerPhone = (customerId: number) => {
-    const customer = customers?.find((c: Customer) => c.id === customerId);
-    return customer?.phone || null;
-  };
-
-  const getVehicleInfo = (vehicleId: number) => {
-    const vehicle = vehicles?.find((v: Vehicle) => v.id === vehicleId);
-    return vehicle ? `${vehicle.brand} ${vehicle.model} - ${vehicle.plate}` : "Veículo não encontrado";
-  };
-
-  const getServiceTypeName = (serviceTypeId: number) => {
-    const serviceType = serviceTypes?.find((st: ServiceType) => st.id === serviceTypeId);
-    return serviceType?.name || "Serviço não encontrado";
-  };
-
-  // Filter services for selected date and status
-  let dayServices = services?.filter((service: Service) => 
-    service.scheduledDate === selectedDate &&
-    (statusFilter === "all" || service.status === statusFilter)
-  ).sort((a: Service, b: Service) => {
-    const timeA = a.scheduledTime || '00:00';
-    const timeB = b.scheduledTime || '00:00';
-    return timeA.localeCompare(timeB);
-  }) || [];
-
-  // Group services by time slots for grid view
-  const timeSlots = [
-    "08:00", "09:00", "10:00", "11:00", "12:00", 
-    "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"
-  ];
-
-  const getServicesForTimeSlot = (time: string) => {
-    return dayServices.filter((service: Service) => {
-      const serviceTime = service.scheduledTime?.substring(0, 5);
-      return serviceTime === time;
+  const handleEdit = (service: Service) => {
+    setEditingService(service);
+    form.reset({
+      customerId: service.customerId,
+      vehicleId: service.vehicleId,
+      description: service.description,
+      status: service.status as "scheduled" | "in_progress" | "completed" | "cancelled",
+      scheduledDate: service.scheduledDate ? new Date(service.scheduledDate).toISOString().slice(0, 16) : "",
+      estimatedHours: service.estimatedHours || 1,
+      hourlyRate: service.hourlyRate || 0,
+      notes: service.notes || "",
     });
+    setIsModalOpen(true);
   };
 
-  // Navigation functions
-  const navigateDate = (direction: 'prev' | 'next') => {
-    const currentDate = new Date(selectedDate);
-    const newDate = new Date(currentDate);
-    newDate.setDate(currentDate.getDate() + (direction === 'next' ? 1 : -1));
-    setSelectedDate(newDate.toISOString().split('T')[0]);
+  const handleDelete = (id: number) => {
+    if (confirm("Tem certeza que deseja remover este serviço?")) {
+      deleteMutation.mutate(id);
+    }
   };
 
-  const goToToday = () => {
-    setSelectedDate(new Date().toISOString().split('T')[0]);
-  };
+  const filteredServices = services.filter((service) => {
+    const matchesSearch = service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.customer?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.vehicle?.plate.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === "all" || service.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
 
-  const isToday = selectedDate === new Date().toISOString().split('T')[0];
-
-  const getServicePriority = (service: Service) => {
-    if (service.status === 'in_progress') return 'high';
-    if (service.estimatedValue && Number(service.estimatedValue) > 500) return 'medium';
-    return 'normal';
-  };
-
-  if (isLoading || !isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600"></div>
-      </div>
-    );
-  }
-
-  const ServiceCard = ({ service, isCompact = false }: { service: Service, isCompact?: boolean }) => (
-    <Card className={`group hover:shadow-xl transition-all duration-300 border-l-4 ${priorityColors[getServicePriority(service) as keyof typeof priorityColors]} ${isCompact ? 'mb-3' : 'mb-4'} hover:scale-[1.02] backdrop-blur-sm bg-white/95`}>
-      <CardContent className={isCompact ? "p-4" : "p-5"}>
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="flex items-center bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg px-3 py-2 border border-blue-100 shadow-sm">
-                <Clock className="h-4 w-4 text-blue-600 mr-2" />
-                <span className="font-semibold text-blue-800 text-sm">
-                  {service.scheduledTime || 'Horário não definido'}
-                </span>
-              </div>
-              <Badge className={`${statusColors[service.status as keyof typeof statusColors]} border-2 text-xs font-medium px-3 py-1 shadow-sm`}>
-                {statusLabels[service.status as keyof typeof statusLabels]}
-              </Badge>
-            </div>
-
-            <div className={`${isCompact ? 'space-y-3' : 'grid grid-cols-1 lg:grid-cols-2 gap-6'}`}>
-              <div className="space-y-2">
-                <div className="flex items-center text-gray-700 bg-gray-50 rounded-lg p-3">
-                  <div className="bg-green-100 p-2 rounded-full mr-3">
-                    <User className="h-4 w-4 text-green-600" />
-                  </div>
-                  <div className="text-sm">
-                    <div className="font-semibold text-gray-900">{getCustomerName(service.customerId)}</div>
-                    {getCustomerPhone(service.customerId) && !isCompact && (
-                      <div className="text-xs text-gray-600 flex items-center mt-1">
-                        <Phone className="h-3 w-3 mr-1" />
-                        {getCustomerPhone(service.customerId)}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="bg-blue-50 rounded-lg p-3">
-                  <div className="flex items-center text-gray-700 mb-2">
-                    <div className="bg-blue-100 p-2 rounded-full mr-3">
-                      <Car className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div className="text-sm font-semibold text-gray-900">{getVehicleInfo(service.vehicleId)}</div>
-                  </div>
-                  <div className="flex items-center text-gray-700 ml-11">
-                    <Wrench className="h-3 w-3 mr-2 text-gray-500" />
-                    <div className="text-sm font-medium text-gray-700">{getServiceTypeName(service.serviceTypeId)}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {service.estimatedValue && !isCompact && (
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 border border-green-100">
-                  <span className="text-xl font-bold text-green-700">
-                    R$ {Number(service.estimatedValue).toFixed(2)}
-                  </span>
-                  <span className="text-sm text-green-600 ml-2">valor estimado</span>
-                </div>
-              </div>
-            )}
-
-            {service.notes && !isCompact && (
-              <div className="mt-4">
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                  <div className="flex items-start">
-                    <div className="bg-amber-100 p-1 rounded mr-2 mt-0.5">
-                      <Eye className="h-3 w-3 text-amber-600" />
-                    </div>
-                    <p className="text-sm text-amber-800 font-medium">{service.notes}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-col space-y-2 ml-4">
-            <Button 
-              size="sm" 
-              variant="ghost" 
-              className="h-8 w-8 p-0 hover:bg-blue-100 group-hover:scale-110 transition-transform duration-200"
-              title="Ver detalhes"
-            >
-              <Eye className="h-4 w-4 text-blue-600" />
-            </Button>
-            {getCustomerPhone(service.customerId) && (
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                className="h-8 w-8 p-0 hover:bg-green-100 group-hover:scale-110 transition-transform duration-200"
-                title="Ligar para cliente"
-              >
-                <Phone className="h-4 w-4 text-green-600" />
-              </Button>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+  const selectedCustomerId = form.watch("customerId");
+  const availableVehicles = vehicles.filter(vehicle => 
+    selectedCustomerId ? vehicle.customerId === selectedCustomerId : true
   );
 
-  return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
-      <Sidebar />
+  if (!user) {
+    return null;
+  }
 
+  return (
+    <div className="flex h-screen overflow-hidden">
+      <Sidebar />
+      
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
-          title="Agenda"
-          subtitle="Visualize e gerencie os agendamentos"
+          title="Agendamentos"
+          subtitle="Gerencie os agendamentos de serviços"
         />
-
-        <main className="flex-1 overflow-y-auto">
-          {/* Enhanced Header */}
-          <div className="bg-gradient-to-r from-white via-blue-50 to-white border-b border-blue-100 px-6 py-6 sticky top-0 z-10 shadow-lg backdrop-blur-sm bg-white/95">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-6">
-                <div className="flex items-center space-x-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigateDate('prev')}
-                    className="h-9 w-9 p-0"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-
-                  <div className="text-center min-w-[200px]">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      {new Date(selectedDate).toLocaleDateString('pt-BR', { 
-                        weekday: 'long', 
-                        day: 'numeric', 
-                        month: 'long'
-                      })}
-                    </h2>
-                    <p className="text-sm text-gray-600">
-                      {dayServices.length} {dayServices.length === 1 ? 'agendamento' : 'agendamentos'}
-                    </p>
-                  </div>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigateDate('next')}
-                    className="h-9 w-9 p-0"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+        
+        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-white/80 via-blue-50/50 to-indigo-50/30 backdrop-blur-sm">
+          <div className="p-8">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Input
+                    placeholder="Buscar agendamentos..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-12 w-80 h-12 border-2 border-gray-200 focus:border-blue-400 rounded-xl shadow-sm bg-white/80"
+                  />
                 </div>
-
-                <div className="flex items-center space-x-3">
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-40">
-                      <Filter className="h-4 w-4 mr-2" />
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os Status</SelectItem>
-                      <SelectItem value="scheduled">Agendado</SelectItem>
-                      <SelectItem value="in_progress">Em Andamento</SelectItem>
-                      <SelectItem value="completed">Concluído</SelectItem>
-                      <SelectItem value="cancelled">Cancelado</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <div className="flex bg-gray-100 rounded-lg p-1">
-                    <Button
-                      size="sm"
-                      variant={viewMode === "timeline" ? "default" : "ghost"}
-                      onClick={() => setViewMode("timeline")}
-                      className="text-xs"
-                    >
-                      Timeline
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={viewMode === "grid" ? "default" : "ghost"}
-                      onClick={() => setViewMode("grid")}
-                      className="text-xs"
-                    >
-                      Grade
-                    </Button>
-                  </div>
-                </div>
+                
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-48 h-12 border-2 border-gray-200 focus:border-blue-400 rounded-xl shadow-sm bg-white/80">
+                    <SelectValue placeholder="Filtrar por status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os status</SelectItem>
+                    <SelectItem value="scheduled">Agendado</SelectItem>
+                    <SelectItem value="in_progress">Em Andamento</SelectItem>
+                    <SelectItem value="completed">Concluído</SelectItem>
+                    <SelectItem value="cancelled">Cancelado</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-
-              <div className="flex items-center space-x-3">
-                {!isToday && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={goToToday}
-                  >
-                    Hoje
-                  </Button>
-                )}
-
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
-                />
-
-                <Button
-                  className="bg-green-600 hover:bg-green-700"
-                  onClick={() => setIsNewServiceModalOpen(true)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo Serviço
-                </Button>
+              
+              <div className="flex items-center space-x-4">
+                <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg shadow-md">
+                  <span className="font-semibold">{filteredServices.length}</span>
+                  <span className="ml-1 text-sm">agendamentos</span>
+                </div>
+                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                      onClick={() => {
+                        setEditingService(null);
+                        form.reset();
+                      }}
+                    >
+                      <Plus className="h-5 w-5 mr-2" />
+                      Novo Agendamento
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingService ? "Editar Agendamento" : "Novo Agendamento"}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <Form {...form}>
+                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="customerId"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Cliente</FormLabel>
+                                <Select onValueChange={(value) => {
+                                  field.onChange(parseInt(value));
+                                  form.setValue("vehicleId", 0); // Reset vehicle selection
+                                }} value={field.value?.toString()}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Selecione o cliente" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {customers.map((customer) => (
+                                      <SelectItem key={customer.id} value={customer.id.toString()}>
+                                        {customer.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="vehicleId"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Veículo</FormLabel>
+                                <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Selecione o veículo" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {availableVehicles.map((vehicle) => (
+                                      <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                                        {vehicle.make} {vehicle.model} - {vehicle.plate}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                              <FormItem className="md:col-span-2">
+                                <FormLabel>Descrição do Serviço</FormLabel>
+                                <FormControl>
+                                  <Textarea placeholder="Descreva o serviço a ser realizado..." {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="scheduledDate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Data e Hora do Agendamento</FormLabel>
+                                <FormControl>
+                                  <Input type="datetime-local" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="status"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Status</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Selecione o status" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="scheduled">Agendado</SelectItem>
+                                    <SelectItem value="in_progress">Em Andamento</SelectItem>
+                                    <SelectItem value="completed">Concluído</SelectItem>
+                                    <SelectItem value="cancelled">Cancelado</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="estimatedHours"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Horas Estimadas</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    min="0.5" 
+                                    step="0.5" 
+                                    placeholder="1.0" 
+                                    {...field}
+                                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="hourlyRate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Valor por Hora (R$)</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    min="0" 
+                                    step="0.01" 
+                                    placeholder="50.00" 
+                                    {...field}
+                                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="notes"
+                            render={({ field }) => (
+                              <FormItem className="md:col-span-2">
+                                <FormLabel>Observações</FormLabel>
+                                <FormControl>
+                                  <Textarea placeholder="Observações adicionais..." {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="flex justify-end gap-4 pt-4">
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={() => setIsModalOpen(false)}
+                          >
+                            Cancelar
+                          </Button>
+                          <Button 
+                            type="submit" 
+                            disabled={createMutation.isPending || updateMutation.isPending}
+                          >
+                            {editingService ? "Atualizar" : "Agendar"}
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
-          </div>
 
-          {/* Content Area */}
-          <div className="p-6">
-            {servicesLoading ? (
-              <div className="flex justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <Card key={i} className="animate-pulse">
+                    <CardHeader>
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="h-3 bg-gray-200 rounded"></div>
+                        <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            ) : dayServices.length > 0 ? (
-              viewMode === "timeline" ? (
-                <div className="space-y-3">
-                  {dayServices.map((service: Service) => (
-                    <ServiceCard key={service.id} service={service} />
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-                  {timeSlots.map((timeSlot) => {
-                    const slotServices = getServicesForTimeSlot(timeSlot);
-                    const hasServices = slotServices.length > 0;
-                    return (
-                      <Card key={timeSlot} className={`min-h-[250px] transition-all duration-300 ${hasServices ? 'border-l-4 border-l-blue-500 shadow-md hover:shadow-lg' : 'border-dashed border-2 border-gray-200 hover:border-gray-300'}`}>
-                        <CardHeader className="pb-3 bg-gradient-to-r from-gray-50 to-white">
-                          <CardTitle className="text-lg flex items-center justify-between">
-                            <div className="flex items-center">
-                              <div className={`p-2 rounded-lg mr-3 ${hasServices ? 'bg-blue-100' : 'bg-gray-100'}`}>
-                                <Clock className={`h-5 w-5 ${hasServices ? 'text-blue-600' : 'text-gray-400'}`} />
-                              </div>
-                              <span className={hasServices ? 'text-gray-900' : 'text-gray-500'}>{timeSlot}</span>
-                            </div>
-                            <Badge 
-                              variant={hasServices ? "default" : "secondary"} 
-                              className={`text-xs font-semibold ${hasServices ? 'bg-blue-600' : ''}`}
-                            >
-                              {slotServices.length} {slotServices.length === 1 ? 'serviço' : 'serviços'}
-                            </Badge>
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          {hasServices ? (
-                            <div className="space-y-3">
-                              {slotServices.map((service) => (
-                                <div key={service.id} className="relative bg-white rounded-lg border border-gray-200 p-3 hover:shadow-md transition-shadow">
-                                  <div className="flex items-start justify-between mb-2">
-                                    <Badge className={`${statusColors[service.status as keyof typeof statusColors]} text-xs`}>
-                                      {statusLabels[service.status as keyof typeof statusLabels]}
-                                    </Badge>
-                                  </div>
-                                  <div className="space-y-2">
-                                    <div className="flex items-center text-sm">
-                                      <User className="h-3 w-3 mr-2 text-gray-500" />
-                                      <span className="font-medium text-gray-900 truncate">{getCustomerName(service.customerId)}</span>
-                                    </div>
-                                    <div className="flex items-center text-sm">
-                                      <Car className="h-3 w-3 mr-2 text-gray-500" />
-                                      <span className="text-gray-700 truncate">{getVehicleInfo(service.vehicleId)}</span>
-                                    </div>
-                                    <div className="flex items-center text-sm">
-                                      <Wrench className="h-3 w-3 mr-2 text-gray-500" />
-                                      <span className="text-gray-700 truncate">{getServiceTypeName(service.serviceTypeId)}</span>
-                                    </div>
-                                    {service.estimatedValue && (
-                                      <div className="text-sm font-semibold text-green-600">
-                                        R$ {Number(service.estimatedValue).toFixed(2)}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                              <div className="bg-gray-100 p-4 rounded-full mb-3">
-                                <Calendar className="h-8 w-8 text-gray-300" />
-                              </div>
-                              <div className="text-sm font-medium">Horário livre</div>
-                              <div className="text-xs mt-1">Disponível para agendamento</div>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              )
             ) : (
-              <Card className="border-dashed border-2 border-gray-300">
-                <CardContent className="text-center py-16">
-                  <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-6" />
-                  <h3 className="text-xl font-medium text-gray-900 mb-3">
-                    Nenhum agendamento para esta data
-                  </h3>
-                  <p className="text-gray-500 mb-6">
-                    Não há serviços agendados para {new Date(selectedDate).toLocaleDateString('pt-BR')}.
-                  </p>
-                  <Button
-                    className="bg-green-600 hover:bg-green-700"
-                    onClick={() => setIsNewServiceModalOpen(true)}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Agendar Primeiro Serviço
-                  </Button>
-                </CardContent>
-              </Card>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredServices.map((service) => (
+                  <Card key={service.id} className="group hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:-translate-y-1">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
+                            <Calendar className="h-6 w-6 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <CardTitle className="text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-2">
+                              {service.description}
+                            </CardTitle>
+                            <Badge className={`text-xs mt-1 ${statusColors[service.status as keyof typeof statusColors]}`}>
+                              {statusLabels[service.status as keyof typeof statusLabels]}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEdit(service)}
+                            className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-600"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDelete(service.id)}
+                            className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="space-y-2 text-sm text-gray-600">
+                        <div className="flex items-center">
+                          <User className="h-4 w-4 mr-2 text-gray-400" />
+                          <span className="min-w-0 flex-1 truncate">{service.customer?.name}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <Car className="h-4 w-4 mr-2 text-gray-400" />
+                          <span className="min-w-0 flex-1 truncate">
+                            {service.vehicle?.make} {service.vehicle?.model} - {service.vehicle?.plate}
+                          </span>
+                        </div>
+                        {service.scheduledDate && (
+                          <div className="flex items-center">
+                            <Clock className="h-4 w-4 mr-2 text-gray-400" />
+                            <span>{new Date(service.scheduledDate).toLocaleString('pt-BR')}</span>
+                          </div>
+                        )}
+                        {service.estimatedHours && service.hourlyRate && (
+                          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                            <span className="text-xs text-gray-500">
+                              {service.estimatedHours}h × R$ {service.hourlyRate}
+                            </span>
+                            <span className="font-semibold text-green-600">
+                              R$ {((service.estimatedHours || 0) * (service.hourlyRate || 0)).toFixed(2)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             )}
           </div>
         </main>
       </div>
-
-      <NewServiceModal
-        isOpen={isNewServiceModalOpen}
-        onClose={() => setIsNewServiceModalOpen(false)}
-      />
     </div>
   );
 }

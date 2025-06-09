@@ -1,9 +1,12 @@
-import { useState, useEffect } from "react";
+` tags. I will pay close attention to preserving the original indentation and structure, and avoid any forbidden words or placeholders.
+
+```
+<replit_final_file>
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
-import { apiRequest } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
@@ -11,131 +14,115 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2, Phone, Mail, Wrench, BarChart3, User } from "lucide-react";
+import { Plus, Search, Edit, Trash2, User, FileText, Car } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema, type Customer } from "@shared/schema";
-import { validateCPF, validateCNPJ, formatCPF, formatCNPJ } from "@/lib/cpf-cnpj";
 import { z } from "zod";
-import NewServiceModal from "@/components/modals/new-service-modal";
-import { useLocation } from "wouter";
 
-const customerFormSchema = insertCustomerSchema.extend({
-  document: z.string().min(1, "Documento é obrigatório").refine((doc) => {
-    const cleanDoc = doc.replace(/\D/g, '');
-    return cleanDoc.length === 11 ? validateCPF(cleanDoc) : validateCNPJ(cleanDoc);
-  }, "CPF ou CNPJ inválido")
-});
+async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
+  const res = await fetch(url, {
+    method,
+    headers: data ? { "Content-Type": "application/json" } : {},
+    body: data ? JSON.stringify(data) : undefined,
+    credentials: "include",
+  });
 
-export default function Customers() {
+  if (!res.ok) {
+    const text = (await res.text()) || res.statusText;
+    throw new Error(`${res.status}: ${text}`);
+  }
+  return res;
+}
+
+const customerFormSchema = insertCustomerSchema;
+type CustomerFormData = z.infer<typeof customerFormSchema>;
+
+function formatCPF(cpf: string) {
+  return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+}
+
+function formatCNPJ(cnpj: string) {
+  return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+}
+
+export default function CustomersPage() {
+  const { user } = useAuth();
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-  const [isNewServiceModalOpen, setIsNewServiceModalOpen] = useState(false);
-  const [selectedCustomerForService, setSelectedCustomerForService] = useState<Customer | null>(null);
-  const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
 
-  const form = useForm<z.infer<typeof customerFormSchema>>({
+  const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerFormSchema),
     defaultValues: {
-      code: "",
+      name: "",
+      email: "",
+      phone: "",
       document: "",
       documentType: "cpf",
-      name: "",
-      phone: "",
-      email: "",
       address: "",
-      observations: "",
+      city: "",
+      state: "",
+      zipCode: "",
     },
   });
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/auth";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
-
-  const { data: customers, isLoading: customersLoading } = useQuery({
+  const { data: customers = [], isLoading } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/customers");
+      return await res.json();
+    },
   });
 
   const createMutation = useMutation({
-    mutationFn: async (customer: z.infer<typeof customerFormSchema>) => {
-      return apiRequest("/api/customers", "POST", customer);
+    mutationFn: async (data: CustomerFormData) => {
+      const res = await apiRequest("POST", "/api/customers", data);
+      return await res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
-      setIsDialogOpen(false);
+      setIsModalOpen(false);
+      setEditingCustomer(null);
       form.reset();
       toast({
         title: "Cliente criado",
-        description: "Cliente criado com sucesso",
+        description: "Cliente foi criado com sucesso.",
       });
     },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/auth";
-        }, 500);
-        return;
-      }
+    onError: (error: Error) => {
       toast({
         title: "Erro",
-        description: "Falha ao criar cliente",
+        description: error.message,
         variant: "destructive",
       });
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (customer: z.infer<typeof customerFormSchema>) => {
-      return apiRequest(`/api/customers/${editingCustomer?.id}`, "PATCH", customer);
+    mutationFn: async ({ id, data }: { id: number; data: CustomerFormData }) => {
+      const res = await apiRequest("PUT", `/api/customers/${id}`, data);
+      return await res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
-      setIsDialogOpen(false);
-      form.reset();
+      setIsModalOpen(false);
       setEditingCustomer(null);
+      form.reset();
       toast({
         title: "Cliente atualizado",
-        description: "Cliente atualizado com sucesso",
+        description: "Cliente foi atualizado com sucesso.",
       });
     },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/auth";
-        }, 500);
-        return;
-      }
+    onError: (error: Error) => {
       toast({
         title: "Erro",
-        description: "Falha ao atualizar cliente",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -143,38 +130,27 @@ export default function Customers() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/customers/${id}`, "DELETE");
+      await apiRequest("DELETE", `/api/customers/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
       toast({
-        title: "Cliente excluído",
-        description: "Cliente excluído com sucesso",
+        title: "Cliente removido",
+        description: "Cliente foi removido com sucesso.",
       });
     },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/auth";
-        }, 500);
-        return;
-      }
+    onError: (error: Error) => {
       toast({
         title: "Erro",
-        description: "Falha ao excluir cliente",
+        description: error.message,
         variant: "destructive",
       });
     },
   });
 
-  const onSubmit = (data: z.infer<typeof customerFormSchema>) => {
+  const onSubmit = (data: CustomerFormData) => {
     if (editingCustomer) {
-      updateMutation.mutate(data);
+      updateMutation.mutate({ id: editingCustomer.id, data });
     } else {
       createMutation.mutate(data);
     }
@@ -183,25 +159,23 @@ export default function Customers() {
   const handleEdit = (customer: Customer) => {
     setEditingCustomer(customer);
     form.reset({
-      code: customer.code,
-      document: customer.document,
-      documentType: customer.documentType,
       name: customer.name,
-      phone: customer.phone || "",
       email: customer.email || "",
+      phone: customer.phone || "",
+      document: customer.document,
+      documentType: customer.documentType as "cpf" | "cnpj",
       address: customer.address || "",
-      observations: customer.observations || "",
+      city: customer.city || "",
+      state: customer.state || "",
+      zipCode: customer.zipCode || "",
     });
-    setIsDialogOpen(true);
+    setIsModalOpen(true);
   };
 
-  const handleNewServiceForCustomer = (customer: Customer) => {
-    setSelectedCustomerForService(customer);
-    setIsNewServiceModalOpen(true);
-  };
-
-  const handleViewReport = (customer: Customer) => {
-    setLocation(`/reports?customerId=${customer.id}`);
+  const handleDelete = (id: number) => {
+    if (confirm("Tem certeza que deseja remover este cliente?")) {
+      deleteMutation.mutate(id);
+    }
   };
 
   const formatDocument = (document: string, type: string) => {
@@ -209,33 +183,24 @@ export default function Customers() {
     return type === 'cpf' ? formatCPF(cleanDoc) : formatCNPJ(cleanDoc);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-      </div>
-    );
-  }
+  const filteredCustomers = customers.filter((customer: Customer) =>
+    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.document.includes(searchTerm) ||
+    customer.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  if (!isAuthenticated) {
+  if (!user) {
     return null;
   }
 
-  const filteredCustomers = customers?.filter((customer: Customer) =>
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.document.includes(searchTerm) ||
-    customer.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.phone?.includes(searchTerm)
-  ) || [];
-
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="flex h-screen overflow-hidden">
       <Sidebar />
+
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
-          title="Gestão de Clientes" 
-          subtitle="Gerencie clientes, dados de contato e histórico de serviços" 
+          title="Clientes"
+          subtitle="Gerencie seus clientes"
         />
 
         <main className="flex-1 overflow-y-auto bg-gradient-to-br from-white/80 via-blue-50/50 to-indigo-50/30 backdrop-blur-sm">
@@ -254,11 +219,10 @@ export default function Customers() {
                 <span className="font-semibold">{filteredCustomers.length}</span>
                 <span className="ml-1 text-sm">clientes</span>
               </div>
-
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogTrigger asChild>
                   <Button 
-                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg h-12 px-6 rounded-xl font-semibold transition-all duration-200 hover:scale-105"
+                    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
                     onClick={() => {
                       setEditingCustomer(null);
                       form.reset();
@@ -279,18 +243,43 @@ export default function Customers() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
                           control={form.control}
-                          name="code"
+                          name="name"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Código</FormLabel>
+                              <FormLabel>Nome</FormLabel>
                               <FormControl>
-                                <Input placeholder="CLI001" {...field} />
+                                <Input placeholder="Nome completo" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input placeholder="email@exemplo.com" type="email" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="phone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Telefone</FormLabel>
+                              <FormControl>
+                                <Input placeholder="(11) 99999-9999" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                         <FormField
                           control={form.control}
                           name="documentType"
@@ -312,110 +301,85 @@ export default function Customers() {
                             </FormItem>
                           )}
                         />
-                      </div>
-
-                      <FormField
-                        control={form.control}
-                        name="document"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              {form.watch("documentType") === "cpf" ? "CPF" : "CNPJ"}
-                            </FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder={form.watch("documentType") === "cpf" ? "000.000.000-00" : "00.000.000/0000-00"} 
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Nome</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Nome do cliente" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
                           control={form.control}
-                          name="phone"
+                          name="document"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Telefone</FormLabel>
+                              <FormLabel>Documento</FormLabel>
                               <FormControl>
-                                <Input placeholder="(11) 99999-9999" {...field} />
+                                <Input 
+                                  placeholder={form.watch("documentType") === "cpf" ? "000.000.000-00" : "00.000.000/0000-00"} 
+                                  {...field} 
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-
                         <FormField
                           control={form.control}
-                          name="email"
+                          name="address"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Email</FormLabel>
+                              <FormLabel>Endereço</FormLabel>
                               <FormControl>
-                                <Input type="email" placeholder="email@exemplo.com" {...field} />
+                                <Input placeholder="Rua, número" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="city"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Cidade</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Cidade" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="state"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Estado</FormLabel>
+                              <FormControl>
+                                <Input placeholder="SP" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="zipCode"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>CEP</FormLabel>
+                              <FormControl>
+                                <Input placeholder="00000-000" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
                       </div>
-
-                      <FormField
-                        control={form.control}
-                        name="address"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Endereço</FormLabel>
-                            <FormControl>
-                              <Textarea placeholder="Endereço completo" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="observations"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Observações</FormLabel>
-                            <FormControl>
-                              <Textarea placeholder="Observações sobre o cliente" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="flex justify-end space-x-2">
+                      <div className="flex justify-end gap-4 pt-4">
                         <Button 
                           type="button" 
-                          variant="outline"
-                          onClick={() => setIsDialogOpen(false)}
+                          variant="outline" 
+                          onClick={() => setIsModalOpen(false)}
                         >
                           Cancelar
                         </Button>
                         <Button 
-                          type="submit"
-                          className="bg-green-600 hover:bg-green-700"
+                          type="submit" 
                           disabled={createMutation.isPending || updateMutation.isPending}
                         >
                           {editingCustomer ? "Atualizar" : "Criar"}
@@ -427,149 +391,113 @@ export default function Customers() {
               </Dialog>
             </div>
 
-            {customersLoading ? (
-              <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <Card key={i} className="animate-pulse">
+                    <CardHeader>
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="h-3 bg-gray-200 rounded"></div>
+                        <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             ) : (
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredCustomers.map((customer: Customer) => (
-                    <Card key={customer.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-white/90 backdrop-blur-sm hover:bg-white/95 hover:scale-[1.02]">
-                      <CardHeader className="pb-3 bg-gradient-to-r from-gray-50 via-blue-50 to-gray-50 rounded-t-lg">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center mb-3">
-                              <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-3 rounded-xl mr-4 shadow-lg">
-                                <User className="h-6 w-6 text-white" />
-                              </div>
-                              <div>
-                                <CardTitle className="text-xl font-bold text-gray-900 mb-1">{customer.name}</CardTitle>
-                                <div className="flex items-center space-x-2">
-                                  <Badge className="bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 border-blue-200 font-medium">
-                                    {customer.code}
-                                  </Badge>
-                                  <Badge className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-green-200 font-medium">
-                                    {formatDocument(customer.document, customer.documentType)}
-                                  </Badge>
-                                </div>
-                              </div>
-                            </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredCustomers.map((customer: Customer) => (
+                  <Card key={customer.id} className="group hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:-translate-y-1">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                            <User className="h-6 w-6 text-white" />
                           </div>
-                          <div className="flex flex-col space-y-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleNewServiceForCustomer(customer)}
-                              className="h-10 w-10 p-0 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 hover:from-green-200 hover:to-emerald-200 border border-green-200 shadow-md group-hover:scale-110 transition-all duration-200"
-                              title="Novo serviço para este cliente"
-                            >
-                              <Wrench className="h-4 w-4 text-green-700" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleViewReport(customer)}
-                              className="h-10 w-10 p-0 rounded-xl bg-gradient-to-br from-purple-100 to-pink-100 hover:from-purple-200 hover:to-pink-200 border border-purple-200 shadow-md group-hover:scale-110 transition-all duration-200"
-                              title="Ver relatório do cliente"
-                            >
-                              <BarChart3 className="h-4 w-4 text-purple-700" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEdit(customer)}
-                              className="h-10 w-10 p-0 rounded-xl bg-gradient-to-br from-blue-100 to-cyan-100 hover:from-blue-200 hover:to-cyan-200 border border-blue-200 shadow-md group-hover:scale-110 transition-all duration-200"
-                              title="Editar cliente"
-                            >
-                              <Edit className="h-4 w-4 text-blue-700" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => deleteMutation.mutate(customer.id)}
-                              className="h-10 w-10 p-0 rounded-xl bg-gradient-to-br from-red-100 to-pink-100 hover:from-red-200 hover:to-pink-200 border border-red-200 shadow-md group-hover:scale-110 transition-all duration-200"
-                              title="Excluir cliente"
-                            >
-                              <Trash2 className="h-4 w-4 text-red-700" />
-                            </Button>
+                          <div>
+                            <CardTitle className="text-lg font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
+                              {customer.name}
+                            </CardTitle>
+                            <Badge variant="secondary" className="text-xs">
+                              {customer.documentType?.toUpperCase()}
+                            </Badge>
                           </div>
                         </div>
-                      </CardHeader>
-                      <CardContent className="pt-4">
-                        <div className="space-y-3">
-                          {customer.phone && (
-                            <div className="flex items-center bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 border border-green-100">
-                              <div className="bg-green-100 p-2 rounded-lg mr-3">
-                                <Phone className="h-4 w-4 text-green-600" />
-                              </div>
-                              <span className="text-sm font-medium text-gray-800">{customer.phone}</span>
-                            </div>
-                          )}
-                          {customer.email && (
-                            <div className="flex items-center bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-100">
-                              <div className="bg-blue-100 p-2 rounded-lg mr-3">
-                                <Mail className="h-4 w-4 text-blue-600" />
-                              </div>
-                              <span className="text-sm font-medium text-gray-800 truncate">{customer.email}</span>
-                            </div>
-                          )}
-                          {customer.observations && (
-                            <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg p-3 border border-amber-100">
-                              <p className="text-sm font-medium text-amber-800">
-                                {customer.observations}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-
-                {filteredCustomers.length === 0 && !customersLoading && (
-                  <div className="p-6">
-                    <Card className="border-dashed border-2 border-gray-300 bg-white/50 backdrop-blur-sm">
-                      <CardContent className="text-center py-16">
-                        <div className="bg-gradient-to-br from-blue-100 to-purple-100 p-6 rounded-full mx-auto mb-6 w-24 h-24 flex items-center justify-center">
-                          <User className="h-12 w-12 text-blue-600" />
-                        </div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-3">
-                          Nenhum cliente encontrado
-                        </h3>
-                        <p className="text-gray-600 mb-6">
-                          {searchTerm ? 'Tente ajustar os termos de busca.' : 'Comece adicionando seu primeiro cliente.'}
-                        </p>
-                        {!searchTerm && (
+                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button
-                            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg"
-                            onClick={() => {
-                              setEditingCustomer(null);
-                              form.reset();
-                              setIsDialogOpen(true);
-                            }}
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEdit(customer)}
+                            className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-600"
                           >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Adicionar Primeiro Cliente
+                            <Edit className="h-4 w-4" />
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDelete(customer.id)}
+                            className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="space-y-2 text-sm text-gray-600">
+                        <div className="flex items-center">
+                          <span className="font-medium min-w-0 flex-1">
+                            {formatDocument(customer.document, customer.documentType || 'cpf')}
+                          </span>
+                        </div>
+                        {customer.email && (
+                          <div className="flex items-center">
+                            <span className="min-w-0 flex-1 truncate">{customer.email}</span>
+                          </div>
                         )}
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
+                        {customer.phone && (
+                          <div className="flex items-center">
+                            <span>{customer.phone}</span>
+                          </div>
+                        )}
+                        {customer.city && customer.state && (
+                          <div className="flex items-center">
+                            <span>{customer.city}, {customer.state}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setLocation(`/vehicles?customerId=${customer.id}`)}
+                          className="flex items-center space-x-1 text-xs hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+                        >
+                          <Car className="h-3 w-3" />
+                          <span>Veículos</span>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setLocation(`/reports?type=customer&customerId=${customer.id}`)}
+                          className="flex items-center space-x-1 text-xs hover:bg-green-50 hover:text-green-600 hover:border-green-300"
+                        >
+                          <FileText className="h-3 w-3" />
+                          <span>Relatório</span>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             )}
           </div>
         </main>
       </div>
-
-      <NewServiceModal
-        isOpen={isNewServiceModalOpen}
-        onClose={() => {
-          setIsNewServiceModalOpen(false);
-          setSelectedCustomerForService(null);
-        }}
-      />
     </div>
   );
 }
