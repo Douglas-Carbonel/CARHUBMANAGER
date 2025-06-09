@@ -1,85 +1,67 @@
-
-import { QueryClientProvider } from "@tanstack/react-query";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Switch, Route } from "wouter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import { Router, Route, Switch } from "wouter";
-import { queryClient } from "@/lib/queryClient";
 import { AuthProvider } from "@/hooks/useAuth";
-import { ProtectedRoute } from "@/lib/protected-route";
-import { AuthGuard } from "@/lib/auth-guard";
-
-// Import pages
+import LandingPage from "@/pages/landing";
 import AuthPage from "@/pages/auth-page";
 import Dashboard from "@/pages/dashboard";
-import CustomersPage from "@/pages/customers";
-import VehiclesPage from "@/pages/vehicles";
-import ServicesPage from "@/pages/services";
-import SchedulePage from "@/pages/schedule";
-import ReportsPage from "@/pages/reports";
-import AdminPage from "@/pages/admin";
-import NotFound from "@/pages/not-found";
+import Services from "@/pages/services";
+import Customers from "@/pages/customers";
+import Vehicles from "@/pages/vehicles";
+import Schedule from "@/pages/schedule";
+import Reports from "@/pages/reports";
+import Admin from "@/pages/admin";
+import NotFoundPage from "@/pages/not-found";
+import { ProtectedRoute } from "@/lib/protected-route";
+
+const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AuthProvider>
-          <Router>
-            <Switch>
-              {/* Root route - shows auth page if not authenticated, redirects to dashboard if authenticated */}
-              <Route path="/">
-                <AuthGuard />
-              </Route>
-              
-              {/* Auth route - only accessible when not authenticated */}
-              <Route path="/auth">
-                <AuthPage />
-              </Route>
-              
-              {/* Protected routes */}
-              <Route path="/dashboard">
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/customers">
-                <ProtectedRoute>
-                  <CustomersPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/vehicles">
-                <ProtectedRoute>
-                  <VehiclesPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/services">
-                <ProtectedRoute>
-                  <ServicesPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/schedule">
-                <ProtectedRoute>
-                  <SchedulePage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/reports">
-                <ProtectedRoute>
-                  <ReportsPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/admin">
-                <ProtectedRoute>
-                  <AdminPage />
-                </ProtectedRoute>
-              </Route>
-              
-              {/* 404 page */}
-              <Route component={NotFound} />
-            </Switch>
-          </Router>
-        </AuthProvider>
+      <AuthProvider>
+        <Switch>
+          <Route path="/" component={LandingPage} />
+          <Route path="/auth" component={AuthPage} />
+          <Route path="/dashboard">
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/services">
+            <ProtectedRoute>
+              <Services />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/customers">
+            <ProtectedRoute>
+              <Customers />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/vehicles">
+            <ProtectedRoute>
+              <Vehicles />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/schedule">
+            <ProtectedRoute>
+              <Schedule />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/reports">
+            <ProtectedRoute>
+              <Reports />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/admin">
+            <ProtectedRoute>
+              <Admin />
+            </ProtectedRoute>
+          </Route>
+          <Route component={NotFoundPage} />
+        </Switch>
         <Toaster />
-      </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
