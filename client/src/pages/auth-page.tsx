@@ -11,7 +11,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { User, Lock, Car, Users, Wrench, Calendar } from "lucide-react";
+import { User, Lock, Car, Users, Wrench, Calendar, Loader2 } from "lucide-react";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Nome de usuário é obrigatório"),
@@ -156,9 +156,16 @@ export default function AuthPage() {
                   <Button
                     type="submit"
                     disabled={loginMutation.isPending}
-                    className="w-full bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-500 hover:to-cyan-500 text-teal-900 font-semibold py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg tracking-wide uppercase"
+                    className="w-full bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-500 hover:to-cyan-500 text-teal-900 font-semibold py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg tracking-wide uppercase disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
                   >
-                    {loginMutation.isPending ? "Entrando..." : "Entrar"}
+                    {loginMutation.isPending ? (
+                      <div className="flex items-center justify-center">
+                        <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                        Entrando...
+                      </div>
+                    ) : (
+                      "Entrar"
+                    )}
                   </Button>
                 </form>
               </div>
