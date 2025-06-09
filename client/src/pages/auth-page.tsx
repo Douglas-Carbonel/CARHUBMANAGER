@@ -64,10 +64,10 @@ export default function AuthPage() {
         {/* Left side - Branding */}
         <div className="hidden lg:flex flex-col items-center space-y-12 flex-1">
           <div className="text-center">
-            <h1 className="text-7xl font-black bg-gradient-to-r from-teal-600 via-cyan-500 to-emerald-600 bg-clip-text text-transparent mb-6 tracking-[0.2em] drop-shadow-2xl transform hover:scale-105 transition-transform duration-300 font-serif italic">
-              CARHUB
+            <h1 className="text-7xl font-extrabold bg-gradient-to-r from-teal-600 via-cyan-500 to-emerald-600 bg-clip-text text-transparent mb-6 tracking-[0.15em] drop-shadow-2xl transform hover:scale-105 transition-transform duration-300 font-sans">
+              CAR<span className="font-light">HUB</span>
             </h1>
-            <p className="text-2xl text-gray-700 mb-8 font-medium">
+            <p className="text-xl text-gray-600 mb-8 font-light tracking-wide">
               Sistema de Gestão Automotiva
             </p>
           </div>
@@ -112,9 +112,10 @@ export default function AuthPage() {
               <div className="bg-gradient-to-br from-teal-700 to-emerald-800 rounded-lg p-8 shadow-inner">
                 {/* Header */}
                 <div className="text-center mb-8">
-                  <h2 className="text-2xl font-bold text-cyan-100 tracking-wider mb-2">
-                    LOGIN
+                  <h2 className="text-3xl font-light text-cyan-100 tracking-[0.2em] mb-2 uppercase">
+                    Login
                   </h2>
+                  <div className="w-12 h-0.5 bg-gradient-to-r from-emerald-400 to-cyan-400 mx-auto mt-3"></div>
                 </div>
 
                 {/* Only login form now */}
@@ -155,9 +156,9 @@ export default function AuthPage() {
                   <Button
                     type="submit"
                     disabled={loginMutation.isPending}
-                    className="w-full bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-500 hover:to-cyan-500 text-teal-900 font-bold py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg tracking-wider"
+                    className="w-full bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-500 hover:to-cyan-500 text-teal-900 font-semibold py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg tracking-wide uppercase"
                   >
-                    {loginMutation.isPending ? "ENTRANDO..." : "LOGIN"}
+                    {loginMutation.isPending ? "Entrando..." : "Entrar"}
                   </Button>
                 </form>
               </div>
