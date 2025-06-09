@@ -54,8 +54,9 @@ export function setupAuth(app: Express) {
     store: sessionStore,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Always false in development
       maxAge: sessionTtl,
+      sameSite: 'lax',
     },
   };
 
@@ -175,8 +176,17 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    console.log("Auth check - isAuthenticated:", req.isAuthenticated());
+    console.log("Auth check - session:", req.session);
+    console.log("Auth check - user:", req.user);
+    
+    if (!req.isAuthenticated()) {
+      console.log("User not authenticated, returning 401");
+      return res.sendStatus(401);
+    }
+    
     const user = req.user!;
+    console.log("User authenticated, returning user data:", user);
     res.json({
       id: user.id,
       username: user.username,
