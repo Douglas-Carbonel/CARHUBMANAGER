@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, createInitialAdmin } from "./auth";
+import { setupAuth, createInitialAdmin, hashPassword } from "./auth";
 import { 
   insertCustomerSchema,
   insertVehicleSchema,
@@ -321,6 +321,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/users", requireAdmin, async (req, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);
+      
+      // Hash the password before storing
+      if (userData.password) {
+        userData.password = await hashPassword(userData.password);
+      }
+      
       const user = await storage.createUser(userData);
       res.json(user);
     } catch (error: any) {

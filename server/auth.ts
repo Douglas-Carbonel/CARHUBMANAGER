@@ -24,7 +24,7 @@ declare global {
 
 const scryptAsync = promisify(scrypt);
 
-async function hashPassword(password: string) {
+export async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${buf.toString("hex")}.${salt}`;
@@ -71,7 +71,15 @@ export function setupAuth(app: Express) {
         if (!user || !user.isActive || !(await comparePasswords(password, user.password))) {
           return done(null, false);
         }
-        return done(null, user);
+        return done(null, {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role as "admin" | "technician" | null,
+          isActive: user.isActive
+        });
       } catch (error) {
         return done(error);
       }
