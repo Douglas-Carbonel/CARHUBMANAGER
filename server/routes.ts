@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import passport from "passport";
 import { storage } from "./storage";
 import { setupAuth, createInitialAdmin, hashPassword } from "./auth";
 import { 
@@ -362,19 +363,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/login", (req, res) => {
     // Redirect to auth page when accessing login via GET
     res.redirect("/auth");
-  });
-
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    const user = req.user!;
-    res.status(200).json({
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: user.role,
-      isActive: user.isActive,
-    });
   });
 
   const httpServer = createServer(app);
