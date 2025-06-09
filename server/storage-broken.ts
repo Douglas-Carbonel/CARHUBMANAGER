@@ -123,8 +123,9 @@ export class DatabaseStorage implements IStorage {
   // Customer operations
   async getCustomers(): Promise<Customer[]> {
     try {
-      const result = await db.execute(sql`SELECT * FROM customers ORDER BY name ASC`);
-      return result.rows as Customer[];
+      const result = await db.select().from(customers).orderBy(asc(customers.name));
+      console.log('Successfully fetched customers:', result.length);
+      return result;
     } catch (error) {
       console.error('Error fetching customers:', error);
       throw error;
@@ -132,23 +133,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCustomer(id: number): Promise<Customer | undefined> {
-    try {
-      const result = await db.execute(sql`SELECT * FROM customers WHERE id = ${id}`);
-      return result.rows[0] as Customer;
-    } catch (error) {
-      console.error('Error fetching customer:', error);
-      throw error;
-    }
+    const [customer] = await db.select().from(customers).where(eq(customers.id, id));
+    return customer;
   }
 
   async getCustomerByDocument(document: string): Promise<Customer | undefined> {
-    try {
-      const result = await db.execute(sql`SELECT * FROM customers WHERE document = ${document}`);
-      return result.rows[0] as Customer;
-    } catch (error) {
-      console.error('Error fetching customer by document:', error);
-      throw error;
-    }
+    const [customer] = await db.select().from(customers).where(eq(customers.document, document));
+    return customer;
   }
 
   async createCustomer(customer: InsertCustomer): Promise<Customer> {
@@ -171,33 +162,16 @@ export class DatabaseStorage implements IStorage {
 
   // Vehicle operations
   async getVehicles(): Promise<Vehicle[]> {
-    try {
-      const result = await db.execute(sql`SELECT * FROM vehicles ORDER BY plate ASC`);
-      return result.rows as Vehicle[];
-    } catch (error) {
-      console.error('Error fetching vehicles:', error);
-      throw error;
-    }
+    return await db.select().from(vehicles).orderBy(asc(vehicles.plate));
   }
 
   async getVehiclesByCustomer(customerId: number): Promise<Vehicle[]> {
-    try {
-      const result = await db.execute(sql`SELECT * FROM vehicles WHERE customer_id = ${customerId}`);
-      return result.rows as Vehicle[];
-    } catch (error) {
-      console.error('Error fetching vehicles by customer:', error);
-      throw error;
-    }
+    return await db.select().from(vehicles).where(eq(vehicles.customerId, customerId));
   }
 
   async getVehicle(id: number): Promise<Vehicle | undefined> {
-    try {
-      const result = await db.execute(sql`SELECT * FROM vehicles WHERE id = ${id}`);
-      return result.rows[0] as Vehicle;
-    } catch (error) {
-      console.error('Error fetching vehicle:', error);
-      throw error;
-    }
+    const [vehicle] = await db.select().from(vehicles).where(eq(vehicles.id, id));
+    return vehicle;
   }
 
   async createVehicle(vehicle: InsertVehicle): Promise<Vehicle> {
@@ -220,57 +194,32 @@ export class DatabaseStorage implements IStorage {
 
   // Service operations
   async getServices(): Promise<Service[]> {
-    try {
-      const result = await db.execute(sql`SELECT * FROM services ORDER BY created_at DESC`);
-      return result.rows as Service[];
-    } catch (error) {
-      console.error('Error fetching services:', error);
-      throw error;
-    }
+    return await db.select().from(services).orderBy(desc(services.createdAt));
   }
 
   async getService(id: number): Promise<Service | undefined> {
-    try {
-      const result = await db.execute(sql`SELECT * FROM services WHERE id = ${id}`);
-      return result.rows[0] as Service;
-    } catch (error) {
-      console.error('Error fetching service:', error);
-      throw error;
-    }
+    const [service] = await db.select().from(services).where(eq(services.id, id));
+    return service;
   }
 
   async getServicesByCustomer(customerId: number): Promise<Service[]> {
-    try {
-      const result = await db.execute(sql`SELECT * FROM services WHERE customer_id = ${customerId}`);
-      return result.rows as Service[];
-    } catch (error) {
-      console.error('Error fetching services by customer:', error);
-      throw error;
-    }
+    return await db.select().from(services).where(eq(services.customerId, customerId));
   }
 
   async getServicesByVehicle(vehicleId: number): Promise<Service[]> {
-    try {
-      const result = await db.execute(sql`SELECT * FROM services WHERE vehicle_id = ${vehicleId}`);
-      return result.rows as Service[];
-    } catch (error) {
-      console.error('Error fetching services by vehicle:', error);
-      throw error;
-    }
+    return await db.select().from(services).where(eq(services.vehicleId, vehicleId));
   }
 
   async getServicesByDateRange(startDate: string, endDate: string): Promise<Service[]> {
-    try {
-      const result = await db.execute(sql`
-        SELECT * FROM services 
-        WHERE scheduled_date >= ${startDate} AND scheduled_date <= ${endDate}
-        ORDER BY scheduled_date DESC
-      `);
-      return result.rows as Service[];
-    } catch (error) {
-      console.error('Error fetching services by date range:', error);
-      throw error;
-    }
+    return await db
+      .select()
+      .from(services)
+      .where(
+        and(
+          gte(services.scheduledDate, startDate),
+          lte(services.scheduledDate, endDate)
+        )
+      );
   }
 
   async createService(service: InsertService): Promise<Service> {
@@ -293,23 +242,12 @@ export class DatabaseStorage implements IStorage {
 
   // Service type operations
   async getServiceTypes(): Promise<ServiceType[]> {
-    try {
-      const result = await db.execute(sql`SELECT * FROM service_types ORDER BY name ASC`);
-      return result.rows as ServiceType[];
-    } catch (error) {
-      console.error('Error fetching service types:', error);
-      throw error;
-    }
+    return await db.select().from(serviceTypes).orderBy(asc(serviceTypes.name));
   }
 
   async getServiceType(id: number): Promise<ServiceType | undefined> {
-    try {
-      const result = await db.execute(sql`SELECT * FROM service_types WHERE id = ${id}`);
-      return result.rows[0] as ServiceType;
-    } catch (error) {
-      console.error('Error fetching service type:', error);
-      throw error;
-    }
+    const [serviceType] = await db.select().from(serviceTypes).where(eq(serviceTypes.id, id));
+    return serviceType;
   }
 
   async createServiceType(serviceType: InsertServiceType): Promise<ServiceType> {
@@ -328,13 +266,7 @@ export class DatabaseStorage implements IStorage {
 
   // Payment operations
   async getPaymentsByService(serviceId: number): Promise<Payment[]> {
-    try {
-      const result = await db.execute(sql`SELECT * FROM payments WHERE service_id = ${serviceId}`);
-      return result.rows as Payment[];
-    } catch (error) {
-      console.error('Error fetching payments by service:', error);
-      throw error;
-    }
+    return await db.select().from(payments).where(eq(payments.serviceId, serviceId));
   }
 
   async createPayment(payment: InsertPayment): Promise<Payment> {
@@ -342,45 +274,160 @@ export class DatabaseStorage implements IStorage {
     return newPayment;
   }
 
+
+
   // Dashboard statistics
   async getDashboardStats(): Promise<{
     dailyRevenue: number;
     dailyServices: number;
+    dailyServices: number;
     appointments: number;
     activeCustomers: number;
   }> {
-    try {
-      return {
-        dailyRevenue: 0,
-        dailyServices: 0,
-        appointments: 0,
-        activeCustomers: 0,
-      };
-    } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
-      return {
-        dailyRevenue: 0,
-        dailyServices: 0,
-        appointments: 0,
-        activeCustomers: 0,
-      };
-    }
+    const today = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    // Daily revenue from completed services
+    const [dailyRevenueResult] = await db
+      .select({ revenue: sum(services.finalValue) })
+      .from(services)
+      .where(
+        and(
+          eq(services.status, 'completed'),
+          eq(services.scheduledDate, today)
+        )
+      );
+
+    // Daily services count
+    const [dailyServicesResult] = await db
+      .select({ count: count() })
+      .from(services)
+      .where(eq(services.scheduledDate, today));
+
+    // Appointments in next 24h
+    const [appointmentsResult] = await db
+      .select({ count: count() })
+      .from(services)
+      .where(
+        and(
+          eq(services.status, 'scheduled'),
+          gte(services.scheduledDate, today),
+          lte(services.scheduledDate, tomorrow)
+        )
+      );
+
+    // Active customers (with services in last 30 days)
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const [activeCustomersResult] = await db
+      .select({ count: sql<number>`COUNT(DISTINCT ${services.customerId})` })
+      .from(services)
+      .where(gte(services.scheduledDate, thirtyDaysAgo));
+
+    return {
+      dailyRevenue: Number(dailyRevenueResult?.revenue || 0),
+      dailyServices: dailyServicesResult?.count || 0,
+      appointments: appointmentsResult?.count || 0,
+      activeCustomers: Number(activeCustomersResult?.count || 0),
+    };
   }
 
   async getRevenueByDays(days: number): Promise<{ date: string; revenue: number }[]> {
-    return [];
+    const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    const results = await db
+      .select({
+        date: services.scheduledDate,
+        revenue: sum(services.finalValue)
+      })
+      .from(services)
+      .where(
+        and(
+          eq(services.status, 'completed'),
+          gte(services.scheduledDate, startDate)
+        )
+      )
+      .groupBy(services.scheduledDate)
+      .orderBy(asc(services.scheduledDate));
+
+    return results.map(r => ({
+      date: r.date || '',
+      revenue: Number(r.revenue || 0)
+    }));
   }
 
   async getTopServices(): Promise<{ name: string; count: number; revenue: number }[]> {
-    return [];
+    const results = await db
+      .select({
+        name: serviceTypes.name,
+        count: count(),
+        revenue: sum(services.finalValue)
+      })
+      .from(services)
+      .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+      .where(eq(services.status, 'completed'))
+      .groupBy(serviceTypes.id, serviceTypes.name)
+      .orderBy(desc(count()))
+      .limit(5);
+
+    return results.map(r => ({
+      name: r.name,
+      count: r.count,
+      revenue: Number(r.revenue || 0)
+    }));
   }
 
   async getRecentServices(limit: number): Promise<any[]> {
-    return [];
+    const results = await db
+      .select({
+        id: services.id,
+        status: services.status,
+        finalValue: services.finalValue,
+        estimatedValue: services.estimatedValue,
+        customerName: customers.name,
+        vehicleBrand: vehicles.brand,
+        vehicleModel: vehicles.model,
+        vehiclePlate: vehicles.plate,
+        serviceTypeName: serviceTypes.name,
+        scheduledDate: services.scheduledDate,
+      })
+      .from(services)
+      .innerJoin(customers, eq(services.customerId, customers.id))
+      .innerJoin(vehicles, eq(services.vehicleId, vehicles.id))
+      .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+      .orderBy(desc(services.createdAt))
+      .limit(limit);
+
+    return results;
   }
 
   async getUpcomingAppointments(limit: number): Promise<any[]> {
-    return [];
+    const today = new Date().toISOString().split('T')[0];
+
+    const results = await db
+      .select({
+        id: services.id,
+        scheduledDate: services.scheduledDate,
+        scheduledTime: services.scheduledTime,
+        customerName: customers.name,
+        vehicleBrand: vehicles.brand,
+        vehicleModel: vehicles.model,
+        vehiclePlate: vehicles.plate,
+        serviceTypeName: serviceTypes.name,
+      })
+      .from(services)
+      .innerJoin(customers, eq(services.customerId, customers.id))
+      .innerJoin(vehicles, eq(services.vehicleId, vehicles.id))
+      .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+      .where(
+        and(
+          eq(services.status, 'scheduled'),
+          gte(services.scheduledDate, today)
+        )
+      )
+      .orderBy(asc(services.scheduledDate), asc(services.scheduledTime))
+      .limit(limit);
+
+    return results;
   }
 }
 
