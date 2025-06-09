@@ -122,14 +122,7 @@ export class DatabaseStorage implements IStorage {
 
   // Customer operations
   async getCustomers(): Promise<Customer[]> {
-    try {
-      const result = await db.select().from(customers).orderBy(asc(customers.name));
-      console.log('Successfully fetched customers:', result.length);
-      return result;
-    } catch (error) {
-      console.error('Error fetching customers:', error);
-      throw error;
-    }
+    return await db.select().from(customers).orderBy(asc(customers.name));
   }
 
   async getCustomer(id: number): Promise<Customer | undefined> {
@@ -216,10 +209,11 @@ export class DatabaseStorage implements IStorage {
       .from(services)
       .where(
         and(
-          gte(services.scheduledDate, startDate),
-          lte(services.scheduledDate, endDate)
+          gte(services.scheduledDate, new Date(startDate)),
+          lte(services.scheduledDate, new Date(endDate))
         )
-      );
+      )
+      .orderBy(desc(services.scheduledDate));
   }
 
   async createService(service: InsertService): Promise<Service> {
@@ -274,12 +268,9 @@ export class DatabaseStorage implements IStorage {
     return newPayment;
   }
 
-
-
   // Dashboard statistics
   async getDashboardStats(): Promise<{
     dailyRevenue: number;
-    dailyServices: number;
     dailyServices: number;
     appointments: number;
     activeCustomers: number;
@@ -293,8 +284,9 @@ export class DatabaseStorage implements IStorage {
       .from(services)
       .where(
         and(
-          eq(services.status, 'completed'),
-          eq(services.scheduledDate, today)
+          gte(services.completedDate, new Date(today)),
+          lte(services.completedDate, new Date(tomorrow)),
+          eq(services.status, 'completed')
         )
       );
 
@@ -302,65 +294,70 @@ export class DatabaseStorage implements IStorage {
     const [dailyServicesResult] = await db
       .select({ count: count() })
       .from(services)
-      .where(eq(services.scheduledDate, today));
+      .where(
+        and(
+          gte(services.scheduledDate, new Date(today)),
+          lte(services.scheduledDate, new Date(tomorrow))
+        )
+      );
 
-    // Appointments in next 24h
+    // Upcoming appointments (today and tomorrow)
     const [appointmentsResult] = await db
       .select({ count: count() })
       .from(services)
       .where(
         and(
-          eq(services.status, 'scheduled'),
-          gte(services.scheduledDate, today),
-          lte(services.scheduledDate, tomorrow)
+          gte(services.scheduledDate, new Date(today)),
+          lte(services.scheduledDate, new Date(tomorrow)),
+          eq(services.status, 'scheduled')
         )
       );
 
-    // Active customers (with services in last 30 days)
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    // Active customers (customers with services in the last 30 days)
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const [activeCustomersResult] = await db
-      .select({ count: sql<number>`COUNT(DISTINCT ${services.customerId})` })
+      .select({ count: count() })
       .from(services)
-      .where(gte(services.scheduledDate, thirtyDaysAgo));
+      .where(gte(services.createdAt, thirtyDaysAgo));
 
     return {
       dailyRevenue: Number(dailyRevenueResult?.revenue || 0),
-      dailyServices: dailyServicesResult?.count || 0,
-      appointments: appointmentsResult?.count || 0,
+      dailyServices: Number(dailyServicesResult?.count || 0),
+      appointments: Number(appointmentsResult?.count || 0),
       activeCustomers: Number(activeCustomersResult?.count || 0),
     };
   }
 
   async getRevenueByDays(days: number): Promise<{ date: string; revenue: number }[]> {
-    const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
-    const results = await db
+    const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    
+    const result = await db
       .select({
-        date: services.scheduledDate,
-        revenue: sum(services.finalValue)
+        date: sql<string>`date(${services.completedDate})`,
+        revenue: sum(services.finalValue),
       })
       .from(services)
       .where(
         and(
-          eq(services.status, 'completed'),
-          gte(services.scheduledDate, startDate)
+          gte(services.completedDate, startDate),
+          eq(services.status, 'completed')
         )
       )
-      .groupBy(services.scheduledDate)
-      .orderBy(asc(services.scheduledDate));
+      .groupBy(sql`date(${services.completedDate})`)
+      .orderBy(sql`date(${services.completedDate})`);
 
-    return results.map(r => ({
-      date: r.date || '',
-      revenue: Number(r.revenue || 0)
+    return result.map(row => ({
+      date: row.date,
+      revenue: Number(row.revenue || 0),
     }));
   }
 
   async getTopServices(): Promise<{ name: string; count: number; revenue: number }[]> {
-    const results = await db
+    const result = await db
       .select({
         name: serviceTypes.name,
         count: count(),
-        revenue: sum(services.finalValue)
+        revenue: sum(services.finalValue),
       })
       .from(services)
       .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
@@ -369,26 +366,23 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(count()))
       .limit(5);
 
-    return results.map(r => ({
-      name: r.name,
-      count: r.count,
-      revenue: Number(r.revenue || 0)
+    return result.map(row => ({
+      name: row.name,
+      count: Number(row.count),
+      revenue: Number(row.revenue || 0),
     }));
   }
 
   async getRecentServices(limit: number): Promise<any[]> {
-    const results = await db
+    return await db
       .select({
         id: services.id,
-        status: services.status,
-        finalValue: services.finalValue,
-        estimatedValue: services.estimatedValue,
         customerName: customers.name,
-        vehicleBrand: vehicles.brand,
-        vehicleModel: vehicles.model,
         vehiclePlate: vehicles.plate,
-        serviceTypeName: serviceTypes.name,
+        serviceType: serviceTypes.name,
+        status: services.status,
         scheduledDate: services.scheduledDate,
+        finalValue: services.finalValue,
       })
       .from(services)
       .innerJoin(customers, eq(services.customerId, customers.id))
@@ -396,23 +390,19 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
       .orderBy(desc(services.createdAt))
       .limit(limit);
-
-    return results;
   }
 
   async getUpcomingAppointments(limit: number): Promise<any[]> {
-    const today = new Date().toISOString().split('T')[0];
-
-    const results = await db
+    const today = new Date();
+    
+    return await db
       .select({
         id: services.id,
-        scheduledDate: services.scheduledDate,
-        scheduledTime: services.scheduledTime,
         customerName: customers.name,
-        vehicleBrand: vehicles.brand,
-        vehicleModel: vehicles.model,
         vehiclePlate: vehicles.plate,
-        serviceTypeName: serviceTypes.name,
+        serviceType: serviceTypes.name,
+        scheduledDate: services.scheduledDate,
+        estimatedValue: services.estimatedValue,
       })
       .from(services)
       .innerJoin(customers, eq(services.customerId, customers.id))
@@ -420,14 +410,12 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
       .where(
         and(
-          eq(services.status, 'scheduled'),
-          gte(services.scheduledDate, today)
+          gte(services.scheduledDate, today),
+          eq(services.status, 'scheduled')
         )
       )
-      .orderBy(asc(services.scheduledDate), asc(services.scheduledTime))
+      .orderBy(asc(services.scheduledDate))
       .limit(limit);
-
-    return results;
   }
 }
 
