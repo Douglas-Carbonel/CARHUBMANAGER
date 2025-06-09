@@ -90,7 +90,18 @@ export function setupAuth(app: Express) {
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
-      done(null, user);
+      if (!user) {
+        return done(null, null);
+      }
+      done(null, {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role as "admin" | "technician" | null,
+        isActive: user.isActive
+      });
     } catch (error) {
       done(error);
     }
@@ -118,7 +129,15 @@ export function setupAuth(app: Express) {
         isActive: true,
       });
 
-      req.login(user, (err) => {
+      req.login({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role as "admin" | "technician" | null,
+        isActive: user.isActive
+      }, (err) => {
         if (err) return next(err);
         res.status(201).json({
           id: user.id,
