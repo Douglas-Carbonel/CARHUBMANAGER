@@ -1,7 +1,4 @@
-` tags. I will pay close attention to preserving the original indentation and structure, and avoid any forbidden words or placeholders.
 
-```
-<replit_final_file>
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
@@ -60,15 +57,14 @@ export default function CustomersPage() {
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerFormSchema),
     defaultValues: {
+      code: "",
       name: "",
       email: "",
       phone: "",
       document: "",
       documentType: "cpf",
       address: "",
-      city: "",
-      state: "",
-      zipCode: "",
+      observations: "",
     },
   });
 
@@ -159,15 +155,14 @@ export default function CustomersPage() {
   const handleEdit = (customer: Customer) => {
     setEditingCustomer(customer);
     form.reset({
+      code: customer.code,
       name: customer.name,
       email: customer.email || "",
       phone: customer.phone || "",
       document: customer.document,
       documentType: customer.documentType as "cpf" | "cnpj",
       address: customer.address || "",
-      city: customer.city || "",
-      state: customer.state || "",
-      zipCode: customer.zipCode || "",
+      observations: customer.observations || "",
     });
     setIsModalOpen(true);
   };
@@ -186,7 +181,8 @@ export default function CustomersPage() {
   const filteredCustomers = customers.filter((customer: Customer) =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.document.includes(searchTerm) ||
-    customer.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (!user) {
@@ -241,6 +237,19 @@ export default function CustomersPage() {
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="code"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Código</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Código do cliente" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                         <FormField
                           control={form.control}
                           name="name"
@@ -321,10 +330,10 @@ export default function CustomersPage() {
                           control={form.control}
                           name="address"
                           render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="col-span-2">
                               <FormLabel>Endereço</FormLabel>
                               <FormControl>
-                                <Input placeholder="Rua, número" {...field} />
+                                <Input placeholder="Endereço completo" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -332,38 +341,12 @@ export default function CustomersPage() {
                         />
                         <FormField
                           control={form.control}
-                          name="city"
+                          name="observations"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Cidade</FormLabel>
+                            <FormItem className="col-span-2">
+                              <FormLabel>Observações</FormLabel>
                               <FormControl>
-                                <Input placeholder="Cidade" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="state"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Estado</FormLabel>
-                              <FormControl>
-                                <Input placeholder="SP" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="zipCode"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>CEP</FormLabel>
-                              <FormControl>
-                                <Input placeholder="00000-000" {...field} />
+                                <Input placeholder="Observações adicionais" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -408,6 +391,31 @@ export default function CustomersPage() {
                   </Card>
                 ))}
               </div>
+            ) : filteredCustomers.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="bg-gradient-to-br from-blue-100 to-purple-100 p-6 rounded-full mb-6 w-24 h-24 flex items-center justify-center">
+                  <User className="h-12 w-12 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  Nenhum cliente encontrado
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  {searchTerm ? 'Tente ajustar os termos de busca.' : 'Comece adicionando seu primeiro cliente.'}
+                </p>
+                {!searchTerm && (
+                  <Button
+                    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                    onClick={() => {
+                      setEditingCustomer(null);
+                      form.reset();
+                      setIsModalOpen(true);
+                    }}
+                  >
+                    <Plus className="h-5 w-5 mr-2" />
+                    Adicionar Primeiro Cliente
+                  </Button>
+                )}
+              </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredCustomers.map((customer: Customer) => (
@@ -422,9 +430,14 @@ export default function CustomersPage() {
                             <CardTitle className="text-lg font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
                               {customer.name}
                             </CardTitle>
-                            <Badge variant="secondary" className="text-xs">
-                              {customer.documentType?.toUpperCase()}
-                            </Badge>
+                            <div className="flex items-center space-x-2">
+                              <Badge variant="secondary" className="text-xs">
+                                {customer.documentType?.toUpperCase()}
+                              </Badge>
+                              <Badge variant="outline" className="text-xs">
+                                {customer.code}
+                              </Badge>
+                            </div>
                           </div>
                         </div>
                         <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -464,9 +477,9 @@ export default function CustomersPage() {
                             <span>{customer.phone}</span>
                           </div>
                         )}
-                        {customer.city && customer.state && (
+                        {customer.address && (
                           <div className="flex items-center">
-                            <span>{customer.city}, {customer.state}</span>
+                            <span className="truncate">{customer.address}</span>
                           </div>
                         )}
                       </div>
