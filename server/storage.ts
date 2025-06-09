@@ -122,7 +122,14 @@ export class DatabaseStorage implements IStorage {
 
   // Customer operations
   async getCustomers(): Promise<Customer[]> {
-    return await db.select().from(customers).orderBy(asc(customers.name));
+    try {
+      const result = await db.select().from(customers).orderBy(asc(customers.name));
+      console.log('Successfully fetched customers:', result.length);
+      return result;
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+      throw error;
+    }
   }
 
   async getCustomer(id: number): Promise<Customer | undefined> {
