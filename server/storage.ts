@@ -172,8 +172,7 @@ export class DatabaseStorage implements IStorage {
   // Vehicle operations
   async getVehicles(): Promise<Vehicle[]> {
     try {
-      const result = await db.execute(sql`SELECT * FROM vehicles ORDER BY plate ASC`);
-      return result.rows as Vehicle[];
+      return await db.select().from(vehicles).orderBy(asc(vehicles.plate));
     } catch (error) {
       console.error('Error fetching vehicles:', error);
       throw error;
@@ -182,8 +181,7 @@ export class DatabaseStorage implements IStorage {
 
   async getVehiclesByCustomer(customerId: number): Promise<Vehicle[]> {
     try {
-      const result = await db.execute(sql`SELECT * FROM vehicles WHERE customer_id = ${customerId}`);
-      return result.rows as Vehicle[];
+      return await db.select().from(vehicles).where(eq(vehicles.customerId, customerId));
     } catch (error) {
       console.error('Error fetching vehicles by customer:', error);
       throw error;
@@ -192,8 +190,8 @@ export class DatabaseStorage implements IStorage {
 
   async getVehicle(id: number): Promise<Vehicle | undefined> {
     try {
-      const result = await db.execute(sql`SELECT * FROM vehicles WHERE id = ${id}`);
-      return result.rows[0] as Vehicle;
+      const [vehicle] = await db.select().from(vehicles).where(eq(vehicles.id, id));
+      return vehicle;
     } catch (error) {
       console.error('Error fetching vehicle:', error);
       throw error;
@@ -221,8 +219,7 @@ export class DatabaseStorage implements IStorage {
   // Service operations
   async getServices(): Promise<Service[]> {
     try {
-      const result = await db.execute(sql`SELECT * FROM services ORDER BY created_at DESC`);
-      return result.rows as Service[];
+      return await db.select().from(services).orderBy(desc(services.createdAt));
     } catch (error) {
       console.error('Error fetching services:', error);
       throw error;
@@ -231,8 +228,8 @@ export class DatabaseStorage implements IStorage {
 
   async getService(id: number): Promise<Service | undefined> {
     try {
-      const result = await db.execute(sql`SELECT * FROM services WHERE id = ${id}`);
-      return result.rows[0] as Service;
+      const [service] = await db.select().from(services).where(eq(services.id, id));
+      return service;
     } catch (error) {
       console.error('Error fetching service:', error);
       throw error;
@@ -241,8 +238,7 @@ export class DatabaseStorage implements IStorage {
 
   async getServicesByCustomer(customerId: number): Promise<Service[]> {
     try {
-      const result = await db.execute(sql`SELECT * FROM services WHERE customer_id = ${customerId}`);
-      return result.rows as Service[];
+      return await db.select().from(services).where(eq(services.customerId, customerId));
     } catch (error) {
       console.error('Error fetching services by customer:', error);
       throw error;
@@ -251,8 +247,7 @@ export class DatabaseStorage implements IStorage {
 
   async getServicesByVehicle(vehicleId: number): Promise<Service[]> {
     try {
-      const result = await db.execute(sql`SELECT * FROM services WHERE vehicle_id = ${vehicleId}`);
-      return result.rows as Service[];
+      return await db.select().from(services).where(eq(services.vehicleId, vehicleId));
     } catch (error) {
       console.error('Error fetching services by vehicle:', error);
       throw error;
@@ -261,12 +256,9 @@ export class DatabaseStorage implements IStorage {
 
   async getServicesByDateRange(startDate: string, endDate: string): Promise<Service[]> {
     try {
-      const result = await db.execute(sql`
-        SELECT * FROM services 
-        WHERE scheduled_date >= ${startDate} AND scheduled_date <= ${endDate}
-        ORDER BY scheduled_date DESC
-      `);
-      return result.rows as Service[];
+      return await db.select().from(services)
+        .where(and(gte(services.scheduledDate, startDate), lte(services.scheduledDate, endDate)))
+        .orderBy(desc(services.scheduledDate));
     } catch (error) {
       console.error('Error fetching services by date range:', error);
       throw error;
