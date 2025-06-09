@@ -63,7 +63,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/customers", requireAuth, async (req, res) => {
     try {
       const customerData = insertCustomerSchema.parse(req.body);
-      
+
       // Check if document already exists
       const existingCustomer = await storage.getCustomerByDocument(customerData.document);
       if (existingCustomer) {
@@ -321,12 +321,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/users", requireAdmin, async (req, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);
-      
+
       // Hash the password before storing
       if (userData.password) {
         userData.password = await hashPassword(userData.password);
       }
-      
+
       const user = await storage.createUser(userData);
       res.json(user);
     } catch (error: any) {
@@ -357,6 +357,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       res.status(500).json({ message: "Failed to delete user" });
     }
+  });
+
+  app.get("/api/login", (req, res) => {
+    // Redirect to auth page when accessing login via GET
+    res.redirect("/auth");
+  });
+
+  app.post("/api/login", passport.authenticate("local"), (req, res) => {
+    const user = req.user!;
+    res.status(200).json({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      isActive: user.isActive,
+    });
   });
 
   const httpServer = createServer(app);

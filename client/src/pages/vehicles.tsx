@@ -26,7 +26,7 @@ const vehicleFormSchema = insertVehicleSchema.extend({
   customerId: z.number().min(1, "Cliente é obrigatório"),
   plate: z.string().min(1, "Placa é obrigatória"),
   brand: z.string().min(1, "Marca é obrigatória"),
-  model: z.string().min(1, "Modelo é obrigatório"),
+  model: z.string().min(1, "Modelo é obrigatória"),
   year: z.number().min(1900, "Ano inválido").max(new Date().getFullYear() + 1, "Ano inválido"),
 });
 
@@ -63,7 +63,7 @@ export default function Vehicles() {
         variant: "destructive",
       });
       setTimeout(() => {
-        window.location.href = "/api/login";
+        window.location.href = "/auth";
       }, 500);
       return;
     }
@@ -100,7 +100,7 @@ export default function Vehicles() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/auth";
         }, 500);
         return;
       }
@@ -134,7 +134,7 @@ export default function Vehicles() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/auth";
         }, 500);
         return;
       }
@@ -165,7 +165,7 @@ export default function Vehicles() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/auth";
         }, 500);
         return;
       }
@@ -241,7 +241,7 @@ export default function Vehicles() {
           title="Gestão de Veículos" 
           subtitle="Gerencie veículos, proprietários e histórico de serviços" 
         />
-        
+
         <main className="flex-1 overflow-y-auto bg-gradient-to-br from-white/80 via-blue-50/50 to-indigo-50/30 backdrop-blur-sm">
           <div className="p-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
