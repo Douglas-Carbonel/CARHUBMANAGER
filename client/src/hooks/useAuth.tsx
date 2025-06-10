@@ -4,12 +4,11 @@ import {
   useQuery,
   useMutation,
   UseMutationResult,
-  QueryClient,
+  useQueryClient,
 } from "@tanstack/react-query";
 import { User } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-
-const queryClient = new QueryClient();
+import { useLocation } from "wouter";
 
 type LoginData = {
   username: string;
@@ -57,6 +56,8 @@ async function apiRequest(
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
   
   const {
     data: user,
@@ -99,6 +100,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Login realizado com sucesso",
         description: `Bem-vindo, ${user.firstName}!`,
       });
+      // Redireciona para dashboard após login bem-sucedido
+      setTimeout(() => {
+        setLocation("/dashboard");
+      }, 500);
     },
     onError: (error: Error) => {
       toast({
@@ -120,6 +125,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Registro realizado com sucesso",
         description: `Conta criada para ${user.firstName}!`,
       });
+      // Redireciona para dashboard após registro bem-sucedido
+      setTimeout(() => {
+        setLocation("/dashboard");
+      }, 500);
     },
     onError: (error: Error) => {
       toast({
@@ -136,10 +145,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
+      queryClient.clear(); // Limpa todo o cache
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado do sistema",
       });
+      // Redireciona para página de login após logout
+      setTimeout(() => {
+        setLocation("/");
+      }, 500);
     },
     onError: (error: Error) => {
       toast({

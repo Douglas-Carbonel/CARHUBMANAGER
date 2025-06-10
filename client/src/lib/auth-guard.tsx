@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
@@ -29,17 +28,5 @@ export function AuthGuard() {
   }
 
   // Se não está autenticado, mostra a página de login
-  if (!user) {
-    return <AuthPage />;
-  }
-
-  // Se está autenticado, mostra loading enquanto redireciona
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50">
-      <div className="text-center">
-        <Loader2 className="h-12 w-12 animate-spin text-teal-600 mx-auto mb-4" />
-        <p className="text-gray-600">Redirecionando para dashboard...</p>
-      </div>
-    </div>
-  );
+  return <AuthPage />;
 }

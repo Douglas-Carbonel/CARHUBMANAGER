@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -50,6 +51,15 @@ const getNavigation = (userRole: string | null) => {
       icon: BarChart3,
     },
   ];
+
+  // Adiciona Admin apenas para usuários admin
+  if (userRole === "admin") {
+    baseNavigation.push({
+      name: "Admin",
+      href: "/admin",
+      icon: Shield,
+    });
+  }
 
   return baseNavigation;
 };
@@ -118,13 +128,14 @@ export default function Sidebar() {
         <Button
           variant="ghost"
           onClick={handleLogout}
+          disabled={logoutMutation.isPending}
           className={cn(
-            "w-full justify-start text-white hover:bg-red-600",
+            "w-full justify-start text-white hover:bg-red-600 disabled:opacity-50",
             isCollapsed && "px-2"
           )}
         >
           <LogOut className={cn("h-5 w-5", !isCollapsed && "mr-3")} />
-          {!isCollapsed && "Sair"}
+          {!isCollapsed && (logoutMutation.isPending ? "Saindo..." : "Sair")}
         </Button>
       </div>
     </div>
