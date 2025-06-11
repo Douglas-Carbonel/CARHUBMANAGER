@@ -1,5 +1,9 @@
 
-const { Pool } = require('pg');
+import pkg from 'pg';
+const { Pool } = pkg;
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 async function fixObservationsField() {
   const pool = new Pool({
