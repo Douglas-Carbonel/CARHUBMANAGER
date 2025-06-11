@@ -420,120 +420,111 @@ export default function CustomersPage() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredCustomers.map((customer: Customer) => (
-                  <Card key={customer.id} className="group hover:shadow-2xl transition-all duration-300 bg-white/95 backdrop-blur-sm border-0 hover:bg-white overflow-hidden relative hover:-translate-y-1 max-w-sm mx-auto w-full">
-                    {/* Enhanced gradient border */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-teal-400/30 via-emerald-400/30 to-teal-500/30 rounded-xl p-[1px]">
-                      <div className="bg-white h-full w-full rounded-xl"></div>
-                    </div>
-                    
-                    <div className="relative">
-                      {/* Header Section - Mais compacto */}
-                      <div className="bg-gradient-to-r from-teal-50 to-emerald-50 p-4 border-b border-gray-100">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3 flex-1 min-w-0">
-                            <div className="relative">
-                              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white">
-                                <User className="h-6 w-6 text-white" />
-                              </div>
-                              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-white flex items-center justify-center">
-                                <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-                              </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-bold text-gray-900 truncate text-base leading-tight mb-1">
-                                {customer.name}
-                              </h3>
-                              <div className="flex items-center space-x-1">
-                                <span className="text-xs font-medium text-teal-600 bg-teal-100 px-2 py-0.5 rounded-full">
-                                  {customer.documentType?.toUpperCase()}
-                                </span>
-                                <span className="text-xs text-gray-600 font-medium">
-                                  #{customer.code}
-                                </span>
-                              </div>
+                  <Card key={customer.id} className="group hover:shadow-lg transition-all duration-300 bg-white border border-gray-200 hover:border-teal-300 overflow-hidden relative">
+                    <div className="p-6">
+                      {/* Header com avatar e nome */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                          <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-semibold text-lg shadow-md">
+                            {customer.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 truncate text-base mb-1">
+                              {customer.name}
+                            </h3>
+                            <div className="flex items-center space-x-2">
+                              <Badge variant="secondary" className="text-xs bg-teal-50 text-teal-700 hover:bg-teal-100">
+                                #{customer.code}
+                              </Badge>
+                              <Badge variant="outline" className="text-xs border-emerald-200 text-emerald-700">
+                                {customer.documentType?.toUpperCase()}
+                              </Badge>
                             </div>
                           </div>
-                          <div className="flex flex-col space-y-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEdit(customer)}
-                              className="h-7 w-7 p-0 hover:bg-emerald-100 hover:text-emerald-700 rounded-lg"
-                              title="Editar"
-                            >
-                              <Edit className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDelete(customer.id)}
-                              className="h-7 w-7 p-0 hover:bg-red-100 hover:text-red-700 rounded-lg"
-                              title="Excluir"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Customer Details Section - Mais compacto */}
-                      <div className="p-4 space-y-2">
-                        <div className="text-xs font-medium text-gray-700 bg-gray-50 rounded-lg p-2">
-                          {customer.documentType === 'cpf' ? formatCPF(customer.document) : formatCNPJ(customer.document)}
-                        </div>
-                        {customer.email && (
-                          <div className="text-xs text-gray-600 bg-gray-50 rounded-lg p-2 truncate" title={customer.email}>
-                            {customer.email}
-                          </div>
-                        )}
-                        {customer.phone && (
-                          <div className="text-xs text-gray-600 bg-gray-50 rounded-lg p-2">
-                            {customer.phone}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Action Buttons Section - Layout modernizado com ícones */}
-                      <div className="p-4 pt-0 border-t border-gray-100">
-                        {/* Primary Action - Veículos */}
-                        <div className="mb-3">
-                          <Button
-                            size="sm"
-                            onClick={() => setLocation(`/vehicles?customerId=${customer.id}`)}
-                            className="w-full h-10 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-md hover:shadow-lg transition-all duration-200 rounded-lg text-sm font-semibold"
-                          >
-                            <Car className="h-4 w-4 mr-2" />
-                            Gerenciar Veículos
-                          </Button>
                         </div>
                         
-                        {/* Secondary Actions - Só ícones com tooltips */}
-                        <div className="flex justify-center space-x-4">
+                        {/* Ações de edição e exclusão */}
+                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button
                             size="sm"
-                            variant="outline"
-                            onClick={() => setLocation(`/services?customerId=${customer.id}`)}
-                            className="h-12 w-12 p-0 border-2 border-teal-200 text-teal-700 hover:bg-teal-50 hover:border-teal-300 hover:scale-110 transition-all duration-200 rounded-xl group"
-                            title="Serviços"
+                            variant="ghost"
+                            onClick={() => handleEdit(customer)}
+                            className="h-8 w-8 p-0 hover:bg-teal-50 hover:text-teal-600"
+                            title="Editar"
                           >
-                            <div className="flex flex-col items-center space-y-1">
-                              <Wrench className="h-5 w-5" />
-                              <span className="text-xs font-medium opacity-70 group-hover:opacity-100">Serviços</span>
-                            </div>
+                            <Edit className="h-4 w-4" />
                           </Button>
                           <Button
                             size="sm"
-                            variant="outline"
-                            onClick={() => setLocation(`/reports?customerId=${customer.id}`)}
-                            className="h-12 w-12 p-0 border-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 hover:scale-110 transition-all duration-200 rounded-xl group"
-                            title="Relatórios"
+                            variant="ghost"
+                            onClick={() => handleDelete(customer.id)}
+                            className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                            title="Excluir"
                           >
-                            <div className="flex flex-col items-center space-y-1">
-                              <FileText className="h-5 w-5" />
-                              <span className="text-xs font-medium opacity-70 group-hover:opacity-100">Relatórios</span>
-                            </div>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Informações de acesso rápido */}
+                      <div className="space-y-3 mb-5">
+                        <div className="flex items-center text-sm text-gray-600">
+                          <span className="font-medium w-20">Doc:</span>
+                          <span className="text-gray-900 font-mono text-xs">
+                            {customer.documentType === 'cpf' ? formatCPF(customer.document) : formatCNPJ(customer.document)}
+                          </span>
+                        </div>
+                        
+                        {customer.email && (
+                          <div className="flex items-center text-sm text-gray-600">
+                            <span className="font-medium w-20">Email:</span>
+                            <span className="text-gray-900 truncate text-xs" title={customer.email}>
+                              {customer.email}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {customer.phone && (
+                          <div className="flex items-center text-sm text-gray-600">
+                            <span className="font-medium w-20">Fone:</span>
+                            <span className="text-gray-900 font-mono text-xs">
+                              {customer.phone}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Ações principais */}
+                      <div className="space-y-3 pt-4 border-t border-gray-100">
+                        <Button
+                          onClick={() => setLocation(`/vehicles?customerId=${customer.id}`)}
+                          className="w-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-sm"
+                          size="sm"
+                        >
+                          <Car className="h-4 w-4 mr-2" />
+                          Veículos
+                        </Button>
+                        
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setLocation(`/services?customerId=${customer.id}`)}
+                            className="border-teal-200 text-teal-700 hover:bg-teal-50"
+                          >
+                            <Wrench className="h-4 w-4 mr-1" />
+                            Serviços
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setLocation(`/reports?customerId=${customer.id}`)}
+                            className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                          >
+                            <FileText className="h-4 w-4 mr-1" />
+                            Relatórios
                           </Button>
                         </div>
                       </div>
