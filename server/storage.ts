@@ -123,8 +123,7 @@ export class DatabaseStorage implements IStorage {
   // Customer operations
   async getCustomers(): Promise<Customer[]> {
     try {
-      const result = await db.execute(sql`SELECT * FROM customers ORDER BY name ASC`);
-      return result.rows as Customer[];
+      return await db.select().from(customers).orderBy(asc(customers.name));
     } catch (error) {
       console.error('Error fetching customers:', error);
       throw error;
@@ -133,8 +132,8 @@ export class DatabaseStorage implements IStorage {
 
   async getCustomer(id: number): Promise<Customer | undefined> {
     try {
-      const result = await db.execute(sql`SELECT * FROM customers WHERE id = ${id}`);
-      return result.rows[0] as Customer;
+      const [customer] = await db.select().from(customers).where(eq(customers.id, id));
+      return customer;
     } catch (error) {
       console.error('Error fetching customer:', error);
       throw error;
@@ -143,8 +142,8 @@ export class DatabaseStorage implements IStorage {
 
   async getCustomerByDocument(document: string): Promise<Customer | undefined> {
     try {
-      const result = await db.execute(sql`SELECT * FROM customers WHERE document = ${document}`);
-      return result.rows[0] as Customer;
+      const [customer] = await db.select().from(customers).where(eq(customers.document, document));
+      return customer;
     } catch (error) {
       console.error('Error fetching customer by document:', error);
       throw error;
@@ -152,8 +151,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCustomer(customer: InsertCustomer): Promise<Customer> {
-    const [newCustomer] = await db.insert(customers).values(customer).returning();
-    return newCustomer;
+    try {
+      const [newCustomer] = await db.insert(customers).values({
+        ...customer,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }).returning();
+      return newCustomer;
+    } catch (error) {
+      console.error('Error creating customer:', error);
+      throw error;
+    }
   }
 
   async updateCustomer(id: number, customer: Partial<InsertCustomer>): Promise<Customer> {
@@ -286,8 +294,7 @@ export class DatabaseStorage implements IStorage {
   // Service type operations
   async getServiceTypes(): Promise<ServiceType[]> {
     try {
-      const result = await db.execute(sql`SELECT * FROM service_types ORDER BY name ASC`);
-      return result.rows as ServiceType[];
+      return await db.select().from(serviceTypes).orderBy(asc(serviceTypes.name));
     } catch (error) {
       console.error('Error fetching service types:', error);
       throw error;
@@ -296,8 +303,8 @@ export class DatabaseStorage implements IStorage {
 
   async getServiceType(id: number): Promise<ServiceType | undefined> {
     try {
-      const result = await db.execute(sql`SELECT * FROM service_types WHERE id = ${id}`);
-      return result.rows[0] as ServiceType;
+      const [serviceType] = await db.select().from(serviceTypes).where(eq(serviceTypes.id, id));
+      return serviceType;
     } catch (error) {
       console.error('Error fetching service type:', error);
       throw error;
@@ -321,8 +328,7 @@ export class DatabaseStorage implements IStorage {
   // Payment operations
   async getPaymentsByService(serviceId: number): Promise<Payment[]> {
     try {
-      const result = await db.execute(sql`SELECT * FROM payments WHERE service_id = ${serviceId}`);
-      return result.rows as Payment[];
+      return await db.select().from(payments).where(eq(payments.serviceId, serviceId));
     } catch (error) {
       console.error('Error fetching payments by service:', error);
       throw error;

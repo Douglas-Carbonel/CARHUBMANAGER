@@ -63,6 +63,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/customers", requireAuth, async (req, res) => {
     try {
+      console.log('Creating customer with data:', req.body);
       const customerData = insertCustomerSchema.parse(req.body);
 
       // Check if document already exists
@@ -72,12 +73,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const customer = await storage.createCustomer(customerData);
+      console.log('Customer created successfully:', customer);
       res.status(201).json(customer);
     } catch (error: any) {
+      console.error('Error creating customer:', error);
       if (error.name === 'ZodError') {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to create customer" });
+      res.status(500).json({ message: "Failed to create customer", error: error.message });
     }
   });
 
