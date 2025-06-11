@@ -420,121 +420,120 @@ export default function CustomersPage() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {filteredCustomers.map((customer: Customer) => (
-                  <Card key={customer.id} className="group hover:shadow-2xl transition-all duration-300 bg-white/95 backdrop-blur-sm border-0 hover:bg-white overflow-hidden relative hover:-translate-y-1">
+                  <Card key={customer.id} className="group hover:shadow-2xl transition-all duration-300 bg-white/95 backdrop-blur-sm border-0 hover:bg-white overflow-hidden relative hover:-translate-y-1 max-w-sm mx-auto w-full">
                     {/* Enhanced gradient border */}
                     <div className="absolute inset-0 bg-gradient-to-br from-teal-400/30 via-emerald-400/30 to-teal-500/30 rounded-xl p-[1px]">
                       <div className="bg-white h-full w-full rounded-xl"></div>
                     </div>
                     
                     <div className="relative">
-                      {/* Header Section */}
-                      <div className="bg-gradient-to-r from-teal-50 to-emerald-50 p-5 border-b border-gray-100">
+                      {/* Header Section - Mais compacto */}
+                      <div className="bg-gradient-to-r from-teal-50 to-emerald-50 p-4 border-b border-gray-100">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4 flex-1 min-w-0">
+                          <div className="flex items-center space-x-3 flex-1 min-w-0">
                             <div className="relative">
-                              <div className="w-14 h-14 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white">
-                                <User className="h-7 w-7 text-white" />
+                              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white">
+                                <User className="h-6 w-6 text-white" />
                               </div>
-                              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-400 rounded-full border-2 border-white flex items-center justify-center">
-                                <div className="w-2 h-2 bg-white rounded-full"></div>
+                              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-white flex items-center justify-center">
+                                <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
                               </div>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-bold text-gray-900 truncate text-lg leading-tight mb-1">
+                              <h3 className="font-bold text-gray-900 truncate text-base leading-tight mb-1">
                                 {customer.name}
                               </h3>
-                              <div className="flex items-center space-x-2">
-                                <span className="text-sm font-medium text-teal-600 bg-teal-100 px-3 py-1 rounded-full">
+                              <div className="flex items-center space-x-1">
+                                <span className="text-xs font-medium text-teal-600 bg-teal-100 px-2 py-0.5 rounded-full">
                                   {customer.documentType?.toUpperCase()}
                                 </span>
-                                <span className="text-sm text-gray-600 font-medium">
+                                <span className="text-xs text-gray-600 font-medium">
                                   #{customer.code}
                                 </span>
                               </div>
                             </div>
                           </div>
-                          <div className="flex flex-col space-y-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <div className="flex flex-col space-y-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => handleEdit(customer)}
-                              className="h-8 w-8 p-0 hover:bg-emerald-100 hover:text-emerald-700 rounded-lg"
+                              className="h-7 w-7 p-0 hover:bg-emerald-100 hover:text-emerald-700 rounded-lg"
                               title="Editar"
                             >
-                              <Edit className="h-4 w-4" />
+                              <Edit className="h-3.5 w-3.5" />
                             </Button>
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => handleDelete(customer.id)}
-                              className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-700 rounded-lg"
+                              className="h-7 w-7 p-0 hover:bg-red-100 hover:text-red-700 rounded-lg"
                               title="Excluir"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </div>
                         </div>
                       </div>
 
-                      {/* Customer Details Section */}
-                      <div className="p-5 space-y-3">
-                        <div className="grid grid-cols-1 gap-3">
-                          <div className="flex items-center text-sm text-gray-700 bg-gray-50 rounded-lg p-3">
-                            <span className="font-semibold text-gray-800 mr-3 min-w-0">Documento:</span>
-                            <span className="truncate font-medium">
-                              {customer.documentType === 'cpf' ? formatCPF(customer.document) : formatCNPJ(customer.document)}
-                            </span>
-                          </div>
-                          {customer.email && (
-                            <div className="flex items-center text-sm text-gray-700 bg-gray-50 rounded-lg p-3">
-                              <span className="font-semibold text-gray-800 mr-3 min-w-0">Email:</span>
-                              <span className="truncate">{customer.email}</span>
-                            </div>
-                          )}
-                          {customer.phone && (
-                            <div className="flex items-center text-sm text-gray-700 bg-gray-50 rounded-lg p-3">
-                              <span className="font-semibold text-gray-800 mr-3 min-w-0">Telefone:</span>
-                              <span className="truncate">{customer.phone}</span>
-                            </div>
-                          )}
+                      {/* Customer Details Section - Mais compacto */}
+                      <div className="p-4 space-y-2">
+                        <div className="text-xs font-medium text-gray-700 bg-gray-50 rounded-lg p-2">
+                          {customer.documentType === 'cpf' ? formatCPF(customer.document) : formatCNPJ(customer.document)}
                         </div>
+                        {customer.email && (
+                          <div className="text-xs text-gray-600 bg-gray-50 rounded-lg p-2 truncate" title={customer.email}>
+                            {customer.email}
+                          </div>
+                        )}
+                        {customer.phone && (
+                          <div className="text-xs text-gray-600 bg-gray-50 rounded-lg p-2">
+                            {customer.phone}
+                          </div>
+                        )}
                       </div>
 
-                      {/* Action Buttons Section - Hierarchical Layout */}
-                      <div className="p-5 pt-0 border-t border-gray-100">
+                      {/* Action Buttons Section - Layout modernizado com ícones */}
+                      <div className="p-4 pt-0 border-t border-gray-100">
                         {/* Primary Action - Veículos */}
                         <div className="mb-3">
                           <Button
-                            size="lg"
+                            size="sm"
                             onClick={() => setLocation(`/vehicles?customerId=${customer.id}`)}
-                            className="w-full h-12 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-md hover:shadow-lg transition-all duration-200 rounded-lg text-base font-semibold"
+                            className="w-full h-10 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-md hover:shadow-lg transition-all duration-200 rounded-lg text-sm font-semibold"
                           >
-                            <Car className="h-5 w-5 mr-3" />
+                            <Car className="h-4 w-4 mr-2" />
                             Gerenciar Veículos
                           </Button>
                         </div>
                         
-                        {/* Secondary Actions */}
-                        <div className="grid grid-cols-2 gap-3">
+                        {/* Secondary Actions - Só ícones com tooltips */}
+                        <div className="flex justify-center space-x-4">
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => setLocation(`/services?customerId=${customer.id}`)}
-                            className="h-10 border-2 border-teal-200 text-teal-700 hover:bg-teal-50 hover:border-teal-300 transition-all duration-200 rounded-lg font-medium"
+                            className="h-12 w-12 p-0 border-2 border-teal-200 text-teal-700 hover:bg-teal-50 hover:border-teal-300 hover:scale-110 transition-all duration-200 rounded-xl group"
+                            title="Serviços"
                           >
-                            <Wrench className="h-4 w-4 mr-2" />
-                            Serviços
+                            <div className="flex flex-col items-center space-y-1">
+                              <Wrench className="h-5 w-5" />
+                              <span className="text-xs font-medium opacity-70 group-hover:opacity-100">Serviços</span>
+                            </div>
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => setLocation(`/reports?customerId=${customer.id}`)}
-                            className="h-10 border-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 transition-all duration-200 rounded-lg font-medium"
+                            className="h-12 w-12 p-0 border-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 hover:scale-110 transition-all duration-200 rounded-xl group"
+                            title="Relatórios"
                           >
-                            <FileText className="h-4 w-4 mr-2" />
-                            Relatórios
+                            <div className="flex flex-col items-center space-y-1">
+                              <FileText className="h-5 w-5" />
+                              <span className="text-xs font-medium opacity-70 group-hover:opacity-100">Relatórios</span>
+                            </div>
                           </Button>
                         </div>
                       </div>

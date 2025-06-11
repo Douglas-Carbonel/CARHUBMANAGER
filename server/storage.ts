@@ -180,7 +180,7 @@ export class DatabaseStorage implements IStorage {
   // Vehicle operations
   async getVehicles(): Promise<Vehicle[]> {
     try {
-      return await db.select().from(vehicles).orderBy(asc(vehicles.plate));
+      return await db.select().from(vehicles).orderBy(vehicles.licensePlate);
     } catch (error) {
       console.error('Error fetching vehicles:', error);
       throw error;
