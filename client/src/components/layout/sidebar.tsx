@@ -15,7 +15,6 @@ import {
   LogOut,
   Menu,
   X,
-  Shield,
 } from "lucide-react";
 
 const getNavigation = (userRole: string | null) => {
@@ -51,15 +50,6 @@ const getNavigation = (userRole: string | null) => {
       icon: BarChart3,
     },
   ];
-
-  // Adiciona Admin apenas para usuários admin
-  if (userRole === "admin") {
-    baseNavigation.push({
-      name: "Admin",
-      href: "/admin",
-      icon: Shield,
-    });
-  }
 
   return baseNavigation;
 };
