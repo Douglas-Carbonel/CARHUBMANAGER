@@ -487,24 +487,26 @@ export default function CustomersPage() {
                         )}
                       </div>
                       <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setLocation(`/vehicles?customerId=${customer.id}`)}
-                          className="flex items-center space-x-1 text-xs hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
-                        >
-                          <Car className="h-3 w-3" />
-                          <span>Veículos</span>
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setLocation(`/reports?type=customer&customerId=${customer.id}`)}
-                          className="flex items-center space-x-1 text-xs hover:bg-green-50 hover:text-green-600 hover:border-green-300"
-                        >
-                          <FileText className="h-3 w-3" />
-                          <span>Relatório</span>
-                        </Button>
+                        <div className="flex space-x-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setLocation(`/vehicles?customerId=${customer.id}`)}
+                            className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-600"
+                            title="Ver veículos do cliente"
+                          >
+                            <Car className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setLocation(`/reports?customerId=${customer.id}`)}
+                            className="h-8 w-8 p-0 hover:bg-green-100 hover:text-green-600"
+                            title="Ver relatório do cliente"
+                          >
+                            <FileText className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>

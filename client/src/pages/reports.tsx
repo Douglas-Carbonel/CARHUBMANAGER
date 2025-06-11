@@ -1,8 +1,9 @@
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,8 +50,18 @@ const statusLabels = {
 export default function Reports() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
+  const [location] = useLocation();
   const [selectedPeriod, setSelectedPeriod] = useState("30");
   const [selectedCustomer, setSelectedCustomer] = useState<string>("all");
+
+  // Extract customerId from URL parameters
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.split('?')[1] || '');
+    const customerId = urlParams.get('customerId');
+    if (customerId) {
+      setSelectedCustomer(customerId);
+    }
+  }, [location]);
 
   // Queries
   const { data: services } = useQuery({
@@ -232,13 +243,38 @@ export default function Reports() {
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
-          title="Relatórios e Analytics"
-          subtitle="Insights detalhados do seu negócio"
+          title={selectedCustomer !== "all" && customers ? 
+            `Relatórios - ${customers.find((c: Customer) => c.id.toString() === selectedCustomer)?.name || 'Cliente'}` : 
+            "Relatórios e Analytics"
+          }
+          subtitle={selectedCustomer !== "all" ? 
+            "Insights específicos do cliente selecionado" : 
+            "Insights detalhados do seu negócio"
+          }
         />
         
         <main className="flex-1 overflow-y-auto">
           {/* Controls */}
           <div className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10">
+            {selectedCustomer !== "all" && customers && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <Users className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-800">
+                    Exibindo relatórios para: {customers.find((c: Customer) => c.id.toString() === selectedCustomer)?.name}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setSelectedCustomer("all")}
+                    className="h-6 w-6 p-0 hover:bg-blue-200"
+                    title="Remover filtro"
+                  >
+                    <XCircle className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
