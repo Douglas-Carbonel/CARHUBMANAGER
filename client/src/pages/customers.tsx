@@ -420,115 +420,123 @@ export default function CustomersPage() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredCustomers.map((customer: Customer) => (
-                  <Card key={customer.id} className="group hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border-0 hover:bg-white overflow-hidden relative">
-                    {/* Subtle gradient border */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-teal-400/20 via-emerald-400/20 to-teal-500/20 rounded-lg p-[1px]">
-                      <div className="bg-white h-full w-full rounded-lg"></div>
+                  <Card key={customer.id} className="group hover:shadow-2xl transition-all duration-300 bg-white/95 backdrop-blur-sm border-0 hover:bg-white overflow-hidden relative hover:-translate-y-1">
+                    {/* Enhanced gradient border */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-teal-400/30 via-emerald-400/30 to-teal-500/30 rounded-xl p-[1px]">
+                      <div className="bg-white h-full w-full rounded-xl"></div>
                     </div>
                     
-                    <div className="relative p-4">
-                      {/* Header with avatar and actions */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center space-x-3 flex-1 min-w-0">
-                          <div className="relative">
-                            <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
-                              <User className="h-5 w-5 text-white" />
+                    <div className="relative">
+                      {/* Header Section */}
+                      <div className="bg-gradient-to-r from-teal-50 to-emerald-50 p-5 border-b border-gray-100">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4 flex-1 min-w-0">
+                            <div className="relative">
+                              <div className="w-14 h-14 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white">
+                                <User className="h-7 w-7 text-white" />
+                              </div>
+                              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-400 rounded-full border-2 border-white flex items-center justify-center">
+                                <div className="w-2 h-2 bg-white rounded-full"></div>
+                              </div>
                             </div>
-                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-white flex items-center justify-center">
-                              <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-bold text-gray-900 truncate text-lg leading-tight mb-1">
+                                {customer.name}
+                              </h3>
+                              <div className="flex items-center space-x-2">
+                                <span className="text-sm font-medium text-teal-600 bg-teal-100 px-3 py-1 rounded-full">
+                                  {customer.documentType?.toUpperCase()}
+                                </span>
+                                <span className="text-sm text-gray-600 font-medium">
+                                  #{customer.code}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-gray-900 truncate text-sm leading-tight">
-                              {customer.name}
-                            </h3>
-                            <div className="flex items-center space-x-1 mt-1">
-                              <span className="text-xs font-medium text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full">
-                                {customer.documentType?.toUpperCase()}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                #{customer.code}
-                              </span>
-                            </div>
+                          <div className="flex flex-col space-y-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEdit(customer)}
+                              className="h-8 w-8 p-0 hover:bg-emerald-100 hover:text-emerald-700 rounded-lg"
+                              title="Editar"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDelete(customer.id)}
+                              className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-700 rounded-lg"
+                              title="Excluir"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
-                        </div>
-                        
-                        {/* Edit/Delete actions */}
-                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleEdit(customer)}
-                            className="h-7 w-7 p-0 rounded-md hover:bg-teal-50 hover:text-teal-600"
-                            title="Editar"
-                          >
-                            <Edit className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDelete(customer.id)}
-                            className="h-7 w-7 p-0 rounded-md hover:bg-red-50 hover:text-red-600"
-                            title="Excluir"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
                         </div>
                       </div>
 
-                      {/* Customer info */}
-                      <div className="space-y-2 mb-4">
-                        <div className="text-xs font-medium text-gray-700">
-                          {customer.documentType === "cpf" ? formatCPF(customer.document) : formatCNPJ(customer.document)}
+                      {/* Customer Details Section */}
+                      <div className="p-5 space-y-3">
+                        <div className="grid grid-cols-1 gap-3">
+                          <div className="flex items-center text-sm text-gray-700 bg-gray-50 rounded-lg p-3">
+                            <span className="font-semibold text-gray-800 mr-3 min-w-0">Documento:</span>
+                            <span className="truncate font-medium">
+                              {customer.documentType === 'cpf' ? formatCPF(customer.document) : formatCNPJ(customer.document)}
+                            </span>
+                          </div>
+                          {customer.email && (
+                            <div className="flex items-center text-sm text-gray-700 bg-gray-50 rounded-lg p-3">
+                              <span className="font-semibold text-gray-800 mr-3 min-w-0">Email:</span>
+                              <span className="truncate">{customer.email}</span>
+                            </div>
+                          )}
+                          {customer.phone && (
+                            <div className="flex items-center text-sm text-gray-700 bg-gray-50 rounded-lg p-3">
+                              <span className="font-semibold text-gray-800 mr-3 min-w-0">Telefone:</span>
+                              <span className="truncate">{customer.phone}</span>
+                            </div>
+                          )}
                         </div>
-                        
-                        {customer.email && (
-                          <div className="text-xs text-gray-600 truncate" title={customer.email}>
-                            📧 {customer.email}
-                          </div>
-                        )}
-                        
-                        {customer.phone && (
-                          <div className="text-xs text-gray-600">
-                            📱 {customer.phone}
-                          </div>
-                        )}
                       </div>
 
-                      {/* Action buttons */}
-                      <div className="flex justify-center space-x-2 pt-3 border-t border-gray-100">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setLocation(`/vehicles?customerId=${customer.id}`)}
-                          className="flex-1 h-8 text-xs rounded-md hover:bg-teal-50 hover:text-teal-600 transition-colors"
-                          title="Veículos"
-                        >
-                          <Car className="h-3.5 w-3.5 mr-1" />
-                          <span className="hidden sm:inline">Veículos</span>
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setLocation(`/reports?customerId=${customer.id}`)}
-                          className="flex-1 h-8 text-xs rounded-md hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
-                          title="Relatórios"
-                        >
-                          <FileText className="h-3.5 w-3.5 mr-1" />
-                          <span className="hidden sm:inline">Relatórios</span>
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setLocation(`/services?customerId=${customer.id}`)}
-                          className="flex-1 h-8 text-xs rounded-md hover:bg-teal-50 hover:text-teal-600 transition-colors"
-                          title="Serviços"
-                        >
-                          <Wrench className="h-3.5 w-3.5 mr-1" />
-                          <span className="hidden sm:inline">Serviços</span>
-                        </Button>
+                      {/* Action Buttons Section - Hierarchical Layout */}
+                      <div className="p-5 pt-0 border-t border-gray-100">
+                        {/* Primary Action - Veículos */}
+                        <div className="mb-3">
+                          <Button
+                            size="lg"
+                            onClick={() => setLocation(`/vehicles?customerId=${customer.id}`)}
+                            className="w-full h-12 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-md hover:shadow-lg transition-all duration-200 rounded-lg text-base font-semibold"
+                          >
+                            <Car className="h-5 w-5 mr-3" />
+                            Gerenciar Veículos
+                          </Button>
+                        </div>
+                        
+                        {/* Secondary Actions */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setLocation(`/services?customerId=${customer.id}`)}
+                            className="h-10 border-2 border-teal-200 text-teal-700 hover:bg-teal-50 hover:border-teal-300 transition-all duration-200 rounded-lg font-medium"
+                          >
+                            <Wrench className="h-4 w-4 mr-2" />
+                            Serviços
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setLocation(`/reports?customerId=${customer.id}`)}
+                            className="h-10 border-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 transition-all duration-200 rounded-lg font-medium"
+                          >
+                            <FileText className="h-4 w-4 mr-2" />
+                            Relatórios
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </Card>
