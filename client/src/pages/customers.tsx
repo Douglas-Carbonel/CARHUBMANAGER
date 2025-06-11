@@ -199,7 +199,7 @@ export default function CustomersPage() {
                   className="pl-12 w-80 h-12 border-2 border-gray-200 focus:border-blue-400 rounded-xl shadow-sm bg-white/80"
                 />
               </div>
-              <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg shadow-md">
+              <div className="bg-gradient-to-r from-teal-500 to-emerald-600 text-white px-4 py-2 rounded-lg shadow-md">
                 <span className="font-semibold">{filteredCustomers.length}</span>
                 <span className="ml-1 text-sm">clientes</span>
               </div>
@@ -396,8 +396,8 @@ export default function CustomersPage() {
               </div>
             ) : filteredCustomers.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <div className="bg-gradient-to-br from-blue-100 to-purple-100 p-6 rounded-full mb-6 w-24 h-24 flex items-center justify-center">
-                  <User className="h-12 w-12 text-blue-600" />
+                <div className="bg-gradient-to-br from-teal-100 to-emerald-100 p-6 rounded-full mb-6 w-24 h-24 flex items-center justify-center">
+                  <User className="h-12 w-12 text-teal-600" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">
                   Nenhum cliente encontrado
@@ -420,111 +420,117 @@ export default function CustomersPage() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredCustomers.map((customer: Customer) => (
-                  <Card key={customer.id} className="group hover:shadow-lg transition-all duration-300 bg-white border border-gray-200 hover:border-blue-300 overflow-hidden relative h-fit">
-                    {/* Decorative gradient overlay */}
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+                  <Card key={customer.id} className="group hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border-0 hover:bg-white overflow-hidden relative">
+                    {/* Subtle gradient border */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-teal-400/20 via-emerald-400/20 to-teal-500/20 rounded-lg p-[1px]">
+                      <div className="bg-white h-full w-full rounded-lg"></div>
+                    </div>
                     
-                    <CardHeader className="pb-3 pt-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start space-x-3 flex-1">
-                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md">
-                            <User className="h-6 w-6 text-white" />
+                    <div className="relative p-4">
+                      {/* Header with avatar and actions */}
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                          <div className="relative">
+                            <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
+                              <User className="h-5 w-5 text-white" />
+                            </div>
+                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-white flex items-center justify-center">
+                              <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                            </div>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <CardTitle className="text-lg font-bold text-gray-900 truncate mb-1">
+                            <h3 className="font-semibold text-gray-900 truncate text-sm leading-tight">
                               {customer.name}
-                            </CardTitle>
-                            <div className="flex items-center space-x-1">
-                              <Badge className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5">
+                            </h3>
+                            <div className="flex items-center space-x-1 mt-1">
+                              <span className="text-xs font-medium text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full">
                                 {customer.documentType?.toUpperCase()}
-                              </Badge>
-                              <Badge className="bg-gray-100 text-gray-700 text-xs px-2 py-0.5">
+                              </span>
+                              <span className="text-xs text-gray-500">
                                 #{customer.code}
-                              </Badge>
+                              </span>
                             </div>
                           </div>
                         </div>
-                        {/* Action icons */}
+                        
+                        {/* Edit/Delete actions */}
                         <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => handleEdit(customer)}
-                            className="h-8 w-8 p-0 rounded-lg hover:bg-blue-100 hover:text-blue-600"
-                            title="Editar cliente"
+                            className="h-7 w-7 p-0 rounded-md hover:bg-teal-50 hover:text-teal-600"
+                            title="Editar"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className="h-3.5 w-3.5" />
                           </Button>
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => handleDelete(customer.id)}
-                            className="h-8 w-8 p-0 rounded-lg hover:bg-red-100 hover:text-red-600"
-                            title="Excluir cliente"
+                            className="h-7 w-7 p-0 rounded-md hover:bg-red-50 hover:text-red-600"
+                            title="Excluir"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
                       </div>
-                    </CardHeader>
 
-                    <CardContent className="px-4 pb-4">
-                      <div className="space-y-3">
-                        {/* Document info */}
-                        <div className="text-sm">
-                          <div className="font-semibold text-gray-900">
-                            {customer.documentType === "cpf" ? formatCPF(customer.document) : formatCNPJ(customer.document)}
+                      {/* Customer info */}
+                      <div className="space-y-2 mb-4">
+                        <div className="text-xs font-medium text-gray-700">
+                          {customer.documentType === "cpf" ? formatCPF(customer.document) : formatCNPJ(customer.document)}
+                        </div>
+                        
+                        {customer.email && (
+                          <div className="text-xs text-gray-600 truncate" title={customer.email}>
+                            📧 {customer.email}
                           </div>
-                        </div>
-
-                        {/* Contact info */}
-                        <div className="space-y-2">
-                          {customer.email && (
-                            <div className="text-sm text-gray-600 truncate" title={customer.email}>
-                              {customer.email}
-                            </div>
-                          )}
-                          {customer.phone && (
-                            <div className="text-sm text-gray-600">
-                              {customer.phone}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Action buttons with icons */}
-                        <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setLocation(`/vehicles?customerId=${customer.id}`)}
-                            className="h-8 w-8 p-0 rounded-lg hover:bg-blue-100 hover:text-blue-600"
-                            title="Ver veículos"
-                          >
-                            <Car className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setLocation(`/reports?customerId=${customer.id}`)}
-                            className="h-8 w-8 p-0 rounded-lg hover:bg-green-100 hover:text-green-600"
-                            title="Ver relatórios"
-                          >
-                            <FileText className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setLocation(`/services?customerId=${customer.id}`)}
-                            className="h-8 w-8 p-0 rounded-lg hover:bg-purple-100 hover:text-purple-600"
-                            title="Ver serviços"
-                          >
-                            <Wrench className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        )}
+                        
+                        {customer.phone && (
+                          <div className="text-xs text-gray-600">
+                            📱 {customer.phone}
+                          </div>
+                        )}
                       </div>
-                    </CardContent>
+
+                      {/* Action buttons */}
+                      <div className="flex justify-center space-x-2 pt-3 border-t border-gray-100">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setLocation(`/vehicles?customerId=${customer.id}`)}
+                          className="flex-1 h-8 text-xs rounded-md hover:bg-teal-50 hover:text-teal-600 transition-colors"
+                          title="Veículos"
+                        >
+                          <Car className="h-3.5 w-3.5 mr-1" />
+                          <span className="hidden sm:inline">Veículos</span>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setLocation(`/reports?customerId=${customer.id}`)}
+                          className="flex-1 h-8 text-xs rounded-md hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                          title="Relatórios"
+                        >
+                          <FileText className="h-3.5 w-3.5 mr-1" />
+                          <span className="hidden sm:inline">Relatórios</span>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setLocation(`/services?customerId=${customer.id}`)}
+                          className="flex-1 h-8 text-xs rounded-md hover:bg-teal-50 hover:text-teal-600 transition-colors"
+                          title="Serviços"
+                        >
+                          <Wrench className="h-3.5 w-3.5 mr-1" />
+                          <span className="hidden sm:inline">Serviços</span>
+                        </Button>
+                      </div>
+                    </div>
                   </Card>
                 ))}
               </div>
