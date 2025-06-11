@@ -1,4 +1,7 @@
+The requested changes involve updating import statements to include new mask functions and applying these masks to input fields in a React component.
+```
 
+```replit_final_file
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,6 +21,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema, type Customer } from "@shared/schema";
 import { z } from "zod";
+import { formatCPF, formatCNPJ, applyCPFMask, applyCNPJMask, applyPhoneMask } from "@/lib/cpf-cnpj";
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
   const res = await fetch(url, {
@@ -37,13 +41,7 @@ async function apiRequest(method: string, url: string, data?: any): Promise<Resp
 const customerFormSchema = insertCustomerSchema;
 type CustomerFormData = z.infer<typeof customerFormSchema>;
 
-function formatCPF(cpf: string) {
-  return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-}
 
-function formatCNPJ(cnpj: string) {
-  return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
-}
 
 export default function CustomersPage() {
   const { user } = useAuth();
@@ -173,10 +171,7 @@ export default function CustomersPage() {
     }
   };
 
-  const formatDocument = (document: string, type: string) => {
-    const cleanDoc = document.replace(/\D/g, '');
-    return type === 'cpf' ? formatCPF(cleanDoc) : formatCNPJ(cleanDoc);
-  };
+
 
   const filteredCustomers = customers.filter((customer: Customer) =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -283,7 +278,13 @@ export default function CustomersPage() {
                             <FormItem>
                               <FormLabel>Telefone</FormLabel>
                               <FormControl>
-                                <Input placeholder="(11) 99999-9999" {...field} />
+                                <Input 
+                                  placeholder="(11) 99999-9999" 
+                                  {...field}
+                                  onChange={(e) => {
+                                    field.onChange(applyPhoneMask(e.target.value));
+                                  }}
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -318,8 +319,17 @@ export default function CustomersPage() {
                               <FormLabel>Documento</FormLabel>
                               <FormControl>
                                 <Input 
-                                  placeholder={form.watch("documentType") === "cpf" ? "000.000.000-00" : "00.000.000/0000-00"} 
-                                  {...field} 
+                                  placeholder={form.watch("documentType") === "cpf" ? "000.000.000-00" : "00.000.000/0000-00"}
+                                  {...field}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    const documentType = form.watch("documentType");
+                                    if (documentType === "cpf") {
+                                      field.onChange(applyCPFMask(value));
+                                    } else {
+                                      field.onChange(applyCNPJMask(value));
+                                    }
+                                  }}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -440,6 +450,7 @@ export default function CustomersPage() {
                             </div>
                           </div>
                         </div>
+                        {/*Edit and delete icons*/}
                         <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button
                             size="sm"
@@ -464,7 +475,7 @@ export default function CustomersPage() {
                       <div className="space-y-2 text-sm text-gray-600">
                         <div className="flex items-center">
                           <span className="font-medium min-w-0 flex-1">
-                            {formatDocument(customer.document, customer.documentType || 'cpf')}
+                            {formatCPF(customer.document)}
                           </span>
                         </div>
                         {customer.email && (

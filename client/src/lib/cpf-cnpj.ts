@@ -79,3 +79,49 @@ export function formatCNPJ(cnpj: string): string {
 export function formatDocument(document: string, type: 'cpf' | 'cnpj'): string {
   return type === 'cpf' ? formatCPF(document) : formatCNPJ(document);
 }
+
+export function formatPhone(phone: string): string {
+  const cleanPhone = phone.replace(/\D/g, '');
+  
+  if (cleanPhone.length <= 10) {
+    // Formato: (11) 9999-9999
+    return cleanPhone.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+  } else {
+    // Formato: (11) 99999-9999
+    return cleanPhone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+  }
+}
+
+export function applyMask(value: string, mask: string): string {
+  const cleanValue = value.replace(/\D/g, '');
+  let maskedValue = '';
+  let valueIndex = 0;
+  
+  for (let i = 0; i < mask.length && valueIndex < cleanValue.length; i++) {
+    if (mask[i] === '9') {
+      maskedValue += cleanValue[valueIndex];
+      valueIndex++;
+    } else {
+      maskedValue += mask[i];
+    }
+  }
+  
+  return maskedValue;
+}
+
+export function applyCPFMask(value: string): string {
+  return applyMask(value, '999.999.999-99');
+}
+
+export function applyCNPJMask(value: string): string {
+  return applyMask(value, '99.999.999/9999-99');
+}
+
+export function applyPhoneMask(value: string): string {
+  const cleanValue = value.replace(/\D/g, '');
+  if (cleanValue.length <= 10) {
+    return applyMask(value, '(99) 9999-9999');
+  } else {
+    return applyMask(value, '(99) 99999-9999');
+  }
+}
