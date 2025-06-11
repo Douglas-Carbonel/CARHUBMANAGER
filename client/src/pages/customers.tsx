@@ -1,7 +1,4 @@
-The requested changes involve updating import statements to include new mask functions and applying these masks to input fields in a React component.
-```
 
-```replit_final_file
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
@@ -40,8 +37,6 @@ async function apiRequest(method: string, url: string, data?: any): Promise<Resp
 
 const customerFormSchema = insertCustomerSchema;
 type CustomerFormData = z.infer<typeof customerFormSchema>;
-
-
 
 export default function CustomersPage() {
   const { user } = useAuth();
@@ -170,8 +165,6 @@ export default function CustomersPage() {
       deleteMutation.mutate(id);
     }
   };
-
-
 
   const filteredCustomers = customers.filter((customer: Customer) =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -450,7 +443,6 @@ export default function CustomersPage() {
                             </div>
                           </div>
                         </div>
-                        {/*Edit and delete icons*/}
                         <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button
                             size="sm"
@@ -475,7 +467,7 @@ export default function CustomersPage() {
                       <div className="space-y-2 text-sm text-gray-600">
                         <div className="flex items-center">
                           <span className="font-medium min-w-0 flex-1">
-                            {formatCPF(customer.document)}
+                            {customer.documentType === "cpf" ? formatCPF(customer.document) : formatCNPJ(customer.document)}
                           </span>
                         </div>
                         {customer.email && (
