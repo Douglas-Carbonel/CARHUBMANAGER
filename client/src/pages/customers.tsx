@@ -420,35 +420,44 @@ export default function CustomersPage() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredCustomers.map((customer: Customer) => (
-                  <Card key={customer.id} className="group hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:-translate-y-1">
-                    <CardHeader className="pb-3">
+                  <Card key={customer.id} className="group hover:shadow-2xl transition-all duration-500 bg-gradient-to-br from-white via-white to-blue-50/30 border-0 shadow-xl hover:-translate-y-2 hover:scale-[1.02] overflow-hidden relative">
+                    {/* Decorative gradient overlay */}
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+                    
+                    <CardHeader className="pb-4 pt-6 relative">
                       <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                            <User className="h-6 w-6 text-white" />
+                        <div className="flex items-start space-x-4 flex-1">
+                          <div className="relative">
+                            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300">
+                              <User className="h-8 w-8 text-white" />
+                            </div>
+                            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                              <div className="w-2 h-2 bg-white rounded-full"></div>
+                            </div>
                           </div>
-                          <div>
-                            <CardTitle className="text-lg font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
+                          <div className="flex-1 min-w-0">
+                            <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 group-hover:bg-clip-text transition-all duration-300 truncate">
                               {customer.name}
                             </CardTitle>
-                            <div className="flex items-center space-x-2">
-                              <Badge variant="secondary" className="text-xs">
+                            <div className="flex items-center space-x-2 mt-2">
+                              <Badge className="bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300 font-medium text-xs px-2 py-1">
                                 {customer.documentType?.toUpperCase()}
                               </Badge>
-                              <Badge variant="outline" className="text-xs">
-                                {customer.code}
+                              <Badge className="bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border-purple-300 font-medium text-xs px-2 py-1">
+                                #{customer.code}
                               </Badge>
                             </div>
                           </div>
                         </div>
-                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex flex-col space-y-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => handleEdit(customer)}
-                            className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-600"
+                            className="h-9 w-9 p-0 rounded-xl bg-blue-50 hover:bg-blue-100 hover:text-blue-600 border border-blue-200 shadow-sm hover:shadow-md transition-all duration-200"
+                            title="Editar cliente"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -456,59 +465,98 @@ export default function CustomersPage() {
                             size="sm"
                             variant="ghost"
                             onClick={() => handleDelete(customer.id)}
-                            className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600"
+                            className="h-9 w-9 p-0 rounded-xl bg-red-50 hover:bg-red-100 hover:text-red-600 border border-red-200 shadow-sm hover:shadow-md transition-all duration-200"
+                            title="Excluir cliente"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="space-y-2 text-sm text-gray-600">
-                        <div className="flex items-center">
-                          <span className="font-medium min-w-0 flex-1">
-                            {customer.documentType === "cpf" ? formatCPF(customer.document) : formatCNPJ(customer.document)}
-                          </span>
+
+                    <CardContent className="px-6 pb-6">
+                      <div className="space-y-3">
+                        {/* Document info */}
+                        <div className="flex items-center p-3 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-100">
+                          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center mr-3 shadow-md">
+                            <FileText className="h-5 w-5 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-sm font-semibold text-gray-900">
+                              {customer.documentType === "cpf" ? formatCPF(customer.document) : formatCNPJ(customer.document)}
+                            </div>
+                            <div className="text-xs text-gray-500">Documento</div>
+                          </div>
                         </div>
-                        {customer.email && (
-                          <div className="flex items-center">
-                            <span className="min-w-0 flex-1 truncate">{customer.email}</span>
-                          </div>
-                        )}
-                        {customer.phone && (
-                          <div className="flex items-center">
-                            <span>{customer.phone}</span>
-                          </div>
-                        )}
+
+                        {/* Contact info */}
+                        <div className="grid grid-cols-1 gap-2">
+                          {customer.email && (
+                            <div className="flex items-center p-2 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-100">
+                              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                                <span className="text-green-600 text-sm">@</span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-medium text-gray-800 truncate">{customer.email}</div>
+                              </div>
+                            </div>
+                          )}
+                          {customer.phone && (
+                            <div className="flex items-center p-2 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg border border-blue-100">
+                              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                                <span className="text-blue-600 text-xs">📞</span>
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-sm font-medium text-gray-800">{customer.phone}</div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Address */}
                         {customer.address && (
-                          <div className="flex items-center">
-                            <span className="truncate">{customer.address}</span>
+                          <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-100">
+                            <div className="text-xs text-amber-700 font-medium mb-1">Endereço</div>
+                            <div className="text-sm text-gray-800 line-clamp-2">{customer.address}</div>
                           </div>
                         )}
-                      </div>
-                      <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-                        <div className="flex space-x-2">
+
+                        {/* Observations */}
+                        {customer.observations && (
+                          <div className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-100">
+                            <div className="text-xs text-purple-700 font-medium mb-1">Observações</div>
+                            <div className="text-sm text-gray-800 line-clamp-2">{customer.observations}</div>
+                          </div>
+                        )}
+
+                        {/* Action buttons */}
+                        <div className="flex justify-center space-x-4 pt-4 border-t border-gray-100">
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => setLocation(`/vehicles?customerId=${customer.id}`)}
-                            className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-600"
+                            className="flex-1 h-12 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 group/btn"
                             title="Ver veículos do cliente"
                           >
-                            <Car className="h-4 w-4" />
+                            <Car className="h-5 w-5 text-blue-600 group-hover/btn:scale-110 transition-transform mr-2" />
+                            <span className="text-sm font-medium text-blue-700">Veículos</span>
                           </Button>
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => setLocation(`/reports?customerId=${customer.id}`)}
-                            className="h-8 w-8 p-0 hover:bg-green-100 hover:text-green-600"
+                            className="flex-1 h-12 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 border border-green-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 group/btn"
                             title="Ver relatório do cliente"
                           >
-                            <FileText className="h-4 w-4" />
+                            <FileText className="h-5 w-5 text-green-600 group-hover/btn:scale-110 transition-transform mr-2" />
+                            <span className="text-sm font-medium text-green-700">Relatórios</span>
                           </Button>
                         </div>
                       </div>
                     </CardContent>
+
+                    {/* Hover effect overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
                   </Card>
                 ))}
               </div>
