@@ -422,85 +422,99 @@ export default function CustomersPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredCustomers.map((customer: Customer) => (
-                  <Card key={customer.id} className="group hover:shadow-lg transition-all duration-300 bg-white border border-gray-200 hover:border-teal-300 overflow-hidden relative">
-                    <div className="p-6">
-                      {/* Header com avatar e nome */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center space-x-3 flex-1 min-w-0">
-                          <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-semibold text-lg shadow-md">
-                            {customer.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-gray-900 truncate text-base mb-1">
-                              {customer.name}
-                            </h3>
-                            <div className="flex items-center space-x-2">
-                              <Badge variant="secondary" className="text-xs bg-teal-50 text-teal-700 hover:bg-teal-100">
-                                #{customer.code}
-                              </Badge>
-                              <Badge variant="outline" className="text-xs border-emerald-200 text-emerald-700">
-                                {customer.documentType?.toUpperCase()}
-                              </Badge>
-                            </div>
-                          </div>
+                  <div key={customer.id} className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-teal-200 overflow-hidden">
+                    {/* Background gradient sutil */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-teal-50/30 to-emerald-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    
+                    {/* Header colorido */}
+                    <div className="relative h-20 bg-gradient-to-r from-teal-500 to-emerald-600 p-4 flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white font-bold text-lg border border-white/30">
+                          {customer.name.charAt(0).toUpperCase()}
                         </div>
-                        
-                        {/* Ações de edição e exclusão */}
-                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleEdit(customer)}
-                            className="h-8 w-8 p-0 hover:bg-teal-50 hover:text-teal-600"
-                            title="Editar"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDelete(customer.id)}
-                            className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
-                            title="Excluir"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                        <div>
+                          <h3 className="text-white font-semibold truncate max-w-32">
+                            {customer.name}
+                          </h3>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <span className="text-xs text-teal-100 bg-white/20 px-2 py-0.5 rounded-full">
+                              #{customer.code}
+                            </span>
+                          </div>
                         </div>
                       </div>
+                      
+                      {/* Actions no header */}
+                      <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleEdit(customer)}
+                          className="h-8 w-8 p-0 text-white hover:bg-white/20 border-0"
+                          title="Editar"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDelete(customer.id)}
+                          className="h-8 w-8 p-0 text-white hover:bg-red-500/20 border-0"
+                          title="Excluir"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
 
-                      {/* Informações de acesso rápido */}
-                      <div className="space-y-3 mb-5">
-                        <div className="flex items-center text-sm text-gray-600">
-                          <span className="font-medium w-20">Doc:</span>
-                          <span className="text-gray-900 font-mono text-xs">
+                    {/* Conteúdo */}
+                    <div className="relative p-5">
+                      {/* Tipo de documento */}
+                      <div className="mb-4">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                          {customer.documentType?.toUpperCase()}
+                        </span>
+                      </div>
+
+                      {/* Informações essenciais */}
+                      <div className="space-y-3 mb-6">
+                        <div className="flex items-center text-sm">
+                          <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
+                            <User className="h-3 w-3 text-gray-500" />
+                          </div>
+                          <span className="text-gray-900 text-xs font-mono">
                             {customer.documentType === 'cpf' ? formatCPF(customer.document) : formatCNPJ(customer.document)}
                           </span>
                         </div>
                         
                         {customer.email && (
-                          <div className="flex items-center text-sm text-gray-600">
-                            <span className="font-medium w-20">Email:</span>
-                            <span className="text-gray-900 truncate text-xs" title={customer.email}>
+                          <div className="flex items-center text-sm">
+                            <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
+                              <span className="text-gray-500 text-xs">@</span>
+                            </div>
+                            <span className="text-gray-700 text-xs truncate" title={customer.email}>
                               {customer.email}
                             </span>
                           </div>
                         )}
                         
                         {customer.phone && (
-                          <div className="flex items-center text-sm text-gray-600">
-                            <span className="font-medium w-20">Fone:</span>
-                            <span className="text-gray-900 font-mono text-xs">
+                          <div className="flex items-center text-sm">
+                            <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
+                              <span className="text-gray-500 text-xs">📱</span>
+                            </div>
+                            <span className="text-gray-700 text-xs font-mono">
                               {customer.phone}
                             </span>
                           </div>
                         )}
                       </div>
 
-                      {/* Ações principais */}
-                      <div className="space-y-3 pt-4 border-t border-gray-100">
+                      {/* Ações - Layout vertical */}
+                      <div className="space-y-2">
                         <Button
                           onClick={() => setLocation(`/vehicles?customerId=${customer.id}`)}
-                          className="w-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-sm"
+                          className="w-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-sm rounded-xl h-10"
                           size="sm"
                         >
                           <Car className="h-4 w-4 mr-2" />
@@ -512,24 +526,24 @@ export default function CustomersPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => setLocation(`/services?customerId=${customer.id}`)}
-                            className="border-teal-200 text-teal-700 hover:bg-teal-50"
+                            className="border-teal-200 text-teal-700 hover:bg-teal-50 rounded-xl h-9"
                           >
-                            <Wrench className="h-4 w-4 mr-1" />
-                            Serviços
+                            <Wrench className="h-3 w-3 mr-1" />
+                            <span className="text-xs">Serviços</span>
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => setLocation(`/reports?customerId=${customer.id}`)}
-                            className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                            className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl h-9"
                           >
-                            <FileText className="h-4 w-4 mr-1" />
-                            Relatórios
+                            <FileText className="h-3 w-3 mr-1" />
+                            <span className="text-xs">Relatórios</span>
                           </Button>
                         </div>
                       </div>
                     </div>
-                  </Card>
+                  </div>
                 ))}
               </div>
             )}
