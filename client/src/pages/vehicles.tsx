@@ -20,8 +20,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertVehicleSchema, type Vehicle, type Customer } from "@shared/schema";
 import { z } from "zod";
-import { vehicleBrands, vehicleModels, fuelTypes } from "@/lib/vehicle-data";
+import { vehicleBrands, vehicleModels, fuelTypes, showVehicleNotification, showCelebration } from "@/lib/vehicle-data";
 import { cn } from "@/lib/utils";
+import VehicleAnalytics from "@/components/dashboard/vehicle-analytics";
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
   const res = await fetch(url, {
@@ -54,6 +55,7 @@ export default function VehiclesPage() {
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [customModel, setCustomModel] = useState("");
   const [showCustomModel, setShowCustomModel] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleFormSchema),
@@ -89,16 +91,23 @@ export default function VehiclesPage() {
       const res = await apiRequest("POST", "/api/vehicles", data);
       return await res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
       setIsModalOpen(false);
       setEditingVehicle(null);
       form.reset();
       setShowCustomModel(false);
       setCustomModel("");
+      
+      // Efeitos de celebração
+      const brand = form.getValues("brand");
+      const model = showCustomModel ? customModel : form.getValues("model");
+      showVehicleNotification(brand, model);
+      showCelebration();
+      
       toast({
-        title: "Veículo cadastrado",
-        description: "Veículo foi cadastrado com sucesso.",
+        title: "🎉 Veículo cadastrado!",
+        description: `${brand} ${model} foi adicionado com sucesso à frota!`,
       });
     },
     onError: (error: Error) => {
@@ -249,9 +258,21 @@ export default function VehiclesPage() {
                   className="pl-12 w-80 h-12 border-2 border-gray-200 focus:border-blue-400 rounded-xl shadow-sm bg-white/80"
                 />
               </div>
-              <div className="bg-gradient-to-r from-teal-500 to-emerald-600 text-white px-4 py-2 rounded-lg shadow-md">
-                <span className="font-semibold">{filteredVehicles.length}</span>
-                <span className="ml-1 text-sm">veículos</span>
+              <div className="flex items-center gap-4">
+                <Button
+                  variant={showAnalytics ? "default" : "outline"}
+                  onClick={() => setShowAnalytics(!showAnalytics)}
+                  className={showAnalytics 
+                    ? "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg" 
+                    : "border-blue-200 text-blue-700 hover:bg-blue-50"
+                  }
+                >
+                  📊 {showAnalytics ? "Ocultar" : "Mostrar"} Analytics
+                </Button>
+                <div className="bg-gradient-to-r from-teal-500 to-emerald-600 text-white px-4 py-2 rounded-lg shadow-md">
+                  <span className="font-semibold">{filteredVehicles.length}</span>
+                  <span className="ml-1 text-sm">veículos</span>
+                </div>
               </div>
               <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogTrigger asChild>
@@ -535,6 +556,22 @@ export default function VehiclesPage() {
                 </DialogContent>
               </Dialog>
             </div>
+
+            {/* Seção de Analytics */}
+            {showAnalytics && (
+              <div className="mb-8 p-6 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/20 shadow-lg">
+                <div className="flex items-center mb-6">
+                  <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-3 rounded-xl mr-4">
+                    <span className="text-white text-xl">📊</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Analytics da Frota</h3>
+                    <p className="text-gray-600">Insights sobre seus veículos cadastrados</p>
+                  </div>
+                </div>
+                <VehicleAnalytics />
+              </div>
+            )}
 
             {vehiclesLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
