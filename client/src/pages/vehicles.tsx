@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,10 +12,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Plus, Search, Edit, Trash2, Car, User, Wrench, Check, ChevronsUpDown } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Search, Edit, Trash2, Car, User, Check, ChevronsUpDown, Wrench, FileText } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertVehicleSchema, type Vehicle, type Customer } from "@shared/schema";
@@ -48,24 +49,26 @@ export default function VehiclesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
-  const [selectedBrand, setSelectedBrand] = useState("");
   const [openBrandSelect, setOpenBrandSelect] = useState(false);
   const [openModelSelect, setOpenModelSelect] = useState(false);
-  const [openFuelSelect, setOpenFuelSelect] = useState(false);
+  const [selectedBrand, setSelectedBrand] = useState<string>("");
+  const [customModel, setCustomModel] = useState("");
+  const [showCustomModel, setShowCustomModel] = useState(false);
 
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleFormSchema),
     defaultValues: {
+      licensePlate: "",
       brand: "",
       model: "",
-      year: new Date().getFullYear(),
-      licensePlate: "",
+      year: 2024,
       color: "",
-      customerId: 0,
+      fuelType: "gasoline",
+      customerId: 1,
     },
   });
 
-  const { data: vehicles = [], isLoading } = useQuery<(Vehicle & { customer: Customer })[]>({
+  const { data: vehicles = [], isLoading: vehiclesLoading } = useQuery<Vehicle[]>({
     queryKey: ["/api/vehicles"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/vehicles");
@@ -91,9 +94,11 @@ export default function VehiclesPage() {
       setIsModalOpen(false);
       setEditingVehicle(null);
       form.reset();
+      setShowCustomModel(false);
+      setCustomModel("");
       toast({
-        title: "Veículo criado",
-        description: "Veículo foi criado com sucesso.",
+        title: "Veículo cadastrado",
+        description: "Veículo foi cadastrado com sucesso.",
       });
     },
     onError: (error: Error) => {
@@ -115,6 +120,8 @@ export default function VehiclesPage() {
       setIsModalOpen(false);
       setEditingVehicle(null);
       form.reset();
+      setShowCustomModel(false);
+      setCustomModel("");
       toast({
         title: "Veículo atualizado",
         description: "Veículo foi atualizado com sucesso.",
@@ -150,22 +157,41 @@ export default function VehiclesPage() {
   });
 
   const onSubmit = (data: VehicleFormData) => {
+    const finalData = {
+      ...data,
+      model: showCustomModel ? customModel : data.model,
+    };
+
     if (editingVehicle) {
-      updateMutation.mutate({ id: editingVehicle.id, data });
+      updateMutation.mutate({ id: editingVehicle.id, data: finalData });
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(finalData);
     }
   };
 
   const handleEdit = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle);
     setSelectedBrand(vehicle.brand);
+    
+    // Verificar se o modelo existe na lista ou é customizado
+    const modelsForBrand = vehicleModels[vehicle.brand] || [];
+    const isCustomModel = !modelsForBrand.includes(vehicle.model);
+    
+    if (isCustomModel) {
+      setShowCustomModel(true);
+      setCustomModel(vehicle.model);
+    } else {
+      setShowCustomModel(false);
+      setCustomModel("");
+    }
+
     form.reset({
-      brand: vehicle.brand,
-      model: vehicle.model,
-      year: vehicle.year,
       licensePlate: vehicle.licensePlate,
-      color: vehicle.color || "",
+      brand: vehicle.brand,
+      model: isCustomModel ? "" : vehicle.model,
+      year: vehicle.year,
+      color: vehicle.color,
+      fuelType: vehicle.fuelType as "gasoline" | "ethanol" | "flex" | "diesel",
       customerId: vehicle.customerId,
     });
     setIsModalOpen(true);
@@ -177,11 +203,24 @@ export default function VehiclesPage() {
     }
   };
 
-  const filteredVehicles = vehicles.filter((vehicle) =>
+  const handleModelSelect = (model: string) => {
+    if (model === "custom") {
+      setShowCustomModel(true);
+      form.setValue("model", "");
+      setOpenModelSelect(false);
+    } else {
+      setShowCustomModel(false);
+      setCustomModel("");
+      form.setValue("model", model);
+      setOpenModelSelect(false);
+    }
+  };
+
+  const filteredVehicles = vehicles.filter((vehicle: Vehicle) =>
+    vehicle.licensePlate.toLowerCase().includes(searchTerm.toLowerCase()) ||
     vehicle.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
     vehicle.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vehicle.licensePlate.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vehicle.customer?.name.toLowerCase().includes(searchTerm.toLowerCase())
+    vehicle.color.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (!user) {
@@ -195,7 +234,7 @@ export default function VehiclesPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
           title="Veículos"
-          subtitle="Gerencie os veículos dos clientes"
+          subtitle="Gerencie a frota de veículos"
         />
 
         <main className="flex-1 overflow-y-auto bg-gradient-to-br from-white/80 via-blue-50/50 to-indigo-50/30 backdrop-blur-sm">
@@ -210,7 +249,7 @@ export default function VehiclesPage() {
                   className="pl-12 w-80 h-12 border-2 border-gray-200 focus:border-blue-400 rounded-xl shadow-sm bg-white/80"
                 />
               </div>
-              <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg shadow-md">
+              <div className="bg-gradient-to-r from-teal-500 to-emerald-600 text-white px-4 py-2 rounded-lg shadow-md">
                 <span className="font-semibold">{filteredVehicles.length}</span>
                 <span className="ml-1 text-sm">veículos</span>
               </div>
@@ -220,6 +259,8 @@ export default function VehiclesPage() {
                     className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
                     onClick={() => {
                       setEditingVehicle(null);
+                      setShowCustomModel(false);
+                      setCustomModel("");
                       setSelectedBrand("");
                       form.reset();
                     }}
@@ -241,7 +282,7 @@ export default function VehiclesPage() {
                           control={form.control}
                           name="customerId"
                           render={({ field }) => (
-                            <FormItem className="md:col-span-2">
+                            <FormItem>
                               <FormLabel>Cliente</FormLabel>
                               <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
                                 <FormControl>
@@ -250,7 +291,7 @@ export default function VehiclesPage() {
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  {customers.map((customer) => (
+                                  {customers.map((customer: Customer) => (
                                     <SelectItem key={customer.id} value={customer.id.toString()}>
                                       {customer.name}
                                     </SelectItem>
@@ -263,9 +304,22 @@ export default function VehiclesPage() {
                         />
                         <FormField
                           control={form.control}
-                          name="brand"
+                          name="licensePlate"
                           render={({ field }) => (
                             <FormItem>
+                              <FormLabel>Placa</FormLabel>
+                              <FormControl>
+                                <Input placeholder="ABC-1234" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="brand"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col">
                               <FormLabel>Marca</FormLabel>
                               <Popover open={openBrandSelect} onOpenChange={setOpenBrandSelect}>
                                 <PopoverTrigger asChild>
@@ -283,7 +337,7 @@ export default function VehiclesPage() {
                                     </Button>
                                   </FormControl>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-[300px] p-0">
+                                <PopoverContent className="w-full p-0">
                                   <Command>
                                     <CommandInput placeholder="Buscar marca..." />
                                     <CommandList>
@@ -305,9 +359,7 @@ export default function VehiclesPage() {
                                             <Check
                                               className={cn(
                                                 "mr-2 h-4 w-4",
-                                                brand === field.value
-                                                  ? "opacity-100"
-                                                  : "opacity-0"
+                                                brand === field.value ? "opacity-100" : "opacity-0"
                                               )}
                                             />
                                             {brand}
@@ -325,104 +377,87 @@ export default function VehiclesPage() {
                         <FormField
                           control={form.control}
                           name="model"
-                          render={({ field }) => {
-                            const currentBrand = selectedBrand || form.getValues("brand");
-                            const hasModels = currentBrand && vehicleModels[currentBrand] && vehicleModels[currentBrand].length > 0;
-                            
-                            return (
-                              <FormItem>
-                                <FormLabel>Modelo</FormLabel>
-                                {currentBrand ? (
-                                  hasModels ? (
-                                    <Popover open={openModelSelect} onOpenChange={setOpenModelSelect}>
-                                      <PopoverTrigger asChild>
-                                        <FormControl>
-                                          <Button
-                                            variant="outline"
-                                            role="combobox"
-                                            className={cn(
-                                              "w-full justify-between",
-                                              !field.value && "text-muted-foreground"
-                                            )}
-                                          >
-                                            {field.value || "Selecione o modelo"}
-                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                          </Button>
-                                        </FormControl>
-                                      </PopoverTrigger>
-                                      <PopoverContent className="w-[300px] p-0">
-                                        <Command>
-                                          <CommandInput placeholder="Buscar modelo..." />
-                                          <CommandList>
-                                            <CommandEmpty>
-                                              <div className="text-center p-4">
-                                                <p className="text-sm text-gray-600 mb-2">Nenhum modelo encontrado.</p>
-                                                <Button 
-                                                  size="sm" 
-                                                  variant="outline"
-                                                  onClick={() => {
-                                                    setOpenModelSelect(false);
-                                                    // Força o modo de input customizado
-                                                    form.setValue("model", "");
-                                                  }}
-                                                >
-                                                  Digite um modelo customizado
-                                                </Button>
-                                              </div>
-                                            </CommandEmpty>
-                                            <CommandGroup>
-                                              {vehicleModels[currentBrand]?.map((model) => (
-                                                <CommandItem
-                                                  value={model}
-                                                  key={model}
-                                                  onSelect={() => {
-                                                    form.setValue("model", model);
-                                                    setOpenModelSelect(false);
-                                                  }}
-                                                >
-                                                  <Check
-                                                    className={cn(
-                                                      "mr-2 h-4 w-4",
-                                                      model === field.value
-                                                        ? "opacity-100"
-                                                        : "opacity-0"
-                                                    )}
-                                                  />
-                                                  {model}
-                                                </CommandItem>
-                                              ))}
-                                              <CommandItem
-                                                onSelect={() => {
-                                                  setOpenModelSelect(false);
-                                                  form.setValue("model", "");
-                                                }}
-                                                className="border-t border-gray-200 mt-2 pt-2"
-                                              >
-                                                <Plus className="mr-2 h-4 w-4" />
-                                                Digite um modelo customizado
-                                              </CommandItem>
-                                            </CommandGroup>
-                                          </CommandList>
-                                        </Command>
-                                      </PopoverContent>
-                                    </Popover>
-                                  ) : (
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                              <FormLabel>Modelo</FormLabel>
+                              {!showCustomModel ? (
+                                <Popover open={openModelSelect} onOpenChange={setOpenModelSelect}>
+                                  <PopoverTrigger asChild>
                                     <FormControl>
-                                      <Input 
-                                        placeholder="Digite o modelo do veículo" 
-                                        {...field}
-                                      />
+                                      <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        disabled={!selectedBrand && !form.getValues("brand")}
+                                        className={cn(
+                                          "w-full justify-between",
+                                          !field.value && "text-muted-foreground"
+                                        )}
+                                      >
+                                        {field.value || "Selecione o modelo"}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                      </Button>
                                     </FormControl>
-                                  )
-                                ) : (
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-full p-0">
+                                    <Command>
+                                      <CommandInput placeholder="Buscar modelo..." />
+                                      <CommandList>
+                                        <CommandEmpty>Nenhum modelo encontrado.</CommandEmpty>
+                                        <CommandGroup>
+                                          {vehicleModels[selectedBrand || form.getValues("brand")]?.map((model) => (
+                                            <CommandItem
+                                              value={model}
+                                              key={model}
+                                              onSelect={() => handleModelSelect(model)}
+                                            >
+                                              <Check
+                                                className={cn(
+                                                  "mr-2 h-4 w-4",
+                                                  model === field.value ? "opacity-100" : "opacity-0"
+                                                )}
+                                              />
+                                              {model}
+                                            </CommandItem>
+                                          ))}
+                                          <CommandItem
+                                            value="custom"
+                                            onSelect={() => handleModelSelect("custom")}
+                                            className="border-t border-gray-200 text-blue-600 font-medium"
+                                          >
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Digite um modelo customizado
+                                          </CommandItem>
+                                        </CommandGroup>
+                                      </CommandList>
+                                    </Command>
+                                  </PopoverContent>
+                                </Popover>
+                              ) : (
+                                <div className="space-y-2">
                                   <FormControl>
-                                    <Input placeholder="Selecione primeiro a marca" disabled {...field} />
+                                    <Input 
+                                      placeholder="Digite o modelo customizado"
+                                      value={customModel}
+                                      onChange={(e) => setCustomModel(e.target.value)}
+                                    />
                                   </FormControl>
-                                )}
-                                <FormMessage />
-                              </FormItem>
-                            );
-                          }}
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setShowCustomModel(false);
+                                      setCustomModel("");
+                                      form.setValue("model", "");
+                                    }}
+                                  >
+                                    Voltar para lista
+                                  </Button>
+                                </div>
+                              )}
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
                         <FormField
                           control={form.control}
@@ -444,12 +479,12 @@ export default function VehiclesPage() {
                         />
                         <FormField
                           control={form.control}
-                          name="licensePlate"
+                          name="color"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Placa</FormLabel>
+                              <FormLabel>Cor</FormLabel>
                               <FormControl>
-                                <Input placeholder="ABC-1234" {...field} />
+                                <Input placeholder="Branco" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -457,13 +492,24 @@ export default function VehiclesPage() {
                         />
                         <FormField
                           control={form.control}
-                          name="color"
+                          name="fuelType"
                           render={({ field }) => (
-                            <FormItem className="md:col-span-2">
-                              <FormLabel>Cor</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Branco, Preto, Prata..." {...field} />
-                              </FormControl>
+                            <FormItem>
+                              <FormLabel>Combustível</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione o combustível" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {fuelTypes.map((fuel) => (
+                                    <SelectItem key={fuel.value} value={fuel.value}>
+                                      {fuel.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -490,7 +536,7 @@ export default function VehiclesPage() {
               </Dialog>
             </div>
 
-            {isLoading ? (
+            {vehiclesLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[...Array(6)].map((_, i) => (
                   <Card key={i} className="animate-pulse">
@@ -507,75 +553,102 @@ export default function VehiclesPage() {
                   </Card>
                 ))}
               </div>
+            ) : filteredVehicles.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="bg-gradient-to-br from-teal-100 to-emerald-100 p-6 rounded-full mb-6 w-24 h-24 flex items-center justify-center">
+                  <Car className="h-12 w-12 text-teal-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  Nenhum veículo encontrado
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  {searchTerm ? 'Tente ajustar os termos de busca.' : 'Comece adicionando seu primeiro veículo.'}
+                </p>
+                {!searchTerm && (
+                  <Button
+                    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                    onClick={() => {
+                      setEditingVehicle(null);
+                      form.reset();
+                      setIsModalOpen(true);
+                    }}
+                  >
+                    <Plus className="h-5 w-5 mr-2" />
+                    Adicionar Primeiro Veículo
+                  </Button>
+                )}
+              </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredVehicles.map((vehicle) => (
-                  <div key={vehicle.id} className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-blue-200 overflow-hidden">
-                    {/* Background gradient sutil */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 to-purple-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    
-                    {/* Header colorido */}
-                    <div className="relative h-20 bg-gradient-to-r from-blue-500 to-purple-600 p-4 flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white border border-white/30">
-                          <Car className="h-6 w-6" />
+                {filteredVehicles.map((vehicle: Vehicle) => {
+                  const customer = customers.find((c: Customer) => c.id === vehicle.customerId);
+                  return (
+                    <div key={vehicle.id} className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-teal-200 overflow-hidden">
+                      {/* Background gradient sutil */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-teal-50/30 to-emerald-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      
+                      {/* Header colorido */}
+                      <div className="relative h-20 bg-gradient-to-r from-teal-500 to-emerald-600 p-4 flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white font-bold text-lg border border-white/30">
+                            <Car className="h-6 w-6" />
+                          </div>
+                          <div>
+                            <h3 className="text-white font-semibold truncate max-w-32">
+                              {vehicle.brand} {vehicle.model}
+                            </h3>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <span className="text-xs text-teal-100 bg-white/20 px-2 py-0.5 rounded-full font-mono">
+                                {vehicle.licensePlate}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="text-white font-semibold truncate max-w-32">
-                            {vehicle.brand} {vehicle.model}
-                          </h3>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <span className="text-xs text-blue-100 bg-white/20 px-2 py-0.5 rounded-full">
+                        
+                        {/* Actions no header */}
+                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEdit(vehicle)}
+                            className="h-8 w-8 p-0 text-white hover:bg-white/20 border-0"
+                            title="Editar"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDelete(vehicle.id)}
+                            className="h-8 w-8 p-0 text-white hover:bg-red-500/20 border-0"
+                            title="Excluir"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Conteúdo */}
+                      <div className="relative p-5">
+                        {/* Informações do cliente */}
+                        <div className="mb-4">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                            <User className="h-3 w-3 mr-1" />
+                            {customer?.name || 'Cliente não encontrado'}
+                          </span>
+                        </div>
+
+                        {/* Informações do veículo */}
+                        <div className="space-y-3 mb-6">
+                          <div className="flex items-center text-sm">
+                            <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
+                              <span className="text-gray-500 text-xs">📅</span>
+                            </div>
+                            <span className="text-gray-900 text-xs font-semibold">
                               {vehicle.year}
                             </span>
                           </div>
-                        </div>
-                      </div>
-                      
-                      {/* Actions no header */}
-                      <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEdit(vehicle)}
-                          className="h-8 w-8 p-0 text-white hover:bg-white/20 border-0"
-                          title="Editar"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDelete(vehicle.id)}
-                          className="h-8 w-8 p-0 text-white hover:bg-red-500/20 border-0"
-                          title="Excluir"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Conteúdo */}
-                    <div className="relative p-5">
-                      {/* Placa */}
-                      <div className="mb-4">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {vehicle.licensePlate || "Sem placa"}
-                        </span>
-                      </div>
-
-                      {/* Informações essenciais */}
-                      <div className="space-y-3 mb-6">
-                        <div className="flex items-center text-sm">
-                          <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
-                            <User className="h-3 w-3 text-gray-500" />
-                          </div>
-                          <span className="text-gray-700 text-xs truncate" title={vehicle.customer?.name}>
-                            {vehicle.customer?.name}
-                          </span>
-                        </div>
-                        
-                        {vehicle.color && (
+                          
                           <div className="flex items-center text-sm">
                             <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
                               <span className="text-gray-500 text-xs">🎨</span>
@@ -584,23 +657,42 @@ export default function VehiclesPage() {
                               {vehicle.color}
                             </span>
                           </div>
-                        )}
-                      </div>
+                          
+                          <div className="flex items-center text-sm">
+                            <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
+                              <span className="text-gray-500 text-xs">⛽</span>
+                            </div>
+                            <span className="text-gray-700 text-xs capitalize">
+                              {fuelTypes.find(f => f.value === vehicle.fuelType)?.label || vehicle.fuelType}
+                            </span>
+                          </div>
+                        </div>
 
-                      {/* Ações - Layout vertical */}
-                      <div className="space-y-2">
-                        <Button
-                          onClick={() => setLocation(`/services?vehicleId=${vehicle.id}`)}
-                          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-sm rounded-xl h-10"
-                          size="sm"
-                        >
-                          <Wrench className="h-4 w-4 mr-2" />
-                          Serviços
-                        </Button>
+                        {/* Ações */}
+                        <div className="space-y-2">
+                          <Button
+                            onClick={() => setLocation(`/services?vehicleId=${vehicle.id}`)}
+                            className="w-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-sm rounded-xl h-10"
+                            size="sm"
+                          >
+                            <Wrench className="h-4 w-4 mr-2" />
+                            Serviços
+                          </Button>
+                          
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setLocation(`/reports?vehicleId=${vehicle.id}`)}
+                            className="w-full border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl h-9"
+                          >
+                            <FileText className="h-3 w-3 mr-2" />
+                            <span className="text-xs">Histórico</span>
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
