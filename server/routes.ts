@@ -3,6 +3,30 @@ import { createServer, type Server } from "http";
 import passport from "passport";
 import { storage } from "./storage";
 import { setupAuth, createInitialAdmin, hashPassword } from "./auth";
+
+// Function to create initial service types
+async function createInitialServiceTypes() {
+  try {
+    const existingTypes = await storage.getServiceTypes();
+    if (existingTypes.length === 0) {
+      const defaultServiceTypes = [
+        { name: "Troca de Óleo", description: "Troca de óleo do motor", defaultPrice: "80.00" },
+        { name: "Alinhamento", description: "Alinhamento e balanceamento", defaultPrice: "120.00" },
+        { name: "Revisão Geral", description: "Revisão completa do veículo", defaultPrice: "300.00" },
+        { name: "Troca de Pneus", description: "Troca de pneus", defaultPrice: "200.00" },
+        { name: "Lavagem", description: "Lavagem completa", defaultPrice: "30.00" },
+        { name: "Freios", description: "Manutenção do sistema de freios", defaultPrice: "150.00" },
+      ];
+
+      for (const serviceType of defaultServiceTypes) {
+        await storage.createServiceType(serviceType);
+      }
+      console.log("Tipos de serviço iniciais criados com sucesso");
+    }
+  } catch (error) {
+    console.error("Erro ao criar tipos de serviço iniciais:", error);
+  }
+}
 import { 
   insertCustomerSchema,
   insertVehicleSchema,
@@ -38,6 +62,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Create initial admin user
   await createInitialAdmin();
+
+  // Create initial service types if they don't exist
+  await createInitialServiceTypes();
 
   // Customer routes
   app.get("/api/customers", requireAuth, async (req, res) => {
@@ -221,8 +248,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/service-types", requireAuth, async (req, res) => {
     try {
       const serviceTypes = await storage.getServiceTypes();
+      console.log("Service types retornados:", serviceTypes.length, serviceTypes);
       res.json(serviceTypes);
     } catch (error) {
+      console.error("Erro ao buscar tipos de serviço:", error);
       res.status(500).json({ message: "Failed to fetch service types" });
     }
   });

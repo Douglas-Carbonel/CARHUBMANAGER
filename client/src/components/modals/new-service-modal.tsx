@@ -23,6 +23,12 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Debug logs
+  console.log('Modal aberto:', isOpen);
+  console.log('Customers:', customers);
+  console.log('Vehicles:', vehicles);
+  console.log('Service Types:', serviceTypes);
+
   const form = useForm<z.infer<typeof insertServiceSchema>>({
     resolver: zodResolver(insertServiceSchema),
     defaultValues: {
@@ -43,10 +49,12 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
 
   const { data: vehicles } = useQuery({
     queryKey: ["/api/vehicles"],
+    enabled: isAuthenticated,
   });
 
   const { data: serviceTypes } = useQuery({
     queryKey: ["/api/service-types"],
+    enabled: isAuthenticated,
   });
 
   const createMutation = useMutation({
@@ -90,7 +98,10 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   };
 
   const getCustomerVehicles = (customerId: number) => {
-    return vehicles?.filter((v: Vehicle) => v.customerId === customerId) || [];
+    if (!customerId || !vehicles) return [];
+    const customerVehicles = vehicles.filter((v: Vehicle) => v.customerId === customerId);
+    console.log('Veículos para cliente', customerId, ':', customerVehicles);
+    return customerVehicles;
   };
 
   return (
@@ -153,7 +164,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                       <SelectContent>
                         {getCustomerVehicles(form.watch("customerId")).map((vehicle: Vehicle) => (
                           <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                            {vehicle.brand} {vehicle.model} - {vehicle.plate}
+                            {vehicle.brand} {vehicle.model} - {vehicle.licensePlate}
                           </SelectItem>
                         ))}
                       </SelectContent>
