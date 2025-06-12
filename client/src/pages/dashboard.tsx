@@ -11,7 +11,7 @@ export default function Dashboard() {
   const { user } = useAuth();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100">
+    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-slate-50 to-blue-50">
       <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">

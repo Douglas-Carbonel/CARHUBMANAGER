@@ -99,6 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast({
         title: "Login realizado com sucesso",
         description: `Bem-vindo, ${user.firstName}!`,
+        variant: "success" as any,
       });
       // Redireciona para dashboard após login bem-sucedido
       setTimeout(() => {
@@ -124,6 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast({
         title: "Registro realizado com sucesso",
         description: `Conta criada para ${user.firstName}!`,
+        variant: "success" as any,
       });
       // Redireciona para dashboard após registro bem-sucedido
       setTimeout(() => {

@@ -14,36 +14,40 @@ export default function StatsCards() {
       value: stats ? `R$ ${stats.dailyRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : "R$ 0,00",
       change: "+12% vs ontem",
       icon: DollarSign,
-      gradient: "from-emerald-500 to-green-600",
-      bgGradient: "from-emerald-50 to-green-50",
-      iconBg: "bg-gradient-to-r from-emerald-500 to-green-600",
+      gradient: "from-green-600 to-emerald-700",
+      bgGradient: "from-green-50 to-emerald-50",
+      iconBg: "bg-gradient-to-r from-green-600 to-emerald-700",
+      textColor: "text-green-700",
     },
     {
       title: "Serviços Hoje",
       value: stats?.dailyServices || 0,
       change: "+5% vs ontem",
       icon: Wrench,
-      gradient: "from-blue-500 to-cyan-600",
-      bgGradient: "from-blue-50 to-cyan-50",
-      iconBg: "bg-gradient-to-r from-blue-500 to-cyan-600",
+      gradient: "from-blue-600 to-blue-700",
+      bgGradient: "from-blue-50 to-blue-100",
+      iconBg: "bg-gradient-to-r from-blue-600 to-blue-700",
+      textColor: "text-blue-700",
     },
     {
       title: "Agendamentos",
       value: stats?.appointments || 0,
       change: "Próximas 24h",
       icon: Calendar,
-      gradient: "from-orange-500 to-amber-600",
-      bgGradient: "from-orange-50 to-amber-50",
-      iconBg: "bg-gradient-to-r from-orange-500 to-amber-600",
+      gradient: "from-amber-500 to-orange-600",
+      bgGradient: "from-amber-50 to-orange-50",
+      iconBg: "bg-gradient-to-r from-amber-500 to-orange-600",
+      textColor: "text-amber-700",
     },
     {
       title: "Clientes Ativos",
       value: stats?.activeCustomers || 0,
       change: "+3% este mês",
       icon: Users,
-      gradient: "from-purple-500 to-indigo-600",
-      bgGradient: "from-purple-50 to-indigo-50",
-      iconBg: "bg-gradient-to-r from-purple-500 to-indigo-600",
+      gradient: "from-slate-600 to-slate-700",
+      bgGradient: "from-slate-50 to-slate-100",
+      iconBg: "bg-gradient-to-r from-slate-600 to-slate-700",
+      textColor: "text-slate-700",
     },
   ];
 
@@ -66,20 +70,20 @@ export default function StatsCards() {
       {statsData.map((stat, index) => (
         <Card 
           key={index} 
-          className={`border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-gradient-to-br ${stat.bgGradient} backdrop-blur-sm`}
+          className={`border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-white/80 backdrop-blur-sm hover:bg-white/90`}
         >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-slate-600 tracking-wide uppercase">{stat.title}</p>
+                <p className={`text-3xl font-bold ${stat.textColor}`}>{stat.value}</p>
                 <div className="flex items-center text-sm">
-                  <TrendingUp className="h-4 w-4 text-emerald-600 mr-1" />
-                  <span className="text-emerald-600 font-medium">{stat.change}</span>
+                  <TrendingUp className={`h-4 w-4 mr-1 ${stat.textColor}`} />
+                  <span className={`font-medium ${stat.textColor}`}>{stat.change}</span>
                 </div>
               </div>
-              <div className={`w-14 h-14 ${stat.iconBg} rounded-2xl flex items-center justify-center shadow-lg`}>
-                <stat.icon className="h-7 w-7 text-white" />
+              <div className={`w-16 h-16 ${stat.iconBg} rounded-3xl flex items-center justify-center shadow-lg border-2 border-white/30`}>
+                <stat.icon className="h-8 w-8 text-white" />
               </div>
             </div>
           </CardContent>

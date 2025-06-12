@@ -3,36 +3,48 @@
 @tailwind utilities;
 
 :root {
-  --background: 0 0% 100%;
-  --foreground: 20 14.3% 4.1%;
-  --muted: 60 4.8% 95.9%;
-  --muted-foreground: 25 5.3% 44.7%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 20 14.3% 4.1%;
+  --background: 220 15% 98%;
+  --foreground: 220 13% 15%;
+  --muted: 220 15% 94%;
+  --muted-foreground: 220 8% 45%;
+  --popover: 220 15% 98%;
+  --popover-foreground: 220 13% 15%;
   --card: 0 0% 100%;
-  --card-foreground: 20 14.3% 4.1%;
-  --border: 20 5.9% 90%;
-  --input: 20 5.9% 90%;
-  --primary: 142 76% 36%; /* #16A34A - Green-600 */
-  --primary-foreground: 355 100% 97%;
-  --secondary: 60 4.8% 95.9%;
-  --secondary-foreground: 24 9.8% 10%;
-  --accent: 60 4.8% 95.9%;
-  --accent-foreground: 24 9.8% 10%;
+  --card-foreground: 220 13% 15%;
+  --border: 220 13% 88%;
+  --input: 220 13% 88%;
+  --primary: 195 100% 35%; /* #0081CB - CarHub Blue */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 195 15% 92%;
+  --secondary-foreground: 220 13% 15%;
+  --accent: 195 15% 92%;
+  --accent-foreground: 220 13% 15%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 60 9.1% 97.8%;
-  --ring: 20 14.3% 4.1%;
-  --radius: 0.5rem;
+  --ring: 195 100% 35%;
+  --radius: 0.75rem;
   
   /* Custom CarHub colors */
-  --sidebar-background: 215 28% 17%; /* #2C3E50 */
+  --sidebar-background: 220 30% 12%; /* Dark navy blue */
   --sidebar-foreground: 0 0% 100%;
-  --sidebar-primary: 142 76% 36%; /* #16A34A */
+  --sidebar-primary: 195 100% 35%; /* CarHub Blue */
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 215 23% 25%; /* #34495E */
+  --sidebar-accent: 220 25% 18%; /* Lighter navy */
   --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-border: 215 23% 25%;
-  --sidebar-ring: 142 76% 36%;
+  --sidebar-border: 220 20% 22%;
+  --sidebar-ring: 195 100% 35%;
+  
+  /* Success colors */
+  --success: 142 76% 36%; /* Green for success */
+  --success-foreground: 0 0% 100%;
+  
+  /* Warning colors */
+  --warning: 45 93% 47%; /* Orange for warnings */
+  --warning-foreground: 0 0% 100%;
+  
+  /* Info colors */
+  --info: 195 100% 35%; /* CarHub blue for info */
+  --info-foreground: 0 0% 100%;
 }
 
 .dark {
