@@ -109,7 +109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Vehicle routes
   app.get("/api/vehicles", requireAuth, async (req, res) => {
     try {
-      const vehicles = await storage.getVehicles();
+      const vehicles = await storage.getVehiclesWithCustomers();
       res.json(vehicles);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch vehicles" });

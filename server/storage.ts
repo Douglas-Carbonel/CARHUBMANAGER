@@ -40,6 +40,7 @@ export interface IStorage {
 
   // Vehicle operations
   getVehicles(): Promise<Vehicle[]>;
+  getVehiclesWithCustomers(): Promise<(Vehicle & { customer: Customer })[]>;
   getVehiclesByCustomer(customerId: number): Promise<Vehicle[]>;
   getVehicle(id: number): Promise<Vehicle | undefined>;
   createVehicle(vehicle: InsertVehicle): Promise<Vehicle>;
@@ -183,6 +184,47 @@ export class DatabaseStorage implements IStorage {
       return await db.select().from(vehicles).orderBy(vehicles.licensePlate);
     } catch (error) {
       console.error('Error fetching vehicles:', error);
+      throw error;
+    }
+  }
+
+  async getVehiclesWithCustomers(): Promise<(Vehicle & { customer: Customer })[]> {
+    try {
+      const result = await db.select({
+        id: vehicles.id,
+        customerId: vehicles.customerId,
+        licensePlate: vehicles.licensePlate,
+        brand: vehicles.brand,
+        model: vehicles.model,
+        year: vehicles.year,
+        color: vehicles.color,
+        chassis: vehicles.chassis,
+        engine: vehicles.engine,
+        fuelType: vehicles.fuelType,
+        notes: vehicles.notes,
+        createdAt: vehicles.createdAt,
+        updatedAt: vehicles.updatedAt,
+        customer: {
+          id: customers.id,
+          code: customers.code,
+          document: customers.document,
+          documentType: customers.documentType,
+          name: customers.name,
+          phone: customers.phone,
+          email: customers.email,
+          address: customers.address,
+          observations: customers.observations,
+          createdAt: customers.createdAt,
+          updatedAt: customers.updatedAt,
+        }
+      })
+      .from(vehicles)
+      .innerJoin(customers, eq(vehicles.customerId, customers.id))
+      .orderBy(vehicles.licensePlate);
+      
+      return result;
+    } catch (error) {
+      console.error('Error fetching vehicles with customers:', error);
       throw error;
     }
   }

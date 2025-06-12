@@ -12,11 +12,15 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2, Car, User, Wrench } from "lucide-react";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Plus, Search, Edit, Trash2, Car, User, Wrench, Check, ChevronsUpDown } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertVehicleSchema, type Vehicle, type Customer } from "@shared/schema";
 import { z } from "zod";
+import { carBrands, carModelsByBrand, fuelTypes } from "@/lib/vehicle-data";
+import { cn } from "@/lib/utils";
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
   const res = await fetch(url, {
@@ -44,14 +48,18 @@ export default function VehiclesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [selectedBrand, setSelectedBrand] = useState("");
+  const [openBrandSelect, setOpenBrandSelect] = useState(false);
+  const [openModelSelect, setOpenModelSelect] = useState(false);
+  const [openFuelSelect, setOpenFuelSelect] = useState(false);
 
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleFormSchema),
     defaultValues: {
-      make: "",
+      brand: "",
       model: "",
       year: new Date().getFullYear(),
-      plate: "",
+      licensePlate: "",
       color: "",
       customerId: 0,
     },
@@ -151,11 +159,12 @@ export default function VehiclesPage() {
 
   const handleEdit = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle);
+    setSelectedBrand(vehicle.brand);
     form.reset({
-      make: vehicle.make,
+      brand: vehicle.brand,
       model: vehicle.model,
       year: vehicle.year,
-      plate: vehicle.plate,
+      licensePlate: vehicle.licensePlate,
       color: vehicle.color || "",
       customerId: vehicle.customerId,
     });
@@ -169,9 +178,9 @@ export default function VehiclesPage() {
   };
 
   const filteredVehicles = vehicles.filter((vehicle) =>
-    vehicle.make.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    vehicle.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
     vehicle.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vehicle.plate.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    vehicle.licensePlate.toLowerCase().includes(searchTerm.toLowerCase()) ||
     vehicle.customer?.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -211,6 +220,7 @@ export default function VehiclesPage() {
                     className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
                     onClick={() => {
                       setEditingVehicle(null);
+                      setSelectedBrand("");
                       form.reset();
                     }}
                   >
@@ -253,13 +263,61 @@ export default function VehiclesPage() {
                         />
                         <FormField
                           control={form.control}
-                          name="make"
+                          name="brand"
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Marca</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Toyota, Honda, Ford..." {...field} />
-                              </FormControl>
+                              <Popover open={openBrandSelect} onOpenChange={setOpenBrandSelect}>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant="outline"
+                                      role="combobox"
+                                      className={cn(
+                                        "w-full justify-between",
+                                        !field.value && "text-muted-foreground"
+                                      )}
+                                    >
+                                      {field.value || "Selecione a marca"}
+                                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[300px] p-0">
+                                  <Command>
+                                    <CommandInput placeholder="Buscar marca..." />
+                                    <CommandList>
+                                      <CommandEmpty>Nenhuma marca encontrada.</CommandEmpty>
+                                      <CommandGroup>
+                                        {carBrands.map((brand) => (
+                                          <CommandItem
+                                            value={brand}
+                                            key={brand}
+                                            onSelect={() => {
+                                              form.setValue("brand", brand);
+                                              setSelectedBrand(brand);
+                                              if (form.getValues("model") && !carModelsByBrand[brand]?.includes(form.getValues("model"))) {
+                                                form.setValue("model", "");
+                                              }
+                                              setOpenBrandSelect(false);
+                                            }}
+                                          >
+                                            <Check
+                                              className={cn(
+                                                "mr-2 h-4 w-4",
+                                                brand === field.value
+                                                  ? "opacity-100"
+                                                  : "opacity-0"
+                                              )}
+                                            />
+                                            {brand}
+                                          </CommandItem>
+                                        ))}
+                                      </CommandGroup>
+                                    </CommandList>
+                                  </Command>
+                                </PopoverContent>
+                              </Popover>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -270,9 +328,59 @@ export default function VehiclesPage() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Modelo</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Corolla, Civic, Focus..." {...field} />
-                              </FormControl>
+                              {selectedBrand || form.getValues("brand") ? (
+                                <Popover open={openModelSelect} onOpenChange={setOpenModelSelect}>
+                                  <PopoverTrigger asChild>
+                                    <FormControl>
+                                      <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        className={cn(
+                                          "w-full justify-between",
+                                          !field.value && "text-muted-foreground"
+                                        )}
+                                      >
+                                        {field.value || "Selecione o modelo"}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                      </Button>
+                                    </FormControl>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-[300px] p-0">
+                                    <Command>
+                                      <CommandInput placeholder="Buscar modelo..." />
+                                      <CommandList>
+                                        <CommandEmpty>Nenhum modelo encontrado.</CommandEmpty>
+                                        <CommandGroup>
+                                          {carModelsByBrand[selectedBrand || form.getValues("brand")]?.map((model) => (
+                                            <CommandItem
+                                              value={model}
+                                              key={model}
+                                              onSelect={() => {
+                                                form.setValue("model", model);
+                                                setOpenModelSelect(false);
+                                              }}
+                                            >
+                                              <Check
+                                                className={cn(
+                                                  "mr-2 h-4 w-4",
+                                                  model === field.value
+                                                    ? "opacity-100"
+                                                    : "opacity-0"
+                                                )}
+                                              />
+                                              {model}
+                                            </CommandItem>
+                                          ))}
+                                        </CommandGroup>
+                                      </CommandList>
+                                    </Command>
+                                  </PopoverContent>
+                                </Popover>
+                              ) : (
+                                <FormControl>
+                                  <Input placeholder="Selecione primeiro a marca" disabled {...field} />
+                                </FormControl>
+                              )}
                               <FormMessage />
                             </FormItem>
                           )}
@@ -297,7 +405,7 @@ export default function VehiclesPage() {
                         />
                         <FormField
                           control={form.control}
-                          name="plate"
+                          name="licensePlate"
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Placa</FormLabel>
@@ -334,7 +442,7 @@ export default function VehiclesPage() {
                           type="submit" 
                           disabled={createMutation.isPending || updateMutation.isPending}
                         >
-                          {editingVehicle ? "Atualizar" : "Criar"}
+                          {editingVehicle ? "Atualizar" : "Cadastrar"}
                         </Button>
                       </div>
                     </form>
@@ -372,14 +480,14 @@ export default function VehiclesPage() {
                           </div>
                           <div>
                             <CardTitle className="text-lg font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
-                              {vehicle.make} {vehicle.model}
+                              {vehicle.brand} {vehicle.model}
                             </CardTitle>
                             <div className="flex items-center space-x-2">
                               <Badge variant="secondary" className="text-xs">
                                 {vehicle.year}
                               </Badge>
                               <Badge variant="outline" className="text-xs">
-                                {vehicle.plate}
+                                {vehicle.licensePlate}
                               </Badge>
                             </div>
                           </div>
