@@ -58,6 +58,10 @@ export const vehicleModels = {
     "City", "Civic", "Accord", "HR-V", "CR-V", "Pilot", "Fit", "WR-V",
     "Ridgeline", "Passport", "Odyssey", "Insight", "Clarity", "Element",
     "S2000", "NSX", "Del Sol", "Prelude"
+  ],
+  "BYD": [
+    "Dolphin", "Seal", "Atto 3", "Han", "Tang", "Song", "Yuan", "Qin",
+    "E2", "E3", "King", "F3", "G3", "S6", "S7", "Flyer"
   ]
 };
 

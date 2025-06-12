@@ -325,65 +325,104 @@ export default function VehiclesPage() {
                         <FormField
                           control={form.control}
                           name="model"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Modelo</FormLabel>
-                              {selectedBrand || form.getValues("brand") ? (
-                                <Popover open={openModelSelect} onOpenChange={setOpenModelSelect}>
-                                  <PopoverTrigger asChild>
+                          render={({ field }) => {
+                            const currentBrand = selectedBrand || form.getValues("brand");
+                            const hasModels = currentBrand && vehicleModels[currentBrand] && vehicleModels[currentBrand].length > 0;
+                            
+                            return (
+                              <FormItem>
+                                <FormLabel>Modelo</FormLabel>
+                                {currentBrand ? (
+                                  hasModels ? (
+                                    <Popover open={openModelSelect} onOpenChange={setOpenModelSelect}>
+                                      <PopoverTrigger asChild>
+                                        <FormControl>
+                                          <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            className={cn(
+                                              "w-full justify-between",
+                                              !field.value && "text-muted-foreground"
+                                            )}
+                                          >
+                                            {field.value || "Selecione o modelo"}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                          </Button>
+                                        </FormControl>
+                                      </PopoverTrigger>
+                                      <PopoverContent className="w-[300px] p-0">
+                                        <Command>
+                                          <CommandInput placeholder="Buscar modelo..." />
+                                          <CommandList>
+                                            <CommandEmpty>
+                                              <div className="text-center p-4">
+                                                <p className="text-sm text-gray-600 mb-2">Nenhum modelo encontrado.</p>
+                                                <Button 
+                                                  size="sm" 
+                                                  variant="outline"
+                                                  onClick={() => {
+                                                    setOpenModelSelect(false);
+                                                    // Força o modo de input customizado
+                                                    form.setValue("model", "");
+                                                  }}
+                                                >
+                                                  Digite um modelo customizado
+                                                </Button>
+                                              </div>
+                                            </CommandEmpty>
+                                            <CommandGroup>
+                                              {vehicleModels[currentBrand]?.map((model) => (
+                                                <CommandItem
+                                                  value={model}
+                                                  key={model}
+                                                  onSelect={() => {
+                                                    form.setValue("model", model);
+                                                    setOpenModelSelect(false);
+                                                  }}
+                                                >
+                                                  <Check
+                                                    className={cn(
+                                                      "mr-2 h-4 w-4",
+                                                      model === field.value
+                                                        ? "opacity-100"
+                                                        : "opacity-0"
+                                                    )}
+                                                  />
+                                                  {model}
+                                                </CommandItem>
+                                              ))}
+                                              <CommandItem
+                                                onSelect={() => {
+                                                  setOpenModelSelect(false);
+                                                  form.setValue("model", "");
+                                                }}
+                                                className="border-t border-gray-200 mt-2 pt-2"
+                                              >
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                Digite um modelo customizado
+                                              </CommandItem>
+                                            </CommandGroup>
+                                          </CommandList>
+                                        </Command>
+                                      </PopoverContent>
+                                    </Popover>
+                                  ) : (
                                     <FormControl>
-                                      <Button
-                                        variant="outline"
-                                        role="combobox"
-                                        className={cn(
-                                          "w-full justify-between",
-                                          !field.value && "text-muted-foreground"
-                                        )}
-                                      >
-                                        {field.value || "Selecione o modelo"}
-                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                      </Button>
+                                      <Input 
+                                        placeholder="Digite o modelo do veículo" 
+                                        {...field}
+                                      />
                                     </FormControl>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-[300px] p-0">
-                                    <Command>
-                                      <CommandInput placeholder="Buscar modelo..." />
-                                      <CommandList>
-                                        <CommandEmpty>Nenhum modelo encontrado.</CommandEmpty>
-                                        <CommandGroup>
-                                          {vehicleModels[selectedBrand || form.getValues("brand")]?.map((model) => (
-                                            <CommandItem
-                                              value={model}
-                                              key={model}
-                                              onSelect={() => {
-                                                form.setValue("model", model);
-                                                setOpenModelSelect(false);
-                                              }}
-                                            >
-                                              <Check
-                                                className={cn(
-                                                  "mr-2 h-4 w-4",
-                                                  model === field.value
-                                                    ? "opacity-100"
-                                                    : "opacity-0"
-                                                )}
-                                              />
-                                              {model}
-                                            </CommandItem>
-                                          ))}
-                                        </CommandGroup>
-                                      </CommandList>
-                                    </Command>
-                                  </PopoverContent>
-                                </Popover>
-                              ) : (
-                                <FormControl>
-                                  <Input placeholder="Selecione primeiro a marca" disabled {...field} />
-                                </FormControl>
-                              )}
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                                  )
+                                ) : (
+                                  <FormControl>
+                                    <Input placeholder="Selecione primeiro a marca" disabled {...field} />
+                                  </FormControl>
+                                )}
+                                <FormMessage />
+                              </FormItem>
+                            );
+                          }}
                         />
                         <FormField
                           control={form.control}
@@ -469,75 +508,98 @@ export default function VehiclesPage() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredVehicles.map((vehicle) => (
-                  <Card key={vehicle.id} className="group hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:-translate-y-1">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center">
-                            <Car className="h-6 w-6 text-white" />
-                          </div>
-                          <div>
-                            <CardTitle className="text-lg font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
-                              {vehicle.brand} {vehicle.model}
-                            </CardTitle>
-                            <div className="flex items-center space-x-2">
-                              <Badge variant="secondary" className="text-xs">
-                                {vehicle.year}
-                              </Badge>
-                              <Badge variant="outline" className="text-xs">
-                                {vehicle.licensePlate}
-                              </Badge>
-                            </div>
-                          </div>
+                  <div key={vehicle.id} className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-blue-200 overflow-hidden">
+                    {/* Background gradient sutil */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 to-purple-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    
+                    {/* Header colorido */}
+                    <div className="relative h-20 bg-gradient-to-r from-blue-500 to-purple-600 p-4 flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white border border-white/30">
+                          <Car className="h-6 w-6" />
                         </div>
-                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleEdit(vehicle)}
-                            className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-600"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDelete(vehicle.id)}
-                            className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                        <div>
+                          <h3 className="text-white font-semibold truncate max-w-32">
+                            {vehicle.brand} {vehicle.model}
+                          </h3>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <span className="text-xs text-blue-100 bg-white/20 px-2 py-0.5 rounded-full">
+                              {vehicle.year}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="space-y-2 text-sm text-gray-600">
-                        {vehicle.color && (
-                          <div className="flex items-center">
-                            <span className="font-medium">Cor:</span>
-                            <span className="ml-2">{vehicle.color}</span>
-                          </div>
-                        )}
-                        <div className="flex items-center">
-                          <User className="h-4 w-4 mr-2 text-gray-400" />
-                          <span className="min-w-0 flex-1 truncate">{vehicle.customer?.name}</span>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                      
+                      {/* Actions no header */}
+                      <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button
                           size="sm"
-                          variant="outline"
-                          onClick={() => setLocation(`/services?vehicleId=${vehicle.id}`)}
-                          className="flex items-center space-x-1 text-xs hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+                          variant="ghost"
+                          onClick={() => handleEdit(vehicle)}
+                          className="h-8 w-8 p-0 text-white hover:bg-white/20 border-0"
+                          title="Editar"
                         >
-                          <Wrench className="h-3 w-3" />
-                          <span>Serviços</span>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDelete(vehicle.id)}
+                          className="h-8 w-8 p-0 text-white hover:bg-red-500/20 border-0"
+                          title="Excluir"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+
+                    {/* Conteúdo */}
+                    <div className="relative p-5">
+                      {/* Placa */}
+                      <div className="mb-4">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {vehicle.licensePlate || "Sem placa"}
+                        </span>
+                      </div>
+
+                      {/* Informações essenciais */}
+                      <div className="space-y-3 mb-6">
+                        <div className="flex items-center text-sm">
+                          <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
+                            <User className="h-3 w-3 text-gray-500" />
+                          </div>
+                          <span className="text-gray-700 text-xs truncate" title={vehicle.customer?.name}>
+                            {vehicle.customer?.name}
+                          </span>
+                        </div>
+                        
+                        {vehicle.color && (
+                          <div className="flex items-center text-sm">
+                            <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
+                              <span className="text-gray-500 text-xs">🎨</span>
+                            </div>
+                            <span className="text-gray-700 text-xs">
+                              {vehicle.color}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Ações - Layout vertical */}
+                      <div className="space-y-2">
+                        <Button
+                          onClick={() => setLocation(`/services?vehicleId=${vehicle.id}`)}
+                          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-sm rounded-xl h-10"
+                          size="sm"
+                        >
+                          <Wrench className="h-4 w-4 mr-2" />
+                          Serviços
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
