@@ -151,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado do sistema",
+        variant: "default",
       });
       // Redireciona para página de login após logout
       setTimeout(() => {
