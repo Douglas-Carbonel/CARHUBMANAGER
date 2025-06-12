@@ -23,12 +23,6 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Debug logs
-  console.log('Modal aberto:', isOpen);
-  console.log('Customers:', customers);
-  console.log('Vehicles:', vehicles);
-  console.log('Service Types:', serviceTypes);
-
   const form = useForm<z.infer<typeof insertServiceSchema>>({
     resolver: zodResolver(insertServiceSchema),
     defaultValues: {
@@ -45,17 +39,24 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
 
   const { data: customers } = useQuery({
     queryKey: ["/api/customers"],
+    enabled: isOpen,
   });
 
   const { data: vehicles } = useQuery({
     queryKey: ["/api/vehicles"],
-    enabled: isAuthenticated,
+    enabled: isOpen,
   });
 
   const { data: serviceTypes } = useQuery({
     queryKey: ["/api/service-types"],
-    enabled: isAuthenticated,
+    enabled: isOpen,
   });
+
+  // Debug logs
+  console.log('Modal aberto:', isOpen);
+  console.log('Customers:', customers);
+  console.log('Vehicles:', vehicles);
+  console.log('Service Types:', serviceTypes);
 
   const createMutation = useMutation({
     mutationFn: async (data: z.infer<typeof insertServiceSchema>) => {
