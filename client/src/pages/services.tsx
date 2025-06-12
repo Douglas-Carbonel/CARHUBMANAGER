@@ -24,7 +24,7 @@ const serviceFormSchema = insertServiceSchema.extend({
   customerId: z.number().min(1, "Cliente é obrigatório"),
   vehicleId: z.number().min(1, "Veículo é obrigatório"),
   serviceTypeId: z.number().min(1, "Tipo de serviço é obrigatório"),
-  estimatedValue: z.number().min(0, "Valor deve ser positivo"),
+  estimatedValue: z.string().min(1, "Valor é obrigatório"),
 });
 
 export default function Services() {
@@ -42,35 +42,31 @@ export default function Services() {
       serviceTypeId: 0,
       scheduledDate: "",
       scheduledTime: "",
-      estimatedValue: 0,
+      estimatedValue: "",
       status: "scheduled",
       notes: "",
     },
   });
 
-  const { data: services = [], isLoading } = useQuery({
+  const { data: services = [], isLoading } = useQuery<Service[]>({
     queryKey: ["/api/services"],
   });
 
-  const { data: customers = [] } = useQuery({
+  const { data: customers = [] } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
   });
 
-  const { data: vehicles = [] } = useQuery({
+  const { data: vehicles = [] } = useQuery<Vehicle[]>({
     queryKey: ["/api/vehicles"],
   });
 
-  const { data: serviceTypes = [] } = useQuery({
+  const { data: serviceTypes = [] } = useQuery<ServiceType[]>({
     queryKey: ["/api/service-types"],
   });
 
   const createMutation = useMutation({
     mutationFn: (data: z.infer<typeof serviceFormSchema>) =>
-      apiRequest("/api/services", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      }),
+      apiRequest("/api/services", "POST", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
       setIsDialogOpen(false);
@@ -84,7 +80,7 @@ export default function Services() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<z.infer<typeof serviceFormSchema>> }) =>
-      apiRequest(`/api/services/${id}`, { method: "PATCH", body: data }),
+      apiRequest(`/api/services/${id}`, "PATCH", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
       setIsDialogOpen(false);
@@ -99,7 +95,7 @@ export default function Services() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) =>
-      apiRequest(`/api/services/${id}`, { method: "DELETE" }),
+      apiRequest(`/api/services/${id}`, "DELETE"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
       toast({ title: "Serviço excluído com sucesso!" });
@@ -125,7 +121,7 @@ export default function Services() {
       serviceTypeId: service.serviceTypeId,
       scheduledDate: service.scheduledDate || "",
       scheduledTime: service.scheduledTime || "",
-      estimatedValue: Number(service.estimatedValue) || 0,
+      estimatedValue: service.estimatedValue?.toString() || "",
       status: service.status || "scheduled",
       notes: service.notes || "",
     });
@@ -138,14 +134,14 @@ export default function Services() {
     }
   };
 
-  const filteredServices = services?.filter((service: Service) =>
-    customers?.find((c: Customer) => c.id === service.customerId)?.name
+  const filteredServices = services.filter((service: Service) =>
+    customers.find((c: Customer) => c.id === service.customerId)?.name
       ?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vehicles?.find((v: Vehicle) => v.id === service.vehicleId)?.plate
+    vehicles.find((v: Vehicle) => v.id === service.vehicleId)?.licensePlate
       ?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    serviceTypes?.find((st: ServiceType) => st.id === service.serviceTypeId)?.name
+    serviceTypes.find((st: ServiceType) => st.id === service.serviceTypeId)?.name
       ?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  );
 
   const getStatusBadge = (status: string) => {
     const colors = {
@@ -162,7 +158,7 @@ export default function Services() {
       <Sidebar />
       
       <div className="flex-1 flex flex-col">
-        <Header />
+        <Header title="Serviços" />
         
         <main className="flex-1 p-6">
           <div className="flex justify-between items-center mb-6">
@@ -176,7 +172,7 @@ export default function Services() {
                 </Button>
               </DialogTrigger>
               
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>
                     {editingService ? "Editar Serviço" : "Novo Serviço"}
@@ -192,14 +188,20 @@ export default function Services() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Cliente</FormLabel>
-                            <Select onValueChange={(value) => field.onChange(Number(value))}>
+                            <Select 
+                              onValueChange={(value) => {
+                                field.onChange(Number(value));
+                                form.setValue("vehicleId", 0); // Reset vehicle when customer changes
+                              }} 
+                              value={field.value > 0 ? field.value.toString() : ""}
+                            >
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Selecione um cliente" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {customers?.map((customer: Customer) => (
+                                {customers.map((customer: Customer) => (
                                   <SelectItem key={customer.id} value={customer.id.toString()}>
                                     {customer.name}
                                   </SelectItem>
@@ -214,26 +216,37 @@ export default function Services() {
                       <FormField
                         control={form.control}
                         name="vehicleId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Veículo</FormLabel>
-                            <Select onValueChange={(value) => field.onChange(Number(value))}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione um veículo" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {vehicles?.map((vehicle: Vehicle) => (
-                                  <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                                    {vehicle.plate} - {vehicle.brand} {vehicle.model}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        render={({ field }) => {
+                          const selectedCustomerId = form.watch("customerId");
+                          const availableVehicles = vehicles.filter(vehicle => 
+                            selectedCustomerId ? vehicle.customerId === selectedCustomerId : true
+                          );
+                          
+                          return (
+                            <FormItem>
+                              <FormLabel>Veículo</FormLabel>
+                              <Select 
+                                onValueChange={(value) => field.onChange(Number(value))} 
+                                value={field.value > 0 ? field.value.toString() : ""}
+                                disabled={!selectedCustomerId}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder={selectedCustomerId ? "Selecione um veículo" : "Primeiro selecione um cliente"} />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {availableVehicles.map((vehicle: Vehicle) => (
+                                    <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                                      {vehicle.licensePlate} - {vehicle.brand} {vehicle.model}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
                       />
                     </div>
 
@@ -244,14 +257,17 @@ export default function Services() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Tipo de Serviço</FormLabel>
-                            <Select onValueChange={(value) => field.onChange(Number(value))}>
+                            <Select 
+                              onValueChange={(value) => field.onChange(Number(value))} 
+                              value={field.value > 0 ? field.value.toString() : ""}
+                            >
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Selecione um tipo" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {serviceTypes?.map((type: ServiceType) => (
+                                {serviceTypes.map((type: ServiceType) => (
                                   <SelectItem key={type.id} value={type.id.toString()}>
                                     {type.name}
                                   </SelectItem>
@@ -269,7 +285,7 @@ export default function Services() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Status</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value || ""}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue />
@@ -296,7 +312,7 @@ export default function Services() {
                           <FormItem>
                             <FormLabel>Data</FormLabel>
                             <FormControl>
-                              <Input {...field} type="date" />
+                              <Input {...field} type="date" value={field.value || ""} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -310,7 +326,7 @@ export default function Services() {
                           <FormItem>
                             <FormLabel>Hora</FormLabel>
                             <FormControl>
-                              <Input {...field} type="time" />
+                              <Input {...field} type="time" value={field.value || ""} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -328,7 +344,8 @@ export default function Services() {
                                 {...field} 
                                 type="number" 
                                 step="0.01"
-                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                placeholder="0.00"
+                                value={field.value || ""}
                               />
                             </FormControl>
                             <FormMessage />
@@ -344,7 +361,7 @@ export default function Services() {
                         <FormItem>
                           <FormLabel>Observações</FormLabel>
                           <FormControl>
-                            <Textarea {...field} />
+                            <Textarea {...field} value={field.value || ""} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -355,7 +372,11 @@ export default function Services() {
                       <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                         Cancelar
                       </Button>
-                      <Button type="submit" className="bg-teal-600 hover:bg-teal-700">
+                      <Button 
+                        type="submit" 
+                        className="bg-teal-600 hover:bg-teal-700"
+                        disabled={createMutation.isPending || updateMutation.isPending}
+                      >
                         {editingService ? "Atualizar" : "Criar"}
                       </Button>
                     </div>
@@ -382,70 +403,75 @@ export default function Services() {
               <div>Carregando serviços...</div>
             ) : (
               filteredServices.map((service: Service) => {
-                const customer = customers?.find((c: Customer) => c.id === service.customerId);
-                const vehicle = vehicles?.find((v: Vehicle) => v.id === service.vehicleId);
-                const serviceType = serviceTypes?.find((st: ServiceType) => st.id === service.serviceTypeId);
+                const customer = customers.find((c: Customer) => c.id === service.customerId);
+                const vehicle = vehicles.find((v: Vehicle) => v.id === service.vehicleId);
+                const serviceType = serviceTypes.find((st: ServiceType) => st.id === service.serviceTypeId);
                 
                 return (
                   <Card key={service.id}>
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle className="text-lg">{serviceType?.name}</CardTitle>
-                          <div className="flex items-center space-x-4 text-sm text-gray-500 mt-2">
-                            <div className="flex items-center">
-                              <User className="h-4 w-4 mr-1" />
-                              {customer?.name}
-                            </div>
-                            <div className="flex items-center">
-                              <Car className="h-4 w-4 mr-1" />
-                              {vehicle?.plate} - {vehicle?.brand} {vehicle?.model}
-                            </div>
+                          <CardTitle className="flex items-center">
+                            <Wrench className="h-5 w-5 mr-2 text-teal-600" />
+                            {serviceType?.name || "Tipo não encontrado"}
+                          </CardTitle>
+                          <div className="flex items-center mt-2 text-sm text-gray-600">
+                            <User className="h-4 w-4 mr-1" />
+                            {customer?.name || "Cliente não encontrado"}
+                            <Car className="h-4 w-4 ml-4 mr-1" />
+                            {vehicle?.licensePlate || "Veículo não encontrado"} - {vehicle?.brand} {vehicle?.model}
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Badge className={getStatusBadge(service.status || 'scheduled')}>
-                            {service.status === 'scheduled' && 'Agendado'}
-                            {service.status === 'in_progress' && 'Em Andamento'}
-                            {service.status === 'completed' && 'Concluído'}
-                            {service.status === 'cancelled' && 'Cancelado'}
+                          <Badge className={getStatusBadge(service.status || "scheduled")}>
+                            {service.status === "scheduled" && "Agendado"}
+                            {service.status === "in_progress" && "Em Andamento"}
+                            {service.status === "completed" && "Concluído"}
+                            {service.status === "cancelled" && "Cancelado"}
                           </Badge>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex justify-between items-center">
-                        <div className="flex space-x-4 text-sm text-gray-600">
-                          {service.scheduledDate && (
-                            <div className="flex items-center">
-                              <Calendar className="h-4 w-4 mr-1" />
-                              {format(new Date(service.scheduledDate), 'dd/MM/yyyy')}
-                            </div>
-                          )}
-                          {service.scheduledTime && (
-                            <div className="flex items-center">
-                              <Clock className="h-4 w-4 mr-1" />
-                              {service.scheduledTime}
-                            </div>
-                          )}
-                          {service.estimatedValue && (
-                            <div className="flex items-center">
-                              <DollarSign className="h-4 w-4 mr-1" />
-                              R$ {Number(service.estimatedValue).toFixed(2)}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm" onClick={() => handleEdit(service)}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(service)}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="outline" size="sm" onClick={() => handleDelete(service.id)}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(service.id)}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        {service.scheduledDate && (
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+                            {format(new Date(service.scheduledDate), "dd/MM/yyyy")}
+                            {service.scheduledTime && (
+                              <span className="ml-2 flex items-center">
+                                <Clock className="h-4 w-4 mr-1 text-gray-500" />
+                                {service.scheduledTime}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {service.estimatedValue && (
+                          <div className="flex items-center">
+                            <DollarSign className="h-4 w-4 mr-2 text-gray-500" />
+                            R$ {Number(service.estimatedValue).toFixed(2)}
+                          </div>
+                        )}
+                      </div>
                       {service.notes && (
-                        <p className="text-sm text-gray-600 mt-2">{service.notes}</p>
+                        <div className="mt-2 text-sm text-gray-600">
+                          <strong>Observações:</strong> {service.notes}
+                        </div>
                       )}
                     </CardContent>
                   </Card>
