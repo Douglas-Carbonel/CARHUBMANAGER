@@ -263,11 +263,11 @@ export default function VehiclesPage() {
                   variant={showAnalytics ? "default" : "outline"}
                   onClick={() => setShowAnalytics(!showAnalytics)}
                   className={showAnalytics 
-                    ? "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg" 
-                    : "border-blue-200 text-blue-700 hover:bg-blue-50"
+                    ? "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg" 
+                    : "border-emerald-200 text-emerald-700 hover:bg-emerald-50"
                   }
                 >
-                  📊 {showAnalytics ? "Ocultar" : "Mostrar"} Analytics
+                  📊 {showAnalytics ? "Ocultar" : "Ver"} Relatórios
                 </Button>
                 <div className="bg-gradient-to-r from-teal-500 to-emerald-600 text-white px-4 py-2 rounded-lg shadow-md">
                   <span className="font-semibold">{filteredVehicles.length}</span>
