@@ -19,7 +19,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertVehicleSchema, type Vehicle, type Customer } from "@shared/schema";
 import { z } from "zod";
-import { carBrands, carModelsByBrand, fuelTypes } from "@/lib/vehicle-data";
+import { vehicleBrands, vehicleModels, fuelTypes } from "@/lib/vehicle-data";
 import { cn } from "@/lib/utils";
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
@@ -289,14 +289,14 @@ export default function VehiclesPage() {
                                     <CommandList>
                                       <CommandEmpty>Nenhuma marca encontrada.</CommandEmpty>
                                       <CommandGroup>
-                                        {carBrands.map((brand) => (
+                                        {vehicleBrands.map((brand) => (
                                           <CommandItem
                                             value={brand}
                                             key={brand}
                                             onSelect={() => {
                                               form.setValue("brand", brand);
                                               setSelectedBrand(brand);
-                                              if (form.getValues("model") && !carModelsByBrand[brand]?.includes(form.getValues("model"))) {
+                                              if (form.getValues("model") && !vehicleModels[brand]?.includes(form.getValues("model"))) {
                                                 form.setValue("model", "");
                                               }
                                               setOpenBrandSelect(false);
@@ -351,7 +351,7 @@ export default function VehiclesPage() {
                                       <CommandList>
                                         <CommandEmpty>Nenhum modelo encontrado.</CommandEmpty>
                                         <CommandGroup>
-                                          {carModelsByBrand[selectedBrand || form.getValues("brand")]?.map((model) => (
+                                          {vehicleModels[selectedBrand || form.getValues("brand")]?.map((model) => (
                                             <CommandItem
                                               value={model}
                                               key={model}
