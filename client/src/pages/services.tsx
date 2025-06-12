@@ -52,16 +52,46 @@ export default function Services() {
     queryKey: ["/api/services"],
   });
 
-  const { data: customers = [] } = useQuery<Customer[]>({
+  const { data: customers = [], isLoading: customersLoading, error: customersError } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
+    queryFn: async () => {
+      const res = await fetch("/api/customers", {
+        credentials: "include",
+      });
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${res.statusText}`);
+      }
+      return await res.json();
+    },
+    retry: false,
   });
 
-  const { data: vehicles = [] } = useQuery<Vehicle[]>({
+  const { data: vehicles = [], isLoading: vehiclesLoading, error: vehiclesError } = useQuery<Vehicle[]>({
     queryKey: ["/api/vehicles"],
+    queryFn: async () => {
+      const res = await fetch("/api/vehicles", {
+        credentials: "include",
+      });
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${res.statusText}`);
+      }
+      return await res.json();
+    },
+    retry: false,
   });
 
-  const { data: serviceTypes = [] } = useQuery<ServiceType[]>({
+  const { data: serviceTypes = [], isLoading: serviceTypesLoading, error: serviceTypesError } = useQuery<ServiceType[]>({
     queryKey: ["/api/service-types"],
+    queryFn: async () => {
+      const res = await fetch("/api/service-types", {
+        credentials: "include",
+      });
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${res.statusText}`);
+      }
+      return await res.json();
+    },
+    retry: false,
   });
 
   const createMutation = useMutation({
