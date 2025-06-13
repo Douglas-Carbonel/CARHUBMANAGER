@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { validateCPF, validateCNPJ, formatCPF, formatCNPJ } from "@/lib/cpf-cnpj";
 import CustomerAnalytics from "@/components/dashboard/customer-analytics";
 import { z } from "zod";
-import { insertCustomerSchema, type Customer } from "@shared/schema";
+import { insertCustomerSchema } from "@shared/schema";
 import { formatCPF, formatCNPJ, applyCPFMask, applyCNPJMask, applyPhoneMask } from "@/lib/cpf-cnpj";
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
