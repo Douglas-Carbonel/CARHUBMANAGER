@@ -233,23 +233,23 @@ export default function SchedulePage() {
           subtitle="Gerencie os agendamentos de serviços"
         />
         
-        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/20">
+        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-teal-50 via-emerald-50/30 to-cyan-50/20">
           {/* Header Section */}
-          <div className="bg-gradient-to-r from-white via-blue-50 to-white border-b border-blue-100 px-8 py-6 sticky top-0 z-10 shadow-lg backdrop-blur-sm bg-white/95">
+          <div className="bg-gradient-to-r from-white via-teal-50 to-white border-b border-teal-100 px-8 py-6 sticky top-0 z-10 shadow-lg backdrop-blur-sm bg-white/95">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
                 <div className="relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-teal-400 h-5 w-5" />
                   <Input
                     placeholder="Buscar agendamentos..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 w-80 h-12 border-2 border-slate-200 focus:border-blue-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm"
+                    className="pl-12 w-80 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm"
                   />
                 </div>
                 
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-48 h-12 border-2 border-slate-200 focus:border-blue-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm">
+                  <SelectTrigger className="w-48 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm">
                     <SelectValue placeholder="Filtrar por status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -263,14 +263,14 @@ export default function SchedulePage() {
               </div>
               
               <div className="flex items-center space-x-4">
-                <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-5 py-3 rounded-xl shadow-lg backdrop-blur-sm">
+                <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-5 py-3 rounded-xl shadow-lg backdrop-blur-sm">
                   <span className="font-bold text-lg">{filteredServices.length}</span>
                   <span className="ml-2 text-sm font-medium">agendamentos</span>
                 </div>
                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                   <DialogTrigger asChild>
                     <Button 
-                      className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-3 rounded-xl font-semibold"
+                      className="bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-500 hover:to-cyan-500 text-teal-900 shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-3 rounded-xl font-semibold"
                       onClick={() => {
                         setEditingService(null);
                         form.reset();

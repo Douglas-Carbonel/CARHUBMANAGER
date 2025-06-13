@@ -66,20 +66,20 @@ export default function Sidebar() {
   return (
     <div
       className={cn(
-        "flex flex-col h-screen bg-gradient-to-b from-teal-700 to-teal-800 text-white transition-all duration-300",
+        "flex flex-col h-screen bg-gradient-to-b from-teal-700 via-emerald-800 to-teal-900 text-white transition-all duration-300 shadow-2xl border-r border-teal-600",
         isCollapsed ? "w-16" : "w-64"
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-teal-600">
+      <div className="flex items-center justify-between p-6 border-b border-teal-600/50 bg-gradient-to-r from-teal-700 to-emerald-700">
         {!isCollapsed && (
-          <h1 className="text-xl font-bold tracking-wider">CARHUB</h1>
+          <h1 className="text-xl font-bold tracking-wider bg-gradient-to-r from-cyan-200 to-emerald-200 bg-clip-text text-transparent">CARHUB</h1>
         )}
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="text-white hover:bg-teal-600"
+          className="text-cyan-200 hover:text-white hover:bg-teal-600/50 rounded-lg transition-all duration-200"
         >
           {isCollapsed ? <Menu className="h-4 w-4" /> : <X className="h-4 w-4" />}
         </Button>
@@ -94,8 +94,8 @@ export default function Sidebar() {
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full justify-start text-left text-white hover:bg-teal-600",
-                  isActive && "bg-teal-600",
+                  "w-full justify-start text-left text-cyan-200 hover:text-white hover:bg-teal-600/50 rounded-lg transition-all duration-200 font-medium",
+                  isActive && "bg-gradient-to-r from-emerald-400 to-cyan-400 text-teal-900 shadow-lg font-semibold",
                   isCollapsed && "px-2"
                 )}
               >
@@ -108,11 +108,11 @@ export default function Sidebar() {
       </nav>
 
       {/* User info and logout */}
-      <div className="p-4 border-t border-teal-600">
+      <div className="p-4 border-t border-teal-600/50 bg-gradient-to-r from-emerald-800 to-teal-900">
         {!isCollapsed && user && (
-          <div className="mb-3">
-            <p className="text-sm font-medium">{user.firstName} {user.lastName}</p>
-            <p className="text-xs text-teal-200">{user.role}</p>
+          <div className="mb-4 p-3 bg-teal-800/50 rounded-lg">
+            <p className="text-sm font-semibold text-white">{user.firstName} {user.lastName}</p>
+            <p className="text-xs text-cyan-200 capitalize">{user.role === "admin" ? "Administrador" : "Técnico"}</p>
           </div>
         )}
         <Button
@@ -120,7 +120,7 @@ export default function Sidebar() {
           onClick={handleLogout}
           disabled={logoutMutation.isPending}
           className={cn(
-            "w-full justify-start text-white hover:bg-red-600 disabled:opacity-50",
+            "w-full justify-start text-cyan-200 hover:text-white hover:bg-red-600/80 disabled:opacity-50 rounded-lg transition-all duration-200 font-medium",
             isCollapsed && "px-2"
           )}
         >
