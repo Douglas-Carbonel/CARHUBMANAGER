@@ -463,15 +463,15 @@ export default function SchedulePage() {
             {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[...Array(6)].map((_, i) => (
-                  <Card key={i} className="animate-pulse bg-white/80 backdrop-blur-sm border border-slate-200">
+                  <Card key={i} className="animate-pulse bg-white/80 backdrop-blur-sm border border-teal-200">
                     <CardHeader>
-                      <div className="h-5 bg-slate-200 rounded w-3/4"></div>
-                      <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+                      <div className="h-5 bg-teal-200 rounded w-3/4"></div>
+                      <div className="h-4 bg-teal-200 rounded w-1/2"></div>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
-                        <div className="h-4 bg-slate-200 rounded"></div>
-                        <div className="h-4 bg-slate-200 rounded w-2/3"></div>
+                        <div className="h-4 bg-teal-200 rounded"></div>
+                        <div className="h-4 bg-teal-200 rounded w-2/3"></div>
                       </div>
                     </CardContent>
                   </Card>
@@ -480,15 +480,15 @@ export default function SchedulePage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredServices.map((service) => (
-                  <Card key={service.id} className="group hover:shadow-2xl transition-all duration-300 bg-white/95 backdrop-blur-sm border border-slate-200/50 shadow-lg hover:-translate-y-2 hover:scale-105">
+                  <Card key={service.id} className="group hover:shadow-2xl transition-all duration-300 bg-white/95 backdrop-blur-sm border border-teal-200/50 shadow-lg hover:-translate-y-2 hover:scale-105">
                     <CardHeader className="pb-4">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                          <div className="w-12 h-12 bg-gradient-to-br from-teal-600 via-emerald-600 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg">
                             <Calendar className="h-6 w-6 text-white" />
                           </div>
                           <div className="flex-1">
-                            <CardTitle className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors line-clamp-2">
+                            <CardTitle className="text-sm font-bold text-teal-800 group-hover:text-emerald-600 transition-colors line-clamp-2">
                               {service.serviceType?.name || "Serviço"}
                             </CardTitle>
                             <Badge className={`text-xs mt-2 font-medium ${statusColors[service.status as keyof typeof statusColors]} rounded-lg px-2 py-1`}>
@@ -501,7 +501,7 @@ export default function SchedulePage() {
                             size="sm"
                             variant="ghost"
                             onClick={() => handleEdit(service)}
-                            className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-600 rounded-lg"
+                            className="h-8 w-8 p-0 hover:bg-emerald-100 hover:text-emerald-600 rounded-lg"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -518,22 +518,22 @@ export default function SchedulePage() {
                     </CardHeader>
                     <CardContent className="pt-0">
                       <div className="space-y-3">
-                        <div className="flex items-center text-sm text-slate-600">
-                          <User className="h-4 w-4 mr-2 text-slate-400" />
+                        <div className="flex items-center text-sm text-teal-700">
+                          <User className="h-4 w-4 mr-2 text-teal-500" />
                           <span className="font-medium">{service.customer?.name}</span>
                         </div>
-                        <div className="flex items-center text-sm text-slate-600">
-                          <Car className="h-4 w-4 mr-2 text-slate-400" />
+                        <div className="flex items-center text-sm text-teal-700">
+                          <Car className="h-4 w-4 mr-2 text-teal-500" />
                           <span>{service.vehicle?.brand} {service.vehicle?.model} - {service.vehicle?.licensePlate}</span>
                         </div>
                         {service.scheduledDate && (
-                          <div className="flex items-center text-sm text-slate-600">
-                            <Clock className="h-4 w-4 mr-2 text-slate-400" />
+                          <div className="flex items-center text-sm text-teal-700">
+                            <Clock className="h-4 w-4 mr-2 text-teal-500" />
                             <span>{new Date(service.scheduledDate).toLocaleDateString('pt-BR')}</span>
                           </div>
                         )}
                         {service.estimatedValue && (
-                          <div className="text-sm font-semibold text-green-600">
+                          <div className="text-sm font-semibold text-emerald-600">
                             R$ {parseFloat(service.estimatedValue.toString()).toFixed(2)}
                           </div>
                         )}
