@@ -73,18 +73,20 @@ export default function Sidebar() {
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-teal-600/50 bg-gradient-to-r from-teal-700 to-emerald-700">
         {!isCollapsed && (
-          <div className="flex flex-col items-center">
+          <div className="flex items-center space-x-2">
             <div className="relative">
-              <h1 className="text-3xl font-extrabold tracking-[0.4em] bg-gradient-to-r from-white via-cyan-100 to-emerald-100 bg-clip-text text-transparent filter drop-shadow-lg">
-                CAR
-              </h1>
-              <h2 className="text-lg font-light italic tracking-[0.6em] bg-gradient-to-r from-cyan-200 to-emerald-200 bg-clip-text text-transparent mt-[-8px] ml-1">
-                HUB
-              </h2>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-emerald-500 flex items-center justify-center shadow-lg">
+                <Car className="h-5 w-5 text-white" />
+              </div>
+              <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-400 opacity-80"></div>
             </div>
-            <div className="w-16 h-px bg-gradient-to-r from-transparent via-cyan-300 to-transparent mt-2 opacity-70"></div>
-            <div className="text-[10px] text-cyan-200/60 tracking-[0.3em] mt-1 font-medium uppercase">
-              Sistema
+            <div className="flex flex-col">
+              <h1 className="text-xl font-bold text-white leading-tight tracking-wide">
+                CarHub
+              </h1>
+              <p className="text-xs text-cyan-200/70 font-medium tracking-wider uppercase">
+                Oficina
+              </p>
             </div>
           </div>
         )}
