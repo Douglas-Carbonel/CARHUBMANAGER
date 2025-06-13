@@ -260,14 +260,11 @@ export default function VehiclesPage() {
               </div>
               <div className="flex items-center gap-4">
                 <Button
-                  variant={showAnalytics ? "default" : "outline"}
+                  variant="outline"
                   onClick={() => setShowAnalytics(!showAnalytics)}
-                  className={showAnalytics 
-                    ? "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg" 
-                    : "border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                  }
+                  className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
                 >
-                  📊 {showAnalytics ? "Ocultar" : "Ver"} Relatórios
+                  📊 Ver Relatórios
                 </Button>
                 <div className="bg-gradient-to-r from-teal-500 to-emerald-600 text-white px-4 py-2 rounded-lg shadow-md">
                   <span className="font-semibold">{filteredVehicles.length}</span>
