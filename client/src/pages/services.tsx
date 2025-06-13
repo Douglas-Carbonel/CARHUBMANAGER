@@ -453,7 +453,10 @@ export default function Services() {
                             <User className="h-4 w-4 mr-1" />
                             {service.customer?.name || "Cliente não encontrado"}
                             <Car className="h-4 w-4 ml-4 mr-1" />
-                            {service.vehicle?.licensePlate || service.vehicle?.plate || "Veículo não encontrado"} - {service.vehicle?.brand || service.vehicle?.make} {service.vehicle?.model}
+                            {service.vehicle ? 
+                              `${service.vehicle.licensePlate || service.vehicle.plate || "S/N"} - ${service.vehicle.brand || service.vehicle.make || ""} ${service.vehicle.model || ""}`.trim() 
+                              : "Veículo não encontrado"
+                            }
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
