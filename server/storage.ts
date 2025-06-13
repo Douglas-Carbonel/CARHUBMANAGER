@@ -48,7 +48,7 @@ export interface IStorage {
   deleteVehicle(id: number): Promise<void>;
 
   // Service operations
-  getServices(): Promise<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]>;
+  getServices(): Promise<Service[]>;
   getService(id: number): Promise<Service | undefined>;
   getServicesByCustomer(customerId: number): Promise<Service[]>;
   getServicesByVehicle(vehicleId: number): Promise<Service[]>;
@@ -221,7 +221,7 @@ export class DatabaseStorage implements IStorage {
       .from(vehicles)
       .innerJoin(customers, eq(vehicles.customerId, customers.id))
       .orderBy(vehicles.licensePlate);
-
+      
       return result;
     } catch (error) {
       console.error('Error fetching vehicles with customers:', error);
@@ -267,26 +267,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Service operations
-  async getServices(): Promise<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]> {
-    const result = await db
-      .select({
-        service: services,
-        customer: customers,
-        vehicle: vehicles,
-        serviceType: serviceTypes,
-      })
-      .from(services)
-      .leftJoin(customers, eq(services.customerId, customers.id))
-      .leftJoin(vehicles, eq(services.vehicleId, vehicles.id))
-      .leftJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
-      .orderBy(desc(services.createdAt));
-
-    return result.map(row => ({
-      ...row.service,
-      customer: row.customer!,
-      vehicle: row.vehicle!,
-      serviceType: row.serviceType!,
-    }));
+  async getServices(): Promise<Service[]> {
+    try {
+      return await db.select().from(services).orderBy(desc(services.createdAt));
+    } catch (error) {
+      console.error('Error fetching services:', error);
+      throw error;
+    }
   }
 
   async getService(id: number): Promise<Service | undefined> {
@@ -398,7 +385,6 @@ export class DatabaseStorage implements IStorage {
   // Dashboard statistics
   async getDashboardStats(): Promise<{
     dailyRevenue: number;
-    dailyServices: number;
     dailyServices: number;
     appointments: number;
     activeCustomers: number;
