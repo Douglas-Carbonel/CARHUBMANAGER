@@ -583,21 +583,29 @@ export class DatabaseStorage implements IStorage {
         .orderBy(sql`count(*) desc`)
         .limit(5);
 
-      // Average service value
-      const completedServices = await db
+      // Average service value (considering both finalValue and estimatedValue)
+      const allServices = await db
         .select({
-          value: services.finalValue
+          finalValue: services.finalValue,
+          estimatedValue: services.estimatedValue,
+          status: services.status
         })
-        .from(services)
-        .where(
-          and(
-            eq(services.status, 'completed'),
-            isNotNull(services.finalValue)
-          )
-        );
+        .from(services);
 
-      const avgServiceValue = completedServices.length > 0 
-        ? completedServices.reduce((sum, s) => sum + Number(s.value), 0) / completedServices.length
+      const servicesWithValues = allServices.filter(s => {
+        const value = s.status === 'completed' && s.finalValue 
+          ? Number(s.finalValue) 
+          : Number(s.estimatedValue || 0);
+        return value > 0;
+      });
+
+      const avgServiceValue = servicesWithValues.length > 0 
+        ? servicesWithValues.reduce((sum, s) => {
+            const value = s.status === 'completed' && s.finalValue 
+              ? Number(s.finalValue) 
+              : Number(s.estimatedValue || 0);
+            return sum + value;
+          }, 0) / servicesWithValues.length
         : 0;
 
       return {
