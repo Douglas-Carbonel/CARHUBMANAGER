@@ -275,7 +275,7 @@ export default function Services() {
                                 <SelectContent>
                                   {availableVehicles.map((vehicle) => (
                                     <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                                      {vehicle.licensePlate || vehicle.plate} - {vehicle.brand || vehicle.make} {vehicle.model}
+                                      {vehicle.licensePlate} - {vehicle.brand} {vehicle.model}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
