@@ -432,44 +432,36 @@ export class DatabaseStorage implements IStorage {
   async getDashboardStats() {
     try {
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
+      const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD format
 
       // Get today's revenue from completed services
-      const todayServices = await db
+      const todayCompletedServices = await db
         .select()
         .from(services)
         .where(
           and(
-            gte(services.scheduledDate, today.toISOString().split('T')[0]),
-            lte(services.scheduledDate, tomorrow.toISOString().split('T')[0]),
+            eq(services.scheduledDate, todayStr),
             eq(services.status, 'completed')
           )
         );
 
-      const dailyRevenue = todayServices.reduce((sum, service) => {
+      const dailyRevenue = todayCompletedServices.reduce((sum, service) => {
         return sum + Number(service.finalValue || service.estimatedValue || 0);
       }, 0);
 
-      // Get today's services count
+      // Get today's total services count (all statuses)
       const todayServicesCount = await db
         .select({ count: sql<number>`count(*)` })
         .from(services)
-        .where(
-          and(
-            gte(services.scheduledDate, today.toISOString().split('T')[0]),
-            lte(services.scheduledDate, tomorrow.toISOString().split('T')[0])
-          )
-        );
+        .where(eq(services.scheduledDate, todayStr));
 
-      // Get upcoming appointments (next 24 hours)
-      const upcomingAppointments = await db
+      // Get scheduled appointments for today and future dates
+      const scheduledAppointments = await db
         .select({ count: sql<number>`count(*)` })
         .from(services)
         .where(
           and(
-            gte(services.scheduledDate, tomorrow.toISOString().split('T')[0]),
+            gte(services.scheduledDate, todayStr),
             eq(services.status, 'scheduled')
           )
         );
@@ -486,7 +478,7 @@ export class DatabaseStorage implements IStorage {
       return {
         dailyRevenue,
         dailyServices: todayServicesCount[0]?.count || 0,
-        appointments: upcomingAppointments[0]?.count || 0,
+        appointments: scheduledAppointments[0]?.count || 0,
         activeCustomers: activeCustomers.length
       };
     } catch (error) {

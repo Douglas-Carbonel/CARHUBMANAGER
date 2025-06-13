@@ -107,19 +107,27 @@ export default function Reports() {
   // Analytics calculations
   const analytics = useMemo(() => {
     if (!services || !customers || !vehicles || !serviceTypes) return null;
+    
+    // Type assertions for proper TypeScript support
+    const servicesArray = Array.isArray(services) ? services : [];
+    const customersArray = Array.isArray(customers) ? customers : [];
+    const vehiclesArray = Array.isArray(vehicles) ? vehicles : [];
+    const serviceTypesArray = Array.isArray(serviceTypes) ? serviceTypes : [];
 
     const now = new Date();
     const periodDays = parseInt(selectedPeriod);
     const cutoffDate = new Date(now.getTime() - (periodDays * 24 * 60 * 60 * 1000));
 
-    const filteredServices = services.filter((service: Service) => {
+    const filteredServices = servicesArray.filter((service: any) => {
+      if (!service.scheduledDate) return false;
       const serviceDate = new Date(service.scheduledDate);
       const matchesPeriod = serviceDate >= cutoffDate;
-      const matchesCustomer = selectedCustomer === "all" || service.customerId.toString() === selectedCustomer;
+      const matchesCustomer = selectedCustomer === "all" || service.customerId?.toString() === selectedCustomer;
       return matchesPeriod && matchesCustomer;
     });
 
-    const previousPeriodServices = services.filter((service: Service) => {
+    const previousPeriodServices = servicesArray.filter((service: any) => {
+      if (!service.scheduledDate) return false;
       const serviceDate = new Date(service.scheduledDate);
       const previousCutoff = new Date(cutoffDate.getTime() - (periodDays * 24 * 60 * 60 * 1000));
       return serviceDate >= previousCutoff && serviceDate < cutoffDate;
