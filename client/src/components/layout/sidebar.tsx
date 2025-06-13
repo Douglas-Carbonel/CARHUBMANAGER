@@ -73,21 +73,17 @@ export default function Sidebar() {
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-teal-600/50 bg-gradient-to-r from-teal-700 to-emerald-700">
         {!isCollapsed && (
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-col items-start">
             <div className="relative">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-emerald-500 flex items-center justify-center shadow-lg">
-                <Car className="h-5 w-5 text-white" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-400 opacity-80"></div>
-            </div>
-            <div className="flex flex-col">
-              <h1 className="text-xl font-bold text-white leading-tight tracking-wide">
-                CarHub
+              <h1 className="text-2xl font-serif text-white tracking-tight leading-none">
+                <span className="font-light italic">Car</span>
+                <span className="font-bold ml-1">Hub</span>
               </h1>
-              <p className="text-xs text-cyan-200/70 font-medium tracking-wider uppercase">
-                Oficina
-              </p>
+              <div className="absolute -bottom-1 left-0 w-full h-px bg-gradient-to-r from-cyan-300 via-white to-transparent opacity-60"></div>
             </div>
+            <p className="text-xs text-cyan-100/70 font-light tracking-[0.2em] mt-1 ml-0.5">
+              Sistema de Gestão
+            </p>
           </div>
         )}
         <Button
