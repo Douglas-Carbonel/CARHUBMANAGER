@@ -1,7 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
-import Footer from "@/components/layout/footer";
 import StatsCards from "@/components/dashboard/stats-cards";
 import RevenueChart from "@/components/dashboard/revenue-chart";
 import TopServices from "@/components/dashboard/top-services";
