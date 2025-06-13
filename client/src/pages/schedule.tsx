@@ -220,7 +220,7 @@ export default function SchedulePage() {
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
-          title="Agendamentos"
+          title="Agenda & Agendamentos"
           subtitle="Gerencie os agendamentos de serviços"
         />
         

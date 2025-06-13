@@ -242,7 +242,7 @@ export default function VehiclesPage() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
-          title="Veículos"
+          title="Frota de Veículos"
           subtitle="Gerencie a frota de veículos"
         />
 

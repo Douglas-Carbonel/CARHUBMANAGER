@@ -174,7 +174,7 @@ export default function Services() {
     const searchLower = searchTerm.toLowerCase();
     return (
       (service.customer?.name || "").toLowerCase().includes(searchLower) ||
-      (service.vehicle?.licensePlate || service.vehicle?.plate || "").toLowerCase().includes(searchLower) ||
+      (service.vehicle?.licensePlate || "").toLowerCase().includes(searchLower) ||
       (service.serviceType?.name || "").toLowerCase().includes(searchLower) ||
       (service.notes || "").toLowerCase().includes(searchLower)
     );
@@ -195,7 +195,7 @@ export default function Services() {
       <Sidebar />
       
       <div className="flex-1 flex flex-col">
-        <Header title="Serviços" />
+        <Header title="Ordens de Serviço" />
         
         <main className="flex-1 p-6">
           <div className="flex justify-between items-center mb-6">

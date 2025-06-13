@@ -183,7 +183,7 @@ export default function CustomersPage() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
-          title="Clientes"
+          title="Gestão de Clientes"
           subtitle="Gerencie seus clientes"
         />
 

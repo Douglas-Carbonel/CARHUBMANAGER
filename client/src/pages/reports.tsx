@@ -245,7 +245,7 @@ export default function Reports() {
         <Header 
           title={selectedCustomer !== "all" && customers ? 
             `Relatórios - ${customers.find((c: Customer) => c.id.toString() === selectedCustomer)?.name || 'Cliente'}` : 
-            "Relatórios e Analytics"
+            "Relatórios & Analytics"
           }
           subtitle={selectedCustomer !== "all" ? 
             "Insights específicos do cliente selecionado" : 
