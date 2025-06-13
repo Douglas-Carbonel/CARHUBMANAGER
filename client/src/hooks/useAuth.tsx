@@ -26,6 +26,7 @@ type RegisterData = {
 
 type AuthContextType = {
   user: User | null;
+  isAuthenticated: boolean;
   isLoading: boolean;
   error: Error | null;
   loginMutation: UseMutationResult<User, Error, LoginData>;
@@ -169,6 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const contextValue: AuthContextType = {
     user: user ?? null,
+    isAuthenticated: !!user,
     isLoading,
     error,
     loginMutation,

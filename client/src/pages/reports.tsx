@@ -132,20 +132,23 @@ export default function Reports() {
     const inProgressServices = filteredServices.filter((s: Service) => s.status === 'in_progress').length;
     const scheduledServices = filteredServices.filter((s: Service) => s.status === 'scheduled').length;
 
-    // Revenue calculations
-    const totalRevenue = filteredServices
-      .filter((s: Service) => s.status === 'completed')
-      .reduce((sum: number, service: Service) => {
-        return sum + Number(service.finalValue || service.estimatedValue || 0);
-      }, 0);
+    // Revenue calculations - using both final and estimated values
+    const completedServicesWithRevenue = filteredServices.filter((s: Service) => s.status === 'completed');
+    const totalRevenue = completedServicesWithRevenue.reduce((sum: number, service: Service) => {
+      const value = service.finalValue || service.estimatedValue || 0;
+      return sum + Number(value);
+    }, 0);
 
-    const previousRevenue = previousPeriodServices
-      .filter((s: Service) => s.status === 'completed')
-      .reduce((sum: number, service: Service) => {
-        return sum + Number(service.finalValue || service.estimatedValue || 0);
-      }, 0);
+    const previousCompletedServices = previousPeriodServices.filter((s: Service) => s.status === 'completed');
+    const previousRevenue = previousCompletedServices.reduce((sum: number, service: Service) => {
+      const value = service.finalValue || service.estimatedValue || 0;
+      return sum + Number(value);
+    }, 0);
 
     const revenueGrowth = previousRevenue > 0 ? ((totalRevenue - previousRevenue) / previousRevenue) * 100 : 0;
+
+    // Average ticket calculation
+    const avgTicket = completedServicesWithRevenue.length > 0 ? totalRevenue / completedServicesWithRevenue.length : 0;
 
     // Service type distribution
     const serviceTypeStats = (serviceTypes || []).map((serviceType: ServiceType) => {
