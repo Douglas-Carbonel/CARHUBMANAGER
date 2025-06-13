@@ -204,15 +204,6 @@ export default function Services() {
         <Header 
           title="Serviços"
           subtitle="Gerencie os serviços da sua oficina"
-          action={
-            <Button 
-              onClick={() => setIsAnalyticsModalOpen(true)}
-              className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Relatório de Serviços
-            </Button>
-          }
         />
 
         <main className="flex-1 p-8">
@@ -494,9 +485,18 @@ export default function Services() {
               </SelectContent>
             </Select>
             
-            <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-4 py-2 rounded-lg shadow-md">
-              <span className="font-semibold">{filteredServices.length}</span>
-              <span className="ml-1 text-sm">serviços</span>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                onClick={() => setIsAnalyticsModalOpen(true)}
+                className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+              >
+                📊 Ver Relatórios
+              </Button>
+              <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-4 py-2 rounded-lg shadow-md">
+                <span className="font-semibold">{filteredServices.length}</span>
+                <span className="ml-1 text-sm">serviços</span>
+              </div>
             </div>
           </div>
 

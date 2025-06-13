@@ -189,15 +189,6 @@ export default function CustomersPage() {
         <Header 
           title="Clientes"
           subtitle="Gerencie seus clientes e suas informações"
-          action={
-            <Button 
-              onClick={() => setIsAnalyticsModalOpen(true)}
-              className="bg-gradient-to-r from-blue-600 to-cyan-700 hover:from-blue-700 hover:to-cyan-800 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Relatório de Clientes
-            </Button>
-          }
         />
 
         <main className="flex-1 overflow-y-auto bg-gradient-to-br from-white/80 via-blue-50/50 to-indigo-50/30 backdrop-blur-sm">
@@ -212,9 +203,18 @@ export default function CustomersPage() {
                   className="pl-12 w-80 h-12 border-2 border-gray-200 focus:border-blue-400 rounded-xl shadow-sm bg-white/80"
                 />
               </div>
-              <div className="bg-gradient-to-r from-teal-500 to-emerald-600 text-white px-4 py-2 rounded-lg shadow-md">
-                <span className="font-semibold">{filteredCustomers.length}</span>
-                <span className="ml-1 text-sm">clientes</span>
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsAnalyticsModalOpen(true)}
+                  className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                >
+                  📊 Ver Relatórios
+                </Button>
+                <div className="bg-gradient-to-r from-teal-500 to-emerald-600 text-white px-4 py-2 rounded-lg shadow-md">
+                  <span className="font-semibold">{filteredCustomers.length}</span>
+                  <span className="ml-1 text-sm">clientes</span>
+                </div>
               </div>
               <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogTrigger asChild>
