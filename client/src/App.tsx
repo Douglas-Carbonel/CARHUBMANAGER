@@ -9,7 +9,7 @@ import Services from "@/pages/services";
 import Customers from "@/pages/customers";
 import Vehicles from "@/pages/vehicles";
 import Schedule from "@/pages/schedule";
-import Reports from "@/pages/reports";
+import Reports from "@/pages/reports-working";
 import Admin from "@/pages/admin";
 import NotFoundPage from "@/pages/not-found";
 import { ProtectedRoute } from "@/lib/protected-route";
