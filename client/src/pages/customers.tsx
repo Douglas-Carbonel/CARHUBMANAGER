@@ -1,18 +1,22 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Plus, Search, Edit, Trash2, User, Phone, Mail, MapPin, Car, Calendar, Users } from "lucide-react";
+import { useState } from "react";
+import PageLayout from "@/components/layout/page-layout";
+import PageTitle from "@/components/layout/page-title";
 import { useToast } from "@/hooks/use-toast";
+import type { Customer } from "@/shared/schema";
+import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Edit, Trash2, User, FileText, Car, Wrench } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -178,6 +182,19 @@ export default function CustomersPage() {
   }
 
   return (
+    <PageLayout title="Clientes" subtitle="Gerencie os clientes da oficina">
+      <div className="space-y-6">
+        <PageTitle 
+          title="Clientes" 
+          subtitle="Gerencie todos os clientes da oficina"
+          icon={<Users className="h-6 w-6" />}
+        />
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Clientes</h1>
+            <p className="text-gray-600">Gerencie todos os clientes da oficina</p>
+          </div>
+
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
 
@@ -425,7 +442,7 @@ export default function CustomersPage() {
                   <div key={customer.id} className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-teal-200 overflow-hidden">
                     {/* Background gradient sutil */}
                     <div className="absolute inset-0 bg-gradient-to-br from-teal-50/30 to-emerald-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    
+
                     {/* Header colorido */}
                     <div className="relative h-20 bg-gradient-to-r from-teal-500 to-emerald-600 p-4 flex items-center justify-between">
                       <div className="flex items-center space-x-3">
@@ -443,7 +460,7 @@ export default function CustomersPage() {
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Actions no header */}
                       <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button
@@ -486,7 +503,7 @@ export default function CustomersPage() {
                             {customer.documentType === 'cpf' ? formatCPF(customer.document) : formatCNPJ(customer.document)}
                           </span>
                         </div>
-                        
+
                         {customer.email && (
                           <div className="flex items-center text-sm">
                             <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
@@ -497,7 +514,7 @@ export default function CustomersPage() {
                             </span>
                           </div>
                         )}
-                        
+
                         {customer.phone && (
                           <div className="flex items-center text-sm">
                             <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
@@ -520,7 +537,7 @@ export default function CustomersPage() {
                           <Car className="h-4 w-4 mr-2" />
                           Veículos
                         </Button>
-                        
+
                         <div className="grid grid-cols-2 gap-2">
                           <Button
                             variant="outline"
