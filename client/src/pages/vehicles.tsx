@@ -23,6 +23,7 @@ import { z } from "zod";
 import { vehicleBrands, vehicleModels, fuelTypes, showVehicleNotification, showCelebration } from "@/lib/vehicle-data";
 import { cn } from "@/lib/utils";
 import VehicleAnalytics from "@/components/dashboard/vehicle-analytics";
+import { BarChart3 } from "lucide-react";
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
   const res = await fetch(url, {
@@ -56,6 +57,7 @@ export default function VehiclesPage() {
   const [customModel, setCustomModel] = useState("");
   const [showCustomModel, setShowCustomModel] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
 
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleFormSchema),
@@ -261,7 +263,7 @@ export default function VehiclesPage() {
               <div className="flex items-center gap-4">
                 <Button
                   variant="outline"
-                  onClick={() => setShowAnalytics(!showAnalytics)}
+                  onClick={() => setIsAnalyticsModalOpen(true)}
                   className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
                 >
                   📊 Ver Relatórios
@@ -554,21 +556,18 @@ export default function VehiclesPage() {
               </Dialog>
             </div>
 
-            {/* Seção de Analytics */}
-            {showAnalytics && (
-              <div className="mb-8 p-6 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/20 shadow-lg">
-                <div className="flex items-center mb-6">
-                  <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-3 rounded-xl mr-4">
-                    <span className="text-white text-xl">📊</span>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">Analytics da Frota</h3>
-                    <p className="text-gray-600">Insights sobre seus veículos cadastrados</p>
-                  </div>
-                </div>
+            {/* Analytics Modal */}
+            <Dialog open={isAnalyticsModalOpen} onOpenChange={setIsAnalyticsModalOpen}>
+              <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center">
+                    <BarChart3 className="h-5 w-5 mr-2" />
+                    Relatório de Veículos
+                  </DialogTitle>
+                </DialogHeader>
                 <VehicleAnalytics />
-              </div>
-            )}
+              </DialogContent>
+            </Dialog>
 
             {vehiclesLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
