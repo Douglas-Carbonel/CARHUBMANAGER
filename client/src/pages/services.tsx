@@ -1,285 +1,220 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import Layout from "@/components/layout";
+import PageLayout from "@/components/layout/page-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Eye, Edit, Trash2, Search, Filter, User, Car, Calendar, Clock, DollarSign, MapPin, Wrench } from "lucide-react";
-import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import PageLayout from "@/components/layout/page-layout";
-import PageTitle from "@/components/layout/page-title";
-import NewServiceModal from "@/components/modals/new-service-modal";
-import { useToast } from "@/hooks/use-toast";
-import type { Service } from "@/shared/schema";
-import { useAuth } from "@/hooks/useAuth";
-import { apiRequest } from "@/lib/queryClient";
-import Sidebar from "@/components/layout/sidebar";
-import Header from "@/components/layout/header";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { insertServiceSchema, type Customer, type Vehicle, type ServiceType } from "@shared/schema";
-import { z } from "zod";
-import { format } from "date-fns";
+import { Plus, Search, Clock, DollarSign, User, Car, Wrench } from "lucide-react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
+import NewServiceModal from "@/components/modals/new-service-modal";
 
-const serviceFormSchema = insertServiceSchema.extend({
-  customerId: z.number().min(1, "Cliente é obrigatório"),
-  vehicleId: z.number().min(1, "Veículo é obrigatório"),
-  serviceTypeId: z.number().min(1, "Tipo de serviço é obrigatório"),
-  estimatedValue: z.string().min(1, "Valor é obrigatório"),
-});
+interface Service {
+  id: number;
+  description: string;
+  status: string;
+  estimatedValue?: number;
+  finalValue?: number;
+  scheduledDate?: string;
+  scheduledTime?: string;
+  customer?: {
+    id: number;
+    name: string;
+    document: string;
+  };
+  vehicle?: {
+    id: number;
+    licensePlate?: string;
+    plate?: string;
+    brand?: string;
+    make?: string;
+    model: string;
+  };
+  serviceType?: {
+    id: number;
+    name: string;
+    description: string;
+  };
+}
 
 export default function Services() {
-  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingService, setEditingService] = useState<Service | null>(null);
-  const queryClient = useQueryClient();
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [isNewServiceModalOpen, setIsNewServiceModalOpen] = useState(false);
 
-  const form = useForm<z.infer<typeof serviceFormSchema>>({
-    resolver: zodResolver(serviceFormSchema),
-    defaultValues: {
-      customerId: 0,
-      vehicleId: 0,
-      serviceTypeId: 0,
-      scheduledDate: "",
-      scheduledTime: "",
-      estimatedValue: "",
-      status: "scheduled",
-      notes: "",
-    },
-  });
-
-  const { data: services = [], isLoading } = useQuery<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]>({
+  const { data: services = [], isLoading } = useQuery({
     queryKey: ["/api/services"],
-    queryFn: async () => {
-      const res = await fetch("/api/services", {
-        credentials: "include",
-      });
-      if (!res.ok) {
-        throw new Error(`${res.status}: ${res.statusText}`);
-      }
-      return await res.json();
-    },
+    queryFn: () => queryClient.get("/api/services"),
   });
 
-  const { data: customers = [] } = useQuery<Customer[]>({
-    queryKey: ["/api/customers"],
-    queryFn: async () => {
-      const res = await fetch("/api/customers", {
-        credentials: "include",
-      });
-      if (!res.ok) {
-        throw new Error(`${res.status}: ${res.statusText}`);
-      }
-      return await res.json();
-    },
-  });
+  const filteredServices = services.filter((service: Service) => {
+    const matchesSearch = (service.description || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (service.customer?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (service.vehicle?.licensePlate || service.vehicle?.plate || "").toLowerCase().includes(searchTerm.toLowerCase());
 
-  const { data: vehicles = [] } = useQuery<(Vehicle & { customer: Customer })[]>({
-    queryKey: ["/api/vehicles"],
-    queryFn: async () => {
-      const res = await fetch("/api/vehicles", {
-        credentials: "include",
-      });
-      if (!res.ok) {
-        throw new Error(`${res.status}: ${res.statusText}`);
-      }
-      return await res.json();
-    },
-  });
+    const matchesStatus = statusFilter === "all" || service.status === statusFilter;
 
-  const { data: serviceTypes = [] } = useQuery<ServiceType[]>({
-    queryKey: ["/api/service-types"],
-    queryFn: async () => {
-      const res = await fetch("/api/service-types", {
-        credentials: "include",
-      });
-      if (!res.ok) {
-        throw new Error(`${res.status}: ${res.statusText}`);
-      }
-      return await res.json();
-    },
-  });
-
-  const createMutation = useMutation({
-    mutationFn: (data: z.infer<typeof serviceFormSchema>) =>
-      apiRequest("/api/services", "POST", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/services"] });
-      setIsDialogOpen(false);
-      form.reset();
-      toast({ title: "Serviço criado com sucesso!" });
-    },
-    onError: () => {
-      toast({ title: "Erro ao criar serviço", variant: "destructive" });
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<z.infer<typeof serviceFormSchema>> }) =>
-      apiRequest(`/api/services/${id}`, "PATCH", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/services"] });
-      setIsDialogOpen(false);
-      setEditingService(null);
-      form.reset();
-      toast({ title: "Serviço atualizado com sucesso!" });
-    },
-    onError: () => {
-      toast({ title: "Erro ao atualizar serviço", variant: "destructive" });
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) =>
-      apiRequest(`/api/services/${id}`, "DELETE"),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/services"] });
-      toast({ title: "Serviço excluído com sucesso!" });
-    },
-    onError: () => {
-      toast({ title: "Erro ao excluir serviço", variant: "destructive" });
-    },
-  });
-
-  const onSubmit = (data: z.infer<typeof serviceFormSchema>) => {
-    if (editingService) {
-      updateMutation.mutate({ id: editingService.id, data });
-    } else {
-      createMutation.mutate(data);
-    }
-  };
-
-  const handleEdit = (service: Service) => {
-    setEditingService(service);
-    form.reset({
-      customerId: service.customerId,
-      vehicleId: service.vehicleId,
-      serviceTypeId: service.serviceTypeId,
-      scheduledDate: service.scheduledDate || "",
-      scheduledTime: service.scheduledTime || "",
-      estimatedValue: service.estimatedValue?.toString() || "",
-      status: service.status || "scheduled",
-      notes: service.notes || "",
-    });
-    setIsDialogOpen(true);
-  };
-
-  const handleDelete = (id: number) => {
-    if (confirm("Tem certeza que deseja excluir este serviço?")) {
-      deleteMutation.mutate(id);
-    }
-  };
-
-  const filteredServices = services.filter((service) => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      (service.customer?.name || "").toLowerCase().includes(searchLower) ||
-      (service.vehicle?.licensePlate || service.vehicle?.plate || "").toLowerCase().includes(searchLower) ||
-      (service.serviceType?.name || "").toLowerCase().includes(searchLower) ||
-      (service.notes || "").toLowerCase().includes(searchLower)
-    );
+    return matchesSearch && matchesStatus;
   });
 
   const getStatusBadge = (status: string) => {
-    const colors = {
-      scheduled: "bg-blue-100 text-blue-800",
-      in_progress: "bg-yellow-100 text-yellow-800",
-      completed: "bg-green-100 text-green-800",
-      cancelled: "bg-red-100 text-red-800",
+    const statusConfig = {
+      scheduled: { label: "Agendado", className: "bg-blue-100 text-blue-800" },
+      in_progress: { label: "Em Andamento", className: "bg-yellow-100 text-yellow-800" },
+      completed: { label: "Concluído", className: "bg-green-100 text-green-800" },
+      cancelled: { label: "Cancelado", className: "bg-red-100 text-red-800" },
     };
-    return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-800";
+
+    const config = statusConfig[status as keyof typeof statusConfig] || { label: status, className: "bg-gray-100 text-gray-800" };
+    return <Badge className={config.className}>{config.label}</Badge>;
   };
 
-  return (
-    <PageLayout title="Serviços" subtitle="Gerencie os serviços da oficina">
-      <div className="space-y-6">
-        <PageTitle 
-          title="Serviços" 
-          subtitle="Gerencie todos os serviços da oficina"
-          icon={<Wrench className="h-6 w-6" />}
-        />
-        <div className="flex items-center justify-between">
-          <div>
+  if (isLoading) {
+    return (
+      <Layout>
+        <PageLayout title="Serviços" subtitle="Gerencie os serviços da oficina">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Carregando serviços...</p>
           </div>
+        </PageLayout>
+      </Layout>
+    );
+  }
 
-          <NewServiceModal />
+  const pageActions = (
+    <Button 
+      onClick={() => setIsNewServiceModalOpen(true)}
+      className="button-primary"
+    >
+      <Plus className="h-4 w-4 mr-2" />
+      Novo Serviço
+    </Button>
+  );
+
+  return (
+    <Layout>
+      <PageLayout 
+        title="Serviços" 
+        subtitle="Gerencie os serviços da oficina"
+        actions={pageActions}
+      >
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Buscar serviços..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 w-64"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os Status</SelectItem>
+              <SelectItem value="scheduled">Agendado</SelectItem>
+              <SelectItem value="in_progress">Em Andamento</SelectItem>
+              <SelectItem value="completed">Concluído</SelectItem>
+              <SelectItem value="cancelled">Cancelado</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        <div className="grid gap-4">
-          <div className="border p-4 rounded-md">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Filtros</h2>
-              <Button variant="ghost">
-                <Filter className="h-4 w-4 mr-2" />
-                Limpar Filtros
-              </Button>
-            </div>
-            <div className="mt-4">
-              <Input
-                type="search"
-                placeholder="Buscar..."
-                className="w-full"
-              />
-            </div>
-          </div>
-
-          {isLoading ? (
-            <div>Carregando serviços...</div>
-          ) : (
-            filteredServices.map((service) => (
-              <Card key={service.id}>
-                <CardHeader>
-                  <div className="flex justify-between">
-                    <CardTitle>
-                      <div className="flex items-center space-x-2">
-                        <Wrench className="h-4 w-4 text-gray-500" />
-                        <span>{service.serviceType?.name}</span>
+        <div className="grid gap-6">
+          {filteredServices.map((service: Service) => (
+            <Card key={service.id} className="card-enhanced">
+              <CardHeader className="pb-4">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2">
+                    <CardTitle className="text-xl font-semibold">
+                      <div className="flex items-center">
+                        <Wrench className="h-5 w-5 mr-3 text-teal-600" />
+                        {service.serviceType?.name || "Tipo não encontrado"}
                       </div>
                     </CardTitle>
+                    <CardDescription className="text-gray-600 font-medium">{service.description}</CardDescription>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4 grid-cols-2">
-                    <div className="flex items-center space-x-2">
-                      <User className="h-4 w-4 text-gray-500" />
-                      <span>{service.customer?.name}</span>
+                  {getStatusBadge(service.status)}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Clock className="h-4 w-4 mr-2" />
+                      <span className="font-semibold">Agendamento</span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Car className="h-4 w-4 text-gray-500" />
-                      <span>{`${service.vehicle?.licensePlate || service.vehicle?.plate} - ${service.vehicle?.model}`}</span>
+                    <p className="text-sm font-medium text-gray-800">
+                      {service.scheduledDate && service.scheduledTime
+                        ? `${new Date(service.scheduledDate).toLocaleDateString()} ${service.scheduledTime}`
+                        : "Não agendado"}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center text-sm text-gray-500">
+                      <DollarSign className="h-4 w-4 mr-2" />
+                      <span className="font-semibold">Valor</span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="h-4 w-4 text-gray-500" />
-                      <span>{format(new Date(service.scheduledDate), "dd/MM/yyyy")}</span>
+                    <p className="text-sm font-medium text-gray-800">
+                      {service.finalValue 
+                        ? `R$ ${parseFloat(service.finalValue.toString()).toFixed(2)}`
+                        : service.estimatedValue
+                        ? `R$ ${parseFloat(service.estimatedValue.toString()).toFixed(2)} (estimado)`
+                        : "Não informado"}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center text-sm text-gray-500 mb-2">
+                      <span className="font-semibold">Cliente & Veículo</span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Clock className="h-4 w-4 text-gray-500" />
-                      <span>{service.scheduledTime}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <DollarSign className="h-4 w-4 text-gray-500" />
-                      <span>{service.estimatedValue}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="h-4 w-4 text-gray-500" />
-                      <Badge className={getStatusBadge(service.status || "scheduled")}>
-                        {service.status === "scheduled" && "Agendado"}
-                        {service.status === "in_progress" && "Em Andamento"}
-                        {service.status === "completed" && "Concluído"}
-                        {service.status === "cancelled" && "Cancelado"}
-                      </Badge>
+                    <div className="space-y-1">
+                      <div className="flex items-center text-sm text-gray-800">
+                        <User className="h-4 w-4 mr-2 text-blue-600" />
+                        <span className="font-medium">{service.customer?.name || "Cliente não encontrado"}</span>
+                      </div>
+                      <div className="flex items-center text-sm text-gray-800">
+                        <Car className="h-4 w-4 mr-2 text-green-600" />
+                        <span className="font-medium">
+                          {service.vehicle ? 
+                            `${service.vehicle.licensePlate || service.vehicle.plate || "S/N"} - ${service.vehicle.brand || service.vehicle.make || ""} ${service.vehicle.model || ""}`.trim() 
+                            : "Veículo não encontrado"
+                          }
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
+
+                  <div className="flex justify-end items-start space-x-2">
+                    <Button variant="outline" size="sm" className="hover:bg-blue-50 hover:border-blue-300">
+                      Editar
+                    </Button>
+                    <Button variant="outline" size="sm" className="hover:bg-green-50 hover:border-green-300">
+                      Detalhes
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      </div>
-    </PageLayout>
+{filteredServices.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500">Nenhum serviço encontrado</p>
+          </div>
+        )}
+
+        <NewServiceModal 
+          isOpen={isNewServiceModalOpen}
+          onClose={() => setIsNewServiceModalOpen(false)}
+        />
+      </PageLayout>
+    </Layout>
   );
 }
