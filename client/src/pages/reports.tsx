@@ -29,7 +29,16 @@ import {
   Timer,
   Award,
   FileText,
-  Download
+  Download,
+  Activity,
+  Zap,
+  Eye,
+  Settings,
+  ShieldAlert,
+  Star,
+  CreditCard,
+  Calendar as CalendarIcon,
+  Percent
 } from "lucide-react";
 import { type Service, type Customer, type Vehicle, type ServiceType } from "@shared/schema";
 
@@ -155,9 +164,10 @@ export default function Reports() {
         name: type.name,
         count: typeServices.length,
         revenue,
-        percentage: totalServices > 0 ? (typeServices.length / totalServices) * 100 : 0
+        percentage: totalServices > 0 ? (typeServices.length / totalServices) * 100 : 0,
+        avgTicket: typeServices.length > 0 ? revenue / typeServices.filter(s => s.status === 'completed').length : 0
       };
-    }).sort((a, b) => b.count - a.count) || [];
+    }).sort((a, b) => b.revenue - a.revenue) || [];
 
     // Customer stats
     const customerStats = customers?.map((customer: Customer) => {
@@ -167,11 +177,17 @@ export default function Reports() {
         .reduce((sum: number, service: Service) => {
           return sum + Number(service.finalValue || service.estimatedValue || 0);
         }, 0);
+      
+      const completedCount = customerServices.filter(s => s.status === 'completed').length;
+      const avgTicket = completedCount > 0 ? revenue / completedCount : 0;
+      
       return {
         id: customer.id,
         name: customer.name,
         count: customerServices.length,
-        revenue
+        revenue,
+        avgTicket,
+        lastService: customerServices.length > 0 ? Math.max(...customerServices.map(s => new Date(s.scheduledDate).getTime())) : 0
       };
     }).filter(c => c.count > 0).sort((a, b) => b.revenue - a.revenue) || [];
 
@@ -197,6 +213,24 @@ export default function Reports() {
     const cancellationRate = totalServices > 0 ? (cancelledServices / totalServices) * 100 : 0;
     const averageTicket = completedServices > 0 ? totalRevenue / completedServices : 0;
 
+    // Critical KPIs
+    const overdueServices = filteredServices.filter((s: Service) => {
+      const serviceDate = new Date(s.scheduledDate);
+      return serviceDate < now && (s.status === 'scheduled' || s.status === 'in_progress');
+    }).length;
+
+    const customerRetentionRate = customerStats.filter(c => c.count > 1).length / (customerStats.length || 1) * 100;
+    
+    const profitability = serviceTypeStats.reduce((sum, type) => sum + type.revenue, 0) - (totalServices * 50); // Assumindo custo fixo de R$50 por serviço
+    const profitMargin = totalRevenue > 0 ? (profitability / totalRevenue) * 100 : 0;
+
+    // Customer lifetime value
+    const avgCustomerLifetime = customerStats.reduce((sum, c) => sum + c.revenue, 0) / (customerStats.length || 1);
+
+    // Service efficiency
+    const avgServicesPerDay = totalServices / periodDays;
+    const revenuePerDay = totalRevenue / periodDays;
+
     return {
       totalServices,
       completedServices,
@@ -211,7 +245,14 @@ export default function Reports() {
       completionRate,
       cancellationRate,
       averageTicket,
-      previousPeriodServices: previousPeriodServices.length
+      previousPeriodServices: previousPeriodServices.length,
+      overdueServices,
+      customerRetentionRate,
+      profitability,
+      profitMargin,
+      avgCustomerLifetime,
+      avgServicesPerDay,
+      revenuePerDay
     };
   }, [services, customers, serviceTypes, selectedPeriod, selectedCustomer]);
 
@@ -245,15 +286,38 @@ export default function Reports() {
         <Header 
           title={selectedCustomer !== "all" && customers ? 
             `Relatórios - ${customers.find((c: Customer) => c.id.toString() === selectedCustomer)?.name || 'Cliente'}` : 
-            "Relatórios e Analytics"
+            "Dashboard Executivo"
           }
           subtitle={selectedCustomer !== "all" ? 
             "Insights específicos do cliente selecionado" : 
-            "Insights detalhados do seu negócio"
+            "Visão 360° do seu negócio - Indicadores estratégicos para gestão"
           }
         />
         
         <main className="flex-1 overflow-y-auto">
+          {/* Critical Alerts */}
+          {(analytics.overdueServices > 0 || analytics.cancellationRate > 15 || analytics.profitMargin < 20) && (
+            <div className="bg-red-50 border-l-4 border-red-400 p-4 mx-6 mt-4 rounded-lg">
+              <div className="flex items-start">
+                <ShieldAlert className="h-5 w-5 text-red-500 mt-0.5 mr-3" />
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-red-800 mb-2">⚠️ Alertas Críticos - Requer Ação Imediata</h3>
+                  <div className="text-sm text-red-700 space-y-1">
+                    {analytics.overdueServices > 0 && (
+                      <p>• {analytics.overdueServices} serviços em atraso - Contate os clientes urgentemente</p>
+                    )}
+                    {analytics.cancellationRate > 15 && (
+                      <p>• Taxa de cancelamento alta ({analytics.cancellationRate.toFixed(1)}%) - Revisar processo de agendamento</p>
+                    )}
+                    {analytics.profitMargin < 20 && (
+                      <p>• Margem de lucro baixa ({analytics.profitMargin.toFixed(1)}%) - Revisar precificação</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Controls */}
           <div className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10">
             {selectedCustomer !== "all" && customers && (
@@ -312,25 +376,26 @@ export default function Reports() {
           </div>
 
           <div className="p-6">
-            <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-                <TabsTrigger value="revenue">Receita</TabsTrigger>
-                <TabsTrigger value="services">Serviços</TabsTrigger>
-                <TabsTrigger value="customers">Clientes</TabsTrigger>
+            <Tabs defaultValue="executive" className="space-y-6">
+              <TabsList className="grid w-full grid-cols-5">
+                <TabsTrigger value="executive">Executivo</TabsTrigger>
+                <TabsTrigger value="financial">Financeiro</TabsTrigger>
+                <TabsTrigger value="operational">Operacional</TabsTrigger>
+                <TabsTrigger value="customer">Clientes</TabsTrigger>
+                <TabsTrigger value="performance">Performance</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="overview" className="space-y-6">
-                {/* KPI Cards */}
+              <TabsContent value="executive" className="space-y-6">
+                {/* Executive KPIs */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <Card className="border-l-4 border-l-green-500">
+                  <Card className="border-l-4 border-l-green-500 bg-gradient-to-br from-green-50 to-emerald-50">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
                       <DollarSign className="h-4 w-4 text-green-600" />
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold text-green-600">
-                        R$ {analytics.totalRevenue.toFixed(2)}
+                        R$ {analytics.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </div>
                       <div className="flex items-center text-xs text-gray-600 mt-1">
                         {analytics.revenueGrowth >= 0 ? (
@@ -346,29 +411,29 @@ export default function Reports() {
                     </CardContent>
                   </Card>
 
-                  <Card className="border-l-4 border-l-blue-500">
+                  <Card className="border-l-4 border-l-blue-500 bg-gradient-to-br from-blue-50 to-cyan-50">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Total de Serviços</CardTitle>
-                      <Wrench className="h-4 w-4 text-blue-600" />
+                      <CardTitle className="text-sm font-medium">Margem de Lucro</CardTitle>
+                      <Percent className="h-4 w-4 text-blue-600" />
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold text-blue-600">
-                        {analytics.totalServices}
+                        {analytics.profitMargin.toFixed(1)}%
                       </div>
                       <div className="text-xs text-gray-600 mt-1">
-                        {analytics.completedServices} concluídos
+                        R$ {analytics.profitability.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} lucro
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card className="border-l-4 border-l-purple-500">
+                  <Card className="border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-50 to-violet-50">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">Ticket Médio</CardTitle>
                       <Target className="h-4 w-4 text-purple-600" />
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold text-purple-600">
-                        R$ {analytics.averageTicket.toFixed(2)}
+                        R$ {analytics.averageTicket.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </div>
                       <div className="text-xs text-gray-600 mt-1">
                         Por serviço concluído
@@ -376,173 +441,131 @@ export default function Reports() {
                     </CardContent>
                   </Card>
 
-                  <Card className="border-l-4 border-l-orange-500">
+                  <Card className="border-l-4 border-l-orange-500 bg-gradient-to-br from-orange-50 to-amber-50">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Taxa de Conclusão</CardTitle>
-                      <CheckCircle className="h-4 w-4 text-orange-600" />
+                      <CardTitle className="text-sm font-medium">Retenção de Clientes</CardTitle>
+                      <Star className="h-4 w-4 text-orange-600" />
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold text-orange-600">
-                        {analytics.completionRate.toFixed(1)}%
+                        {analytics.customerRetentionRate.toFixed(1)}%
                       </div>
                       <div className="text-xs text-gray-600 mt-1">
-                        {analytics.completedServices} de {analytics.totalServices} serviços
+                        Clientes recorrentes
                       </div>
                     </CardContent>
                   </Card>
                 </div>
 
-                {/* Status Distribution */}
+                {/* Strategic Insights */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <Card>
+                  <Card className="bg-gradient-to-br from-slate-50 to-gray-50">
                     <CardHeader>
                       <CardTitle className="flex items-center">
-                        <PieChart className="h-5 w-5 mr-2" />
-                        Status dos Serviços
+                        <Eye className="h-5 w-5 mr-2" />
+                        Insights Estratégicos
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                            <span className="text-sm">Concluídos</span>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-medium">{analytics.completedServices}</div>
-                            <div className="text-xs text-gray-500">{analytics.completionRate.toFixed(1)}%</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="w-3 h-3 bg-orange-500 rounded-full mr-3"></div>
-                            <span className="text-sm">Em Andamento</span>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-medium">{analytics.inProgressServices}</div>
-                            <div className="text-xs text-gray-500">
-                              {((analytics.inProgressServices / analytics.totalServices) * 100).toFixed(1)}%
+                        {analytics.revenuePerDay > 0 && (
+                          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                            <div className="flex items-start">
+                              <DollarSign className="h-4 w-4 text-green-500 mt-0.5 mr-2" />
+                              <div className="text-sm text-green-800">
+                                <strong>Receita Diária:</strong> R$ {analytics.revenuePerDay.toFixed(2)}/dia 
+                                ({analytics.avgServicesPerDay.toFixed(1)} serviços/dia)
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-                            <span className="text-sm">Agendados</span>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-medium">{analytics.scheduledServices}</div>
-                            <div className="text-xs text-gray-500">
-                              {((analytics.scheduledServices / analytics.totalServices) * 100).toFixed(1)}%
+                        )}
+                        
+                        {analytics.avgCustomerLifetime > 0 && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <div className="flex items-start">
+                              <Users className="h-4 w-4 text-blue-500 mt-0.5 mr-2" />
+                              <div className="text-sm text-blue-800">
+                                <strong>Valor Médio por Cliente:</strong> R$ {analytics.avgCustomerLifetime.toFixed(2)}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
-                            <span className="text-sm">Cancelados</span>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-medium">{analytics.cancelledServices}</div>
-                            <div className="text-xs text-gray-500">{analytics.cancellationRate.toFixed(1)}%</div>
+                        )}
+                        
+                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                          <div className="flex items-start">
+                            <Activity className="h-4 w-4 text-purple-500 mt-0.5 mr-2" />
+                            <div className="text-sm text-purple-800">
+                              <strong>Eficiência Operacional:</strong> {analytics.completionRate.toFixed(1)}% de conclusão
+                            </div>
                           </div>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className="bg-gradient-to-br from-slate-50 to-gray-50">
                     <CardHeader>
                       <CardTitle className="flex items-center">
-                        <Award className="h-5 w-5 mr-2" />
-                        Top Serviços
+                        <Settings className="h-5 w-5 mr-2" />
+                        Ações Recomendadas
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
-                        {analytics.serviceTypeStats.slice(0, 5).map((type, index) => (
-                          <div key={type.name} className="flex items-center justify-between">
-                            <div className="flex items-center">
-                              <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold mr-3">
-                                {index + 1}
+                        {analytics.overdueServices > 0 && (
+                          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                            <div className="flex items-start">
+                              <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5 mr-2" />
+                              <div className="text-sm text-red-800">
+                                <strong>URGENTE:</strong> {analytics.overdueServices} serviços em atraso. 
+                                Contatar clientes imediatamente.
                               </div>
-                              <span className="text-sm font-medium">{type.name}</span>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-sm font-medium">{type.count} serviços</div>
-                              <div className="text-xs text-gray-500">R$ {type.revenue.toFixed(2)}</div>
                             </div>
                           </div>
-                        ))}
+                        )}
+                        
+                        {analytics.cancellationRate > 10 && (
+                          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                            <div className="flex items-start">
+                              <XCircle className="h-4 w-4 text-orange-500 mt-0.5 mr-2" />
+                              <div className="text-sm text-orange-800">
+                                <strong>Revisar processo:</strong> Taxa de cancelamento de {analytics.cancellationRate.toFixed(1)}% 
+                                está acima do ideal (10%).
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {analytics.averageTicket < 150 && (
+                          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                            <div className="flex items-start">
+                              <Target className="h-4 w-4 text-yellow-500 mt-0.5 mr-2" />
+                              <div className="text-sm text-yellow-800">
+                                <strong>Oportunidade:</strong> Ticket médio baixo. 
+                                Considere pacotes de serviços ou upsell.
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {analytics.customerRetentionRate < 40 && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <div className="flex items-start">
+                              <Star className="h-4 w-4 text-blue-500 mt-0.5 mr-2" />
+                              <div className="text-sm text-blue-800">
+                                <strong>Fidelização:</strong> Criar programa de clientes recorrentes 
+                                para melhorar retenção.
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
                 </div>
-
-                {/* Recommendations */}
-                <Card className="border-l-4 border-l-yellow-500">
-                  <CardHeader>
-                    <CardTitle className="flex items-center text-yellow-700">
-                      <AlertTriangle className="h-5 w-5 mr-2" />
-                      Recomendações e Insights
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-3">
-                        <h4 className="font-semibold text-gray-900">Oportunidades de Melhoria</h4>
-                        {analytics.cancellationRate > 10 && (
-                          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                            <div className="flex items-start">
-                              <XCircle className="h-4 w-4 text-red-500 mt-0.5 mr-2" />
-                              <div className="text-sm text-red-800">
-                                <strong>Alta taxa de cancelamento:</strong> {analytics.cancellationRate.toFixed(1)}% dos serviços foram cancelados. 
-                                Considere melhorar a comunicação com clientes.
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        {analytics.averageTicket < 100 && (
-                          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                            <div className="flex items-start">
-                              <Target className="h-4 w-4 text-orange-500 mt-0.5 mr-2" />
-                              <div className="text-sm text-orange-800">
-                                <strong>Ticket médio baixo:</strong> R$ {analytics.averageTicket.toFixed(2)}. 
-                                Considere ofertar serviços complementares.
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <div className="space-y-3">
-                        <h4 className="font-semibold text-gray-900">Pontos Positivos</h4>
-                        {analytics.completionRate > 80 && (
-                          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                            <div className="flex items-start">
-                              <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 mr-2" />
-                              <div className="text-sm text-green-800">
-                                <strong>Excelente taxa de conclusão:</strong> {analytics.completionRate.toFixed(1)}% dos serviços são concluídos com sucesso.
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        {analytics.revenueGrowth > 0 && (
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                            <div className="flex items-start">
-                              <TrendingUp className="h-4 w-4 text-blue-500 mt-0.5 mr-2" />
-                              <div className="text-sm text-blue-800">
-                                <strong>Crescimento positivo:</strong> Receita {analytics.revenueGrowth.toFixed(1)}% superior ao período anterior.
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
               </TabsContent>
 
-              <TabsContent value="revenue" className="space-y-6">
+              <TabsContent value="financial" className="space-y-6">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center">
@@ -574,51 +597,216 @@ export default function Reports() {
                     </div>
                   </CardContent>
                 </Card>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Rentabilidade por Serviço</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {analytics.serviceTypeStats.slice(0, 5).map((type, index) => (
+                          <div key={type.name} className="border border-gray-200 rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="font-semibold text-gray-900">{type.name}</h4>
+                              <Badge variant="outline">{type.count} serviços</Badge>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <span className="text-gray-500">Receita:</span>
+                                <div className="font-medium text-green-600">R$ {type.revenue.toFixed(2)}</div>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Ticket Médio:</span>
+                                <div className="font-medium">R$ {type.avgTicket.toFixed(2)}</div>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Participação:</span>
+                                <div className="font-medium">{type.percentage.toFixed(1)}%</div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <CreditCard className="h-5 w-5 mr-2" />
+                        Métricas Financeiras
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium">Receita Bruta</span>
+                            <span className="text-lg font-bold text-green-600">
+                              R$ {analytics.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium">Lucro Estimado</span>
+                            <span className="text-lg font-bold text-blue-600">
+                              R$ {analytics.profitability.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium">Margem de Lucro</span>
+                            <span className="text-lg font-bold text-purple-600">
+                              {analytics.profitMargin.toFixed(1)}%
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium">Receita/Dia</span>
+                            <span className="text-lg font-bold text-orange-600">
+                              R$ {analytics.revenuePerDay.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
 
-              <TabsContent value="services" className="space-y-6">
+              <TabsContent value="operational" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <Card className="border-l-4 border-l-blue-500">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total de Serviços</CardTitle>
+                      <Wrench className="h-4 w-4 text-blue-600" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-blue-600">
+                        {analytics.totalServices}
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        {analytics.completedServices} concluídos
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-l-4 border-l-green-500">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Taxa de Conclusão</CardTitle>
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-green-600">
+                        {analytics.completionRate.toFixed(1)}%
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        {analytics.completedServices} de {analytics.totalServices} serviços
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-l-4 border-l-red-500">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Serviços em Atraso</CardTitle>
+                      <AlertTriangle className="h-4 w-4 text-red-600" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-red-600">
+                        {analytics.overdueServices}
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        Requer ação imediata
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-l-4 border-l-yellow-500">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Taxa de Cancelamento</CardTitle>
+                      <XCircle className="h-4 w-4 text-yellow-600" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-yellow-600">
+                        {analytics.cancellationRate.toFixed(1)}%
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        {analytics.cancelledServices} cancelados
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
                 <Card>
                   <CardHeader>
-                    <CardTitle>Análise de Serviços por Tipo</CardTitle>
+                    <CardTitle className="flex items-center">
+                      <PieChart className="h-5 w-5 mr-2" />
+                      Status dos Serviços
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      {analytics.serviceTypeStats.map((type) => (
-                        <div key={type.name} className="border border-gray-200 rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-semibold text-gray-900">{type.name}</h4>
-                            <Badge variant="outline">{type.count} serviços</Badge>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                            <span className="text-sm">Concluídos</span>
                           </div>
-                          <div className="grid grid-cols-3 gap-4 text-sm">
-                            <div>
-                              <span className="text-gray-500">Quantidade:</span>
-                              <div className="font-medium">{type.count}</div>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Receita:</span>
-                              <div className="font-medium text-green-600">R$ {type.revenue.toFixed(2)}</div>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Participação:</span>
-                              <div className="font-medium">{type.percentage.toFixed(1)}%</div>
-                            </div>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">{analytics.completedServices}</div>
+                            <div className="text-xs text-gray-500">{analytics.completionRate.toFixed(1)}%</div>
                           </div>
-                          <div className="mt-3">
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div
-                                className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full"
-                                style={{ width: `${type.percentage}%` }}
-                              ></div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="w-3 h-3 bg-orange-500 rounded-full mr-3"></div>
+                            <span className="text-sm">Em Andamento</span>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">{analytics.inProgressServices}</div>
+                            <div className="text-xs text-gray-500">
+                              {analytics.totalServices > 0 ? ((analytics.inProgressServices / analytics.totalServices) * 100).toFixed(1) : 0}%
                             </div>
                           </div>
                         </div>
-                      ))}
+                      </div>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                            <span className="text-sm">Agendados</span>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">{analytics.scheduledServices}</div>
+                            <div className="text-xs text-gray-500">
+                              {analytics.totalServices > 0 ? ((analytics.scheduledServices / analytics.totalServices) * 100).toFixed(1) : 0}%
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
+                            <span className="text-sm">Cancelados</span>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">{analytics.cancelledServices}</div>
+                            <div className="text-xs text-gray-500">{analytics.cancellationRate.toFixed(1)}%</div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
               </TabsContent>
 
-              <TabsContent value="customers" className="space-y-6">
+              <TabsContent value="customer" className="space-y-6">
                 <Card>
                   <CardHeader>
                     <CardTitle>Top Clientes por Receita</CardTitle>
@@ -633,13 +821,61 @@ export default function Reports() {
                             </div>
                             <div>
                               <div className="font-semibold text-gray-900">{customer.name}</div>
-                              <div className="text-sm text-gray-500">{customer.count} serviço(s)</div>
+                              <div className="text-sm text-gray-500">
+                                {customer.count} serviço(s) • Último: {new Date(customer.lastService).toLocaleDateString('pt-BR')}
+                              </div>
                             </div>
                           </div>
                           <div className="text-right">
                             <div className="font-bold text-green-600">R$ {customer.revenue.toFixed(2)}</div>
                             <div className="text-sm text-gray-500">
-                              R$ {(customer.revenue / customer.count).toFixed(2)} por serviço
+                              R$ {customer.avgTicket.toFixed(2)} por serviço
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="performance" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Análise de Performance por Tipo de Serviço</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {analytics.serviceTypeStats.map((type) => (
+                        <div key={type.name} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-semibold text-gray-900">{type.name}</h4>
+                            <Badge variant="outline">{type.count} serviços</Badge>
+                          </div>
+                          <div className="grid grid-cols-4 gap-4 text-sm">
+                            <div>
+                              <span className="text-gray-500">Quantidade:</span>
+                              <div className="font-medium">{type.count}</div>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Receita:</span>
+                              <div className="font-medium text-green-600">R$ {type.revenue.toFixed(2)}</div>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Ticket Médio:</span>
+                              <div className="font-medium">R$ {type.avgTicket.toFixed(2)}</div>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Participação:</span>
+                              <div className="font-medium">{type.percentage.toFixed(1)}%</div>
+                            </div>
+                          </div>
+                          <div className="mt-3">
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div
+                                className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full"
+                                style={{ width: `${type.percentage}%` }}
+                              ></div>
                             </div>
                           </div>
                         </div>
