@@ -1,21 +1,25 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Plus, Search, Edit, Trash2, Car, User, Calendar, Wrench, MapPin, Phone } from "lucide-react";
+import { useState } from "react";
+import PageLayout from "@/components/layout/page-layout";
+import PageTitle from "@/components/layout/page-title";
 import { useToast } from "@/hooks/use-toast";
+import type { Vehicle } from "@/shared/schema";
+import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2, Car, User, Check, ChevronsUpDown, Wrench, FileText } from "lucide-react";
+import { Check, ChevronsUpDown, FileText } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertVehicleSchema, type Vehicle, type Customer } from "@shared/schema";
@@ -98,13 +102,13 @@ export default function VehiclesPage() {
       form.reset();
       setShowCustomModel(false);
       setCustomModel("");
-      
+
       // Efeitos de celebração
       const brand = form.getValues("brand");
       const model = showCustomModel ? customModel : form.getValues("model");
       showVehicleNotification(brand, model);
       showCelebration();
-      
+
       toast({
         title: "🎉 Veículo cadastrado!",
         description: `${brand} ${model} foi adicionado com sucesso à frota!`,
@@ -181,11 +185,11 @@ export default function VehiclesPage() {
   const handleEdit = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle);
     setSelectedBrand(vehicle.brand);
-    
+
     // Verificar se o modelo existe na lista ou é customizado
     const modelsForBrand = vehicleModels[vehicle.brand] || [];
     const isCustomModel = !modelsForBrand.includes(vehicle.model);
-    
+
     if (isCustomModel) {
       setShowCustomModel(true);
       setCustomModel(vehicle.model);
@@ -237,12 +241,24 @@ export default function VehiclesPage() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <PageLayout title="Veículos" subtitle="Gerencie os veículos dos clientes">
+      <div className="space-y-6">
+        <PageTitle 
+          title="Veículos" 
+          subtitle="Gerencie todos os veículos dos clientes"
+          icon={<Car className="h-6 w-6" />}
+        />
+        <div className="flex items-center justify-between">
+          <div>
+            
+          </div>
+
+  
       <Sidebar />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      
         <Header 
-          title="Frota de Veículos"
+          title="Veículos"
           subtitle="Gerencie a frota de veículos"
         />
 
@@ -623,7 +639,7 @@ export default function VehiclesPage() {
                     <div key={vehicle.id} className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-teal-200 overflow-hidden">
                       {/* Background gradient sutil */}
                       <div className="absolute inset-0 bg-gradient-to-br from-teal-50/30 to-emerald-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      
+
                       {/* Header colorido */}
                       <div className="relative h-20 bg-gradient-to-r from-teal-500 to-emerald-600 p-4 flex items-center justify-between">
                         <div className="flex items-center space-x-3">
@@ -641,7 +657,7 @@ export default function VehiclesPage() {
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* Actions no header */}
                         <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button
@@ -685,7 +701,7 @@ export default function VehiclesPage() {
                               {vehicle.year}
                             </span>
                           </div>
-                          
+
                           <div className="flex items-center text-sm">
                             <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
                               <span className="text-gray-500 text-xs">🎨</span>
@@ -694,7 +710,7 @@ export default function VehiclesPage() {
                               {vehicle.color}
                             </span>
                           </div>
-                          
+
                           <div className="flex items-center text-sm">
                             <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
                               <span className="text-gray-500 text-xs">⛽</span>
@@ -715,7 +731,7 @@ export default function VehiclesPage() {
                             <Wrench className="h-4 w-4 mr-2" />
                             Serviços
                           </Button>
-                          
+
                           <Button
                             variant="outline"
                             size="sm"
@@ -734,7 +750,7 @@ export default function VehiclesPage() {
             )}
           </div>
         </main>
-      </div>
-    </div>
+      
+    
   );
 }
