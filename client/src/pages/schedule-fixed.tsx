@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
@@ -67,16 +66,16 @@ export default function SchedulePage() {
     defaultValues: {
       customerId: 0,
       vehicleId: 0,
-      description: "",
+      serviceTypeId: 0,
       status: "scheduled",
       scheduledDate: "",
-      estimatedHours: 1,
-      hourlyRate: 0,
+      estimatedValue: undefined,
+      finalValue: undefined,
       notes: "",
     },
   });
 
-  const { data: services = [], isLoading } = useQuery<(Service & { customer: Customer; vehicle: Vehicle })[]>({
+  const { data: services = [], isLoading } = useQuery<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]>({
     queryKey: ["/api/services"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/services");
@@ -96,6 +95,14 @@ export default function SchedulePage() {
     queryKey: ["/api/vehicles"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/vehicles");
+      return await res.json();
+    },
+  });
+
+  const { data: serviceTypes = [] } = useQuery<ServiceType[]>({
+    queryKey: ["/api/service-types"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/service-types");
       return await res.json();
     },
   });
@@ -181,11 +188,11 @@ export default function SchedulePage() {
     form.reset({
       customerId: service.customerId,
       vehicleId: service.vehicleId,
-      description: service.description,
+      serviceTypeId: service.serviceTypeId,
       status: service.status as "scheduled" | "in_progress" | "completed" | "cancelled",
-      scheduledDate: service.scheduledDate ? new Date(service.scheduledDate).toISOString().slice(0, 16) : "",
-      estimatedHours: service.estimatedHours || 1,
-      hourlyRate: service.hourlyRate || 0,
+      scheduledDate: service.scheduledDate ? new Date(service.scheduledDate).toISOString().slice(0, 10) : "",
+      estimatedValue: service.estimatedValue || undefined,
+      finalValue: service.finalValue || undefined,
       notes: service.notes || "",
     });
     setIsModalOpen(true);
@@ -198,9 +205,9 @@ export default function SchedulePage() {
   };
 
   const filteredServices = services.filter((service) => {
-    const matchesSearch = (service.description || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = (service.notes || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (service.customer?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (service.vehicle?.plate || "").toLowerCase().includes(searchTerm.toLowerCase());
+      (service.vehicle?.licensePlate || "").toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === "all" || service.status === statusFilter;
     
@@ -290,7 +297,7 @@ export default function SchedulePage() {
                                 <FormLabel>Cliente</FormLabel>
                                 <Select onValueChange={(value) => {
                                   field.onChange(parseInt(value));
-                                  form.setValue("vehicleId", 0); // Reset vehicle selection
+                                  form.setValue("vehicleId", 0);
                                 }} value={field.value?.toString()}>
                                   <FormControl>
                                     <SelectTrigger>
@@ -324,7 +331,7 @@ export default function SchedulePage() {
                                   <SelectContent>
                                     {availableVehicles.map((vehicle) => (
                                       <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                                        {vehicle.make} {vehicle.model} - {vehicle.plate}
+                                        {vehicle.brand} {vehicle.model} - {vehicle.licensePlate}
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
@@ -335,13 +342,24 @@ export default function SchedulePage() {
                           />
                           <FormField
                             control={form.control}
-                            name="description"
+                            name="serviceTypeId"
                             render={({ field }) => (
-                              <FormItem className="md:col-span-2">
-                                <FormLabel>Descrição do Serviço</FormLabel>
-                                <FormControl>
-                                  <Textarea placeholder="Descreva o serviço a ser realizado..." {...field} />
-                                </FormControl>
+                              <FormItem>
+                                <FormLabel>Tipo de Serviço</FormLabel>
+                                <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Selecione o tipo de serviço" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {serviceTypes.map((serviceType) => (
+                                      <SelectItem key={serviceType.id} value={serviceType.id.toString()}>
+                                        {serviceType.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -351,9 +369,9 @@ export default function SchedulePage() {
                             name="scheduledDate"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Data e Hora do Agendamento</FormLabel>
+                                <FormLabel>Data do Agendamento</FormLabel>
                                 <FormControl>
-                                  <Input type="datetime-local" {...field} />
+                                  <Input type="date" {...field} value={field.value || ""} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -365,7 +383,7 @@ export default function SchedulePage() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Status</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <Select onValueChange={field.onChange} defaultValue={field.value || "scheduled"}>
                                   <FormControl>
                                     <SelectTrigger>
                                       <SelectValue placeholder="Selecione o status" />
@@ -384,38 +402,19 @@ export default function SchedulePage() {
                           />
                           <FormField
                             control={form.control}
-                            name="estimatedHours"
+                            name="estimatedValue"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Horas Estimadas</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    min="0.5" 
-                                    step="0.5" 
-                                    placeholder="1.0" 
-                                    {...field}
-                                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="hourlyRate"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Valor por Hora (R$)</FormLabel>
+                                <FormLabel>Valor Estimado (R$)</FormLabel>
                                 <FormControl>
                                   <Input 
                                     type="number" 
                                     min="0" 
                                     step="0.01" 
-                                    placeholder="50.00" 
+                                    placeholder="150.00" 
                                     {...field}
-                                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                                    value={field.value || ""}
+                                    onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -429,7 +428,7 @@ export default function SchedulePage() {
                               <FormItem className="md:col-span-2">
                                 <FormLabel>Observações</FormLabel>
                                 <FormControl>
-                                  <Textarea placeholder="Observações adicionais..." {...field} />
+                                  <Textarea placeholder="Observações adicionais..." {...field} value={field.value || ""} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -457,6 +456,7 @@ export default function SchedulePage() {
                 </Dialog>
               </div>
             </div>
+          </div>
           
           {/* Main Content */}
           <div className="p-8">
@@ -489,7 +489,7 @@ export default function SchedulePage() {
                           </div>
                           <div className="flex-1">
                             <CardTitle className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors line-clamp-2">
-                              {service.description}
+                              {service.serviceType?.name || "Serviço"}
                             </CardTitle>
                             <Badge className={`text-xs mt-2 font-medium ${statusColors[service.status as keyof typeof statusColors]} rounded-lg px-2 py-1`}>
                               {statusLabels[service.status as keyof typeof statusLabels]}
@@ -509,39 +509,32 @@ export default function SchedulePage() {
                             size="sm"
                             variant="ghost"
                             onClick={() => handleDelete(service.id)}
-                            className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600"
+                            className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 rounded-lg"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="space-y-2 text-sm text-gray-600">
-                        <div className="flex items-center">
-                          <User className="h-4 w-4 mr-2 text-gray-400" />
-                          <span className="min-w-0 flex-1 truncate">{service.customer?.name}</span>
+                    <CardContent className="pt-0">
+                      <div className="space-y-3">
+                        <div className="flex items-center text-sm text-slate-600">
+                          <User className="h-4 w-4 mr-2 text-slate-400" />
+                          <span className="font-medium">{service.customer?.name}</span>
                         </div>
-                        <div className="flex items-center">
-                          <Car className="h-4 w-4 mr-2 text-gray-400" />
-                          <span className="min-w-0 flex-1 truncate">
-                            {service.vehicle?.make} {service.vehicle?.model} - {service.vehicle?.plate}
-                          </span>
+                        <div className="flex items-center text-sm text-slate-600">
+                          <Car className="h-4 w-4 mr-2 text-slate-400" />
+                          <span>{service.vehicle?.brand} {service.vehicle?.model} - {service.vehicle?.licensePlate}</span>
                         </div>
                         {service.scheduledDate && (
-                          <div className="flex items-center">
-                            <Clock className="h-4 w-4 mr-2 text-gray-400" />
-                            <span>{new Date(service.scheduledDate).toLocaleString('pt-BR')}</span>
+                          <div className="flex items-center text-sm text-slate-600">
+                            <Clock className="h-4 w-4 mr-2 text-slate-400" />
+                            <span>{new Date(service.scheduledDate).toLocaleDateString('pt-BR')}</span>
                           </div>
                         )}
-                        {service.estimatedHours && service.hourlyRate && (
-                          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                            <span className="text-xs text-gray-500">
-                              {service.estimatedHours}h × R$ {service.hourlyRate}
-                            </span>
-                            <span className="font-semibold text-green-600">
-                              R$ {((service.estimatedHours || 0) * (service.hourlyRate || 0)).toFixed(2)}
-                            </span>
+                        {service.estimatedValue && (
+                          <div className="text-sm font-semibold text-green-600">
+                            R$ {parseFloat(service.estimatedValue.toString()).toFixed(2)}
                           </div>
                         )}
                       </div>
