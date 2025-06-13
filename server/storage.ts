@@ -103,6 +103,14 @@ export interface IStorage {
     }[];
     averageValue: number;
   }>;
+
+  // Vehicle analytics
+  getVehicleAnalytics(): Promise<{
+    totalVehicles: number;
+    brandDistribution: { brand: string; count: number; percentage: number; }[];
+    fuelDistribution: { fuelType: string; count: number; percentage: number; }[];
+    ageDistribution: { range: string; count: number; percentage: number; }[];
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -641,6 +649,59 @@ export class DatabaseStorage implements IStorage {
 
   async getUpcomingAppointments(limit: number): Promise<any[]> {
     return [];
+  }
+
+  // Vehicle analytics
+  async getVehicleAnalytics() {
+    const vehiclesData = await db.select().from(vehicles);
+
+    // Brand distribution
+    const brandCounts = vehiclesData.reduce((acc, vehicle) => {
+      acc[vehicle.brand] = (acc[vehicle.brand] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Fuel type distribution  
+    const fuelCounts = vehiclesData.reduce((acc, vehicle) => {
+      acc[vehicle.fuelType] = (acc[vehicle.fuelType] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Year distribution
+    const currentYear = new Date().getFullYear();
+    const yearRanges = {
+      'Novo (0-2 anos)': 0,
+      'Semi-novo (3-5 anos)': 0,
+      'Usado (6-10 anos)': 0,
+      'Antigo (10+ anos)': 0
+    };
+
+    vehiclesData.forEach(vehicle => {
+      const age = currentYear - vehicle.year;
+      if (age <= 2) yearRanges['Novo (0-2 anos)']++;
+      else if (age <= 5) yearRanges['Semi-novo (3-5 anos)']++;
+      else if (age <= 10) yearRanges['Usado (6-10 anos)']++;
+      else yearRanges['Antigo (10+ anos)']++;
+    });
+
+    return {
+      totalVehicles: vehiclesData.length,
+      brandDistribution: Object.entries(brandCounts).map(([brand, count]) => ({
+        brand,
+        count,
+        percentage: (count / vehiclesData.length) * 100
+      })),
+      fuelDistribution: Object.entries(fuelCounts).map(([fuel, count]) => ({
+        fuelType: fuel,
+        count,
+        percentage: (count / vehiclesData.length) * 100
+      })),
+      ageDistribution: Object.entries(yearRanges).map(([range, count]) => ({
+        range,
+        count,
+        percentage: vehiclesData.length > 0 ? (count / vehiclesData.length) * 100 : 0
+      }))
+    };
   }
 }
 

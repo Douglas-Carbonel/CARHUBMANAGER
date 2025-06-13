@@ -88,11 +88,6 @@ export default function Reports() {
     enabled: isAuthenticated,
   });
 
-  const { data: serviceTypes } = useQuery({
-    queryKey: ["/api/service-types"],
-    enabled: isAuthenticated,
-  });
-
   // Helper functions
   const getCustomerName = (customerId: number) => {
     const customer = customers?.find((c: Customer) => c.id === customerId);
@@ -104,14 +99,9 @@ export default function Reports() {
     return vehicle ? `${vehicle.brand} ${vehicle.model} - ${vehicle.plate}` : "Veículo não encontrado";
   };
 
-  const getServiceTypeName = (serviceTypeId: number) => {
-    const serviceType = serviceTypes?.find((st: ServiceType) => st.id === serviceTypeId);
-    return serviceType?.name || "Serviço não encontrado";
-  };
-
   // Analytics calculations
   const analytics = useMemo(() => {
-    if (!services) return null;
+    if (!services || !customers || !vehicles) return null;
 
     const now = new Date();
     const periodDays = parseInt(selectedPeriod);
@@ -152,22 +142,16 @@ export default function Reports() {
 
     const revenueGrowth = previousRevenue > 0 ? ((totalRevenue - previousRevenue) / previousRevenue) * 100 : 0;
 
-    // Service type distribution
-    const serviceTypeStats = serviceTypes?.map((type: ServiceType) => {
-      const typeServices = filteredServices.filter((s: Service) => s.serviceTypeId === type.id);
-      const revenue = typeServices
-        .filter((s: Service) => s.status === 'completed')
-        .reduce((sum: number, service: Service) => {
-          return sum + Number(service.finalValue || service.estimatedValue || 0);
-        }, 0);
-      return {
-        name: type.name,
-        count: typeServices.length,
-        revenue,
-        percentage: totalServices > 0 ? (typeServices.length / totalServices) * 100 : 0,
-        avgTicket: typeServices.length > 0 ? revenue / typeServices.filter(s => s.status === 'completed').length : 0
-      };
-    }).sort((a, b) => b.revenue - a.revenue) || [];
+    // Service type distribution (simplified without serviceTypes dependency)
+    const serviceTypeStats = [
+      {
+        name: "Serviços Gerais",
+        count: totalServices,
+        revenue: totalRevenue,
+        percentage: 100,
+        avgTicket: averageTicket
+      }
+    ];
 
     // Customer stats
     const customerStats = customers?.map((customer: Customer) => {

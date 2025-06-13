@@ -297,68 +297,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const stats = await storage.getDashboardStats();
       res.json(stats);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch dashboard stats" });
+    } catch (error: any) {
+      console.error("Error fetching dashboard stats:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch dashboard stats",
+        details: error.message 
+      });
     }
   });
 
-  app.get("/api/dashboard/revenue", requireAuth, async (req, res) => {
-    try {
-      const days = parseInt(req.query.days as string) || 7;
-      const revenue = await storage.getRevenueByDays(days);
-      res.json(revenue);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch revenue data" });
-    }
-  });
+// Get analytics endpoints
+app.get("/api/analytics/customers", requireAuth, async (req, res) => {
+  try {
+    const analytics = await storage.getCustomerAnalytics();
+    res.json(analytics);
+  } catch (error: any) {
+    console.error("Error fetching customer analytics:", error);
+    res.status(500).json({ 
+      error: "Failed to fetch customer analytics",
+      details: error.message 
+    });
+  }
+});
 
-  app.get("/api/dashboard/top-services", requireAuth, async (req, res) => {
-    try {
-      const topServices = await storage.getTopServices();
-      res.json(topServices);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch top services" });
-    }
-  });
+app.get("/api/analytics/services", requireAuth, async (req, res) => {
+  try {
+    const analytics = await storage.getServiceAnalytics();
+    res.json(analytics);
+  } catch (error: any) {
+    console.error("Error fetching service analytics:", error);
+    res.status(500).json({ 
+      error: "Failed to fetch service analytics",
+      details: error.message 
+    });
+  }
+});
 
-  app.get("/api/dashboard/recent-services", requireAuth, async (req, res) => {
-    try {
-      const limit = parseInt(req.query.limit as string) || 5;
-      const recentServices = await storage.getRecentServices(limit);
-      res.json(recentServices);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch recent services" });
-    }
-  });
-
-  app.get("/api/dashboard/upcoming-appointments", requireAuth, async (req, res) => {
-    try {
-      const limit = parseInt(req.query.limit as string) || 5;
-      const appointments = await storage.getUpcomingAppointments(limit);
-      res.json(appointments);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch upcoming appointments" });
-    }
-  });
-
-  // Analytics routes
-  app.get("/api/analytics/customers", requireAuth, async (req, res) => {
-    try {
-      const analytics = await storage.getCustomerAnalytics();
-      res.json(analytics);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch customer analytics" });
-    }
-  });
-
-  app.get("/api/analytics/services", requireAuth, async (req, res) => {
-    try {
-      const analytics = await storage.getServiceAnalytics();
-      res.json(analytics);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch service analytics" });
-    }
-  });
+app.get("/api/analytics/vehicles", requireAuth, async (req, res) => {
+  try {
+    const analytics = await storage.getVehicleAnalytics();
+    res.json(analytics);
+  } catch (error: any) {
+    console.error("Error fetching vehicle analytics:", error);
+    res.status(500).json({ 
+      error: "Failed to fetch vehicle analytics",
+      details: error.message 
+    });
+  }
+});
 
   // Admin user management routes
   app.get("/api/admin/users", requireAdmin, async (req, res) => {
