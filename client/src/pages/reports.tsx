@@ -88,6 +88,11 @@ export default function Reports() {
     enabled: isAuthenticated,
   });
 
+  const { data: serviceTypes } = useQuery({
+    queryKey: ["/api/service-types"],
+    enabled: isAuthenticated,
+  });
+
   // Helper functions
   const getCustomerName = (customerId: number) => {
     const customer = customers?.find((c: Customer) => c.id === customerId);
@@ -101,7 +106,7 @@ export default function Reports() {
 
   // Analytics calculations
   const analytics = useMemo(() => {
-    if (!services || !customers || !vehicles) return null;
+    if (!services || !customers || !vehicles || !serviceTypes) return null;
 
     const now = new Date();
     const periodDays = parseInt(selectedPeriod);
@@ -142,16 +147,27 @@ export default function Reports() {
 
     const revenueGrowth = previousRevenue > 0 ? ((totalRevenue - previousRevenue) / previousRevenue) * 100 : 0;
 
-    // Service type distribution (simplified without serviceTypes dependency)
-    const serviceTypeStats = [
-      {
-        name: "Serviços Gerais",
-        count: totalServices,
-        revenue: totalRevenue,
-        percentage: 100,
-        avgTicket: averageTicket
-      }
-    ];
+    // Service type distribution
+    const serviceTypeStats = serviceTypes.map((serviceType: ServiceType) => {
+      const typeServices = filteredServices.filter((s: Service) => s.serviceTypeId === serviceType.id);
+      const typeRevenue = typeServices
+        .filter((s: Service) => s.status === 'completed')
+        .reduce((sum: number, service: Service) => {
+          return sum + Number(service.finalValue || service.estimatedValue || 0);
+        }, 0);
+      
+      const typeCompletedCount = typeServices.filter(s => s.status === 'completed').length;
+      const typeAvgTicket = typeCompletedCount > 0 ? typeRevenue / typeCompletedCount : 0;
+      const typePercentage = totalServices > 0 ? (typeServices.length / totalServices) * 100 : 0;
+      
+      return {
+        name: serviceType.name,
+        count: typeServices.length,
+        revenue: typeRevenue,
+        percentage: typePercentage,
+        avgTicket: typeAvgTicket
+      };
+    }).filter(type => type.count > 0).sort((a, b) => b.revenue - a.revenue);
 
     // Customer stats
     const customerStats = customers?.map((customer: Customer) => {
