@@ -303,45 +303,10 @@ export class DatabaseStorage implements IStorage {
   async getServices(): Promise<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]> {
     const result = await db
       .select({
-        // Service fields
-        id: services.id,
-        customerId: services.customerId,
-        vehicleId: services.vehicleId,
-        serviceTypeId: services.serviceTypeId,
-        description: services.description,
-        estimatedValue: services.estimatedValue,
-        finalValue: services.finalValue,
-        status: services.status,
-        scheduledDate: services.scheduledDate,
-        completedDate: services.completedDate,
-        observations: services.observations,
-        createdAt: services.createdAt,
-        updatedAt: services.updatedAt,
-
-        // Customer fields
-        customerName: customers.name,
-        customerEmail: customers.email,
-        customerPhone: customers.phone,
-        customerDocument: customers.document,
-        customerAddress: customers.address,
-        customerCreatedAt: customers.createdAt,
-        customerUpdatedAt: customers.updatedAt,
-
-        // Vehicle fields
-        vehicleBrand: vehicles.brand,
-        vehicleModel: vehicles.model,
-        vehicleYear: vehicles.year,
-        vehiclePlate: vehicles.plate,
-        vehicleColor: vehicles.color,
-        vehicleCreatedAt: vehicles.createdAt,
-        vehicleUpdatedAt: vehicles.updatedAt,
-
-        // Service type fields
-        serviceTypeName: serviceTypes.name,
-        serviceTypeDescription: serviceTypes.description,
-        serviceTypeDefaultPrice: serviceTypes.defaultPrice,
-        serviceTypeCreatedAt: serviceTypes.createdAt,
-        serviceTypeUpdatedAt: serviceTypes.updatedAt
+        service: services,
+        customer: customers,
+        vehicle: vehicles,
+        serviceType: serviceTypes,
       })
       .from(services)
       .leftJoin(customers, eq(services.customerId, customers.id))
@@ -350,48 +315,10 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(services.createdAt));
 
     return result.map(row => ({
-      id: row.id,
-      customerId: row.customerId,
-      vehicleId: row.vehicleId,
-      serviceTypeId: row.serviceTypeId,
-      description: row.description,
-      estimatedValue: row.estimatedValue,
-      finalValue: row.finalValue,
-      status: row.status,
-      scheduledDate: row.scheduledDate,
-      completedDate: row.completedDate,
-      observations: row.observations,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-      customer: {
-        id: row.customerId,
-        name: row.customerName || '',
-        email: row.customerEmail || '',
-        phone: row.customerPhone || '',
-        document: row.customerDocument || '',
-        address: row.customerAddress || '',
-        createdAt: row.customerCreatedAt,
-        updatedAt: row.customerUpdatedAt
-      },
-      vehicle: {
-        id: row.vehicleId,
-        customerId: row.customerId,
-        brand: row.vehicleBrand || '',
-        model: row.vehicleModel || '',
-        year: row.vehicleYear || 0,
-        plate: row.vehiclePlate || '',
-        color: row.vehicleColor || '',
-        createdAt: row.vehicleCreatedAt,
-        updatedAt: row.vehicleUpdatedAt
-      },
-      serviceType: {
-        id: row.serviceTypeId,
-        name: row.serviceTypeName || '',
-        description: row.serviceTypeDescription || '',
-        defaultPrice: row.serviceTypeDefaultPrice || '',
-        createdAt: row.serviceTypeCreatedAt,
-        updatedAt: row.serviceTypeUpdatedAt
-      }
+      ...row.service,
+      customer: row.customer!,
+      vehicle: row.vehicle!,
+      serviceType: row.serviceType!,
     }));
   }
 
@@ -640,45 +567,61 @@ export class DatabaseStorage implements IStorage {
         .from(services);
 
       // Services this week
-      const servicesThisWeek = await db
+      const servicesWeek = await db
         .select({ count: sql<number>`count(*)` })
         .from(services)
-        .where(gte(services.createdAt, lastWeek));
+        .where(gte(services.scheduledDate, lastWeek.toISOString().split('T')[0]));
 
       // Services this month
-      const servicesThisMonth = await db
+      const servicesMonth = await db
         .select({ count: sql<number>`count(*)` })
         .from(services)
-        .where(gte(services.createdAt, lastMonth));
+        .where(gte(services.scheduledDate, lastMonth.toISOString().split('T')[0]));
 
-      // Completed services
-      const completedServices = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(services)
-        .where(eq(services.status, 'completed'));
-
-      // Average ticket - calculated from actual service values
-      const completedServicesWithValues = await db
+      // Most scheduled services
+      const topServiceTypes = await db
         .select({
-          finalValue: services.finalValue,
-          estimatedValue: services.estimatedValue
+          serviceTypeId: services.serviceTypeId,
+          serviceTypeName: serviceTypes.name,
+          serviceCount: sql<number>`count(*)`
         })
         .from(services)
-        .where(eq(services.status, 'completed'));
+        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+        .groupBy(services.serviceTypeId, serviceTypes.name)
+        .orderBy(sql`count(*) desc`)
+        .limit(5);
 
-      const totalRevenue = completedServicesWithValues.reduce((sum, service) => {
-        return sum + Number(service.finalValue || service.estimatedValue || 0);
-      }, 0);
+      // Average service value (considering both finalValue and estimatedValue)
+      const allServices = await db
+        .select({
+          finalValue: services.finalValue,
+          estimatedValue: services.estimatedValue,
+          status: services.status
+        })
+        .from(services);
 
-      const averageTicket = completedServicesWithValues.length > 0 ? 
-        totalRevenue / completedServicesWithValues.length : 0;
+      const servicesWithValues = allServices.filter(s => {
+        const value = s.status === 'completed' && s.finalValue 
+          ? Number(s.finalValue) 
+          : Number(s.estimatedValue || 0);
+        return value > 0;
+      });
+
+      const avgServiceValue = servicesWithValues.length > 0 
+        ? servicesWithValues.reduce((sum, s) => {
+            const value = s.status === 'completed' && s.finalValue 
+              ? Number(s.finalValue) 
+              : Number(s.estimatedValue || 0);
+            return sum + value;
+          }, 0) / servicesWithValues.length
+        : 0;
 
       return {
         total: totalServices[0]?.count || 0,
-        thisWeek: servicesThisWeek[0]?.count || 0,
-        thisMonth: servicesThisMonth[0]?.count || 0,
-        topServiceTypes: [],
-        averageValue: 0
+        thisWeek: servicesWeek[0]?.count || 0,
+        thisMonth: servicesMonth[0]?.count || 0,
+        topServiceTypes,
+        averageValue: avgServiceValue
       };
     } catch (error) {
       console.error('Error getting service analytics:', error);
@@ -693,27 +636,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getRevenueByDays(days: number): Promise<{ date: string; revenue: number }[]> {
-    try {
-      const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-
-      const result = await db
-        .select({
-          date: sql<string>`date(${services.scheduledDate})`,
-          revenue: sql<number>`sum(CASE WHEN ${services.status} = 'completed' THEN COALESCE(${services.finalValue}, ${services.estimatedValue}, 0) ELSE 0 END)`
-        })
-        .from(services)
-        .where(gte(services.scheduledDate, startDate.toISOString().split('T')[0]))
-        .groupBy(sql`date(${services.scheduledDate})`)
-        .orderBy(sql`date(${services.scheduledDate})`);
-
-      return result.map(row => ({
-        date: row.date,
-        revenue: Number(row.revenue || 0),
-      }));
-    } catch (error) {
-      console.error('Error getting revenue by days:', error);
-      return [];
-    }
+    return [];
   }
 
   async getTopServices(): Promise<{ name: string; count: number; revenue: number }[]> {
@@ -730,77 +653,55 @@ export class DatabaseStorage implements IStorage {
 
   // Vehicle analytics
   async getVehicleAnalytics() {
-    try {
-      const today = new Date();
-      const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-      const lastMonth = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const vehiclesData = await db.select().from(vehicles);
 
-      // Total vehicles
-      const totalVehicles = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(vehicles);
+    // Brand distribution
+    const brandCounts = vehiclesData.reduce((acc, vehicle) => {
+      acc[vehicle.brand] = (acc[vehicle.brand] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
 
-      // New vehicles this week
-      const newVehiclesWeek = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(vehicles)
-        .where(gte(vehicles.createdAt, lastWeek));
+    // Fuel type distribution  
+    const fuelCounts = vehiclesData.reduce((acc, vehicle) => {
+      acc[vehicle.fuelType] = (acc[vehicle.fuelType] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
 
-      // New vehicles this month
-      const newVehiclesMonth = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(vehicles)
-        .where(gte(vehicles.createdAt, lastMonth));
+    // Year distribution
+    const currentYear = new Date().getFullYear();
+    const yearRanges = {
+      'Novo (0-2 anos)': 0,
+      'Semi-novo (3-5 anos)': 0,
+      'Usado (6-10 anos)': 0,
+      'Antigo (10+ anos)': 0
+    };
 
-      // Most serviced vehicles
-      const topVehicles = await db
-        .select({
-          vehicleId: services.vehicleId,
-          serviceCount: sql<number>`count(*)`
-        })
-        .from(services)
-        .innerJoin(vehicles, eq(services.vehicleId, vehicles.id))
-        .groupBy(services.vehicleId)
-        .orderBy(sql`count(*) desc`)
-        .limit(5);
+    vehiclesData.forEach(vehicle => {
+      const age = currentYear - vehicle.year;
+      if (age <= 2) yearRanges['Novo (0-2 anos)']++;
+      else if (age <= 5) yearRanges['Semi-novo (3-5 anos)']++;
+      else if (age <= 10) yearRanges['Usado (6-10 anos)']++;
+      else yearRanges['Antigo (10+ anos)']++;
+    });
 
-      // Get vehicle details for top vehicles
-      const topVehiclesWithDetails = await Promise.all(
-        topVehicles.map(async (item) => {
-          const vehicle = await db
-            .select({
-              id: vehicles.id,
-              brand: vehicles.brand,
-              model: vehicles.model,
-              plate: vehicles.plate
-            })
-            .from(vehicles)
-            .where(eq(vehicles.id, item.vehicleId))
-            .limit(1);
-
-          return {
-            vehicleId: item.vehicleId,
-            vehicleName: vehicle[0] ? `${vehicle[0].brand} ${vehicle[0].model} - ${vehicle[0].plate}` : 'Veículo não encontrado',
-            serviceCount: item.serviceCount
-          };
-        })
-      );
-
-      return {
-        totalVehicles: totalVehicles[0]?.count || 0,
-        brandDistribution: [],
-        fuelDistribution: [],
-        ageDistribution: []
-      };
-    } catch (error) {
-      console.error('Error getting vehicle analytics:', error);
-      return {
-        totalVehicles: 0,
-        brandDistribution: [],
-        fuelDistribution: [],
-        ageDistribution: []
-      };
-    }
+    return {
+      totalVehicles: vehiclesData.length,
+      brandDistribution: Object.entries(brandCounts).map(([brand, count]) => ({
+        brand,
+        count,
+        percentage: (count / vehiclesData.length) * 100
+      })),
+      fuelDistribution: Object.entries(fuelCounts).map(([fuel, count]) => ({
+        fuelType: fuel,
+        count,
+        percentage: (count / vehiclesData.length) * 100
+      })),
+      ageDistribution: Object.entries(yearRanges).map(([range, count]) => ({
+        range,
+        count,
+        percentage: vehiclesData.length > 0 ? (count / vehiclesData.length) * 100 : 0
+      }))
+    };
   }
 }
 

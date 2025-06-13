@@ -306,20 +306,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/dashboard/revenue", requireAuth, async (req, res) => {
-    try {
-      const days = parseInt(req.query.days as string) || 7;
-      const revenueData = await storage.getRevenueByDays(days);
-      res.json(revenueData);
-    } catch (error: any) {
-      console.error("Error fetching revenue data:", error);
-      res.status(500).json({ 
-        error: "Failed to fetch revenue data",
-        details: error.message 
-      });
-    }
-  });
-
 // Get analytics endpoints
 app.get("/api/analytics/customers", requireAuth, async (req, res) => {
   try {
