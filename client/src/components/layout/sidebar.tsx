@@ -73,7 +73,12 @@ export default function Sidebar() {
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-teal-600/50 bg-gradient-to-r from-teal-700 to-emerald-700">
         {!isCollapsed && (
-          <h1 className="text-xl font-bold tracking-wider bg-gradient-to-r from-cyan-200 to-emerald-200 bg-clip-text text-transparent">CARHUB</h1>
+          <div className="flex flex-col">
+            <h1 className="text-2xl font-bold tracking-[0.3em] bg-gradient-to-r from-cyan-200 via-emerald-200 to-teal-200 bg-clip-text text-transparent drop-shadow-sm">
+              CAR<span className="font-light italic">HUB</span>
+            </h1>
+            <div className="h-0.5 bg-gradient-to-r from-cyan-300 to-emerald-300 mt-1 rounded-full opacity-80"></div>
+          </div>
         )}
         <Button
           variant="ghost"
@@ -109,18 +114,12 @@ export default function Sidebar() {
 
       {/* User info and logout */}
       <div className="p-4 border-t border-teal-600/50 bg-gradient-to-r from-emerald-800 to-teal-900">
-        {!isCollapsed && user && (
-          <div className="mb-4 p-3 bg-teal-800/50 rounded-lg">
-            <p className="text-sm font-semibold text-white">{user.firstName} {user.lastName}</p>
-            <p className="text-xs text-cyan-200 capitalize">{user.role === "admin" ? "Administrador" : "Técnico"}</p>
-          </div>
-        )}
         <Button
           variant="ghost"
           onClick={handleLogout}
           disabled={logoutMutation.isPending}
           className={cn(
-            "w-full justify-start text-cyan-200 hover:text-white hover:bg-red-600/80 disabled:opacity-50 rounded-lg transition-all duration-200 font-medium",
+            "w-full justify-start text-cyan-200 hover:text-white hover:bg-red-600/80 disabled:opacity-50 rounded-lg transition-all duration-200 font-medium border border-red-300/30 hover:border-red-400/60",
             isCollapsed && "px-2"
           )}
         >

@@ -26,11 +26,11 @@ export default function Header({ title, subtitle }: HeaderProps) {
         </div>
         
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm" className="text-teal-600 hover:text-white hover:bg-teal-600/80 rounded-lg transition-all duration-200 shadow-sm">
+          <Button variant="ghost" size="sm" className="text-teal-600 hover:text-white hover:bg-teal-600/80 border border-teal-300 rounded-lg transition-all duration-200 shadow-sm">
             <Search className="h-5 w-5" />
           </Button>
           
-          <Button variant="ghost" size="sm" className="text-teal-600 hover:text-white hover:bg-teal-600/80 rounded-lg transition-all duration-200 shadow-sm">
+          <Button variant="ghost" size="sm" className="text-teal-600 hover:text-white hover:bg-teal-600/80 border border-teal-300 rounded-lg transition-all duration-200 shadow-sm">
             <Bell className="h-5 w-5" />
           </Button>
           
