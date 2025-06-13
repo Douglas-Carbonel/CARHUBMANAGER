@@ -6,7 +6,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
-import Footer from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -734,7 +733,6 @@ export default function VehiclesPage() {
               </div>
             )}
           </div>
-          <Footer />
         </main>
       </div>
     </div>

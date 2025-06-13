@@ -38,7 +38,6 @@ export default function Dashboard() {
               <UpcomingAppointments />
             </div>
           </div>
-          <Footer />
         </main>
       </div>
     </div>
