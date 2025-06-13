@@ -196,9 +196,9 @@ export default function SchedulePage() {
   };
 
   const filteredServices = services.filter((service) => {
-    const matchesSearch = service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.customer?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.vehicle?.plate.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (service.description || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (service.customer?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (service.vehicle?.plate || "").toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === "all" || service.status === statusFilter;
     
