@@ -191,20 +191,25 @@ export default function Services() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-emerald-50">
       <Sidebar />
       
       <div className="flex-1 flex flex-col">
-        <Header title="Serviços" />
+        <Header title="Serviços" subtitle="Gerencie ordens de serviço e manutenções" />
         
-        <main className="flex-1 p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Serviços</h1>
+        <main className="flex-1 p-8">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-700 via-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
+                Gestão de Serviços
+              </h1>
+              <p className="text-teal-700 mt-2 font-medium">Controle completo de ordens de serviço</p>
+            </div>
             
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-teal-600 hover:bg-teal-700">
-                  <Plus className="h-4 w-4 mr-2" />
+                <Button className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 font-semibold px-6 py-3 rounded-lg">
+                  <Plus className="h-5 w-5 mr-2" />
                   Novo Serviço
                 </Button>
               </DialogTrigger>
@@ -405,16 +410,21 @@ export default function Services() {
                       )}
                     />
 
-                    <div className="flex justify-end space-x-2">
-                      <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    <div className="flex justify-end space-x-3 pt-4">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setIsDialogOpen(false)}
+                        className="px-6 py-2 font-medium"
+                      >
                         Cancelar
                       </Button>
                       <Button 
                         type="submit" 
-                        className="bg-teal-600 hover:bg-teal-700"
+                        className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-2 font-semibold"
                         disabled={createMutation.isPending || updateMutation.isPending}
                       >
-                        {editingService ? "Atualizar" : "Criar"}
+                        {editingService ? "Atualizar Serviço" : "Criar Serviço"}
                       </Button>
                     </div>
                   </form>
@@ -423,44 +433,59 @@ export default function Services() {
             </Dialog>
           </div>
 
-          <div className="mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <div className="mb-8">
+            <div className="relative max-w-md">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-teal-500" />
               <Input
                 placeholder="Buscar serviços..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-12 h-12 bg-white/80 border-teal-200 rounded-lg shadow-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200"
               />
             </div>
           </div>
 
-          <div className="grid gap-4">
+          <div className="grid gap-6">
             {isLoading ? (
-              <div>Carregando serviços...</div>
+              <div className="flex justify-center items-center py-20">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+                  <p className="text-teal-700 font-medium">Carregando serviços...</p>
+                </div>
+              </div>
             ) : (
               filteredServices.map((service) => {
                 return (
-                  <Card key={service.id}>
-                    <CardHeader>
+                  <Card key={service.id} className="group hover:shadow-2xl transition-all duration-300 border-0 shadow-lg bg-white/90 backdrop-blur-sm hover:scale-[1.02] transform">
+                    <CardHeader className="pb-4">
                       <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle className="flex items-center">
-                            <Wrench className="h-5 w-5 mr-2 text-teal-600" />
-                            {service.serviceType?.name || "Tipo não encontrado"}
+                          <CardTitle className="flex items-center text-xl">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-teal-500 to-emerald-500 flex items-center justify-center mr-3 shadow-md">
+                              <Wrench className="h-4 w-4 text-white" />
+                            </div>
+                            <span className="bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent font-bold">
+                              {service.serviceType?.name || "Tipo não encontrado"}
+                            </span>
                           </CardTitle>
-                          <div className="flex items-center mt-2 text-sm text-gray-600">
-                            <User className="h-4 w-4 mr-1" />
-                            {service.customer?.name || "Cliente não encontrado"}
-                            <Car className="h-4 w-4 ml-4 mr-1" />
-                            {service.vehicle ? 
-                              `${service.vehicle.licensePlate || service.vehicle.plate || "S/N"} - ${service.vehicle.brand || service.vehicle.make || ""} ${service.vehicle.model || ""}`.trim() 
-                              : "Veículo não encontrado"
-                            }
+                          <div className="flex items-center mt-3 text-sm text-teal-700 space-x-4">
+                            <div className="flex items-center">
+                              <User className="h-4 w-4 mr-2 text-teal-500" />
+                              <span className="font-medium">{service.customer?.name || "Cliente não encontrado"}</span>
+                            </div>
+                            <div className="flex items-center">
+                              <Car className="h-4 w-4 mr-2 text-teal-500" />
+                              <span className="font-medium">
+                                {service.vehicle ? 
+                                  `${service.vehicle.licensePlate || service.vehicle.plate || "S/N"} - ${service.vehicle.brand || service.vehicle.make || ""} ${service.vehicle.model || ""}`.trim() 
+                                  : "Veículo não encontrado"
+                                }
+                              </span>
+                            </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge className={getStatusBadge(service.status || "scheduled")}>
+                        <div className="flex items-center space-x-3">
+                          <Badge className={getStatusBadge(service.status || "scheduled") + " font-medium px-3 py-1 text-xs"}>
                             {service.status === "scheduled" && "Agendado"}
                             {service.status === "in_progress" && "Em Andamento"}
                             {service.status === "completed" && "Concluído"}
@@ -470,6 +495,7 @@ export default function Services() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleEdit(service)}
+                            className="hover:bg-teal-50 hover:border-teal-300 hover:text-teal-700 transition-all duration-200"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -477,36 +503,43 @@ export default function Services() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleDelete(service.id)}
+                            className="hover:bg-red-50 hover:border-red-300 hover:text-red-700 transition-all duration-200"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
+                    <CardContent className="pt-0">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         {service.scheduledDate && (
-                          <div className="flex items-center">
-                            <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                            {format(new Date(service.scheduledDate), "dd/MM/yyyy")}
-                            {service.scheduledTime && (
-                              <span className="ml-2 flex items-center">
-                                <Clock className="h-4 w-4 mr-1 text-gray-500" />
-                                {service.scheduledTime}
-                              </span>
-                            )}
+                          <div className="flex items-center p-3 bg-teal-50/50 rounded-lg">
+                            <Calendar className="h-5 w-5 mr-3 text-teal-600" />
+                            <div>
+                              <span className="font-semibold text-teal-800">{format(new Date(service.scheduledDate), "dd/MM/yyyy")}</span>
+                              {service.scheduledTime && (
+                                <div className="flex items-center mt-1">
+                                  <Clock className="h-4 w-4 mr-1 text-teal-500" />
+                                  <span className="text-teal-700 font-medium">{service.scheduledTime}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         )}
                         {service.estimatedValue && (
-                          <div className="flex items-center">
-                            <DollarSign className="h-4 w-4 mr-2 text-gray-500" />
-                            R$ {Number(service.estimatedValue).toFixed(2)}
+                          <div className="flex items-center p-3 bg-emerald-50/50 rounded-lg">
+                            <DollarSign className="h-5 w-5 mr-3 text-emerald-600" />
+                            <div>
+                              <span className="font-semibold text-emerald-800">R$ {Number(service.estimatedValue).toFixed(2)}</span>
+                              <p className="text-xs text-emerald-600 mt-1">Valor estimado</p>
+                            </div>
                           </div>
                         )}
                       </div>
                       {service.notes && (
-                        <div className="mt-2 text-sm text-gray-600">
-                          <strong>Observações:</strong> {service.notes}
+                        <div className="mt-4 p-3 bg-cyan-50/50 rounded-lg border-l-4 border-cyan-400">
+                          <p className="text-sm font-semibold text-cyan-800 mb-1">Observações:</p>
+                          <p className="text-sm text-cyan-700">{service.notes}</p>
                         </div>
                       )}
                     </CardContent>
