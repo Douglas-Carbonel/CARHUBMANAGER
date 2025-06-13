@@ -93,11 +93,6 @@ export default function Reports() {
     enabled: isAuthenticated,
   });
 
-  const { data: vehicles } = useQuery({
-    queryKey: ["/api/vehicles"],
-    enabled: isAuthenticated,
-  });
-
   // Helper functions
   const getCustomerName = (customerId: number) => {
     const customer = customers?.find((c: Customer) => c.id === customerId);
