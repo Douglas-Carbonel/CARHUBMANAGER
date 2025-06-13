@@ -341,6 +341,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Analytics routes
+  app.get("/api/analytics/customers", requireAuth, async (req, res) => {
+    try {
+      const analytics = await storage.getCustomerAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch customer analytics" });
+    }
+  });
+
+  app.get("/api/analytics/services", requireAuth, async (req, res) => {
+    try {
+      const analytics = await storage.getServiceAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch service analytics" });
+    }
+  });
+
   // Admin user management routes
   app.get("/api/admin/users", requireAdmin, async (req, res) => {
     try {

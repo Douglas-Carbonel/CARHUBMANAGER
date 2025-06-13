@@ -13,12 +13,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2, Calendar, Clock, DollarSign, Wrench, User, Car } from "lucide-react";
+import { Calendar, DollarSign, MoreHorizontal, Plus, Search, Edit, Trash2, Clock, User, Car, Wrench, CheckCircle, XCircle, Timer, BarChart3 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertServiceSchema, type Service, type Customer, type Vehicle, type ServiceType } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
+import ServiceAnalytics from "@/components/dashboard/service-analytics";
 
 const serviceFormSchema = insertServiceSchema.extend({
   customerId: z.number().min(1, "Cliente é obrigatório"),
@@ -30,8 +31,12 @@ const serviceFormSchema = insertServiceSchema.extend({
 export default function Services() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
+
   const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof serviceFormSchema>>({
@@ -193,10 +198,22 @@ export default function Services() {
   return (
     <div className="flex h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-emerald-50">
       <Sidebar />
-      
+
       <div className="flex-1 flex flex-col">
-        <Header title="Serviços" subtitle="Gerencie ordens de serviço e manutenções" />
-        
+        <Header 
+          title="Serviços"
+          subtitle="Gerencie os serviços da sua oficina"
+          action={
+            <Button 
+              onClick={() => setIsAnalyticsModalOpen(true)}
+              className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Relatório de Serviços
+            </Button>
+          }
+        />
+
         <main className="flex-1 p-8">
           <div className="flex justify-between items-center mb-8">
             <div>
@@ -205,7 +222,7 @@ export default function Services() {
               </h1>
               <p className="text-teal-700 mt-2 font-medium">Controle completo de ordens de serviço</p>
             </div>
-            
+
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 font-semibold px-6 py-3 rounded-lg">
@@ -213,14 +230,14 @@ export default function Services() {
                   Novo Serviço
                 </Button>
               </DialogTrigger>
-              
+
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>
                     {editingService ? "Editar Serviço" : "Novo Serviço"}
                   </DialogTitle>
                 </DialogHeader>
-                
+
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -263,7 +280,7 @@ export default function Services() {
                           const availableVehicles = vehicles.filter(vehicle => 
                             selectedCustomerId ? (vehicle.customerId === selectedCustomerId || vehicle.customer?.id === selectedCustomerId) : true
                           );
-                          
+
                           return (
                             <FormItem>
                               <FormLabel>Veículo</FormLabel>
@@ -431,122 +448,19 @@ export default function Services() {
                 </Form>
               </DialogContent>
             </Dialog>
-          </div>
 
-          <div className="mb-8">
-            <div className="relative max-w-md">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-teal-500" />
-              <Input
-                placeholder="Buscar serviços..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 h-12 bg-white/80 border-teal-200 rounded-lg shadow-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200"
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-6">
-            {isLoading ? (
-              <div className="flex justify-center items-center py-20">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
-                  <p className="text-teal-700 font-medium">Carregando serviços...</p>
-                </div>
-              </div>
-            ) : (
-              filteredServices.map((service) => {
-                return (
-                  <Card key={service.id} className="group hover:shadow-2xl transition-all duration-300 border-0 shadow-lg bg-white/90 backdrop-blur-sm hover:scale-[1.02] transform">
-                    <CardHeader className="pb-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="flex items-center text-xl">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-teal-500 to-emerald-500 flex items-center justify-center mr-3 shadow-md">
-                              <Wrench className="h-4 w-4 text-white" />
-                            </div>
-                            <span className="bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent font-bold">
-                              {service.serviceType?.name || "Tipo não encontrado"}
-                            </span>
-                          </CardTitle>
-                          <div className="flex items-center mt-3 text-sm text-teal-700 space-x-4">
-                            <div className="flex items-center">
-                              <User className="h-4 w-4 mr-2 text-teal-500" />
-                              <span className="font-medium">{service.customer?.name || "Cliente não encontrado"}</span>
-                            </div>
-                            <div className="flex items-center">
-                              <Car className="h-4 w-4 mr-2 text-teal-500" />
-                              <span className="font-medium">
-                                {service.vehicle ? 
-                                  `${service.vehicle.licensePlate || service.vehicle.plate || "S/N"} - ${service.vehicle.brand || service.vehicle.make || ""} ${service.vehicle.model || ""}`.trim() 
-                                  : "Veículo não encontrado"
-                                }
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          <Badge className={getStatusBadge(service.status || "scheduled") + " font-medium px-3 py-1 text-xs"}>
-                            {service.status === "scheduled" && "Agendado"}
-                            {service.status === "in_progress" && "Em Andamento"}
-                            {service.status === "completed" && "Concluído"}
-                            {service.status === "cancelled" && "Cancelado"}
-                          </Badge>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(service)}
-                            className="hover:bg-teal-50 hover:border-teal-300 hover:text-teal-700 transition-all duration-200"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDelete(service.id)}
-                            className="hover:bg-red-50 hover:border-red-300 hover:text-red-700 transition-all duration-200"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        {service.scheduledDate && (
-                          <div className="flex items-center p-3 bg-teal-50/50 rounded-lg">
-                            <Calendar className="h-5 w-5 mr-3 text-teal-600" />
-                            <div>
-                              <span className="font-semibold text-teal-800">{format(new Date(service.scheduledDate), "dd/MM/yyyy")}</span>
-                              {service.scheduledTime && (
-                                <div className="flex items-center mt-1">
-                                  <Clock className="h-4 w-4 mr-1 text-teal-500" />
-                                  <span className="text-teal-700 font-medium">{service.scheduledTime}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                        {service.estimatedValue && (
-                          <div className="flex items-center p-3 bg-emerald-50/50 rounded-lg">
-                            <DollarSign className="h-5 w-5 mr-3 text-emerald-600" />
-                            <div>
-                              <span className="font-semibold text-emerald-800">R$ {Number(service.estimatedValue).toFixed(2)}</span>
-                              <p className="text-xs text-emerald-600 mt-1">Valor estimado</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      {service.notes && (
-                        <div className="mt-4 p-3 bg-cyan-50/50 rounded-lg border-l-4 border-cyan-400">
-                          <p className="text-sm font-semibold text-cyan-800 mb-1">Observações:</p>
-                          <p className="text-sm text-cyan-700">{service.notes}</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })
-            )}
+            {/* Analytics Modal */}
+            <Dialog open={isAnalyticsModalOpen} onOpenChange={setIsAnalyticsModalOpen}>
+              <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center">
+                    <BarChart3 className="h-5 w-5 mr-2" />
+                    Relatório de Serviços
+                  </DialogTitle>
+                </DialogHeader>
+                <ServiceAnalytics />
+              </DialogContent>
+            </Dialog>
           </div>
         </main>
       </div>

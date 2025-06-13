@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,13 +10,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2, User, FileText, Car, Wrench } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { insertCustomerSchema, type Customer } from "@shared/schema";
+import { MoreHorizontal, Plus, Search, Edit, Trash2, User, Phone, Mail, FileText, MapPin, BarChart3 } from "lucide-react";
+import { type Customer } from "@shared/schema";
+import { cn } from "@/lib/utils";
+import { validateCPF, validateCNPJ, formatCPF, formatCNPJ } from "@/lib/cpf-cnpj";
+import CustomerAnalytics from "@/components/dashboard/customer-analytics";
 import { z } from "zod";
+import { insertCustomerSchema, type Customer } from "@shared/schema";
 import { formatCPF, formatCNPJ, applyCPFMask, applyCNPJMask, applyPhoneMask } from "@/lib/cpf-cnpj";
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
@@ -46,6 +48,7 @@ export default function CustomersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
 
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerFormSchema),
@@ -184,7 +187,16 @@ export default function CustomersPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
           title="Clientes"
-          subtitle="Gerencie seus clientes"
+          subtitle="Gerencie seus clientes e suas informações"
+          action={
+            <Button 
+              onClick={() => setIsAnalyticsModalOpen(true)}
+              className="bg-gradient-to-r from-blue-600 to-cyan-700 hover:from-blue-700 hover:to-cyan-800 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Relatório de Clientes
+            </Button>
+          }
         />
 
         <main className="flex-1 overflow-y-auto bg-gradient-to-br from-white/80 via-blue-50/50 to-indigo-50/30 backdrop-blur-sm">
@@ -425,7 +437,7 @@ export default function CustomersPage() {
                   <div key={customer.id} className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-teal-200 overflow-hidden">
                     {/* Background gradient sutil */}
                     <div className="absolute inset-0 bg-gradient-to-br from-teal-50/30 to-emerald-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    
+
                     {/* Header colorido */}
                     <div className="relative h-20 bg-gradient-to-r from-teal-500 to-emerald-600 p-4 flex items-center justify-between">
                       <div className="flex items-center space-x-3">
@@ -443,7 +455,7 @@ export default function CustomersPage() {
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Actions no header */}
                       <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button
@@ -486,7 +498,7 @@ export default function CustomersPage() {
                             {customer.documentType === 'cpf' ? formatCPF(customer.document) : formatCNPJ(customer.document)}
                           </span>
                         </div>
-                        
+
                         {customer.email && (
                           <div className="flex items-center text-sm">
                             <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
@@ -497,7 +509,7 @@ export default function CustomersPage() {
                             </span>
                           </div>
                         )}
-                        
+
                         {customer.phone && (
                           <div className="flex items-center text-sm">
                             <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
@@ -520,7 +532,7 @@ export default function CustomersPage() {
                           <Car className="h-4 w-4 mr-2" />
                           Veículos
                         </Button>
-                        
+
                         <div className="grid grid-cols-2 gap-2">
                           <Button
                             variant="outline"
@@ -547,6 +559,19 @@ export default function CustomersPage() {
                 ))}
               </div>
             )}
+
+            {/* Analytics Modal */}
+            <Dialog open={isAnalyticsModalOpen} onOpenChange={setIsAnalyticsModalOpen}>
+              <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center">
+                    <BarChart3 className="h-5 w-5 mr-2" />
+                    Relatório de Clientes
+                  </DialogTitle>
+                </DialogHeader>
+                <CustomerAnalytics />
+              </DialogContent>
+            </Dialog>
           </div>
         </main>
       </div>

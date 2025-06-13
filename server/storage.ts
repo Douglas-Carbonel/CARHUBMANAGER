@@ -19,7 +19,7 @@ import {
   type InsertPayment,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, and, gte, lte, count, sum, sql } from "drizzle-orm";
+import { eq, desc, asc, and, gte, lte, count, sum, sql, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -78,6 +78,31 @@ export interface IStorage {
   getTopServices(): Promise<{ name: string; count: number; revenue: number }[]>;
   getRecentServices(limit: number): Promise<any[]>;
   getUpcomingAppointments(limit: number): Promise<any[]>;
+
+  // Customer analytics
+  getCustomerAnalytics(): Promise<{
+    total: number;
+    newThisWeek: number;
+    newThisMonth: number;
+    topCustomers: {
+      customerId: number;
+      customerName: string;
+      serviceCount: number;
+    }[];
+  }>;
+
+  // Service analytics
+  getServiceAnalytics(): Promise<{
+    total: number;
+    thisWeek: number;
+    thisMonth: number;
+    topServiceTypes: {
+      serviceTypeId: number;
+      serviceTypeName: string;
+      serviceCount: number;
+    }[];
+    averageValue: number;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -396,27 +421,200 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Dashboard statistics
-  async getDashboardStats(): Promise<{
-    dailyRevenue: number;
-    dailyServices: number;
-    dailyServices: number;
-    appointments: number;
-    activeCustomers: number;
-  }> {
+  async getDashboardStats() {
     try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      // Get today's revenue from completed services
+      const todayServices = await db
+        .select()
+        .from(services)
+        .where(
+          and(
+            gte(services.scheduledDate, today.toISOString().split('T')[0]),
+            lte(services.scheduledDate, tomorrow.toISOString().split('T')[0]),
+            eq(services.status, 'completed')
+          )
+        );
+
+      const dailyRevenue = todayServices.reduce((sum, service) => {
+        return sum + Number(service.finalValue || service.estimatedValue || 0);
+      }, 0);
+
+      // Get today's services count
+      const todayServicesCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(services)
+        .where(
+          and(
+            gte(services.scheduledDate, today.toISOString().split('T')[0]),
+            lte(services.scheduledDate, tomorrow.toISOString().split('T')[0])
+          )
+        );
+
+      // Get upcoming appointments (next 24 hours)
+      const upcomingAppointments = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(services)
+        .where(
+          and(
+            gte(services.scheduledDate, tomorrow.toISOString().split('T')[0]),
+            eq(services.status, 'scheduled')
+          )
+        );
+
+      // Get active customers (customers with services in last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const activeCustomers = await db
+        .selectDistinct({ customerId: services.customerId })
+        .from(services)
+        .where(gte(services.scheduledDate, thirtyDaysAgo.toISOString().split('T')[0]));
+
       return {
-        dailyRevenue: 0,
-        dailyServices: 0,
-        appointments: 0,
-        activeCustomers: 0,
+        dailyRevenue,
+        dailyServices: todayServicesCount[0]?.count || 0,
+        appointments: upcomingAppointments[0]?.count || 0,
+        activeCustomers: activeCustomers.length
       };
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
+      console.error('Error getting dashboard stats:', error);
       return {
         dailyRevenue: 0,
         dailyServices: 0,
         appointments: 0,
-        activeCustomers: 0,
+        activeCustomers: 0
+      };
+    }
+  }
+
+  // Customer analytics
+  async getCustomerAnalytics() {
+    try {
+      const today = new Date();
+      const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const lastMonth = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      // Total customers
+      const totalCustomers = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(customers);
+
+      // New customers this week
+      const newCustomersWeek = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(customers)
+        .where(gte(customers.createdAt, lastWeek));
+
+      // New customers this month
+      const newCustomersMonth = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(customers)
+        .where(gte(customers.createdAt, lastMonth));
+
+      // Customers with most services
+      const topCustomers = await db
+        .select({
+          customerId: services.customerId,
+          customerName: customers.name,
+          serviceCount: sql<number>`count(*)`
+        })
+        .from(services)
+        .innerJoin(customers, eq(services.customerId, customers.id))
+        .groupBy(services.customerId, customers.name)
+        .orderBy(sql`count(*) desc`)
+        .limit(5);
+
+      return {
+        total: totalCustomers[0]?.count || 0,
+        newThisWeek: newCustomersWeek[0]?.count || 0,
+        newThisMonth: newCustomersMonth[0]?.count || 0,
+        topCustomers
+      };
+    } catch (error) {
+      console.error('Error getting customer analytics:', error);
+      return {
+        total: 0,
+        newThisWeek: 0,
+        newThisMonth: 0,
+        topCustomers: []
+      };
+    }
+  }
+
+  // Service analytics
+  async getServiceAnalytics() {
+    try {
+      const today = new Date();
+      const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const lastMonth = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      // Total services
+      const totalServices = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(services);
+
+      // Services this week
+      const servicesWeek = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(services)
+        .where(gte(services.scheduledDate, lastWeek.toISOString().split('T')[0]));
+
+      // Services this month
+      const servicesMonth = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(services)
+        .where(gte(services.scheduledDate, lastMonth.toISOString().split('T')[0]));
+
+      // Most scheduled services
+      const topServiceTypes = await db
+        .select({
+          serviceTypeId: services.serviceTypeId,
+          serviceTypeName: serviceTypes.name,
+          serviceCount: sql<number>`count(*)`
+        })
+        .from(services)
+        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+        .groupBy(services.serviceTypeId, serviceTypes.name)
+        .orderBy(sql`count(*) desc`)
+        .limit(5);
+
+      // Average service value
+      const completedServices = await db
+        .select({
+          value: services.finalValue
+        })
+        .from(services)
+        .where(
+          and(
+            eq(services.status, 'completed'),
+            isNotNull(services.finalValue)
+          )
+        );
+
+      const avgServiceValue = completedServices.length > 0 
+        ? completedServices.reduce((sum, s) => sum + Number(s.value), 0) / completedServices.length
+        : 0;
+
+      return {
+        total: totalServices[0]?.count || 0,
+        thisWeek: servicesWeek[0]?.count || 0,
+        thisMonth: servicesMonth[0]?.count || 0,
+        topServiceTypes,
+        averageValue: avgServiceValue
+      };
+    } catch (error) {
+      console.error('Error getting service analytics:', error);
+      return {
+        total: 0,
+        thisWeek: 0,
+        thisMonth: 0,
+        topServiceTypes: [],
+        averageValue: 0
       };
     }
   }

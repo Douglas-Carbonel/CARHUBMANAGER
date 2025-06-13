@@ -6,9 +6,10 @@ import { Link } from "wouter";
 interface HeaderProps {
   title: string;
   subtitle?: string;
+  action?: React.ReactNode;
 }
 
-export default function Header({ title, subtitle }: HeaderProps) {
+export default function Header({ title, subtitle, action }: HeaderProps) {
   const { user } = useAuth();
 
   return (
@@ -24,16 +25,22 @@ export default function Header({ title, subtitle }: HeaderProps) {
             )}
           </div>
         </div>
-        
+
+        {action && (
+          <div className="flex items-center space-x-4">
+            {action}
+          </div>
+        )}
+
         <div className="flex items-center space-x-4">
           <Button variant="ghost" size="sm" className="text-teal-600 hover:text-white hover:bg-teal-600/80 border border-teal-300 rounded-lg transition-all duration-200 shadow-sm">
             <Search className="h-5 w-5" />
           </Button>
-          
+
           <Button variant="ghost" size="sm" className="text-teal-600 hover:text-white hover:bg-teal-600/80 border border-teal-300 rounded-lg transition-all duration-200 shadow-sm">
             <Bell className="h-5 w-5" />
           </Button>
-          
+
           {user?.role === "admin" && (
             <Link href="/admin">
               <Button 
@@ -47,7 +54,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
               </Button>
             </Link>
           )}
-          
+
           <div className="flex items-center space-x-3 pl-4 border-l border-teal-300">
             <div className="w-10 h-10 bg-gradient-to-br from-teal-600 via-emerald-600 to-cyan-600 rounded-full flex items-center justify-center shadow-xl">
               <span className="text-white text-sm font-semibold">
