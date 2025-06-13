@@ -548,7 +548,9 @@ export default function SchedulePage() {
               </div>
             )}
           </div>
-        </main></old_str>
+        </main>
+      </div>
+    </div></old_str>
           </div>
         </main>
       </div>
