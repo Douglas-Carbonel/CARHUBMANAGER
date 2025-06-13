@@ -48,11 +48,20 @@ export default function Services() {
     },
   });
 
-  const { data: services = [], isLoading } = useQuery<Service[]>({
+  const { data: services = [], isLoading } = useQuery<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]>({
     queryKey: ["/api/services"],
+    queryFn: async () => {
+      const res = await fetch("/api/services", {
+        credentials: "include",
+      });
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${res.statusText}`);
+      }
+      return await res.json();
+    },
   });
 
-  const { data: customers = [], isLoading: customersLoading, error: customersError } = useQuery<Customer[]>({
+  const { data: customers = [] } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
     queryFn: async () => {
       const res = await fetch("/api/customers", {
@@ -63,10 +72,9 @@ export default function Services() {
       }
       return await res.json();
     },
-    retry: false,
   });
 
-  const { data: vehicles = [], isLoading: vehiclesLoading, error: vehiclesError } = useQuery<Vehicle[]>({
+  const { data: vehicles = [] } = useQuery<(Vehicle & { customer: Customer })[]>({
     queryKey: ["/api/vehicles"],
     queryFn: async () => {
       const res = await fetch("/api/vehicles", {
@@ -77,10 +85,9 @@ export default function Services() {
       }
       return await res.json();
     },
-    retry: false,
   });
 
-  const { data: serviceTypes = [], isLoading: serviceTypesLoading, error: serviceTypesError } = useQuery<ServiceType[]>({
+  const { data: serviceTypes = [] } = useQuery<ServiceType[]>({
     queryKey: ["/api/service-types"],
     queryFn: async () => {
       const res = await fetch("/api/service-types", {
@@ -91,7 +98,6 @@ export default function Services() {
       }
       return await res.json();
     },
-    retry: false,
   });
 
   const createMutation = useMutation({
@@ -164,14 +170,15 @@ export default function Services() {
     }
   };
 
-  const filteredServices = services.filter((service: Service) =>
-    customers.find((c: Customer) => c.id === service.customerId)?.name
-      ?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vehicles.find((v: Vehicle) => v.id === service.vehicleId)?.licensePlate
-      ?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    serviceTypes.find((st: ServiceType) => st.id === service.serviceTypeId)?.name
-      ?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredServices = services.filter((service) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      (service.customer?.name || "").toLowerCase().includes(searchLower) ||
+      (service.vehicle?.licensePlate || service.vehicle?.plate || "").toLowerCase().includes(searchLower) ||
+      (service.serviceType?.name || "").toLowerCase().includes(searchLower) ||
+      (service.notes || "").toLowerCase().includes(searchLower)
+    );
+  });
 
   const getStatusBadge = (status: string) => {
     const colors = {
@@ -249,7 +256,7 @@ export default function Services() {
                         render={({ field }) => {
                           const selectedCustomerId = form.watch("customerId");
                           const availableVehicles = vehicles.filter(vehicle => 
-                            selectedCustomerId ? vehicle.customerId === selectedCustomerId : true
+                            selectedCustomerId ? (vehicle.customerId === selectedCustomerId || vehicle.customer?.id === selectedCustomerId) : true
                           );
                           
                           return (
@@ -266,9 +273,9 @@ export default function Services() {
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  {availableVehicles.map((vehicle: Vehicle) => (
+                                  {availableVehicles.map((vehicle) => (
                                     <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                                      {vehicle.licensePlate} - {vehicle.brand} {vehicle.model}
+                                      {vehicle.licensePlate || vehicle.plate} - {vehicle.brand || vehicle.make} {vehicle.model}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
@@ -432,11 +439,7 @@ export default function Services() {
             {isLoading ? (
               <div>Carregando serviços...</div>
             ) : (
-              filteredServices.map((service: Service) => {
-                const customer = customers.find((c: Customer) => c.id === service.customerId);
-                const vehicle = vehicles.find((v: Vehicle) => v.id === service.vehicleId);
-                const serviceType = serviceTypes.find((st: ServiceType) => st.id === service.serviceTypeId);
-                
+              filteredServices.map((service) => {
                 return (
                   <Card key={service.id}>
                     <CardHeader>
@@ -444,13 +447,13 @@ export default function Services() {
                         <div>
                           <CardTitle className="flex items-center">
                             <Wrench className="h-5 w-5 mr-2 text-teal-600" />
-                            {serviceType?.name || "Tipo não encontrado"}
+                            {service.serviceType?.name || "Tipo não encontrado"}
                           </CardTitle>
                           <div className="flex items-center mt-2 text-sm text-gray-600">
                             <User className="h-4 w-4 mr-1" />
-                            {customer?.name || "Cliente não encontrado"}
+                            {service.customer?.name || "Cliente não encontrado"}
                             <Car className="h-4 w-4 ml-4 mr-1" />
-                            {vehicle?.licensePlate || "Veículo não encontrado"} - {vehicle?.brand} {vehicle?.model}
+                            {service.vehicle?.licensePlate || service.vehicle?.plate || "Veículo não encontrado"} - {service.vehicle?.brand || service.vehicle?.make} {service.vehicle?.model}
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
