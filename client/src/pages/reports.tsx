@@ -72,80 +72,70 @@ export default function Reports() {
     }
   }, [location]);
 
-  // Queries
-  const { data: services } = useQuery({
+  // Queries with proper typing
+  const { data: services = [], isLoading: servicesLoading } = useQuery({
     queryKey: ["/api/services"],
     enabled: isAuthenticated,
   });
 
-  const { data: customers } = useQuery({
+  const { data: customers = [], isLoading: customersLoading } = useQuery({
     queryKey: ["/api/customers"],
     enabled: isAuthenticated,
   });
 
-  const { data: vehicles } = useQuery({
+  const { data: vehicles = [], isLoading: vehiclesLoading } = useQuery({
     queryKey: ["/api/vehicles"],
     enabled: isAuthenticated,
   });
 
-  const { data: serviceTypes } = useQuery({
+  const { data: serviceTypes = [], isLoading: serviceTypesLoading } = useQuery({
     queryKey: ["/api/service-types"],
     enabled: isAuthenticated,
   });
 
   // Helper functions
   const getCustomerName = (customerId: number) => {
-    const customer = customers?.find((c: Customer) => c.id === customerId);
+    const customer = Array.isArray(customers) ? customers.find((c: any) => c.id === customerId) : null;
     return customer?.name || "Cliente não encontrado";
   };
 
   const getVehicleInfo = (vehicleId: number) => {
-    const vehicle = vehicles?.find((v: Vehicle) => v.id === vehicleId);
-    return vehicle ? `${vehicle.brand} ${vehicle.model} - ${vehicle.plate}` : "Veículo não encontrado";
+    const vehicle = Array.isArray(vehicles) ? vehicles.find((v: any) => v.id === vehicleId) : null;
+    return vehicle ? `${vehicle.brand} ${vehicle.model} - ${vehicle.licensePlate}` : "Veículo não encontrado";
   };
 
   // Analytics calculations
   const analytics = useMemo(() => {
-    if (!services || !customers || !vehicles || !serviceTypes) return null;
+    if (!Array.isArray(services) || !Array.isArray(customers) || !Array.isArray(vehicles) || !Array.isArray(serviceTypes)) {
+      return null;
+    }
 
     const now = new Date();
     const periodDays = parseInt(selectedPeriod);
     const cutoffDate = new Date(now.getTime() - (periodDays * 24 * 60 * 60 * 1000));
 
-    const filteredServices = services.filter((service: Service) => {
+    // Filter services by period and customer
+    const filteredServices = services.filter((service: any) => {
+      if (!service.scheduledDate) return true; // Include services without dates for now
       const serviceDate = new Date(service.scheduledDate);
       const matchesPeriod = serviceDate >= cutoffDate;
-      const matchesCustomer = selectedCustomer === "all" || service.customerId.toString() === selectedCustomer;
+      const matchesCustomer = selectedCustomer === "all" || service.customerId?.toString() === selectedCustomer;
       return matchesPeriod && matchesCustomer;
-    });
-
-    const previousPeriodServices = services.filter((service: Service) => {
-      const serviceDate = new Date(service.scheduledDate);
-      const previousCutoff = new Date(cutoffDate.getTime() - (periodDays * 24 * 60 * 60 * 1000));
-      return serviceDate >= previousCutoff && serviceDate < cutoffDate;
     });
 
     // Basic stats
     const totalServices = filteredServices.length;
-    const completedServices = filteredServices.filter((s: Service) => s.status === 'completed').length;
-    const cancelledServices = filteredServices.filter((s: Service) => s.status === 'cancelled').length;
-    const inProgressServices = filteredServices.filter((s: Service) => s.status === 'in_progress').length;
-    const scheduledServices = filteredServices.filter((s: Service) => s.status === 'scheduled').length;
+    const completedServices = filteredServices.filter((s: any) => s.status === 'completed').length;
+    const cancelledServices = filteredServices.filter((s: any) => s.status === 'cancelled').length;
+    const inProgressServices = filteredServices.filter((s: any) => s.status === 'in_progress').length;
+    const scheduledServices = filteredServices.filter((s: any) => s.status === 'scheduled').length;
 
-    // Revenue calculations - using both final and estimated values
-    const completedServicesWithRevenue = filteredServices.filter((s: Service) => s.status === 'completed');
-    const totalRevenue = completedServicesWithRevenue.reduce((sum: number, service: Service) => {
+    // Revenue calculations
+    const completedServicesWithRevenue = filteredServices.filter((s: any) => s.status === 'completed');
+    const totalRevenue = completedServicesWithRevenue.reduce((sum: number, service: any) => {
       const value = service.finalValue || service.estimatedValue || 0;
       return sum + Number(value);
     }, 0);
-
-    const previousCompletedServices = previousPeriodServices.filter((s: Service) => s.status === 'completed');
-    const previousRevenue = previousCompletedServices.reduce((sum: number, service: Service) => {
-      const value = service.finalValue || service.estimatedValue || 0;
-      return sum + Number(value);
-    }, 0);
-
-    const revenueGrowth = previousRevenue > 0 ? ((totalRevenue - previousRevenue) / previousRevenue) * 100 : 0;
 
     // Average ticket calculation
     const avgTicket = completedServicesWithRevenue.length > 0 ? totalRevenue / completedServicesWithRevenue.length : 0;
