@@ -13,14 +13,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MoreHorizontal, Plus, Search, Edit, Trash2, User, Phone, Mail, FileText, MapPin, BarChart3 } from "lucide-react";
+import { MoreHorizontal, Plus, Search, Edit, Trash2, User, Phone, Mail, FileText, MapPin, BarChart3, Car, Wrench } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { type Customer } from "@shared/schema";
 import { cn } from "@/lib/utils";
-import { validateCPF, validateCNPJ, formatCPF, formatCNPJ } from "@/lib/cpf-cnpj";
+import { validateCPF, validateCNPJ, formatCPF, formatCNPJ, applyCPFMask, applyCNPJMask, applyPhoneMask } from "@/lib/cpf-cnpj";
 import CustomerAnalytics from "@/components/dashboard/customer-analytics";
 import { z } from "zod";
 import { insertCustomerSchema } from "@shared/schema";
-import { formatCPF, formatCNPJ, applyCPFMask, applyCNPJMask, applyPhoneMask } from "@/lib/cpf-cnpj";
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
   const res = await fetch(url, {
