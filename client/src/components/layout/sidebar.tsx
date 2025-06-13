@@ -73,17 +73,11 @@ export default function Sidebar() {
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-teal-600/50 bg-gradient-to-r from-teal-700 to-emerald-700">
         {!isCollapsed && (
-          <div className="flex flex-col items-start">
-            <div className="relative">
-              <h1 className="text-2xl font-serif text-white tracking-tight leading-none">
-                <span className="font-light italic">Car</span>
-                <span className="font-bold ml-1">Hub</span>
-              </h1>
-              <div className="absolute -bottom-1 left-0 w-full h-px bg-gradient-to-r from-cyan-300 via-white to-transparent opacity-60"></div>
-            </div>
-            <p className="text-xs text-cyan-100/70 font-light tracking-[0.2em] mt-1 ml-0.5">
-              Sistema de Gestão
-            </p>
+          <div className="flex items-center">
+            <h1 className="text-2xl font-serif text-white tracking-tight leading-none">
+              <span className="font-light italic">Car</span>
+              <span className="font-bold ml-1">Hub</span>
+            </h1>
           </div>
         )}
         <Button
