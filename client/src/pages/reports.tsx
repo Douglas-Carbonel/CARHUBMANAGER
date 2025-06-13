@@ -148,7 +148,7 @@ export default function Reports() {
     const revenueGrowth = previousRevenue > 0 ? ((totalRevenue - previousRevenue) / previousRevenue) * 100 : 0;
 
     // Service type distribution
-    const serviceTypeStats = serviceTypes.map((serviceType: ServiceType) => {
+    const serviceTypeStats = (serviceTypes || []).map((serviceType: ServiceType) => {
       const typeServices = filteredServices.filter((s: Service) => s.serviceTypeId === serviceType.id);
       const typeRevenue = typeServices
         .filter((s: Service) => s.status === 'completed')
