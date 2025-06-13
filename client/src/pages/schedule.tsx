@@ -224,52 +224,54 @@ export default function SchedulePage() {
           subtitle="Gerencie os agendamentos de serviços"
         />
         
-        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-white/80 via-blue-50/50 to-indigo-50/30 backdrop-blur-sm">
-          <div className="p-8">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <Input
-                    placeholder="Buscar agendamentos..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 w-80 h-12 border-2 border-gray-200 focus:border-blue-400 rounded-xl shadow-sm bg-white/80"
-                  />
+        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50/80 via-teal-50/50 to-emerald-50/30 backdrop-blur-sm">
+          <div className="p-8 space-y-8">
+            {/* Controls Section */}
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg p-6">
+              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                    <Input
+                      placeholder="Buscar agendamentos..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-12 w-80 h-12 border-2 border-gray-200 focus:border-teal-400 rounded-xl shadow-sm bg-white/80 transition-all duration-200"
+                    />
+                  </div>
+                  
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-48 h-12 border-2 border-gray-200 focus:border-teal-400 rounded-xl shadow-sm bg-white/80 transition-all duration-200">
+                      <SelectValue placeholder="Filtrar por status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os status</SelectItem>
+                      <SelectItem value="scheduled">Agendado</SelectItem>
+                      <SelectItem value="in_progress">Em Andamento</SelectItem>
+                      <SelectItem value="completed">Concluído</SelectItem>
+                      <SelectItem value="cancelled">Cancelado</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-48 h-12 border-2 border-gray-200 focus:border-blue-400 rounded-xl shadow-sm bg-white/80">
-                    <SelectValue placeholder="Filtrar por status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os status</SelectItem>
-                    <SelectItem value="scheduled">Agendado</SelectItem>
-                    <SelectItem value="in_progress">Em Andamento</SelectItem>
-                    <SelectItem value="completed">Concluído</SelectItem>
-                    <SelectItem value="cancelled">Cancelado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg shadow-md">
-                  <span className="font-semibold">{filteredServices.length}</span>
-                  <span className="ml-1 text-sm">agendamentos</span>
-                </div>
-                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                  <DialogTrigger asChild>
-                    <Button 
-                      className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-                      onClick={() => {
-                        setEditingService(null);
-                        form.reset();
-                      }}
-                    >
-                      <Plus className="h-5 w-5 mr-2" />
-                      Novo Agendamento
-                    </Button>
-                  </DialogTrigger>
+                <div className="flex items-center space-x-4">
+                  <div className="bg-gradient-to-r from-teal-500 to-emerald-600 text-white px-5 py-3 rounded-xl shadow-lg ring-2 ring-teal-500/20">
+                    <span className="font-bold text-lg">{filteredServices.length}</span>
+                    <span className="ml-2 text-sm font-medium">agendamentos</span>
+                  </div>
+                  <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-3 rounded-xl ring-2 ring-teal-500/20 hover:ring-teal-500/30"
+                        onClick={() => {
+                          setEditingService(null);
+                          form.reset();
+                        }}
+                      >
+                        <Plus className="h-5 w-5 mr-2" />
+                        Novo Agendamento
+                      </Button>
+                    </DialogTrigger>
                   <DialogContent className="max-w-2xl">
                     <DialogHeader>
                       <DialogTitle>
@@ -475,18 +477,18 @@ export default function SchedulePage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredServices.map((service) => (
-                  <Card key={service.id} className="group hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:-translate-y-1">
+                  <Card key={service.id} className="group hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border border-gray-200/50 shadow-lg hover:-translate-y-1 rounded-2xl overflow-hidden">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
+                          <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
                             <Calendar className="h-6 w-6 text-white" />
                           </div>
                           <div className="flex-1">
-                            <CardTitle className="text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-2">
+                            <CardTitle className="text-sm font-semibold text-gray-800 group-hover:text-teal-600 transition-colors line-clamp-2">
                               {service.description}
                             </CardTitle>
-                            <Badge className={`text-xs mt-1 ${statusColors[service.status as keyof typeof statusColors]}`}>
+                            <Badge className={`text-xs mt-1 border-0 ${statusColors[service.status as keyof typeof statusColors]}`}>
                               {statusLabels[service.status as keyof typeof statusLabels]}
                             </Badge>
                           </div>
@@ -496,7 +498,7 @@ export default function SchedulePage() {
                             size="sm"
                             variant="ghost"
                             onClick={() => handleEdit(service)}
-                            className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-600"
+                            className="h-8 w-8 p-0 hover:bg-teal-100 hover:text-teal-600 rounded-xl"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -504,7 +506,7 @@ export default function SchedulePage() {
                             size="sm"
                             variant="ghost"
                             onClick={() => handleDelete(service.id)}
-                            className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600"
+                            className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 rounded-xl"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -514,27 +516,27 @@ export default function SchedulePage() {
                     <CardContent className="space-y-3">
                       <div className="space-y-2 text-sm text-gray-600">
                         <div className="flex items-center">
-                          <User className="h-4 w-4 mr-2 text-gray-400" />
-                          <span className="min-w-0 flex-1 truncate">{service.customer?.name}</span>
+                          <User className="h-4 w-4 mr-2 text-teal-500" />
+                          <span className="min-w-0 flex-1 truncate font-medium">{service.customer?.name}</span>
                         </div>
                         <div className="flex items-center">
-                          <Car className="h-4 w-4 mr-2 text-gray-400" />
-                          <span className="min-w-0 flex-1 truncate">
+                          <Car className="h-4 w-4 mr-2 text-teal-500" />
+                          <span className="min-w-0 flex-1 truncate font-medium">
                             {service.vehicle?.make} {service.vehicle?.model} - {service.vehicle?.plate}
                           </span>
                         </div>
                         {service.scheduledDate && (
                           <div className="flex items-center">
-                            <Clock className="h-4 w-4 mr-2 text-gray-400" />
-                            <span>{new Date(service.scheduledDate).toLocaleString('pt-BR')}</span>
+                            <Clock className="h-4 w-4 mr-2 text-teal-500" />
+                            <span className="font-medium">{new Date(service.scheduledDate).toLocaleString('pt-BR')}</span>
                           </div>
                         )}
                         {service.estimatedHours && service.hourlyRate && (
-                          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                            <span className="text-xs text-gray-500">
+                          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                            <span className="text-xs text-gray-500 font-medium">
                               {service.estimatedHours}h × R$ {service.hourlyRate}
                             </span>
-                            <span className="font-semibold text-green-600">
+                            <span className="font-bold text-teal-600 text-sm">
                               R$ {((service.estimatedHours || 0) * (service.hourlyRate || 0)).toFixed(2)}
                             </span>
                           </div>
