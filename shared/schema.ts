@@ -49,9 +49,12 @@ export const customers = pgTable("customers", {
   document: varchar("document").unique().notNull(), // CPF or CNPJ
   documentType: varchar("document_type", { enum: ["cpf", "cnpj"] }).notNull(),
   name: varchar("name").notNull(),
-  phone: varchar("phone"),
   email: varchar("email"),
+  phone: varchar("phone"),
   address: text("address"),
+  city: varchar("city"),
+  state: varchar("state", { length: 2 }),
+  zipCode: varchar("zip_code", { length: 10 }),
   observations: text("observations"),
   loyaltyPoints: integer("loyalty_points").default(0),
   createdAt: timestamp("created_at").defaultNow(),
@@ -80,10 +83,12 @@ export const serviceTypes = pgTable("service_types", {
   description: text("description"),
   defaultPrice: decimal("default_price", { precision: 10, scale: 2 }),
   estimatedDuration: integer("estimated_duration"), // in minutes
+  isActive: boolean("is_active").default(true),
   isRecurring: boolean("is_recurring").default(false), // Se é um serviço recorrente
   intervalMonths: integer("interval_months"), // Intervalo em meses para repetição
   loyaltyPoints: integer("loyalty_points").default(0), // Pontos de fidelidade concedidos
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const services = pgTable("services", {
@@ -232,11 +237,7 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
 });
 
-export const insertLoyaltyTrackingSchema = createInsertSchema(loyaltyTracking).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
+// Loyalty tracking schema temporarily removed
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -250,5 +251,4 @@ export type InsertServiceType = z.infer<typeof insertServiceTypeSchema>;
 export type ServiceType = typeof serviceTypes.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type Payment = typeof payments.$inferSelect;
-export type InsertLoyaltyTracking = z.infer<typeof insertLoyaltyTrackingSchema>;
-export type LoyaltyTracking = typeof loyaltyTracking.$inferSelect;
+// Loyalty tracking types temporarily removed

@@ -115,16 +115,8 @@ export interface IStorage {
     ageDistribution: { range: string; count: number; percentage: number; }[];
   }>;
 
-  // Loyalty tracking operations
-  getLoyaltyTracking(): Promise<(LoyaltyTracking & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]>;
-  getLoyaltyTrackingByCustomer(customerId: number): Promise<(LoyaltyTracking & { vehicle: Vehicle; serviceType: ServiceType })[]>;
-  getOverdueLoyaltyServices(): Promise<(LoyaltyTracking & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]>;
-  getUpcomingLoyaltyServices(days: number): Promise<(LoyaltyTracking & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]>;
-  createLoyaltyTracking(tracking: InsertLoyaltyTracking): Promise<LoyaltyTracking>;
-  updateLoyaltyTracking(id: number, tracking: Partial<InsertLoyaltyTracking>): Promise<LoyaltyTracking>;
-  deleteLoyaltyTracking(id: number): Promise<void>;
+  // Basic loyalty operations
   addLoyaltyPoints(customerId: number, points: number): Promise<void>;
-  processServiceForLoyalty(service: Service): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
