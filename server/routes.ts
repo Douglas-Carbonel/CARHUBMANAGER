@@ -311,6 +311,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         serviceData.scheduledDate = today.toISOString().split('T')[0]; // YYYY-MM-DD format
       }
       
+      // Garantir que scheduledTime seja null se não fornecido
+      if (!serviceData.scheduledTime || serviceData.scheduledTime === "") {
+        serviceData.scheduledTime = null;
+      }
+      
       console.log('Creating service with data:', JSON.stringify(serviceData, null, 2));
       const service = await storage.createService(serviceData);
       console.log('Service created successfully:', service);
