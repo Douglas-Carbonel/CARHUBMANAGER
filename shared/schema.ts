@@ -115,11 +115,12 @@ export const payments = pgTable("payments", {
   id: serial("id").primaryKey(),
   serviceId: integer("service_id").references(() => services.id).notNull(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-  method: varchar("method", { 
+  paymentMethod: varchar("payment_method", { 
     enum: ["cash", "card", "pix", "transfer"] 
-  }).notNull(),
-  paidAt: timestamp("paid_at").defaultNow(),
+  }),
+  paymentDate: date("payment_date").notNull(),
   notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const loyaltyTracking = pgTable("loyalty_tracking", {
@@ -228,7 +229,7 @@ export const insertServiceTypeSchema = createInsertSchema(serviceTypes).omit({
 
 export const insertPaymentSchema = createInsertSchema(payments).omit({
   id: true,
-  paidAt: true,
+  createdAt: true,
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
