@@ -11,15 +11,74 @@ async function createInitialServiceTypes() {
     
     // Lista completa de tipos de serviços (incluindo os novos)
     const allServiceTypes = [
-      { name: "Troca de Óleo", description: "Troca de óleo do motor", defaultPrice: "80.00" },
-      { name: "Alinhamento", description: "Alinhamento e balanceamento", defaultPrice: "120.00" },
-      { name: "Revisão Geral", description: "Revisão completa do veículo", defaultPrice: "300.00" },
-      { name: "Troca de Pneus", description: "Troca de pneus", defaultPrice: "200.00" },
-      { name: "Lavagem", description: "Lavagem completa", defaultPrice: "30.00" },
-      { name: "Freios", description: "Manutenção do sistema de freios", defaultPrice: "150.00" },
-      { name: "Higienização", description: "Serviços de higienização e limpeza profunda", defaultPrice: "100.00" },
-      { name: "Reparo", description: "Serviços de reparo e manutenção", defaultPrice: "180.00" },
-      { name: "Outros", description: "Outros serviços não especificados", defaultPrice: "50.00" },
+      { 
+        name: "Troca de Óleo", 
+        description: "Troca de óleo do motor", 
+        defaultPrice: "80.00",
+        isRecurring: true,
+        intervalMonths: 6,
+        loyaltyPoints: 10
+      },
+      { 
+        name: "Alinhamento", 
+        description: "Alinhamento e balanceamento", 
+        defaultPrice: "120.00",
+        isRecurring: true,
+        intervalMonths: 12,
+        loyaltyPoints: 15
+      },
+      { 
+        name: "Revisão Geral", 
+        description: "Revisão completa do veículo", 
+        defaultPrice: "300.00",
+        isRecurring: true,
+        intervalMonths: 12,
+        loyaltyPoints: 30
+      },
+      { 
+        name: "Troca de Pneus", 
+        description: "Troca de pneus", 
+        defaultPrice: "200.00",
+        isRecurring: false,
+        loyaltyPoints: 20
+      },
+      { 
+        name: "Lavagem", 
+        description: "Lavagem completa", 
+        defaultPrice: "30.00",
+        isRecurring: false,
+        loyaltyPoints: 5
+      },
+      { 
+        name: "Freios", 
+        description: "Manutenção do sistema de freios", 
+        defaultPrice: "150.00",
+        isRecurring: true,
+        intervalMonths: 18,
+        loyaltyPoints: 18
+      },
+      { 
+        name: "Higienização", 
+        description: "Serviços de higienização e limpeza profunda", 
+        defaultPrice: "100.00",
+        isRecurring: true,
+        intervalMonths: 1,
+        loyaltyPoints: 8
+      },
+      { 
+        name: "Reparo", 
+        description: "Serviços de reparo e manutenção", 
+        defaultPrice: "180.00",
+        isRecurring: false,
+        loyaltyPoints: 15
+      },
+      { 
+        name: "Outros", 
+        description: "Outros serviços não especificados", 
+        defaultPrice: "50.00",
+        isRecurring: false,
+        loyaltyPoints: 5
+      },
     ];
 
     // Verifica quais tipos já existem
@@ -239,6 +298,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const service = await storage.createService(serviceData);
+      
+      // Processar para o sistema de fidelização se o serviço foi concluído
+      if (service.status === 'completed') {
+        await storage.processServiceForLoyalty(service);
+      }
+      
       res.status(201).json(service);
     } catch (error: any) {
       if (error.name === 'ZodError') {
@@ -252,6 +317,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const serviceData = insertServiceSchema.partial().parse(req.body);
       const service = await storage.updateService(parseInt(req.params.id), serviceData);
+      
+      // Processar para o sistema de fidelização se o serviço foi concluído
+      if (service.status === 'completed') {
+        await storage.processServiceForLoyalty(service);
+      }
+      
       res.json(service);
     } catch (error: any) {
       if (error.name === 'ZodError') {
@@ -420,6 +491,44 @@ app.get("/api/analytics/vehicles", requireAuth, async (req, res) => {
       res.json({ message: "User deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  // Loyalty tracking routes
+  app.get("/api/loyalty/tracking", requireAuth, async (req, res) => {
+    try {
+      const tracking = await storage.getLoyaltyTracking();
+      res.json(tracking);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch loyalty tracking" });
+    }
+  });
+
+  app.get("/api/loyalty/customer/:customerId", requireAuth, async (req, res) => {
+    try {
+      const tracking = await storage.getLoyaltyTrackingByCustomer(parseInt(req.params.customerId));
+      res.json(tracking);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch customer loyalty tracking" });
+    }
+  });
+
+  app.get("/api/loyalty/overdue", requireAuth, async (req, res) => {
+    try {
+      const overdue = await storage.getOverdueLoyaltyServices();
+      res.json(overdue);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch overdue loyalty services" });
+    }
+  });
+
+  app.get("/api/loyalty/upcoming/:days", requireAuth, async (req, res) => {
+    try {
+      const days = parseInt(req.params.days) || 30;
+      const upcoming = await storage.getUpcomingLoyaltyServices(days);
+      res.json(upcoming);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch upcoming loyalty services" });
     }
   });
 

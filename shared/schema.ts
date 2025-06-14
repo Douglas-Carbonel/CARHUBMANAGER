@@ -53,6 +53,7 @@ export const customers = pgTable("customers", {
   email: varchar("email"),
   address: text("address"),
   observations: text("observations"),
+  loyaltyPoints: integer("loyalty_points").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -79,6 +80,9 @@ export const serviceTypes = pgTable("service_types", {
   description: text("description"),
   defaultPrice: decimal("default_price", { precision: 10, scale: 2 }),
   estimatedDuration: integer("estimated_duration"), // in minutes
+  isRecurring: boolean("is_recurring").default(false), // Se é um serviço recorrente
+  intervalMonths: integer("interval_months"), // Intervalo em meses para repetição
+  loyaltyPoints: integer("loyalty_points").default(0), // Pontos de fidelidade concedidos
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -111,6 +115,22 @@ export const payments = pgTable("payments", {
   }).notNull(),
   paidAt: timestamp("paid_at").defaultNow(),
   notes: text("notes"),
+});
+
+export const loyaltyTracking = pgTable("loyalty_tracking", {
+  id: serial("id").primaryKey(),
+  customerId: integer("customer_id").references(() => customers.id).notNull(),
+  vehicleId: integer("vehicle_id").references(() => vehicles.id).notNull(),
+  serviceTypeId: integer("service_type_id").references(() => serviceTypes.id).notNull(),
+  lastServiceDate: date("last_service_date").notNull(),
+  nextDueDate: date("next_due_date").notNull(),
+  status: varchar("status", { 
+    enum: ["active", "overdue", "completed"] 
+  }).default("active"),
+  points: integer("points").default(0),
+  notificationSent: boolean("notification_sent").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Relations
@@ -162,6 +182,21 @@ export const usersRelations = relations(users, ({ many }) => ({
   services: many(services),
 }));
 
+export const loyaltyTrackingRelations = relations(loyaltyTracking, ({ one }) => ({
+  customer: one(customers, {
+    fields: [loyaltyTracking.customerId],
+    references: [customers.id],
+  }),
+  vehicle: one(vehicles, {
+    fields: [loyaltyTracking.vehicleId],
+    references: [vehicles.id],
+  }),
+  serviceType: one(serviceTypes, {
+    fields: [loyaltyTracking.serviceTypeId],
+    references: [serviceTypes.id],
+  }),
+}));
+
 // Insert schemas
 export const insertCustomerSchema = createInsertSchema(customers).omit({
   id: true,
@@ -197,6 +232,12 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
 });
 
+export const insertLoyaltyTrackingSchema = createInsertSchema(loyaltyTracking).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
@@ -209,3 +250,5 @@ export type InsertServiceType = z.infer<typeof insertServiceTypeSchema>;
 export type ServiceType = typeof serviceTypes.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type Payment = typeof payments.$inferSelect;
+export type InsertLoyaltyTracking = z.infer<typeof insertLoyaltyTrackingSchema>;
+export type LoyaltyTracking = typeof loyaltyTracking.$inferSelect;

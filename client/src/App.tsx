@@ -1,4 +1,3 @@
-
 import { Switch, Route } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,6 +9,7 @@ import Customers from "@/pages/customers";
 import Vehicles from "@/pages/vehicles";
 import Schedule from "@/pages/schedule";
 import Reports from "@/pages/reports";
+import LoyaltyPage from "./pages/loyalty";
 import Admin from "@/pages/admin";
 import NotFoundPage from "@/pages/not-found";
 import { ProtectedRoute } from "@/lib/protected-route";
@@ -66,6 +66,11 @@ function App() {
           <Route path="/reports">
             <ProtectedRoute>
               <Reports />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/loyalty">
+            <ProtectedRoute>
+              <LoyaltyPage />
             </ProtectedRoute>
           </Route>
           <Route path="/admin">
