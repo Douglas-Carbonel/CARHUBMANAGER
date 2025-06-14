@@ -197,7 +197,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       await storage.deleteVehicle(parseInt(req.params.id));
       res.status(204).send();
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error deleting vehicle:', error);
+      if (error.message && error.message.includes('serviço(s) em aberto')) {
+        return res.status(400).json({ message: error.message });
+      }
       res.status(500).json({ message: "Failed to delete vehicle" });
     }
   });

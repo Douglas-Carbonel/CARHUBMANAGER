@@ -160,7 +160,15 @@ export default function VehiclesPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/vehicles/${id}`);
+      const response = await apiRequest("DELETE", `/api/vehicles/${id}`);
+      
+      // Se a resposta não for ok, lançar erro com a mensagem do servidor
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erro ao remover veículo");
+      }
+      
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
@@ -171,7 +179,7 @@ export default function VehiclesPage() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Erro",
+        title: "Erro ao remover veículo",
         description: error.message,
         variant: "destructive",
       });
@@ -220,7 +228,13 @@ export default function VehiclesPage() {
   };
 
   const handleDelete = (id: number) => {
-    if (confirm("Tem certeza que deseja remover este veículo?")) {
+    const confirmed = confirm(
+      "Tem certeza que deseja remover este veículo?\n\n" +
+      "ATENÇÃO: O veículo não poderá ser removido se houver serviços em aberto " +
+      "(agendados ou em andamento). Finalize ou cancele todos os serviços antes de excluir."
+    );
+    
+    if (confirmed) {
       deleteMutation.mutate(id);
     }
   };

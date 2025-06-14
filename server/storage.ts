@@ -296,6 +296,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteVehicle(id: number): Promise<void> {
+    // Check if vehicle has open services (not completed or cancelled)
+    const openServices = await db
+      .select()
+      .from(services)
+      .where(
+        and(
+          eq(services.vehicleId, id),
+          sql`${services.status} NOT IN ('completed', 'cancelled')`
+        )
+      );
+
+    if (openServices.length > 0) {
+      throw new Error(`Não é possível excluir este veículo pois há ${openServices.length} serviço(s) em aberto. Finalize ou cancele os serviços antes de excluir o veículo.`);
+    }
+
     await db.delete(vehicles).where(eq(vehicles.id, id));
   }
 
