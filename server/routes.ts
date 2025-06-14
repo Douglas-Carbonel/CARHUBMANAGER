@@ -298,12 +298,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const service = await storage.createService(serviceData);
-      
-      // Processar para o sistema de fidelização se o serviço foi concluído
-      if (service.status === 'completed') {
-        await storage.processServiceForLoyalty(service);
-      }
-      
       res.status(201).json(service);
     } catch (error: any) {
       if (error.name === 'ZodError') {
@@ -317,12 +311,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const serviceData = insertServiceSchema.partial().parse(req.body);
       const service = await storage.updateService(parseInt(req.params.id), serviceData);
-      
-      // Processar para o sistema de fidelização se o serviço foi concluído
-      if (service.status === 'completed') {
-        await storage.processServiceForLoyalty(service);
-      }
-      
       res.json(service);
     } catch (error: any) {
       if (error.name === 'ZodError') {

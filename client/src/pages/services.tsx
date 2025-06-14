@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, DollarSign, MoreHorizontal, Plus, Search, Edit, Trash2, Clock, User, Car, Wrench, CheckCircle, XCircle, Timer, BarChart3 } from "lucide-react";
+import { Calendar, DollarSign, MoreHorizontal, Plus, Search, Edit, Trash2, Clock, User, Car, Wrench, CheckCircle, XCircle, Timer, BarChart3, FileText } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertServiceSchema, type Service, type Customer, type Vehicle, type ServiceType } from "@shared/schema";
@@ -561,7 +561,7 @@ export default function Services() {
                         </div>
                         <div className="flex items-center text-sm text-gray-600">
                           <Car className="h-4 w-4 mr-1" />
-                          {service.vehicle?.licensePlate || service.vehicle?.plate || 'Placa não informada'} - {service.vehicle?.brand || service.vehicle?.make} {service.vehicle?.model}
+                          {service.vehicle?.licensePlate || 'Placa não informada'} - {service.vehicle?.brand} {service.vehicle?.model}
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
