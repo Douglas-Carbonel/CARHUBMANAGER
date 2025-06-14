@@ -227,6 +227,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/services", requireAuth, async (req, res) => {
     try {
       const serviceData = insertServiceSchema.parse(req.body);
+      
+      // Se não foi informada data de agendamento, usar a data atual
+      if (!serviceData.scheduledDate || serviceData.scheduledDate === "") {
+        const today = new Date();
+        serviceData.scheduledDate = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+      }
+      
       const service = await storage.createService(serviceData);
       res.status(201).json(service);
     } catch (error: any) {

@@ -58,6 +58,7 @@ export default function SchedulePage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [periodFilter, setPeriodFilter] = useState<string>("day");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
 
@@ -68,7 +69,7 @@ export default function SchedulePage() {
       vehicleId: 0,
       serviceTypeId: 0,
       status: "scheduled",
-      scheduledDate: "",
+      scheduledDate: new Date().toISOString().split('T')[0], // Data atual como padrão
       estimatedValue: undefined,
       finalValue: undefined,
       notes: "",
@@ -204,6 +205,35 @@ export default function SchedulePage() {
     }
   };
 
+  // Helper functions for date filtering
+  const getDateRange = (period: string) => {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    
+    switch (period) {
+      case "day":
+        return { start: todayStr, end: todayStr };
+      case "week":
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - today.getDay());
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        return {
+          start: startOfWeek.toISOString().split('T')[0],
+          end: endOfWeek.toISOString().split('T')[0]
+        };
+      case "month":
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        return {
+          start: startOfMonth.toISOString().split('T')[0],
+          end: endOfMonth.toISOString().split('T')[0]
+        };
+      default:
+        return { start: "", end: "" };
+    }
+  };
+
   const filteredServices = services.filter((service) => {
     const matchesSearch = (service.notes || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (service.customer?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -211,7 +241,15 @@ export default function SchedulePage() {
     
     const matchesStatus = statusFilter === "all" || service.status === statusFilter;
     
-    return matchesSearch && matchesStatus;
+    // Period filter logic
+    let matchesPeriod = true;
+    if (service.scheduledDate && periodFilter !== "all") {
+      const { start, end } = getDateRange(periodFilter);
+      const serviceDate = service.scheduledDate;
+      matchesPeriod = serviceDate >= start && serviceDate <= end;
+    }
+    
+    return matchesSearch && matchesStatus && matchesPeriod;
   });
 
   const selectedCustomerId = form.watch("customerId");
@@ -260,12 +298,28 @@ export default function SchedulePage() {
                     <SelectItem value="cancelled">Cancelado</SelectItem>
                   </SelectContent>
                 </Select>
+
+                <Select value={periodFilter} onValueChange={setPeriodFilter}>
+                  <SelectTrigger className="w-48 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm">
+                    <SelectValue placeholder="Filtrar por período" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="day">Hoje</SelectItem>
+                    <SelectItem value="week">Esta Semana</SelectItem>
+                    <SelectItem value="month">Este Mês</SelectItem>
+                    <SelectItem value="all">Todos os Períodos</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
               <div className="flex items-center space-x-4">
                 <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-5 py-3 rounded-xl shadow-lg backdrop-blur-sm">
                   <span className="font-bold text-lg">{filteredServices.length}</span>
-                  <span className="ml-2 text-sm font-medium">agendamentos</span>
+                  <span className="ml-2 text-sm font-medium">
+                    {periodFilter === "day" ? "hoje" : 
+                     periodFilter === "week" ? "esta semana" : 
+                     periodFilter === "month" ? "este mês" : "agendamentos"}
+                  </span>
                 </div>
                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                   <DialogTrigger asChild>
@@ -273,7 +327,16 @@ export default function SchedulePage() {
                       className="bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-500 hover:to-cyan-500 text-teal-900 shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-3 rounded-xl font-semibold"
                       onClick={() => {
                         setEditingService(null);
-                        form.reset();
+                        form.reset({
+                          customerId: 0,
+                          vehicleId: 0,
+                          serviceTypeId: 0,
+                          status: "scheduled",
+                          scheduledDate: new Date().toISOString().split('T')[0],
+                          estimatedValue: undefined,
+                          finalValue: undefined,
+                          notes: "",
+                        });
                       }}
                     >
                       <Plus className="h-5 w-5 mr-2" />
