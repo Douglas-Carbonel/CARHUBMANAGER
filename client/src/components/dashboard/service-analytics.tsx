@@ -1,10 +1,18 @@
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Wrench, TrendingUp, Calendar, DollarSign, Award } from "lucide-react";
 
 export default function ServiceAnalytics() {
+  const queryClient = useQueryClient();
+
+  // Invalidate and refetch analytics data when component mounts
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ["/api/analytics/services"] });
+  }, [queryClient]);
+
   const { data: analytics, isLoading } = useQuery({
     queryKey: ["/api/analytics/services"],
     queryFn: async () => {
