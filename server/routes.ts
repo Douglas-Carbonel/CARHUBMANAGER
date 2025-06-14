@@ -8,20 +8,35 @@ import { setupAuth, createInitialAdmin, hashPassword } from "./auth";
 async function createInitialServiceTypes() {
   try {
     const existingTypes = await storage.getServiceTypes();
-    if (existingTypes.length === 0) {
-      const defaultServiceTypes = [
-        { name: "Troca de Óleo", description: "Troca de óleo do motor", defaultPrice: "80.00" },
-        { name: "Alinhamento", description: "Alinhamento e balanceamento", defaultPrice: "120.00" },
-        { name: "Revisão Geral", description: "Revisão completa do veículo", defaultPrice: "300.00" },
-        { name: "Troca de Pneus", description: "Troca de pneus", defaultPrice: "200.00" },
-        { name: "Lavagem", description: "Lavagem completa", defaultPrice: "30.00" },
-        { name: "Freios", description: "Manutenção do sistema de freios", defaultPrice: "150.00" },
-      ];
+    
+    // Lista completa de tipos de serviços (incluindo os novos)
+    const allServiceTypes = [
+      { name: "Troca de Óleo", description: "Troca de óleo do motor", defaultPrice: "80.00" },
+      { name: "Alinhamento", description: "Alinhamento e balanceamento", defaultPrice: "120.00" },
+      { name: "Revisão Geral", description: "Revisão completa do veículo", defaultPrice: "300.00" },
+      { name: "Troca de Pneus", description: "Troca de pneus", defaultPrice: "200.00" },
+      { name: "Lavagem", description: "Lavagem completa", defaultPrice: "30.00" },
+      { name: "Freios", description: "Manutenção do sistema de freios", defaultPrice: "150.00" },
+      { name: "Higienização", description: "Serviços de higienização e limpeza profunda", defaultPrice: "100.00" },
+      { name: "Reparo", description: "Serviços de reparo e manutenção", defaultPrice: "180.00" },
+      { name: "Outros", description: "Outros serviços não especificados", defaultPrice: "50.00" },
+    ];
 
-      for (const serviceType of defaultServiceTypes) {
+    // Verifica quais tipos já existem
+    const existingNames = existingTypes.map(type => type.name);
+    
+    // Adiciona apenas os tipos que não existem
+    for (const serviceType of allServiceTypes) {
+      if (!existingNames.includes(serviceType.name)) {
         await storage.createServiceType(serviceType);
+        console.log(`Tipo de serviço "${serviceType.name}" criado com sucesso`);
       }
+    }
+    
+    if (existingTypes.length === 0) {
       console.log("Tipos de serviço iniciais criados com sucesso");
+    } else {
+      console.log("Novos tipos de serviço adicionados com sucesso");
     }
   } catch (error) {
     console.error("Erro ao criar tipos de serviço iniciais:", error);
