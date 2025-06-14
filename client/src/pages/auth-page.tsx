@@ -102,7 +102,7 @@ export default function AuthPage() {
           <div className="relative">
             {/* Main hexagonal shape */}
             <div 
-              className="relative bg-gradient-to-br from-teal-600 to-emerald-700 shadow-2xl transform rotate-0 hover:rotate-1 transition-all duration-700"
+              className="relative bg-gradient-to-br from-teal-600 to-emerald-700 shadow-2xl"
               style={{
                 clipPath: "polygon(20% 0%, 80% 0%, 100% 35%, 80% 100%, 20% 100%, 0% 35%)",
                 padding: "60px 80px"
