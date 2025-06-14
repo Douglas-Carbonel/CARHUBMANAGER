@@ -20,7 +20,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertVehicleSchema, type Vehicle, type Customer } from "@shared/schema";
 import { z } from "zod";
-import { vehicleBrands, vehicleModels, fuelTypes, showVehicleNotification, showCelebration } from "@/lib/vehicle-data";
+import { vehicleBrands, vehicleModels, fuelTypes } from "@/lib/vehicle-data";
 import { cn } from "@/lib/utils";
 import VehicleAnalytics from "@/components/dashboard/vehicle-analytics";
 import { BarChart3 } from "lucide-react";
@@ -58,6 +58,23 @@ export default function VehiclesPage() {
   const [showCustomModel, setShowCustomModel] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
+
+  // Função para formatar placa do veículo
+  const formatLicensePlate = (value: string): string => {
+    // Remove tudo que não for letra ou número
+    const cleaned = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    
+    // Aplica formatação baseada no padrão brasileiro
+    if (cleaned.length <= 3) {
+      return cleaned;
+    } else if (cleaned.length <= 7) {
+      // Formato antigo: ABC-1234
+      return cleaned.replace(/^([A-Z]{1,3})([0-9]{0,4})$/, '$1-$2');
+    } else {
+      // Formato Mercosul: ABC1D23
+      return cleaned.replace(/^([A-Z]{3})([0-9]{1})([A-Z]{1})([0-9]{2})$/, '$1$2$3$4');
+    }
+  };
 
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleFormSchema),
@@ -101,15 +118,9 @@ export default function VehiclesPage() {
       setShowCustomModel(false);
       setCustomModel("");
       
-      // Efeitos de celebração
-      const brand = form.getValues("brand");
-      const model = showCustomModel ? customModel : form.getValues("model");
-      showVehicleNotification(brand, model);
-      showCelebration();
-      
       toast({
-        title: "🎉 Veículo cadastrado!",
-        description: `${brand} ${model} foi adicionado com sucesso à frota!`,
+        title: "Veículo cadastrado!",
+        description: "Veículo foi adicionado com sucesso à frota!",
       });
     },
     onError: (error: Error) => {
@@ -329,7 +340,15 @@ export default function VehiclesPage() {
                             <FormItem>
                               <FormLabel>Placa</FormLabel>
                               <FormControl>
-                                <Input placeholder="ABC-1234" {...field} />
+                                <Input 
+                                  placeholder="ABC-1234 ou ABC1D23" 
+                                  {...field}
+                                  onChange={(e) => {
+                                    const formatted = formatLicensePlate(e.target.value);
+                                    field.onChange(formatted);
+                                  }}
+                                  maxLength={8}
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
