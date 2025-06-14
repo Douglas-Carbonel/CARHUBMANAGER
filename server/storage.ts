@@ -391,8 +391,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createService(service: InsertService): Promise<Service> {
-    const [newService] = await db.insert(services).values(service).returning();
-    return newService;
+    try {
+      console.log('Storage: Creating service with data:', JSON.stringify(service, null, 2));
+      const [newService] = await db.insert(services).values(service).returning();
+      console.log('Storage: Service created successfully:', newService);
+      return newService;
+    } catch (error) {
+      console.error('Storage: Error creating service:', error);
+      throw error;
+    }
   }
 
   async updateService(id: number, service: Partial<InsertService>): Promise<Service> {

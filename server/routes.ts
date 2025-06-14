@@ -289,7 +289,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/services", requireAuth, async (req, res) => {
     try {
+      console.log('Received service data:', JSON.stringify(req.body, null, 2));
       const serviceData = insertServiceSchema.parse(req.body);
+      console.log('Parsed service data:', JSON.stringify(serviceData, null, 2));
       
       // Se não foi informada data de agendamento, usar a data atual
       if (!serviceData.scheduledDate || serviceData.scheduledDate === "") {
@@ -297,13 +299,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         serviceData.scheduledDate = today.toISOString().split('T')[0]; // YYYY-MM-DD format
       }
       
+      console.log('Creating service with data:', JSON.stringify(serviceData, null, 2));
       const service = await storage.createService(serviceData);
+      console.log('Service created successfully:', service);
       res.status(201).json(service);
     } catch (error: any) {
+      console.error('Error creating service:', error);
       if (error.name === 'ZodError') {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to create service" });
+      res.status(500).json({ message: "Failed to create service", error: error.message });
     }
   });
 
