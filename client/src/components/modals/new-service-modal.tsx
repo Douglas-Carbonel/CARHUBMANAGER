@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -103,7 +102,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
       notes: data.notes || undefined,
       scheduledTime: data.scheduledTime || undefined,
     };
-    
+
     createMutation.mutate(serviceData);
   };
 
@@ -122,7 +121,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
         <DialogHeader>
           <DialogTitle>Novo Serviço</DialogTitle>
         </DialogHeader>
-        
+
         <div className="flex-1 overflow-y-auto">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-1">
@@ -164,7 +163,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="vehicleId"
@@ -205,7 +204,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                   )}
                 />
               </div>
-              
+
               <FormField
                 control={form.control}
                 name="serviceTypeId"
@@ -242,7 +241,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                   </FormItem>
                 )}
               />
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
@@ -257,7 +256,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="scheduledTime"
@@ -272,7 +271,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                   )}
                 />
               </div>
-              
+
               <FormField
                 control={form.control}
                 name="estimatedValue"
@@ -286,7 +285,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="notes"
@@ -300,7 +299,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                   </FormItem>
                 )}
               />
-              
+
               <div className="flex justify-end space-x-3 pt-4">
                 <Button 
                   type="button" 
