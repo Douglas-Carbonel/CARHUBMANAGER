@@ -108,7 +108,7 @@ export default function Services() {
 
   const createMutation = useMutation({
     mutationFn: (data: z.infer<typeof serviceFormSchema>) =>
-      apiRequest("/api/services", "POST", data),
+      apiRequest("POST", "/api/services", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
       setIsDialogOpen(false);
@@ -122,7 +122,7 @@ export default function Services() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<z.infer<typeof serviceFormSchema>> }) =>
-      apiRequest(`/api/services/${id}`, "PATCH", data),
+      apiRequest("PATCH", `/api/services/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
       setIsDialogOpen(false);
@@ -137,7 +137,7 @@ export default function Services() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) =>
-      apiRequest(`/api/services/${id}`, "DELETE"),
+      apiRequest("DELETE", `/api/services/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
       toast({ title: "Serviço excluído com sucesso!" });
@@ -180,7 +180,7 @@ export default function Services() {
     const searchLower = searchTerm.toLowerCase();
     return (
       (service.customer?.name || "").toLowerCase().includes(searchLower) ||
-      (service.vehicle?.licensePlate || service.vehicle?.plate || "").toLowerCase().includes(searchLower) ||
+      (service.vehicle?.licensePlate || "").toLowerCase().includes(searchLower) ||
       (service.serviceType?.name || "").toLowerCase().includes(searchLower) ||
       (service.notes || "").toLowerCase().includes(searchLower)
     );
@@ -295,7 +295,7 @@ export default function Services() {
                                 <SelectContent>
                                   {availableVehicles.map((vehicle) => (
                                     <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                                      {vehicle.licensePlate || vehicle.plate} - {vehicle.brand || vehicle.make} {vehicle.model}
+                                      {vehicle.licensePlate} - {vehicle.brand} {vehicle.model}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
