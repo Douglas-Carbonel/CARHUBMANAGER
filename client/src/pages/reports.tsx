@@ -65,21 +65,29 @@ export default function Reports() {
   const { data: services = [] } = useQuery({
     queryKey: ["/api/services"],
     enabled: isAuthenticated,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   const { data: customers = [] } = useQuery({
     queryKey: ["/api/customers"],
     enabled: isAuthenticated,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ["/api/vehicles"],
     enabled: isAuthenticated,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   const { data: serviceTypes = [] } = useQuery({
     queryKey: ["/api/service-types"],
     enabled: isAuthenticated,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   // Helper functions

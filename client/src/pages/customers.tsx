@@ -80,6 +80,7 @@ export default function CustomersPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/analytics/customers"] });
       setIsModalOpen(false);
       setEditingCustomer(null);
       form.reset();
@@ -104,6 +105,7 @@ export default function CustomersPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/analytics/customers"] });
       setIsModalOpen(false);
       setEditingCustomer(null);
       form.reset();
@@ -127,6 +129,7 @@ export default function CustomersPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/analytics/customers"] });
       toast({
         title: "Cliente removido",
         description: "Cliente foi removido com sucesso.",

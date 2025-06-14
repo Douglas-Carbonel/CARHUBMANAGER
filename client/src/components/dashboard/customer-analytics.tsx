@@ -1,11 +1,11 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, TrendingUp, Calendar, Award } from "lucide-react";
+import { Users, TrendingUp, Calendar, Award, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function CustomerAnalytics() {
-  const { data: analytics, isLoading } = useQuery({
+  const { data: analytics, isLoading, refetch } = useQuery({
     queryKey: ["/api/analytics/customers"],
     queryFn: async () => {
       const res = await fetch("/api/analytics/customers", {
@@ -18,16 +18,35 @@ export default function CustomerAnalytics() {
     },
   });
 
+  const handleRefresh = () => {
+    refetch();
+  };
+
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i} className="animate-pulse border-0 shadow-lg">
-            <CardContent className="p-6">
-              <div className="h-24 bg-gradient-to-r from-gray-200 to-gray-300 rounded-xl"></div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-gray-800">Análise de Clientes</h2>
+          <Button
+            onClick={handleRefresh}
+            variant="outline"
+            size="sm"
+            disabled={isLoading}
+            className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Atualizar
+          </Button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="animate-pulse border-0 shadow-lg">
+              <CardContent className="p-6">
+                <div className="h-24 bg-gradient-to-r from-gray-200 to-gray-300 rounded-xl"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
@@ -77,6 +96,19 @@ export default function CustomerAnalytics() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-gray-800">Análise de Clientes</h2>
+        <Button
+          onClick={handleRefresh}
+          variant="outline"
+          size="sm"
+          disabled={isLoading}
+          className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Atualizar
+        </Button>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         {statsData.map((stat, index) => (
           <Card 
