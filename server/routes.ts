@@ -290,7 +290,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/services", requireAuth, async (req, res) => {
     try {
       console.log('Received service data:', JSON.stringify(req.body, null, 2));
-      const serviceData = insertServiceSchema.parse(req.body);
+      
+      // Prepare the data for validation
+      const cleanedData = {
+        ...req.body,
+        customerId: Number(req.body.customerId),
+        vehicleId: Number(req.body.vehicleId),
+        serviceTypeId: Number(req.body.serviceTypeId),
+        estimatedValue: req.body.estimatedValue && req.body.estimatedValue !== "" ? req.body.estimatedValue : undefined,
+        notes: req.body.notes || undefined,
+        scheduledTime: req.body.scheduledTime || undefined,
+      };
+      
+      const serviceData = insertServiceSchema.parse(cleanedData);
       console.log('Parsed service data:', JSON.stringify(serviceData, null, 2));
       
       // Se não foi informada data de agendamento, usar a data atual
@@ -306,6 +318,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error('Error creating service:', error);
       if (error.name === 'ZodError') {
+        console.error('Validation errors:', error.errors);
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to create service", error: error.message });

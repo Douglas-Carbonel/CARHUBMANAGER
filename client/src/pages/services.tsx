@@ -25,7 +25,7 @@ const serviceFormSchema = insertServiceSchema.extend({
   customerId: z.number().min(1, "Cliente é obrigatório"),
   vehicleId: z.number().min(1, "Veículo é obrigatório"),
   serviceTypeId: z.number().min(1, "Tipo de serviço é obrigatório"),
-  estimatedValue: z.string().min(1, "Valor é obrigatório"),
+  estimatedValue: z.string().optional(),
 });
 
 export default function Services() {
@@ -107,7 +107,7 @@ export default function Services() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: z.infer<typeof serviceFormSchema>) =>
+    mutationFn: (data: any) =>
       apiRequest("POST", "/api/services", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
@@ -115,13 +115,14 @@ export default function Services() {
       form.reset();
       toast({ title: "Serviço criado com sucesso!" });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error("Error creating service:", error);
       toast({ title: "Erro ao criar serviço", variant: "destructive" });
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<z.infer<typeof serviceFormSchema>> }) =>
+    mutationFn: ({ id, data }: { id: number; data: any }) =>
       apiRequest("PATCH", `/api/services/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
@@ -130,7 +131,8 @@ export default function Services() {
       form.reset();
       toast({ title: "Serviço atualizado com sucesso!" });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error("Error updating service:", error);
       toast({ title: "Erro ao atualizar serviço", variant: "destructive" });
     },
   });
@@ -148,10 +150,18 @@ export default function Services() {
   });
 
   const onSubmit = (data: z.infer<typeof serviceFormSchema>) => {
+    // Transform the data to match the backend schema
+    const serviceData = {
+      ...data,
+      estimatedValue: data.estimatedValue && data.estimatedValue !== "" ? data.estimatedValue : undefined,
+      notes: data.notes || undefined,
+      scheduledTime: data.scheduledTime || undefined,
+    };
+
     if (editingService) {
-      updateMutation.mutate({ id: editingService.id, data });
+      updateMutation.mutate({ id: editingService.id, data: serviceData });
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(serviceData);
     }
   };
 

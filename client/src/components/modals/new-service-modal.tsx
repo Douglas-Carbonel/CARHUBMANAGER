@@ -96,7 +96,15 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   });
 
   const onSubmit = (data: z.infer<typeof insertServiceSchema>) => {
-    createMutation.mutate(data);
+    // Transform the data to match the backend schema
+    const serviceData = {
+      ...data,
+      estimatedValue: data.estimatedValue && data.estimatedValue !== "" ? data.estimatedValue : undefined,
+      notes: data.notes || undefined,
+      scheduledTime: data.scheduledTime || undefined,
+    };
+    
+    createMutation.mutate(serviceData);
   };
 
   const getCustomerVehicles = (customerId: number) => {
