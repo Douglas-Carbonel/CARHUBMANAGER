@@ -116,6 +116,20 @@ export interface IStorage {
 
   // Basic loyalty operations
   addLoyaltyPoints(customerId: number, points: number): Promise<void>;
+
+  // Dashboard analytics
+  getDashboardAnalytics(): Promise<{
+    topCustomers: Array<{ customerName: string; serviceCount: number; totalValue: number }>;
+    topServices: { 
+      oneMonth: Array<{ serviceName: string; count: number }>;
+      threeMonths: Array<{ serviceName: string; count: number }>;
+      sixMonths: Array<{ serviceName: string; count: number }>;
+    };
+    canceledServices: number;
+    weeklyAppointments: number;
+    monthlyAppointments: number;
+    weeklyEstimatedValue: number;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -983,6 +997,145 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       })
       .where(eq(customers.id, customerId));
+  }
+
+  // Dashboard analytics
+  async getDashboardAnalytics() {
+    try {
+      const now = new Date();
+      const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const threeMonthsAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+      const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+      const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      const oneMonthFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+      // Clientes com mais serviços
+      const topCustomers = await db
+        .select({
+          customerName: customers.name,
+          serviceCount: sql<number>`count(*)`,
+          totalValue: sql<number>`coalesce(sum(${services.finalValue}), 0)`
+        })
+        .from(services)
+        .innerJoin(customers, eq(services.customerId, customers.id))
+        .groupBy(customers.id, customers.name)
+        .orderBy(sql`count(*) desc`)
+        .limit(5);
+
+      // Serviços mais utilizados - 1 mês
+      const topServicesOneMonth = await db
+        .select({
+          serviceName: serviceTypes.name,
+          count: sql<number>`count(*)`
+        })
+        .from(services)
+        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+        .where(gte(services.scheduledDate, oneMonthAgo.toISOString().split('T')[0]))
+        .groupBy(serviceTypes.id, serviceTypes.name)
+        .orderBy(sql`count(*) desc`)
+        .limit(5);
+
+      // Serviços mais utilizados - 3 meses
+      const topServicesThreeMonths = await db
+        .select({
+          serviceName: serviceTypes.name,
+          count: sql<number>`count(*)`
+        })
+        .from(services)
+        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+        .where(gte(services.scheduledDate, threeMonthsAgo.toISOString().split('T')[0]))
+        .groupBy(serviceTypes.id, serviceTypes.name)
+        .orderBy(sql`count(*) desc`)
+        .limit(5);
+
+      // Serviços mais utilizados - 6 meses
+      const topServicesSixMonths = await db
+        .select({
+          serviceName: serviceTypes.name,
+          count: sql<number>`count(*)`
+        })
+        .from(services)
+        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+        .where(gte(services.scheduledDate, sixMonthsAgo.toISOString().split('T')[0]))
+        .groupBy(serviceTypes.id, serviceTypes.name)
+        .orderBy(sql`count(*) desc`)
+        .limit(5);
+
+      // Quantidade de serviços cancelados
+      const canceledServicesResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(services)
+        .where(eq(services.status, 'cancelled'));
+
+      // Agendamentos para próxima semana
+      const weeklyAppointmentsResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(services)
+        .where(
+          and(
+            gte(services.scheduledDate, now.toISOString().split('T')[0]),
+            lte(services.scheduledDate, oneWeekFromNow.toISOString().split('T')[0]),
+            eq(services.status, 'scheduled')
+          )
+        );
+
+      // Agendamentos para próximo mês
+      const monthlyAppointmentsResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(services)
+        .where(
+          and(
+            gte(services.scheduledDate, now.toISOString().split('T')[0]),
+            lte(services.scheduledDate, oneMonthFromNow.toISOString().split('T')[0]),
+            eq(services.status, 'scheduled')
+          )
+        );
+
+      // Valor semanal estimado (agendamentos concluídos/em andamento)
+      const weeklyEstimatedValueResult = await db
+        .select({
+          totalValue: sql<number>`coalesce(sum(
+            case 
+              when ${services.finalValue} is not null then ${services.finalValue}
+              else ${services.estimatedValue}
+            end
+          ), 0)`
+        })
+        .from(services)
+        .where(
+          and(
+            gte(services.scheduledDate, now.toISOString().split('T')[0]),
+            lte(services.scheduledDate, oneWeekFromNow.toISOString().split('T')[0]),
+            or(
+              eq(services.status, 'completed'),
+              eq(services.status, 'in_progress')
+            )
+          )
+        );
+
+      return {
+        topCustomers,
+        topServices: {
+          oneMonth: topServicesOneMonth,
+          threeMonths: topServicesThreeMonths,
+          sixMonths: topServicesSixMonths
+        },
+        canceledServices: canceledServicesResult[0]?.count || 0,
+        weeklyAppointments: weeklyAppointmentsResult[0]?.count || 0,
+        monthlyAppointments: monthlyAppointmentsResult[0]?.count || 0,
+        weeklyEstimatedValue: Number(weeklyEstimatedValueResult[0]?.totalValue || 0)
+      };
+    } catch (error) {
+      console.error('Error getting dashboard analytics:', error);
+      return {
+        topCustomers: [],
+        topServices: { oneMonth: [], threeMonths: [], sixMonths: [] },
+        canceledServices: 0,
+        weeklyAppointments: 0,
+        monthlyAppointments: 0,
+        weeklyEstimatedValue: 0
+      };
+    }
   }
 }
 

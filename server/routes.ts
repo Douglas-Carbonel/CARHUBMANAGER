@@ -413,6 +413,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dashboard new analytics
+  app.get("/api/dashboard/analytics", requireAuth, async (req, res) => {
+    try {
+      const analytics = await storage.getDashboardAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error getting dashboard analytics:", error);
+      res.status(500).json({ message: "Failed to get dashboard analytics" });
+    }
+  });
+
   // Dashboard revenue chart
   app.get("/api/dashboard/revenue", requireAuth, async (req, res) => {
     try {
