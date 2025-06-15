@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -49,6 +49,7 @@ export default function VehiclesPage() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
+  const [customerFilter, setCustomerFilter] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [openBrandSelect, setOpenBrandSelect] = useState(false);
@@ -58,6 +59,15 @@ export default function VehiclesPage() {
   const [showCustomModel, setShowCustomModel] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
+
+  // Check URL parameters for customer filtering
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const customerId = urlParams.get('customerId');
+    if (customerId) {
+      setCustomerFilter(parseInt(customerId));
+    }
+  }, []);
 
   // Função para formatar placa do veículo
   const formatLicensePlate = (value: string): string => {
@@ -252,12 +262,17 @@ export default function VehiclesPage() {
     }
   };
 
-  const filteredVehicles = vehicles.filter((vehicle: Vehicle) =>
-    vehicle.licensePlate.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vehicle.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vehicle.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vehicle.color.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredVehicles = vehicles.filter((vehicle: Vehicle) => {
+    const matchesSearch = 
+      vehicle.licensePlate.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehicle.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehicle.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (vehicle.color || "").toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCustomer = customerFilter ? vehicle.customerId === customerFilter : true;
+    
+    return matchesSearch && matchesCustomer;
+  });
 
   if (!user) {
     return null;
