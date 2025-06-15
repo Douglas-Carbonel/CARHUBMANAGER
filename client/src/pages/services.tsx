@@ -35,6 +35,7 @@ export default function Services() {
   
   // Get customer filter from URL params
   const urlParams = new URLSearchParams(location.split('?')[1] || '');
+  const customerIdFilter = urlParams.get('customerId') || '';
   const customerFilter = urlParams.get('customer') || '';
   
   const [searchTerm, setSearchTerm] = useState(customerFilter);
@@ -196,7 +197,15 @@ export default function Services() {
   const filteredServices = services.filter((service) => {
     const searchLower = searchTerm.toLowerCase();
     
-    // If we have a customer filter from URL and searchTerm matches it, only show that customer's services
+    // If we have a customerId filter from URL, only show that customer's services
+    if (customerIdFilter) {
+      const customerId = parseInt(customerIdFilter);
+      const matchesCustomer = service.customerId === customerId;
+      const matchesStatus = filterStatus === "all" || service.status === filterStatus;
+      return matchesCustomer && matchesStatus;
+    }
+    
+    // If we have a customer name filter from URL and searchTerm matches it, only show that customer's services
     if (customerFilter && searchTerm === customerFilter) {
       const matchesCustomer = (service.customer?.name || "").toLowerCase() === searchLower;
       const matchesStatus = filterStatus === "all" || service.status === filterStatus;

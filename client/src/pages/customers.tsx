@@ -526,7 +526,7 @@ export default function CustomersPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setLocation(`/services?customer=${customer.name}`)}
+                            onClick={() => setLocation(`/services?customerId=${customer.id}`)}
                             className="border-teal-200 text-teal-700 hover:bg-teal-50 rounded-xl h-9"
                           >
                             <Wrench className="h-3 w-3 mr-1" />
