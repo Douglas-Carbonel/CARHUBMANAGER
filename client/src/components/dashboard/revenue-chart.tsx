@@ -5,11 +5,16 @@ import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianG
 import { TrendingUp, DollarSign } from "lucide-react";
 
 export default function RevenueChart() {
-  const { data: revenueData, isLoading } = useQuery({
+  const { data: revenueData, isLoading, error } = useQuery({
     queryKey: ["/api/dashboard/revenue?days=30"],
     staleTime: 30000,
     refetchOnWindowFocus: true,
+    retry: 3,
+    retryDelay: 1000,
   });
+
+  console.log('RevenueChart - data:', revenueData);
+  console.log('RevenueChart - error:', error);
 
   const chartData = revenueData?.map((item: any) => ({
     date: new Date(item.date).toLocaleDateString('pt-BR', { 

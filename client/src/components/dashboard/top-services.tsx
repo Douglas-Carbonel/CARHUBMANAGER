@@ -5,11 +5,16 @@ import { Badge } from "@/components/ui/badge";
 import { Wrench, TrendingUp } from "lucide-react";
 
 export default function TopServices() {
-  const { data: topServices, isLoading } = useQuery({
+  const { data: topServices, isLoading, error } = useQuery({
     queryKey: ["/api/dashboard/top-services"],
     staleTime: 30000,
     refetchOnWindowFocus: true,
+    retry: 3,
+    retryDelay: 1000,
   });
+
+  console.log('TopServices - data:', topServices);
+  console.log('TopServices - error:', error);
 
   if (isLoading) {
     return (

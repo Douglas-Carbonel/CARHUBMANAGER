@@ -461,67 +461,66 @@ export class DatabaseStorage implements IStorage {
   // Dashboard statistics
   async getDashboardStats() {
     try {
+      console.log('Getting dashboard stats...');
+      
       const today = new Date();
       const todayStr = today.toISOString().split('T')[0];
       
-      // Get total completed services revenue
-      const completedServicesRevenue = await db
-        .select({
-          totalRevenue: sql<number>`SUM(CASE 
-            WHEN ${services.finalValue} IS NOT NULL THEN ${services.finalValue}
-            ELSE COALESCE(${services.estimatedValue}, 0)
-          END)`
-        })
-        .from(services)
-        .where(eq(services.status, 'completed'));
-
-      const totalRevenue = Number(completedServicesRevenue[0]?.totalRevenue || 0);
-
-      // Get today's services count
-      const todayServices = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(services)
-        .where(eq(services.scheduledDate, todayStr));
-
-      // Get scheduled appointments count
-      const scheduledAppointments = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(services)
-        .where(eq(services.status, 'scheduled'));
-
-      // Get total customers count
-      const totalCustomers = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(customers);
-
-      // Get monthly revenue (current month)
+      // Get all services first to check data
+      const allServices = await db.select().from(services);
+      console.log('Total services in database:', allServices.length);
+      
+      // Get all customers
+      const allCustomers = await db.select().from(customers);
+      console.log('Total customers in database:', allCustomers.length);
+      
+      // Calculate revenue from completed services
+      let totalRevenue = 0;
+      let monthlyRevenue = 0;
+      let todayServicesCount = 0;
+      let scheduledCount = 0;
+      let totalServicesCount = allServices.length;
+      
       const currentMonth = new Date();
       const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
       const firstDayStr = firstDayOfMonth.toISOString().split('T')[0];
-
-      const monthlyRevenue = await db
-        .select({
-          revenue: sql<number>`SUM(CASE 
-            WHEN ${services.finalValue} IS NOT NULL THEN ${services.finalValue}
-            ELSE COALESCE(${services.estimatedValue}, 0)
-          END)`
-        })
-        .from(services)
-        .where(
-          and(
-            gte(services.scheduledDate, firstDayStr),
-            eq(services.status, 'completed')
-          )
-        );
-
-      return {
+      
+      allServices.forEach(service => {
+        const serviceValue = Number(service.finalValue || service.estimatedValue || 0);
+        
+        // Total revenue from completed services
+        if (service.status === 'completed' && serviceValue > 0) {
+          totalRevenue += serviceValue;
+          
+          // Monthly revenue
+          if (service.scheduledDate >= firstDayStr) {
+            monthlyRevenue += serviceValue;
+          }
+        }
+        
+        // Today's services
+        if (service.scheduledDate === todayStr) {
+          todayServicesCount++;
+        }
+        
+        // Scheduled appointments
+        if (service.status === 'scheduled') {
+          scheduledCount++;
+        }
+      });
+      
+      const stats = {
         totalRevenue: totalRevenue,
-        monthlyRevenue: Number(monthlyRevenue[0]?.revenue || 0),
-        todayServices: Number(todayServices[0]?.count || 0),
-        scheduledAppointments: Number(scheduledAppointments[0]?.count || 0),
-        totalCustomers: Number(totalCustomers[0]?.count || 0),
-        totalServices: await this.getTotalServicesCount()
+        monthlyRevenue: monthlyRevenue,
+        todayServices: todayServicesCount,
+        scheduledAppointments: scheduledCount,
+        totalCustomers: allCustomers.length,
+        totalServices: totalServicesCount
       };
+      
+      console.log('Dashboard stats calculated:', stats);
+      return stats;
+      
     } catch (error) {
       console.error('Error getting dashboard stats:', error);
       return {
@@ -683,48 +682,39 @@ export class DatabaseStorage implements IStorage {
 
   async getRevenueByDays(days: number): Promise<{ date: string; revenue: number }[]> {
     try {
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - days);
-      const startDateStr = startDate.toISOString().split('T')[0];
-
-      const revenueData = await db
-        .select({
-          date: services.scheduledDate,
-          finalValue: services.finalValue,
-          estimatedValue: services.estimatedValue,
-          status: services.status
-        })
-        .from(services)
-        .where(gte(services.scheduledDate, startDateStr))
-        .orderBy(services.scheduledDate);
-
-      // Group by date and sum revenue
-      const revenueByDate: { [key: string]: number } = {};
+      console.log(`Getting revenue data for last ${days} days...`);
       
-      revenueData.forEach(service => {
-        const date = service.date;
-        const revenue = service.status === 'completed' && service.finalValue 
-          ? Number(service.finalValue) 
-          : Number(service.estimatedValue || 0);
-        
-        if (revenue > 0) {
-          revenueByDate[date] = (revenueByDate[date] || 0) + revenue;
-        }
-      });
-
-      // Create array with all days in range
+      // Get all services
+      const allServices = await db.select().from(services);
+      console.log('Total services for revenue calculation:', allServices.length);
+      
+      // Create array with all days in range and calculate revenue
       const result = [];
-      for (let i = 0; i < days; i++) {
+      for (let i = days - 1; i >= 0; i--) {
         const date = new Date();
         date.setDate(date.getDate() - i);
         const dateStr = date.toISOString().split('T')[0];
-        result.unshift({
+        
+        // Calculate revenue for this specific date
+        const dayRevenue = allServices
+          .filter(service => 
+            service.scheduledDate === dateStr && 
+            service.status === 'completed'
+          )
+          .reduce((sum, service) => {
+            const value = Number(service.finalValue || service.estimatedValue || 0);
+            return sum + value;
+          }, 0);
+        
+        result.push({
           date: dateStr,
-          revenue: revenueByDate[dateStr] || 0
+          revenue: dayRevenue
         });
       }
-
+      
+      console.log('Revenue data calculated:', result.slice(-5)); // Log last 5 days
       return result;
+      
     } catch (error) {
       console.error('Error getting revenue by days:', error);
       return [];
@@ -733,27 +723,57 @@ export class DatabaseStorage implements IStorage {
 
   async getTopServices(): Promise<{ name: string; count: number; revenue: number }[]> {
     try {
-      const topServices = await db
+      console.log('Getting top services...');
+      
+      // Get all services with service types
+      const servicesWithTypes = await db
         .select({
-          serviceName: serviceTypes.name,
-          count: sql<number>`count(*)`,
-          totalRevenue: sql<number>`sum(CASE 
-            WHEN ${services.status} = 'completed' AND ${services.finalValue} IS NOT NULL 
-            THEN ${services.finalValue}
-            ELSE COALESCE(${services.estimatedValue}, 0)
-          END)`
+          serviceTypeId: services.serviceTypeId,
+          finalValue: services.finalValue,
+          estimatedValue: services.estimatedValue,
+          status: services.status
         })
-        .from(services)
-        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
-        .groupBy(serviceTypes.name)
-        .orderBy(sql`count(*) desc`)
-        .limit(5);
-
-      return topServices.map(service => ({
-        name: service.serviceName,
-        count: service.count,
-        revenue: Number(service.totalRevenue || 0)
-      }));
+        .from(services);
+      
+      // Get all service types
+      const allServiceTypes = await db.select().from(serviceTypes);
+      
+      console.log('Services for top calculation:', servicesWithTypes.length);
+      console.log('Service types available:', allServiceTypes.length);
+      
+      // Group by service type and calculate stats
+      const serviceStats: { [key: number]: { name: string; count: number; revenue: number } } = {};
+      
+      // Initialize all service types
+      allServiceTypes.forEach(type => {
+        serviceStats[type.id] = {
+          name: type.name,
+          count: 0,
+          revenue: 0
+        };
+      });
+      
+      // Calculate stats for each service
+      servicesWithTypes.forEach(service => {
+        if (serviceStats[service.serviceTypeId]) {
+          serviceStats[service.serviceTypeId].count++;
+          
+          if (service.status === 'completed') {
+            const value = Number(service.finalValue || service.estimatedValue || 0);
+            serviceStats[service.serviceTypeId].revenue += value;
+          }
+        }
+      });
+      
+      // Convert to array and sort by count
+      const result = Object.values(serviceStats)
+        .filter(stat => stat.count > 0)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+      
+      console.log('Top services calculated:', result);
+      return result;
+      
     } catch (error) {
       console.error('Error getting top services:', error);
       return [];
@@ -762,25 +782,34 @@ export class DatabaseStorage implements IStorage {
 
   async getRecentServices(limit: number): Promise<any[]> {
     try {
-      const recentServices = await db
-        .select({
-          id: services.id,
-          customerName: customers.name,
-          vehiclePlate: vehicles.licensePlate,
-          serviceTypeName: serviceTypes.name,
-          scheduledDate: services.scheduledDate,
-          status: services.status,
-          estimatedValue: services.estimatedValue,
-          finalValue: services.finalValue
+      console.log(`Getting ${limit} recent services...`);
+      
+      // Get all services and related data
+      const allServices = await this.getServices();
+      console.log('All services fetched:', allServices.length);
+      
+      // Sort by creation date (or scheduled date if no created date) and limit
+      const recentServices = allServices
+        .sort((a, b) => {
+          const dateA = new Date(a.createdAt || a.scheduledDate);
+          const dateB = new Date(b.createdAt || b.scheduledDate);
+          return dateB.getTime() - dateA.getTime();
         })
-        .from(services)
-        .innerJoin(customers, eq(services.customerId, customers.id))
-        .innerJoin(vehicles, eq(services.vehicleId, vehicles.id))
-        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
-        .orderBy(desc(services.createdAt))
-        .limit(limit);
-
+        .slice(0, limit)
+        .map(service => ({
+          id: service.id,
+          customerName: service.customer?.name || 'Cliente não encontrado',
+          vehiclePlate: service.vehicle?.licensePlate || 'Placa não encontrada',
+          serviceTypeName: service.serviceType?.name || 'Serviço não encontrado',
+          scheduledDate: service.scheduledDate,
+          status: service.status,
+          estimatedValue: service.estimatedValue,
+          finalValue: service.finalValue
+        }));
+      
+      console.log('Recent services processed:', recentServices.length);
       return recentServices;
+      
     } catch (error) {
       console.error('Error getting recent services:', error);
       return [];
@@ -789,32 +818,42 @@ export class DatabaseStorage implements IStorage {
 
   async getUpcomingAppointments(limit: number): Promise<any[]> {
     try {
+      console.log(`Getting ${limit} upcoming appointments...`);
+      
       const today = new Date().toISOString().split('T')[0];
       
-      const upcomingAppointments = await db
-        .select({
-          id: services.id,
-          customerName: customers.name,
-          vehiclePlate: vehicles.licensePlate,
-          serviceTypeName: serviceTypes.name,
-          scheduledDate: services.scheduledDate,
-          scheduledTime: services.scheduledTime,
-          status: services.status
-        })
-        .from(services)
-        .innerJoin(customers, eq(services.customerId, customers.id))
-        .innerJoin(vehicles, eq(services.vehicleId, vehicles.id))
-        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
-        .where(
-          and(
-            gte(services.scheduledDate, today),
-            eq(services.status, 'scheduled')
-          )
+      // Get all services and filter for upcoming scheduled ones
+      const allServices = await this.getServices();
+      console.log('All services for appointments:', allServices.length);
+      
+      const upcomingAppointments = allServices
+        .filter(service => 
+          service.scheduledDate >= today && 
+          service.status === 'scheduled'
         )
-        .orderBy(services.scheduledDate, services.scheduledTime)
-        .limit(limit);
-
+        .sort((a, b) => {
+          // Sort by date first, then by time
+          if (a.scheduledDate !== b.scheduledDate) {
+            return a.scheduledDate.localeCompare(b.scheduledDate);
+          }
+          const timeA = a.scheduledTime || '00:00:00';
+          const timeB = b.scheduledTime || '00:00:00';
+          return timeA.localeCompare(timeB);
+        })
+        .slice(0, limit)
+        .map(service => ({
+          id: service.id,
+          customerName: service.customer?.name || 'Cliente não encontrado',
+          vehiclePlate: service.vehicle?.licensePlate || 'Placa não encontrada',
+          serviceTypeName: service.serviceType?.name || 'Serviço não encontrado',
+          scheduledDate: service.scheduledDate,
+          scheduledTime: service.scheduledTime,
+          status: service.status
+        }));
+      
+      console.log('Upcoming appointments processed:', upcomingAppointments.length);
       return upcomingAppointments;
+      
     } catch (error) {
       console.error('Error getting upcoming appointments:', error);
       return [];

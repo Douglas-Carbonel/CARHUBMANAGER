@@ -9,9 +9,13 @@ export default function StatsCards() {
     staleTime: 30000,
     refetchOnWindowFocus: true,
     refetchInterval: 60000, // Refresh every minute
+    retry: 3,
+    retryDelay: 1000,
   });
 
-  console.log('Dashboard Stats:', stats);
+  console.log('StatsCards - data:', stats);
+  console.log('StatsCards - isLoading:', isLoading);
+  console.log('StatsCards - error:', error);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
