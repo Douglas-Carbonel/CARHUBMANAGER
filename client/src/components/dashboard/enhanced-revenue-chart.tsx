@@ -4,9 +4,10 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { TrendingUp, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import type { RevenueData } from "@/types/dashboard";
 
 export default function EnhancedRevenueChart() {
-  const { data: revenueData, isLoading, error } = useQuery({
+  const { data: revenueData, isLoading, error } = useQuery<RevenueData[]>({
     queryKey: ["/api/dashboard/revenue"],
     staleTime: 60000,
     refetchOnWindowFocus: false,
@@ -62,13 +63,13 @@ export default function EnhancedRevenueChart() {
     }
   };
 
-  const chartData = revenueData?.map(item => ({
+  const chartData = revenueData?.map((item: RevenueData) => ({
     ...item,
     formattedDate: formatDate(item.date),
     displayRevenue: item.revenue || 0
   })) || [];
 
-  const totalRevenue = chartData.reduce((sum, item) => sum + item.displayRevenue, 0);
+  const totalRevenue = chartData.reduce((sum: number, item: any) => sum + item.displayRevenue, 0);
   const avgRevenue = chartData.length > 0 ? totalRevenue / chartData.length : 0;
 
   return (

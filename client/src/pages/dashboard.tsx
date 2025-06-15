@@ -1,8 +1,8 @@
 import { useAuth } from "@/hooks/useAuth";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
-import StatsCards from "@/components/dashboard/stats-cards";
-import RevenueChart from "@/components/dashboard/revenue-chart";
+import EnhancedStatsCards from "@/components/dashboard/enhanced-stats-cards";
+import EnhancedRevenueChart from "@/components/dashboard/enhanced-revenue-chart";
 import TopServices from "@/components/dashboard/top-services";
 import RecentServices from "@/components/dashboard/recent-services";
 import UpcomingAppointments from "@/components/dashboard/upcoming-appointments";
@@ -22,11 +22,11 @@ export default function Dashboard() {
 
         <main className="flex-1 overflow-y-auto">
           <div className="p-8 space-y-8">
-            <StatsCards />
+            <EnhancedStatsCards />
 
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
               <div className="xl:col-span-8">
-                <RevenueChart />
+                <EnhancedRevenueChart />
               </div>
               <div className="xl:col-span-4">
                 <TopServices />
