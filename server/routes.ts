@@ -406,7 +406,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/dashboard/stats", requireAuth, async (req, res) => {
     try {
       const stats = await storage.getDashboardStats();
-      console.log("Dashboard stats returned:", stats);
       res.json(stats);
     } catch (error) {
       console.error("Error getting dashboard stats:", error);
