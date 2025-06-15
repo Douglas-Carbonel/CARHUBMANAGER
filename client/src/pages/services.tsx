@@ -195,6 +195,15 @@ export default function Services() {
 
   const filteredServices = services.filter((service) => {
     const searchLower = searchTerm.toLowerCase();
+    
+    // If we have a customer filter from URL and searchTerm matches it, only show that customer's services
+    if (customerFilter && searchTerm === customerFilter) {
+      const matchesCustomer = (service.customer?.name || "").toLowerCase() === searchLower;
+      const matchesStatus = filterStatus === "all" || service.status === filterStatus;
+      return matchesCustomer && matchesStatus;
+    }
+    
+    // Otherwise, use the regular search logic
     const matchesSearch = (
       (service.customer?.name || "").toLowerCase().includes(searchLower) ||
       (service.vehicle?.licensePlate || "").toLowerCase().includes(searchLower) ||
