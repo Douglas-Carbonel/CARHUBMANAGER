@@ -783,7 +783,7 @@ export default function VehiclesPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setLocation(`/reports?vehicleId=${vehicle.id}&vehiclePlate=${encodeURIComponent(vehicle.licensePlate)}`)}
+                            onClick={() => setLocation(`/vehicle-history?vehicleId=${vehicle.id}&vehiclePlate=${encodeURIComponent(vehicle.licensePlate)}`)}
                             className="w-full border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl h-9"
                           >
                             <FileText className="h-3 w-3 mr-2" />

@@ -8,8 +8,9 @@ import Services from "@/pages/services";
 import Customers from "@/pages/customers";
 import Vehicles from "@/pages/vehicles";
 import Schedule from "@/pages/schedule";
-import Reports from "@/pages/reports";
-import LoyaltyPage from "./pages/loyalty";
+import ReportsPage from "@/pages/reports";
+import VehicleHistoryPage from "@/pages/vehicle-history";
+import LoyaltyPage from "@/pages/loyalty";
 import Admin from "@/pages/admin";
 import NotFoundPage from "@/pages/not-found";
 import { ProtectedRoute } from "@/lib/protected-route";
@@ -65,7 +66,12 @@ function App() {
           </Route>
           <Route path="/reports">
             <ProtectedRoute>
-              <Reports />
+              <ReportsPage />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/vehicle-history">
+            <ProtectedRoute>
+              <VehicleHistoryPage />
             </ProtectedRoute>
           </Route>
           <Route path="/loyalty">
