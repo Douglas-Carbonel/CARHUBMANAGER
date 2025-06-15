@@ -34,9 +34,15 @@ export default function Services() {
   const [location] = useLocation();
   
   // Get customer filter from URL params
-  const urlParams = new URLSearchParams(location.split('?')[1] || '');
+  const urlParams = new URLSearchParams(window.location.search);
   const customerIdFilter = urlParams.get('customerId') || '';
   const customerFilter = urlParams.get('customer') || '';
+  
+  // Debug logging
+  console.log('Services page - location:', location);
+  console.log('Services page - window.location.search:', window.location.search);
+  console.log('Services page - customerIdFilter:', customerIdFilter);
+  console.log('Services page - customerFilter:', customerFilter);
   
   const [searchTerm, setSearchTerm] = useState(customerFilter);
   const [filterStatus, setFilterStatus] = useState<string>("all");
