@@ -18,8 +18,6 @@ import {
   type InsertServiceType,
   type Payment,
   type InsertPayment,
-  type LoyaltyTracking,
-  type InsertLoyaltyTracking,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, gte, lte, count, sum, sql, isNotNull } from "drizzle-orm";
@@ -252,7 +250,11 @@ export class DatabaseStorage implements IStorage {
           phone: customers.phone,
           email: customers.email,
           address: customers.address,
+          city: customers.city,
+          state: customers.state,
+          zipCode: customers.zipCode,
           observations: customers.observations,
+          loyaltyPoints: customers.loyaltyPoints,
           createdAt: customers.createdAt,
           updatedAt: customers.updatedAt,
         }
@@ -683,7 +685,8 @@ export class DatabaseStorage implements IStorage {
 
     // Fuel type distribution  
     const fuelCounts = vehiclesData.reduce((acc, vehicle) => {
-      acc[vehicle.fuelType] = (acc[vehicle.fuelType] || 0) + 1;
+      const fuelType = vehicle.fuelType || 'Não informado';
+      acc[fuelType] = (acc[fuelType] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
@@ -724,125 +727,15 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  // Loyalty tracking operations
-  async getLoyaltyTracking(): Promise<(LoyaltyTracking & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]> {
-    const result = await db
-      .select({
-        tracking: loyaltyTracking,
-        customer: customers,
-        vehicle: vehicles,
-        serviceType: serviceTypes,
+  // Basic loyalty points operation
+  async addLoyaltyPoints(customerId: number, points: number): Promise<void> {
+    await db
+      .update(customers)
+      .set({
+        loyaltyPoints: sql`COALESCE(${customers.loyaltyPoints}, 0) + ${points}`,
+        updatedAt: new Date()
       })
-      .from(loyaltyTracking)
-      .leftJoin(customers, eq(loyaltyTracking.customerId, customers.id))
-      .leftJoin(vehicles, eq(loyaltyTracking.vehicleId, vehicles.id))
-      .leftJoin(serviceTypes, eq(loyaltyTracking.serviceTypeId, serviceTypes.id))
-      .orderBy(desc(loyaltyTracking.nextDueDate));
-
-    return result.map(row => ({
-      ...row.tracking,
-      customer: row.customer!,
-      vehicle: row.vehicle!,
-      serviceType: row.serviceType!,
-    }));
-  }
-
-  async getLoyaltyTrackingByCustomer(customerId: number): Promise<(LoyaltyTracking & { vehicle: Vehicle; serviceType: ServiceType })[]> {
-    const result = await db
-      .select({
-        tracking: loyaltyTracking,
-        vehicle: vehicles,
-        serviceType: serviceTypes,
-      })
-      .from(loyaltyTracking)
-      .leftJoin(vehicles, eq(loyaltyTracking.vehicleId, vehicles.id))
-      .leftJoin(serviceTypes, eq(loyaltyTracking.serviceTypeId, serviceTypes.id))
-      .where(eq(loyaltyTracking.customerId, customerId))
-      .orderBy(desc(loyaltyTracking.nextDueDate));
-
-    return result.map(row => ({
-      ...row.tracking,
-      vehicle: row.vehicle!,
-      serviceType: row.serviceType!,
-    }));
-  }
-
-  async getOverdueLoyaltyServices(): Promise<(LoyaltyTracking & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]> {
-    const today = new Date().toISOString().split('T')[0];
-    
-    const result = await db
-      .select({
-        tracking: loyaltyTracking,
-        customer: customers,
-        vehicle: vehicles,
-        serviceType: serviceTypes,
-      })
-      .from(loyaltyTracking)
-      .leftJoin(customers, eq(loyaltyTracking.customerId, customers.id))
-      .leftJoin(vehicles, eq(loyaltyTracking.vehicleId, vehicles.id))
-      .leftJoin(serviceTypes, eq(loyaltyTracking.serviceTypeId, serviceTypes.id))
-      .where(
-        and(
-          eq(loyaltyTracking.status, 'active'),
-          lte(loyaltyTracking.nextDueDate, today)
-        )
-      )
-      .orderBy(desc(loyaltyTracking.nextDueDate));
-
-    return result.map(row => ({
-      ...row.tracking,
-      customer: row.customer!,
-      vehicle: row.vehicle!,
-      serviceType: row.serviceType!,
-    }));
-  }
-
-  async getUpcomingLoyaltyServices(days: number): Promise<(LoyaltyTracking & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]> {
-    const today = new Date();
-    const futureDate = new Date(today.getTime() + (days * 24 * 60 * 60 * 1000));
-    const todayStr = today.toISOString().split('T')[0];
-    const futureDateStr = futureDate.toISOString().split('T')[0];
-    
-    const result = await db
-      .select({
-        tracking: loyaltyTracking,
-        customer: customers,
-        vehicle: vehicles,
-        serviceType: serviceTypes,
-      })
-      .from(loyaltyTracking)
-      .leftJoin(customers, eq(loyaltyTracking.customerId, customers.id))
-      .leftJoin(vehicles, eq(loyaltyTracking.vehicleId, vehicles.id))
-      .leftJoin(serviceTypes, eq(loyaltyTracking.serviceTypeId, serviceTypes.id))
-      .where(
-        and(
-          eq(loyaltyTracking.status, 'active'),
-          gte(loyaltyTracking.nextDueDate, todayStr),
-          lte(loyaltyTracking.nextDueDate, futureDateStr)
-        )
-      )
-      .orderBy(asc(loyaltyTracking.nextDueDate));
-
-    return result.map(row => ({
-      ...row.tracking,
-      customer: row.customer!,
-      vehicle: row.vehicle!,
-      serviceType: row.serviceType!,
-    }));
-  }
-
-  async createLoyaltyTracking(tracking: InsertLoyaltyTracking): Promise<LoyaltyTracking> {
-    const [newTracking] = await db.insert(loyaltyTracking).values(tracking).returning();
-    return newTracking;
-  }
-
-  async updateLoyaltyTracking(id: number, tracking: Partial<InsertLoyaltyTracking>): Promise<LoyaltyTracking> {
-    const [updatedTracking] = await db
-      .update(loyaltyTracking)
-      .set({ ...tracking, updatedAt: new Date() })
-      .where(eq(loyaltyTracking.id, id))
-      .returning();
-    return updatedTracking;
+      .where(eq(customers.id, customerId));
   }
 
   async deleteLoyaltyTracking(id: number): Promise<void> {
