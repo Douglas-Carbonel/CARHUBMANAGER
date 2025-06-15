@@ -658,19 +658,143 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getRevenueByDays(days: number): Promise<{ date: string; revenue: number }[]> {
-    return [];
+    try {
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+      const startDateStr = startDate.toISOString().split('T')[0];
+
+      const revenueData = await db
+        .select({
+          date: services.scheduledDate,
+          finalValue: services.finalValue,
+          estimatedValue: services.estimatedValue,
+          status: services.status
+        })
+        .from(services)
+        .where(gte(services.scheduledDate, startDateStr))
+        .orderBy(services.scheduledDate);
+
+      // Group by date and sum revenue
+      const revenueByDate: { [key: string]: number } = {};
+      
+      revenueData.forEach(service => {
+        const date = service.date;
+        const revenue = service.status === 'completed' && service.finalValue 
+          ? Number(service.finalValue) 
+          : Number(service.estimatedValue || 0);
+        
+        if (revenue > 0) {
+          revenueByDate[date] = (revenueByDate[date] || 0) + revenue;
+        }
+      });
+
+      // Create array with all days in range
+      const result = [];
+      for (let i = 0; i < days; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        result.unshift({
+          date: dateStr,
+          revenue: revenueByDate[dateStr] || 0
+        });
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Error getting revenue by days:', error);
+      return [];
+    }
   }
 
   async getTopServices(): Promise<{ name: string; count: number; revenue: number }[]> {
-    return [];
+    try {
+      const topServices = await db
+        .select({
+          serviceName: serviceTypes.name,
+          count: sql<number>`count(*)`,
+          totalRevenue: sql<number>`sum(CASE 
+            WHEN ${services.status} = 'completed' AND ${services.finalValue} IS NOT NULL 
+            THEN ${services.finalValue}
+            ELSE COALESCE(${services.estimatedValue}, 0)
+          END)`
+        })
+        .from(services)
+        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+        .groupBy(serviceTypes.name)
+        .orderBy(sql`count(*) desc`)
+        .limit(5);
+
+      return topServices.map(service => ({
+        name: service.serviceName,
+        count: service.count,
+        revenue: Number(service.totalRevenue || 0)
+      }));
+    } catch (error) {
+      console.error('Error getting top services:', error);
+      return [];
+    }
   }
 
   async getRecentServices(limit: number): Promise<any[]> {
-    return [];
+    try {
+      const recentServices = await db
+        .select({
+          id: services.id,
+          customerName: customers.name,
+          vehiclePlate: vehicles.licensePlate,
+          serviceTypeName: serviceTypes.name,
+          scheduledDate: services.scheduledDate,
+          status: services.status,
+          estimatedValue: services.estimatedValue,
+          finalValue: services.finalValue
+        })
+        .from(services)
+        .innerJoin(customers, eq(services.customerId, customers.id))
+        .innerJoin(vehicles, eq(services.vehicleId, vehicles.id))
+        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+        .orderBy(desc(services.createdAt))
+        .limit(limit);
+
+      return recentServices;
+    } catch (error) {
+      console.error('Error getting recent services:', error);
+      return [];
+    }
   }
 
   async getUpcomingAppointments(limit: number): Promise<any[]> {
-    return [];
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      const upcomingAppointments = await db
+        .select({
+          id: services.id,
+          customerName: customers.name,
+          vehiclePlate: vehicles.licensePlate,
+          serviceTypeName: serviceTypes.name,
+          scheduledDate: services.scheduledDate,
+          scheduledTime: services.scheduledTime,
+          status: services.status
+        })
+        .from(services)
+        .innerJoin(customers, eq(services.customerId, customers.id))
+        .innerJoin(vehicles, eq(services.vehicleId, vehicles.id))
+        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+        .where(
+          and(
+            gte(services.scheduledDate, today),
+            eq(services.status, 'scheduled')
+          )
+        )
+        .orderBy(services.scheduledDate, services.scheduledTime)
+        .limit(limit);
+
+      return upcomingAppointments;
+    } catch (error) {
+      console.error('Error getting upcoming appointments:', error);
+      return [];
+    }
   }
 
   // Vehicle analytics
@@ -725,6 +849,124 @@ export class DatabaseStorage implements IStorage {
         percentage: vehiclesData.length > 0 ? (count / vehiclesData.length) * 100 : 0
       }))
     };
+  }
+
+  // Revenue data for charts
+  async getRevenueData(days: number): Promise<{ date: string; revenue: number }[]> {
+    return this.getRevenueByDays(days);
+  }
+
+  // Loyalty tracking functions
+  async getLoyaltyTracking(): Promise<any[]> {
+    try {
+      const tracking = await db
+        .select({
+          customerId: customers.id,
+          customerName: customers.name,
+          loyaltyPoints: customers.loyaltyPoints,
+          totalServices: sql<number>`count(${services.id})`,
+          lastServiceDate: sql<string>`max(${services.scheduledDate})`
+        })
+        .from(customers)
+        .leftJoin(services, eq(customers.id, services.customerId))
+        .groupBy(customers.id, customers.name, customers.loyaltyPoints)
+        .orderBy(desc(customers.loyaltyPoints));
+
+      return tracking;
+    } catch (error) {
+      console.error('Error getting loyalty tracking:', error);
+      return [];
+    }
+  }
+
+  async getLoyaltyTrackingByCustomer(customerId: number): Promise<any[]> {
+    try {
+      const tracking = await db
+        .select({
+          serviceId: services.id,
+          serviceTypeName: serviceTypes.name,
+          scheduledDate: services.scheduledDate,
+          status: services.status,
+          pointsEarned: serviceTypes.loyaltyPoints
+        })
+        .from(services)
+        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+        .where(eq(services.customerId, customerId))
+        .orderBy(desc(services.scheduledDate));
+
+      return tracking;
+    } catch (error) {
+      console.error('Error getting customer loyalty tracking:', error);
+      return [];
+    }
+  }
+
+  async getOverdueLoyaltyServices(): Promise<any[]> {
+    try {
+      const today = new Date();
+      const overdue = await db
+        .select({
+          customerId: customers.id,
+          customerName: customers.name,
+          serviceTypeName: serviceTypes.name,
+          lastServiceDate: sql<string>`max(${services.scheduledDate})`,
+          intervalMonths: serviceTypes.intervalMonths
+        })
+        .from(customers)
+        .innerJoin(services, eq(customers.id, services.customerId))
+        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+        .where(
+          and(
+            eq(serviceTypes.isRecurring, true),
+            isNotNull(serviceTypes.intervalMonths)
+          )
+        )
+        .groupBy(customers.id, customers.name, serviceTypes.name, serviceTypes.intervalMonths)
+        .having(
+          sql`DATE_ADD(max(${services.scheduledDate}), INTERVAL ${serviceTypes.intervalMonths} MONTH) < CURDATE()`
+        );
+
+      return overdue;
+    } catch (error) {
+      console.error('Error getting overdue loyalty services:', error);
+      return [];
+    }
+  }
+
+  async getUpcomingLoyaltyServices(days: number): Promise<any[]> {
+    try {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + days);
+
+      const upcoming = await db
+        .select({
+          customerId: customers.id,
+          customerName: customers.name,
+          serviceTypeName: serviceTypes.name,
+          lastServiceDate: sql<string>`max(${services.scheduledDate})`,
+          intervalMonths: serviceTypes.intervalMonths,
+          nextDueDate: sql<string>`DATE_ADD(max(${services.scheduledDate}), INTERVAL ${serviceTypes.intervalMonths} MONTH)`
+        })
+        .from(customers)
+        .innerJoin(services, eq(customers.id, services.customerId))
+        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+        .where(
+          and(
+            eq(serviceTypes.isRecurring, true),
+            isNotNull(serviceTypes.intervalMonths)
+          )
+        )
+        .groupBy(customers.id, customers.name, serviceTypes.name, serviceTypes.intervalMonths)
+        .having(
+          sql`DATE_ADD(max(${services.scheduledDate}), INTERVAL ${serviceTypes.intervalMonths} MONTH) <= DATE_ADD(CURDATE(), INTERVAL ${days} DAY) 
+              AND DATE_ADD(max(${services.scheduledDate}), INTERVAL ${serviceTypes.intervalMonths} MONTH) >= CURDATE()`
+        );
+
+      return upcoming;
+    } catch (error) {
+      console.error('Error getting upcoming loyalty services:', error);
+      return [];
+    }
   }
 
   // Basic loyalty points operation
