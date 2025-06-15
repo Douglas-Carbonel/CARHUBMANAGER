@@ -20,6 +20,7 @@ import { insertServiceSchema, type Service, type Customer, type Vehicle, type Se
 import { z } from "zod";
 import { format } from "date-fns";
 import ServiceAnalytics from "@/components/dashboard/service-analytics";
+import { useLocation } from "wouter";
 
 const serviceFormSchema = insertServiceSchema.extend({
   customerId: z.number().min(1, "Cliente é obrigatório"),
@@ -30,7 +31,13 @@ const serviceFormSchema = insertServiceSchema.extend({
 
 export default function Services() {
   const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [location] = useLocation();
+  
+  // Get customer filter from URL params
+  const urlParams = new URLSearchParams(location.split('?')[1] || '');
+  const customerFilter = urlParams.get('customer') || '';
+  
+  const [searchTerm, setSearchTerm] = useState(customerFilter);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);

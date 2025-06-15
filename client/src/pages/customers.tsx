@@ -54,7 +54,6 @@ export default function CustomersPage() {
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerFormSchema),
     defaultValues: {
-      code: "",
       name: "",
       email: "",
       phone: "",
@@ -155,7 +154,6 @@ export default function CustomersPage() {
   const handleEdit = (customer: Customer) => {
     setEditingCustomer(customer);
     form.reset({
-      code: customer.code,
       name: customer.name,
       email: customer.email || "",
       phone: customer.phone || "",
@@ -241,19 +239,6 @@ export default function CustomersPage() {
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="code"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Código</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Código do cliente" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
                         <FormField
                           control={form.control}
                           name="name"
@@ -541,7 +526,7 @@ export default function CustomersPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setLocation(`/services?customerId=${customer.id}`)}
+                            onClick={() => setLocation(`/services?customer=${customer.name}`)}
                             className="border-teal-200 text-teal-700 hover:bg-teal-50 rounded-xl h-9"
                           >
                             <Wrench className="h-3 w-3 mr-1" />
