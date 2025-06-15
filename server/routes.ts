@@ -307,13 +307,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Se não foi informada data de agendamento, usar a data atual
       if (!serviceData.scheduledDate || serviceData.scheduledDate === "") {
-        const today = new Date();
-        serviceData.scheduledDate = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+        const now = new Date();
+        serviceData.scheduledDate = now.toISOString().split('T')[0]; // YYYY-MM-DD format
       }
       
-      // Garantir que scheduledTime seja null se não fornecido
+      // Se não foi informada hora de agendamento, usar a hora atual
       if (!serviceData.scheduledTime || serviceData.scheduledTime === "") {
-        serviceData.scheduledTime = null;
+        const now = new Date();
+        // Formatar hora como HH:MM:SS
+        serviceData.scheduledTime = now.toTimeString().split(' ')[0]; // HH:MM:SS format
       }
       
       console.log('Creating service with data:', JSON.stringify(serviceData, null, 2));
