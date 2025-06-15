@@ -772,7 +772,7 @@ export default function VehiclesPage() {
                         {/* Ações */}
                         <div className="space-y-2">
                           <Button
-                            onClick={() => setLocation(`/services?vehicleId=${vehicle.id}`)}
+                            onClick={() => setLocation(`/services?vehicleId=${vehicle.id}&vehiclePlate=${encodeURIComponent(vehicle.licensePlate)}`)}
                             className="w-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-sm rounded-xl h-10"
                             size="sm"
                           >
@@ -783,7 +783,7 @@ export default function VehiclesPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setLocation(`/reports?vehicleId=${vehicle.id}`)}
+                            onClick={() => setLocation(`/reports?vehicleId=${vehicle.id}&vehiclePlate=${encodeURIComponent(vehicle.licensePlate)}`)}
                             className="w-full border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl h-9"
                           >
                             <FileText className="h-3 w-3 mr-2" />

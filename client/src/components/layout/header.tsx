@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Bell, Search, Shield, Settings } from "lucide-react";
+import { Bell, Shield, Settings } from "lucide-react";
 import { Link } from "wouter";
 
 interface HeaderProps {
@@ -33,10 +33,6 @@ export default function Header({ title, subtitle, action }: HeaderProps) {
         )}
 
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm" className="text-teal-600 hover:text-white hover:bg-teal-600/80 border border-teal-300 rounded-lg transition-all duration-200 shadow-sm">
-            <Search className="h-5 w-5" />
-          </Button>
-
           <Button variant="ghost" size="sm" className="text-teal-600 hover:text-white hover:bg-teal-600/80 border border-teal-300 rounded-lg transition-all duration-200 shadow-sm">
             <Bell className="h-5 w-5" />
           </Button>

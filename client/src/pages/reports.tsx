@@ -51,13 +51,18 @@ export default function Reports() {
   const [location] = useLocation();
   const [selectedPeriod, setSelectedPeriod] = useState("30");
   const [selectedCustomer, setSelectedCustomer] = useState<string>("all");
+  const [selectedVehicle, setSelectedVehicle] = useState<string>("all");
 
-  // Extract customerId from URL parameters
+  // Extract parameters from URL
   useEffect(() => {
     const urlParams = new URLSearchParams(location.split('?')[1] || '');
     const customerId = urlParams.get('customerId');
+    const vehicleId = urlParams.get('vehicleId');
     if (customerId) {
       setSelectedCustomer(customerId);
+    }
+    if (vehicleId) {
+      setSelectedVehicle(vehicleId);
     }
   }, [location]);
 
@@ -114,7 +119,8 @@ export default function Reports() {
       const serviceDate = new Date(service.scheduledDate);
       const matchesPeriod = serviceDate >= cutoffDate;
       const matchesCustomer = selectedCustomer === "all" || service.customerId.toString() === selectedCustomer;
-      return matchesPeriod && matchesCustomer;
+      const matchesVehicle = selectedVehicle === "all" || service.vehicleId.toString() === selectedVehicle;
+      return matchesPeriod && matchesCustomer && matchesVehicle;
     });
 
     const previousPeriodServices = services.filter((service: Service) => {

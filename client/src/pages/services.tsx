@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -32,18 +32,20 @@ const serviceFormSchema = insertServiceSchema.extend({
 export default function Services() {
   const { toast } = useToast();
   const [location] = useLocation();
-  
+
   // Get customer filter from URL params
   const urlParams = new URLSearchParams(window.location.search);
   const customerIdFilter = urlParams.get('customerId') || '';
   const customerFilter = urlParams.get('customer') || '';
-  
+  const vehicleIdFilter = urlParams.get('vehicleId');
+  const vehiclePlateFilter = urlParams.get('vehiclePlate');
+
   // Debug logging
   console.log('Services page - location:', location);
   console.log('Services page - window.location.search:', window.location.search);
   console.log('Services page - customerIdFilter:', customerIdFilter);
   console.log('Services page - customerFilter:', customerFilter);
-  
+
   const [searchTerm, setSearchTerm] = useState(customerFilter);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -202,7 +204,7 @@ export default function Services() {
 
   const filteredServices = services.filter((service) => {
     const searchLower = searchTerm.toLowerCase();
-    
+
     // If we have a customerId filter from URL, only show that customer's services
     if (customerIdFilter) {
       const customerId = parseInt(customerIdFilter);
@@ -210,14 +212,22 @@ export default function Services() {
       const matchesStatus = filterStatus === "all" || service.status === filterStatus;
       return matchesCustomer && matchesStatus;
     }
-    
+
     // If we have a customer name filter from URL and searchTerm matches it, only show that customer's services
     if (customerFilter && searchTerm === customerFilter) {
       const matchesCustomer = (service.customer?.name || "").toLowerCase() === searchLower;
       const matchesStatus = filterStatus === "all" || service.status === filterStatus;
       return matchesCustomer && matchesStatus;
     }
-    
+
+    // Vehicle Filtering by ID
+    if (vehicleIdFilter) {
+      const vehicleId = parseInt(vehicleIdFilter);
+      const matchesVehicle = service.vehicleId === vehicleId;
+      const matchesStatus = filterStatus === "all" || service.status === filterStatus;
+      return matchesVehicle && matchesStatus;
+    }
+
     // Otherwise, use the regular search logic
     const matchesSearch = (
       (service.customer?.name || "").toLowerCase().includes(searchLower) ||
@@ -225,11 +235,20 @@ export default function Services() {
       (service.serviceType?.name || "").toLowerCase().includes(searchLower) ||
       (service.notes || "").toLowerCase().includes(searchLower)
     );
-    
+
     const matchesStatus = filterStatus === "all" || service.status === filterStatus;
-    
+
     return matchesSearch && matchesStatus;
   });
+
+  // Pre-fill search with customer name or vehicle plate if provided
+  useEffect(() => {
+    if (customerFilter) {
+      setSearchTerm(customerFilter);
+    } else if (vehiclePlateFilter) {
+      setSearchTerm(decodeURIComponent(vehiclePlateFilter));
+    }
+  }, [customerFilter, vehiclePlateFilter]);
 
   const getStatusBadge = (status: string) => {
     const colors = {
@@ -529,7 +548,7 @@ export default function Services() {
                 <SelectItem value="cancelled">Cancelado</SelectItem>
               </SelectContent>
             </Select>
-            
+
             <div className="flex items-center gap-4">
               <Button
                 variant="outline"
