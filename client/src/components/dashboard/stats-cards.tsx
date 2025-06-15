@@ -6,6 +6,8 @@ import { TrendingUp, DollarSign, Wrench, Calendar, Users } from "lucide-react";
 export default function StatsCards() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ["/api/dashboard/stats"],
+    staleTime: 30000, // 30 seconds
+    refetchOnWindowFocus: true,
   });
 
   const statsData = [

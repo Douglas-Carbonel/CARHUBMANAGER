@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 
 export default function RevenueChart() {
   const { data: revenueData, isLoading } = useQuery({
-    queryKey: ["/api/dashboard/revenue", { days: 7 }],
+    queryKey: ["/api/dashboard/revenue?days=7"],
+    staleTime: 30000,
+    refetchOnWindowFocus: true,
   });
 
   // Transform data for chart

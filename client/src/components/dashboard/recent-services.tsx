@@ -21,7 +21,9 @@ const statusLabels = {
 
 export default function RecentServices() {
   const { data: recentServices, isLoading } = useQuery({
-    queryKey: ["/api/dashboard/recent-services", { limit: 5 }],
+    queryKey: ["/api/dashboard/recent-services?limit=5"],
+    staleTime: 30000,
+    refetchOnWindowFocus: true,
   });
 
   if (isLoading) {

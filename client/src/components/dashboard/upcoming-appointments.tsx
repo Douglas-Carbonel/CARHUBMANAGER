@@ -6,7 +6,9 @@ import { Phone, Calendar, ArrowRight } from "lucide-react";
 
 export default function UpcomingAppointments() {
   const { data: upcomingAppointments, isLoading } = useQuery({
-    queryKey: ["/api/dashboard/upcoming-appointments", { limit: 5 }],
+    queryKey: ["/api/dashboard/upcoming-appointments?limit=5"],
+    staleTime: 30000,
+    refetchOnWindowFocus: true,
   });
 
   if (isLoading) {

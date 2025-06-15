@@ -20,6 +20,8 @@ const serviceIconColors: { [key: string]: string } = {
 export default function TopServices() {
   const { data: topServices, isLoading } = useQuery({
     queryKey: ["/api/dashboard/top-services"],
+    staleTime: 30000,
+    refetchOnWindowFocus: true,
   });
 
   if (isLoading) {

@@ -8,7 +8,7 @@ import { setupAuth, createInitialAdmin, hashPassword } from "./auth";
 async function createInitialServiceTypes() {
   try {
     const existingTypes = await storage.getServiceTypes();
-    
+
     // Lista completa de tipos de serviços (incluindo os novos)
     const allServiceTypes = [
       { 
@@ -83,7 +83,7 @@ async function createInitialServiceTypes() {
 
     // Verifica quais tipos já existem
     const existingNames = existingTypes.map(type => type.name);
-    
+
     // Adiciona apenas os tipos que não existem
     for (const serviceType of allServiceTypes) {
       if (!existingNames.includes(serviceType.name)) {
@@ -91,7 +91,7 @@ async function createInitialServiceTypes() {
         console.log(`Tipo de serviço "${serviceType.name}" criado com sucesso`);
       }
     }
-    
+
     if (existingTypes.length === 0) {
       console.log("Tipos de serviço iniciais criados com sucesso");
     } else {
@@ -290,7 +290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/services", requireAuth, async (req, res) => {
     try {
       console.log('Received service data:', JSON.stringify(req.body, null, 2));
-      
+
       // Prepare the data for validation
       const cleanedData = {
         ...req.body,
@@ -301,23 +301,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notes: req.body.notes || undefined,
         scheduledTime: req.body.scheduledTime || undefined,
       };
-      
+
       const serviceData = insertServiceSchema.parse(cleanedData);
       console.log('Parsed service data:', JSON.stringify(serviceData, null, 2));
-      
+
       // Se não foi informada data de agendamento, usar a data atual
       if (!serviceData.scheduledDate || serviceData.scheduledDate === "") {
         const now = new Date();
         serviceData.scheduledDate = now.toISOString().split('T')[0]; // YYYY-MM-DD format
       }
-      
+
       // Se não foi informada hora de agendamento, usar a hora atual
       if (!serviceData.scheduledTime || serviceData.scheduledTime === "") {
         const now = new Date();
         // Formatar hora como HH:MM:SS
         serviceData.scheduledTime = now.toTimeString().split(' ')[0]; // HH:MM:SS format
       }
-      
+
       console.log('Creating service with data:', JSON.stringify(serviceData, null, 2));
       const service = await storage.createService(serviceData);
       console.log('Service created successfully:', service);
@@ -402,46 +402,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Dashboard routes
+  // Dashboard stats
   app.get("/api/dashboard/stats", requireAuth, async (req, res) => {
     try {
       const stats = await storage.getDashboardStats();
       res.json(stats);
-    } catch (error: any) {
-      console.error("Error fetching dashboard stats:", error);
-      res.status(500).json({ 
-        error: "Failed to fetch dashboard stats",
-        details: error.message 
-      });
+    } catch (error) {
+      console.error("Error getting dashboard stats:", error);
+      res.status(500).json({ message: "Failed to get dashboard stats" });
     }
   });
 
-// Get analytics endpoints
-app.get("/api/analytics/customers", requireAuth, async (req, res) => {
-  try {
-    const analytics = await storage.getCustomerAnalytics();
-    res.json(analytics);
-  } catch (error: any) {
-    console.error("Error fetching customer analytics:", error);
-    res.status(500).json({ 
-      error: "Failed to fetch customer analytics",
-      details: error.message 
-    });
-  }
-});
+  // Dashboard revenue chart
+  app.get("/api/dashboard/revenue", requireAuth, async (req, res) => {
+    try {
+      const days = parseInt(req.query.days as string) || 7;
+      const revenue = await storage.getRevenueData(days);
+      res.json(revenue);
+    } catch (error) {
+      console.error("Error getting revenue data:", error);
+      res.status(500).json({ message: "Failed to get revenue data" });
+    }
+  });
 
-app.get("/api/analytics/services", requireAuth, async (req, res) => {
-  try {
-    const analytics = await storage.getServiceAnalytics();
-    res.json(analytics);
-  } catch (error: any) {
-    console.error("Error fetching service analytics:", error);
-    res.status(500).json({ 
-      error: "Failed to fetch service analytics",
-      details: error.message 
-    });
-  }
-});
+  // Top services
+  app.get("/api/dashboard/top-services", requireAuth, async (req, res) => {
+    try {
+      const topServices = await storage.getTopServices();
+      res.json(topServices);
+    } catch (error) {
+      console.error("Error getting top services:", error);
+      res.status(500).json({ message: "Failed to get top services" });
+    }
+  });
+
+  // Recent services
+  app.get("/api/dashboard/recent-services", requireAuth, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 5;
+      const recentServices = await storage.getRecentServices(limit);
+      res.json(recentServices);
+    } catch (error) {
+      console.error("Error getting recent services:", error);
+      res.status(500).json({ message: "Failed to get recent services" });
+    }
+  });
+
+  // Upcoming appointments
+  app.get("/api/dashboard/upcoming-appointments", requireAuth, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 5;
+      const appointments = await storage.getUpcomingAppointments(limit);
+      res.json(appointments);
+    } catch (error) {
+      console.error("Error getting upcoming appointments:", error);
+      res.status(500).json({ message: "Failed to get upcoming appointments" });
+    }
+  });
+
+  // Analytics routes
+  app.get("/api/analytics/services", requireAuth, async (req, res) => {
+    try {
+      const analytics = await storage.getServiceAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error getting service analytics:", error);
+      res.status(500).json({ message: "Failed to get service analytics" });
+    }
+  });
+
+  app.get("/api/analytics/customers", requireAuth, async (req, res) => {
+    try {
+      const analytics = await storage.getCustomerAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error getting customer analytics:", error);
+      res.status(500).json({ message: "Failed to get customer analytics" });
+    }
+  });
 
 app.get("/api/analytics/vehicles", requireAuth, async (req, res) => {
   try {
