@@ -195,12 +195,16 @@ export default function Services() {
 
   const filteredServices = services.filter((service) => {
     const searchLower = searchTerm.toLowerCase();
-    return (
+    const matchesSearch = (
       (service.customer?.name || "").toLowerCase().includes(searchLower) ||
       (service.vehicle?.licensePlate || "").toLowerCase().includes(searchLower) ||
       (service.serviceType?.name || "").toLowerCase().includes(searchLower) ||
       (service.notes || "").toLowerCase().includes(searchLower)
     );
+    
+    const matchesStatus = filterStatus === "all" || service.status === filterStatus;
+    
+    return matchesSearch && matchesStatus;
   });
 
   const getStatusBadge = (status: string) => {
