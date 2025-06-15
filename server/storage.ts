@@ -462,74 +462,87 @@ export class DatabaseStorage implements IStorage {
   async getDashboardStats() {
     try {
       const today = new Date();
-      const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+      const todayStr = today.toISOString().split('T')[0];
       
-      console.log('Dashboard stats - today:', todayStr);
-
-      // Get all services for debugging
-      const allServices = await db.select().from(services);
-      console.log('Total services in database:', allServices.length);
-
-      // Calculate total revenue from all completed services
-      const allCompletedServices = await db
+      // Get total completed services revenue
+      const completedServicesRevenue = await db
         .select({
-          finalValue: services.finalValue,
-          estimatedValue: services.estimatedValue,
-          status: services.status
+          totalRevenue: sql<number>`SUM(CASE 
+            WHEN ${services.finalValue} IS NOT NULL THEN ${services.finalValue}
+            ELSE COALESCE(${services.estimatedValue}, 0)
+          END)`
         })
         .from(services)
         .where(eq(services.status, 'completed'));
 
-      const totalRevenue = allCompletedServices.reduce((sum, service) => {
-        const value = Number(service.finalValue || service.estimatedValue || 0);
-        return sum + value;
-      }, 0);
+      const totalRevenue = Number(completedServicesRevenue[0]?.totalRevenue || 0);
 
       // Get today's services count
-      const todayServicesResult = await db
+      const todayServices = await db
         .select({ count: sql<number>`count(*)` })
         .from(services)
         .where(eq(services.scheduledDate, todayStr));
 
-      const todayServicesCount = todayServicesResult[0]?.count || 0;
-
-      // Get scheduled appointments (future appointments)
-      const scheduledAppointmentsResult = await db
+      // Get scheduled appointments count
+      const scheduledAppointments = await db
         .select({ count: sql<number>`count(*)` })
+        .from(services)
+        .where(eq(services.status, 'scheduled'));
+
+      // Get total customers count
+      const totalCustomers = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(customers);
+
+      // Get monthly revenue (current month)
+      const currentMonth = new Date();
+      const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+      const firstDayStr = firstDayOfMonth.toISOString().split('T')[0];
+
+      const monthlyRevenue = await db
+        .select({
+          revenue: sql<number>`SUM(CASE 
+            WHEN ${services.finalValue} IS NOT NULL THEN ${services.finalValue}
+            ELSE COALESCE(${services.estimatedValue}, 0)
+          END)`
+        })
         .from(services)
         .where(
           and(
-            eq(services.status, 'scheduled'),
-            gte(services.scheduledDate, todayStr)
+            gte(services.scheduledDate, firstDayStr),
+            eq(services.status, 'completed')
           )
         );
 
-      const scheduledAppointments = scheduledAppointmentsResult[0]?.count || 0;
-
-      // Get active customers (customers with any services)
-      const activeCustomersResult = await db
-        .selectDistinct({ customerId: services.customerId })
-        .from(services);
-
-      const activeCustomers = activeCustomersResult.length;
-
-      const stats = {
-        dailyRevenue: totalRevenue,
-        dailyServices: todayServicesCount,
-        appointments: scheduledAppointments,
-        activeCustomers: activeCustomers
+      return {
+        totalRevenue: totalRevenue,
+        monthlyRevenue: Number(monthlyRevenue[0]?.revenue || 0),
+        todayServices: Number(todayServices[0]?.count || 0),
+        scheduledAppointments: Number(scheduledAppointments[0]?.count || 0),
+        totalCustomers: Number(totalCustomers[0]?.count || 0),
+        totalServices: await this.getTotalServicesCount()
       };
-
-      console.log('Dashboard stats calculated:', stats);
-      return stats;
     } catch (error) {
       console.error('Error getting dashboard stats:', error);
       return {
-        dailyRevenue: 0,
-        dailyServices: 0,
-        appointments: 0,
-        activeCustomers: 0
+        totalRevenue: 0,
+        monthlyRevenue: 0,
+        todayServices: 0,
+        scheduledAppointments: 0,
+        totalCustomers: 0,
+        totalServices: 0
       };
+    }
+  }
+
+  async getTotalServicesCount(): Promise<number> {
+    try {
+      const result = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(services);
+      return Number(result[0]?.count || 0);
+    } catch (error) {
+      return 0;
     }
   }
 
