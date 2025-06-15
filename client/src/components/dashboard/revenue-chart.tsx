@@ -6,16 +6,19 @@ import { MoreHorizontal, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function RevenueChart() {
-  const { data: revenueData, isLoading } = useQuery({
+  const { data: revenueData, isLoading, error } = useQuery({
     queryKey: ["/api/dashboard/revenue?days=7"],
     staleTime: 30000,
     refetchOnWindowFocus: true,
   });
 
+  console.log('RevenueChart - data:', revenueData);
+  console.log('RevenueChart - error:', error);
+
   // Transform data for chart
   const chartData = revenueData?.map((item: any) => ({
     date: new Date(item.date).toLocaleDateString('pt-BR', { weekday: 'short' }),
-    revenue: item.revenue,
+    revenue: Number(item.revenue) || 0,
   })) || [];
 
   if (isLoading) {

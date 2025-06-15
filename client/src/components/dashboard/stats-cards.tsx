@@ -4,17 +4,22 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, DollarSign, Wrench, Calendar, Users } from "lucide-react";
 
 export default function StatsCards() {
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading, error } = useQuery({
     queryKey: ["/api/dashboard/stats"],
     staleTime: 30000, // 30 seconds
     refetchOnWindowFocus: true,
   });
 
+  // Debug logging
+  console.log('StatsCards - data:', stats);
+  console.log('StatsCards - isLoading:', isLoading);
+  console.log('StatsCards - error:', error);
+
   const statsData = [
     {
-      title: "Faturamento Hoje",
-      value: stats ? `R$ ${stats.dailyRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : "R$ 0,00",
-      change: "+12% vs ontem",
+      title: "Faturamento Total",
+      value: stats && stats.dailyRevenue ? `R$ ${Number(stats.dailyRevenue).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : "R$ 0,00",
+      change: "Serviços concluídos",
       icon: DollarSign,
       gradient: "from-green-600 to-emerald-700",
       bgGradient: "from-green-50 to-emerald-50",
@@ -23,8 +28,8 @@ export default function StatsCards() {
     },
     {
       title: "Serviços Hoje",
-      value: stats?.dailyServices || 0,
-      change: "+5% vs ontem",
+      value: stats?.dailyServices ?? 0,
+      change: "Agendados para hoje",
       icon: Wrench,
       gradient: "from-blue-600 to-blue-700",
       bgGradient: "from-blue-50 to-blue-100",
@@ -33,8 +38,8 @@ export default function StatsCards() {
     },
     {
       title: "Agendamentos",
-      value: stats?.appointments || 0,
-      change: "Próximas 24h",
+      value: stats?.appointments ?? 0,
+      change: "Próximos agendamentos",
       icon: Calendar,
       gradient: "from-amber-500 to-orange-600",
       bgGradient: "from-amber-50 to-orange-50",
@@ -43,8 +48,8 @@ export default function StatsCards() {
     },
     {
       title: "Clientes Ativos",
-      value: stats?.activeCustomers || 0,
-      change: "+3% este mês",
+      value: stats?.activeCustomers ?? 0,
+      change: "Com serviços registrados",
       icon: Users,
       gradient: "from-slate-600 to-slate-700",
       bgGradient: "from-slate-50 to-slate-100",

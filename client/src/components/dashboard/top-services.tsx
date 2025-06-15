@@ -18,11 +18,14 @@ const serviceIconColors: { [key: string]: string } = {
 };
 
 export default function TopServices() {
-  const { data: topServices, isLoading } = useQuery({
+  const { data: topServices, isLoading, error } = useQuery({
     queryKey: ["/api/dashboard/top-services"],
     staleTime: 30000,
     refetchOnWindowFocus: true,
   });
+
+  console.log('TopServices - data:', topServices);
+  console.log('TopServices - error:', error);
 
   if (isLoading) {
     return (

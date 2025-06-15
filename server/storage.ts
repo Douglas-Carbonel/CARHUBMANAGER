@@ -469,40 +469,55 @@ export class DatabaseStorage implements IStorage {
       // Get all services for debugging
       const allServices = await db.select().from(services);
       console.log('Total services in database:', allServices.length);
-      console.log('Sample service dates:', allServices.slice(0, 3).map(s => ({ id: s.id, scheduledDate: s.scheduledDate, status: s.status })));
 
-      // Get completed services for revenue calculation (any date)
-      const completedServices = await db
-        .select()
+      // Calculate total revenue from all completed services
+      const allCompletedServices = await db
+        .select({
+          finalValue: services.finalValue,
+          estimatedValue: services.estimatedValue,
+          status: services.status
+        })
         .from(services)
         .where(eq(services.status, 'completed'));
 
-      const totalRevenue = completedServices.reduce((sum, service) => {
-        return sum + Number(service.finalValue || service.estimatedValue || 0);
+      const totalRevenue = allCompletedServices.reduce((sum, service) => {
+        const value = Number(service.finalValue || service.estimatedValue || 0);
+        return sum + value;
       }, 0);
 
       // Get today's services count
-      const todayServicesCount = await db
+      const todayServicesResult = await db
         .select({ count: sql<number>`count(*)` })
         .from(services)
         .where(eq(services.scheduledDate, todayStr));
 
-      // Get all scheduled appointments
-      const scheduledAppointments = await db
+      const todayServicesCount = todayServicesResult[0]?.count || 0;
+
+      // Get scheduled appointments (future appointments)
+      const scheduledAppointmentsResult = await db
         .select({ count: sql<number>`count(*)` })
         .from(services)
-        .where(eq(services.status, 'scheduled'));
+        .where(
+          and(
+            eq(services.status, 'scheduled'),
+            gte(services.scheduledDate, todayStr)
+          )
+        );
+
+      const scheduledAppointments = scheduledAppointmentsResult[0]?.count || 0;
 
       // Get active customers (customers with any services)
-      const activeCustomers = await db
+      const activeCustomersResult = await db
         .selectDistinct({ customerId: services.customerId })
         .from(services);
 
+      const activeCustomers = activeCustomersResult.length;
+
       const stats = {
         dailyRevenue: totalRevenue,
-        dailyServices: allServices.length, // Show total services for now
-        appointments: scheduledAppointments[0]?.count || 0,
-        activeCustomers: activeCustomers.length
+        dailyServices: todayServicesCount,
+        appointments: scheduledAppointments,
+        activeCustomers: activeCustomers
       };
 
       console.log('Dashboard stats calculated:', stats);
