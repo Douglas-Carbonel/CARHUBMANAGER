@@ -291,14 +291,34 @@ export default function VehiclesPage() {
         <main className="flex-1 overflow-y-auto bg-gradient-to-br from-white/80 via-blue-50/50 to-indigo-50/30 backdrop-blur-sm">
           <div className="p-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <Input
-                  placeholder="Buscar veículos..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-12 w-80 h-12 border-2 border-gray-200 focus:border-blue-400 rounded-xl shadow-sm bg-white/80"
-                />
+              <div className="flex-1 max-w-md space-y-3">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Input
+                    placeholder="Buscar veículos..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-12 w-80 h-12 border-2 border-gray-200 focus:border-blue-400 rounded-xl shadow-sm bg-white/80"
+                  />
+                </div>
+                {customerFilter && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-200">
+                      Cliente: {customers.find(c => c.id === customerFilter)?.name || 'Desconhecido'}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setCustomerFilter(null);
+                        window.history.replaceState({}, '', '/vehicles');
+                      }}
+                      className="h-6 w-6 p-0 hover:bg-red-100"
+                    >
+                      ×
+                    </Button>
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-4">
                 <Button
