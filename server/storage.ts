@@ -463,54 +463,50 @@ export class DatabaseStorage implements IStorage {
     try {
       const today = new Date();
       const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+      
+      console.log('Dashboard stats - today:', todayStr);
 
-      // Get today's revenue from completed services
-      const todayCompletedServices = await db
+      // Get all services for debugging
+      const allServices = await db.select().from(services);
+      console.log('Total services in database:', allServices.length);
+      console.log('Sample service dates:', allServices.slice(0, 3).map(s => ({ id: s.id, scheduledDate: s.scheduledDate, status: s.status })));
+
+      // Get completed services for revenue calculation (any date)
+      const completedServices = await db
         .select()
         .from(services)
-        .where(
-          and(
-            eq(services.scheduledDate, todayStr),
-            eq(services.status, 'completed')
-          )
-        );
+        .where(eq(services.status, 'completed'));
 
-      const dailyRevenue = todayCompletedServices.reduce((sum, service) => {
+      const totalRevenue = completedServices.reduce((sum, service) => {
         return sum + Number(service.finalValue || service.estimatedValue || 0);
       }, 0);
 
-      // Get today's total services count (all statuses)
+      // Get today's services count
       const todayServicesCount = await db
         .select({ count: sql<number>`count(*)` })
         .from(services)
         .where(eq(services.scheduledDate, todayStr));
 
-      // Get scheduled appointments for today and future dates
+      // Get all scheduled appointments
       const scheduledAppointments = await db
         .select({ count: sql<number>`count(*)` })
         .from(services)
-        .where(
-          and(
-            gte(services.scheduledDate, todayStr),
-            eq(services.status, 'scheduled')
-          )
-        );
+        .where(eq(services.status, 'scheduled'));
 
-      // Get active customers (customers with services in last 30 days)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
+      // Get active customers (customers with any services)
       const activeCustomers = await db
         .selectDistinct({ customerId: services.customerId })
-        .from(services)
-        .where(gte(services.scheduledDate, thirtyDaysAgo.toISOString().split('T')[0]));
+        .from(services);
 
-      return {
-        dailyRevenue,
-        dailyServices: todayServicesCount[0]?.count || 0,
+      const stats = {
+        dailyRevenue: totalRevenue,
+        dailyServices: allServices.length, // Show total services for now
         appointments: scheduledAppointments[0]?.count || 0,
         activeCustomers: activeCustomers.length
       };
+
+      console.log('Dashboard stats calculated:', stats);
+      return stats;
     } catch (error) {
       console.error('Error getting dashboard stats:', error);
       return {
