@@ -76,6 +76,7 @@ export interface IStorage {
     activeCustomers: number;
   }>;
   getRevenueByDays(days: number): Promise<{ date: string; revenue: number }[]>;
+  getRevenueData(days: number): Promise<{ date: string; revenue: number }[]>;
   getTopServices(): Promise<{ name: string; count: number; revenue: number }[]>;
   getRecentServices(limit: number): Promise<any[]>;
   getUpcomingAppointments(limit: number): Promise<any[]>;
@@ -679,6 +680,8 @@ export class DatabaseStorage implements IStorage {
       
       revenueData.forEach(service => {
         const date = service.date;
+        if (!date) return; // Skip services without dates
+        
         const revenue = service.status === 'completed' && service.finalValue 
           ? Number(service.finalValue) 
           : Number(service.estimatedValue || 0);
@@ -797,6 +800,8 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+
+
   // Vehicle analytics
   async getVehicleAnalytics() {
     const vehiclesData = await db.select().from(vehicles);
@@ -851,7 +856,7 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  // Revenue data for charts
+  // Revenue data for charts - alias for getRevenueByDays
   async getRevenueData(days: number): Promise<{ date: string; revenue: number }[]> {
     return this.getRevenueByDays(days);
   }
