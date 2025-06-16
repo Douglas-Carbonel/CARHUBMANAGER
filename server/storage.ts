@@ -486,8 +486,8 @@ export class DatabaseStorage implements IStorage {
   async getDashboardStats() {
     try {
       console.log('Getting dashboard stats...');
-      // Use a fixed date for testing - change this to new Date() for production
-      const today = new Date('2025-06-15').toISOString().split('T')[0];
+      // Use current date for real-time data
+      const today = new Date().toISOString().split('T')[0];
       console.log('Today date:', today);
 
       // Completed revenue (services with status 'completed' and their final value or estimated value)
@@ -858,8 +858,8 @@ export class DatabaseStorage implements IStorage {
   async getUpcomingAppointments(limit: number): Promise<any[]> {
     try {
       console.log('Storage: Getting upcoming appointments...');
-      // Use a fixed date for testing - change this to new Date() for production
-      const today = new Date('2025-06-15').toISOString().split('T')[0];
+      // Use current date for real-time data
+      const today = new Date().toISOString().split('T')[0];
       console.log('Storage: Today date for appointments:', today);
 
       // Verificar se temos agendamentos
@@ -1232,9 +1232,9 @@ export class DatabaseStorage implements IStorage {
   // Schedule-specific analytics
   async getScheduleStats() {
     try {
-      // Use a fixed date for testing - change this to new Date() for production
-      const today = new Date('2025-06-15').toISOString().split('T')[0];
-      const oneWeekAgo = new Date('2025-06-15');
+      // Use current date for real-time data
+      const today = new Date().toISOString().split('T')[0];
+      const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
       const weekAgoStr = oneWeekAgo.toISOString().split('T')[0];
 
@@ -1303,8 +1303,8 @@ export class DatabaseStorage implements IStorage {
 
   async getTodayAppointments() {
     try {
-      // Use a fixed date for testing - change this to new Date() for production
-      const today = new Date('2025-06-15').toISOString().split('T')[0];
+      // Use current date for real-time data
+      const today = new Date().toISOString().split('T')[0];
 
       const todayAppointments = await db
         .select({
