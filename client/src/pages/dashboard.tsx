@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { Sidebar } from "../components/layout/sidebar";
+import Sidebar from "../components/layout/sidebar";
 import Header from "../components/layout/header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Alert, AlertDescription } from "../components/ui/alert";
