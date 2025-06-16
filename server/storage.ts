@@ -20,7 +20,7 @@ import {
   type InsertPayment,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, and, gte, lte, count, sum, sql, isNotNull } from "drizzle-orm";
+import { eq, desc, asc, and, gte, lte, count, sum, sql, isNotNull, or } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -1106,10 +1106,7 @@ export class DatabaseStorage implements IStorage {
           and(
             gte(services.scheduledDate, now.toISOString().split('T')[0]),
             lte(services.scheduledDate, oneWeekFromNow.toISOString().split('T')[0]),
-            or(
-              eq(services.status, 'completed'),
-              eq(services.status, 'in_progress')
-            )
+            sql`${services.status} IN ('completed', 'in_progress')`
           )
         );
 
