@@ -11,7 +11,7 @@ import { Separator } from "../components/ui/separator";
 import { SimpleStatsCards } from "../components/dashboard/simple-stats-cards";
 import { SimpleRevenueChart } from "../components/dashboard/simple-revenue-chart";
 import { TopServices } from "../components/dashboard/top-services";
-import { RecentServices } from "../components/dashboard/recent-services";
+import RecentServices from "../components/dashboard/recent-services";
 import { UpcomingAppointments } from "../components/dashboard/upcoming-appointments";
 import { 
   TrendingUp, 
