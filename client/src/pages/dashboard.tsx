@@ -8,11 +8,11 @@ import { Alert, AlertDescription } from "../components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Badge } from "../components/ui/badge";
 import { Separator } from "../components/ui/separator";
-import { SimpleStatsCards } from "../components/dashboard/simple-stats-cards";
+import SimpleStatsCards from "../components/dashboard/simple-stats-cards";
 import SimpleRevenueChart from "../components/dashboard/simple-revenue-chart";
-import { TopServices } from "../components/dashboard/top-services";
+import TopServices from "../components/dashboard/top-services";
 import RecentServices from "../components/dashboard/recent-services";
-import { UpcomingAppointments } from "../components/dashboard/upcoming-appointments";
+import UpcomingAppointments from "../components/dashboard/upcoming-appointments";
 import { 
   TrendingUp, 
   Users, 
