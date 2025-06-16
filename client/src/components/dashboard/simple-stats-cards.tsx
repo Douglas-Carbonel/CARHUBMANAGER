@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { TrendingUp, DollarSign, Wrench, Calendar, Users, AlertTriangle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { TrendingUp, DollarSign, Wrench, Calendar, Users, AlertTriangle, Info } from "lucide-react";
 
 interface DashboardStats {
   dailyRevenue: number;
@@ -67,22 +68,24 @@ export default function SimpleStatsCards() {
 
   const statsData = [
     {
-      title: "Faturamento Concluído",
+      title: "Faturamento Concluído (Hoje)",
       value: `R$ ${(stats?.completedRevenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: DollarSign,
       color: "text-green-600",
       bgColor: "bg-green-50",
       iconBg: "bg-green-600",
-      description: "Receita de serviços finalizados hoje"
+      description: "Receita de serviços finalizados hoje",
+      tooltip: "Valor total recebido de serviços marcados como 'concluído' na data de hoje"
     },
     {
-      title: "Faturamento Previsto",
+      title: "Faturamento Previsto (Hoje)",
       value: `R$ ${(stats?.predictedRevenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: TrendingUp,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
       iconBg: "bg-blue-600",
-      description: "Receita estimada de serviços agendados"
+      description: "Receita estimada de serviços agendados para hoje",
+      tooltip: "Valor estimado dos serviços agendados ou em andamento para hoje"
     },
     {
       title: "Serviços Hoje",
@@ -91,43 +94,61 @@ export default function SimpleStatsCards() {
       color: "text-indigo-600",
       bgColor: "bg-indigo-50",
       iconBg: "bg-indigo-600",
-      description: "Total de serviços agendados"
+      description: "Total de serviços agendados para hoje",
+      tooltip: "Quantidade de serviços agendados para hoje (excluindo cancelados)"
     },
     {
-      title: "Agendamentos",
+      title: "Agendamentos Hoje",
       value: stats?.appointments || 0,
       icon: Calendar,
       color: "text-amber-600",
       bgColor: "bg-amber-50",
       iconBg: "bg-amber-600",
-      description: "Próximos agendamentos"
+      description: "Total de agendamentos para hoje",
+      tooltip: "Quantidade total de agendamentos para a data de hoje (todos os status)"
     },
     {
-      title: "Clientes Ativos",
+      title: "Clientes Ativos (30 dias)",
       value: stats?.activeCustomers || 0,
       icon: Users,
       color: "text-purple-600",
       bgColor: "bg-purple-50",
       iconBg: "bg-purple-600",
-      description: "Clientes com serviços recentes"
+      description: "Clientes com serviços nos últimos 30 dias",
+      tooltip: "Clientes únicos que tiveram pelo menos um serviço nos últimos 30 dias"
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
-      {statsData.map((stat, index) => (
-        <Card key={index} className="hover:shadow-lg transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              {stat.title}
-            </CardTitle>
-            <stat.icon className={`h-4 w-4 ${stat.color}`} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stat.value}</div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+    <TooltipProvider>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
+        {statsData.map((stat, index) => (
+          <Card key={index} className="hover:shadow-lg transition-shadow duration-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-sm font-medium text-gray-600">
+                  {stat.title}
+                </CardTitle>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-3 w-3 text-gray-400 hover:text-gray-600 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">{stat.tooltip}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <stat.icon className={`h-4 w-4 ${stat.color}`} />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stat.value}</div>
+              <p className="text-xs text-gray-500 mt-1">
+                {stat.description}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </TooltipProvider>
   );
 }
