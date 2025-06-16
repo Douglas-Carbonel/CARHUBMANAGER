@@ -8,6 +8,8 @@ interface DashboardStats {
   dailyServices: number;
   appointments: number;
   activeCustomers: number;
+  completedRevenue: number;
+  predictedRevenue: number;
 }
 
 export default function SimpleStatsCards() {
@@ -32,8 +34,8 @@ export default function SimpleStatsCards() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {[...Array(4)].map((_, i) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
+        {[...Array(5)].map((_, i) => (
           <Card key={i} className="animate-pulse">
             <CardHeader>
               <div className="h-4 bg-gray-200 rounded w-3/4"></div>
@@ -50,7 +52,7 @@ export default function SimpleStatsCards() {
   if (error) {
     console.error('Dashboard stats error:', error);
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
         <Card className="col-span-full">
           <CardContent className="p-6">
             <div className="flex items-center gap-2 text-red-600">
@@ -65,37 +67,54 @@ export default function SimpleStatsCards() {
 
   const statsData = [
     {
-      title: "Faturamento Hoje",
-      value: `R$ ${(stats?.dailyRevenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      title: "Faturamento Concluído",
+      value: `R$ ${(stats?.completedRevenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: DollarSign,
       color: "text-green-600",
       bgColor: "bg-green-50",
+      iconBg: "bg-green-600",
+      description: "Receita de serviços finalizados hoje"
+    },
+    {
+      title: "Faturamento Previsto",
+      value: `R$ ${(stats?.predictedRevenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      icon: TrendingUp,
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+      iconBg: "bg-blue-600",
+      description: "Receita estimada de serviços agendados"
     },
     {
       title: "Serviços Hoje",
-      value: Number(stats?.dailyServices) || 0,
+      value: stats?.dailyServices || 0,
       icon: Wrench,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
+      color: "text-indigo-600",
+      bgColor: "bg-indigo-50",
+      iconBg: "bg-indigo-600",
+      description: "Total de serviços agendados"
     },
     {
       title: "Agendamentos",
-      value: Number(stats?.appointments) || 0,
+      value: stats?.appointments || 0,
       icon: Calendar,
       color: "text-amber-600",
       bgColor: "bg-amber-50",
+      iconBg: "bg-amber-600",
+      description: "Próximos agendamentos"
     },
     {
       title: "Clientes Ativos",
-      value: Number(stats?.activeCustomers) || 0,
+      value: stats?.activeCustomers || 0,
       icon: Users,
       color: "text-purple-600",
       bgColor: "bg-purple-50",
+      iconBg: "bg-purple-600",
+      description: "Clientes com serviços recentes"
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
       {statsData.map((stat, index) => (
         <Card key={index} className="hover:shadow-lg transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

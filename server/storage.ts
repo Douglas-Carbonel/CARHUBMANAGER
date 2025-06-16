@@ -490,8 +490,8 @@ export class DatabaseStorage implements IStorage {
       const today = new Date('2025-06-15').toISOString().split('T')[0];
       console.log('Today date:', today);
 
-      // Daily revenue from completed services OR services with estimated value for today
-      const dailyRevenue = await db
+      // Completed revenue (services with status 'completed' and their final value or estimated value)
+      const completedRevenue = await db
         .select({ 
           total: sql<number>`COALESCE(SUM(CASE WHEN ${services.finalValue} IS NOT NULL THEN ${services.finalValue} ELSE ${services.estimatedValue} END), 0)` 
         })
@@ -499,15 +499,29 @@ export class DatabaseStorage implements IStorage {
         .where(
           and(
             eq(services.scheduledDate, today),
-            or(
-              eq(services.status, 'completed'),
-              and(
-                ne(services.status, 'cancelled'),
-                isNotNull(services.estimatedValue)
-              )
-            )
+            eq(services.status, 'completed')
           )
         );
+
+      // Predicted revenue (services scheduled/in_progress with estimated value, excluding completed)
+      const predictedRevenue = await db
+        .select({ 
+          total: sql<number>`COALESCE(SUM(${services.estimatedValue}), 0)` 
+        })
+        .from(services)
+        .where(
+          and(
+            eq(services.scheduledDate, today),
+            or(
+              eq(services.status, 'scheduled'),
+              eq(services.status, 'in_progress')
+            ),
+            isNotNull(services.estimatedValue)
+          )
+        );
+
+      // Total daily revenue (completed + predicted for display purposes)
+      const totalDailyRevenue = Number(completedRevenue[0]?.total || 0) + Number(predictedRevenue[0]?.total || 0);
 
       // Daily services count (all except cancelled)
       const dailyServices = await db
@@ -538,7 +552,9 @@ export class DatabaseStorage implements IStorage {
         .where(gte(services.scheduledDate, thirtyDaysAgoStr));
 
       const stats = {
-        dailyRevenue: Number(dailyRevenue[0]?.total) || 0,
+        dailyRevenue: totalDailyRevenue,
+        completedRevenue: Number(completedRevenue[0]?.total) || 0,
+        predictedRevenue: Number(predictedRevenue[0]?.total) || 0,
         dailyServices: Number(dailyServices[0]?.count) || 0,
         appointments: Number(appointments[0]?.count) || 0,
         activeCustomers: activeCustomers.length || 0
@@ -550,6 +566,8 @@ export class DatabaseStorage implements IStorage {
       console.error('Error getting dashboard stats:', error);
       return {
         dailyRevenue: 0,
+        completedRevenue: 0,
+        predictedRevenue: 0,
         dailyServices: 0,
         appointments: 0,
         activeCustomers: 0

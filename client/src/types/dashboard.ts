@@ -1,5 +1,7 @@
 export interface DashboardStats {
   dailyRevenue: number;
+  completedRevenue: number;
+  predictedRevenue: number;
   dailyServices: number;
   appointments: number;
   activeCustomers: number;
