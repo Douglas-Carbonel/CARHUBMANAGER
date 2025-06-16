@@ -260,7 +260,7 @@ export default function Reports() {
     <div className="flex h-screen overflow-hidden bg-gray-50">
       <Sidebar />
       
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden md:ml-0">
         <Header 
           title={selectedCustomer !== "all" && customers ? 
             `Relatórios - ${customers.find((c: Customer) => c.id.toString() === selectedCustomer)?.name || 'Cliente'}` : 
@@ -275,12 +275,12 @@ export default function Reports() {
         <main className="flex-1 overflow-y-auto">
           {/* Critical Alerts */}
           {(analytics.overdueServices > 0 || analytics.cancellationRate > 15 || analytics.profitMargin < 20) && (
-            <div className="bg-red-50 border-l-4 border-red-400 p-4 mx-6 mt-4 rounded-lg">
+            <div className="bg-red-50 border-l-4 border-red-400 p-3 md:p-4 mx-4 md:mx-6 mt-4 rounded-lg">
               <div className="flex items-start">
-                <ShieldAlert className="h-5 w-5 text-red-500 mt-0.5 mr-3" />
-                <div className="flex-1">
-                  <h3 className="text-sm font-medium text-red-800 mb-2">⚠️ Alertas Críticos - Requer Ação Imediata</h3>
-                  <div className="text-sm text-red-700 space-y-1">
+                <ShieldAlert className="h-4 w-4 md:h-5 md:w-5 text-red-500 mt-0.5 mr-2 md:mr-3 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xs md:text-sm font-medium text-red-800 mb-2">⚠️ Alertas Críticos - Requer Ação Imediata</h3>
+                  <div className="text-xs md:text-sm text-red-700 space-y-1">
                     {analytics.overdueServices > 0 && (
                       <p>• {analytics.overdueServices} serviços em atraso - Contate os clientes urgentemente</p>
                     )}
@@ -296,7 +296,7 @@ export default function Reports() {
             </div>
           )}
 
-          <div className="p-6 space-y-6">
+          <div className="p-4 md:p-6 space-y-4 md:space-y-6">
             {/* Filters */}
             <div className="flex flex-wrap gap-4 items-center justify-between bg-white p-4 rounded-lg border">
               <div className="flex gap-4 items-center">
