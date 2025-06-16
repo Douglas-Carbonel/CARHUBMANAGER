@@ -60,56 +60,67 @@ export default function AuthPage() {
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 w-full max-w-6xl flex items-center justify-center gap-16">
+      <div className="relative z-10 w-full max-w-6xl flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16">
         {/* Left side - Branding */}
-        <div className="hidden lg:flex flex-col items-center space-y-12 flex-1">
+        <div className="hidden md:flex flex-col items-center space-y-8 lg:space-y-12 flex-1">
           <div className="text-center">
-            <h1 className="text-7xl font-extrabold bg-gradient-to-r from-teal-600 via-cyan-500 to-emerald-600 bg-clip-text text-transparent mb-6 tracking-[0.15em] drop-shadow-2xl transform hover:scale-105 transition-transform duration-300 font-sans">
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold bg-gradient-to-r from-teal-600 via-cyan-500 to-emerald-600 bg-clip-text text-transparent mb-4 lg:mb-6 tracking-[0.15em] drop-shadow-2xl transform hover:scale-105 transition-transform duration-300 font-sans">
               CAR<span className="font-light">HUB</span>
             </h1>
-            <p className="text-2xl text-gray-700 mb-8 font-medium tracking-wider bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent">
+            <p className="text-lg md:text-xl lg:text-2xl text-gray-700 mb-6 lg:mb-8 font-medium tracking-wider bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent">
               Sistema de Gestão Automotiva
             </p>
           </div>
           
-          <div className="grid grid-cols-2 gap-8 w-full max-w-md">
-            <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-white/20">
-              <Car className="h-14 w-14 text-teal-600 mx-auto mb-4 drop-shadow-md" />
-              <h3 className="font-semibold text-gray-800 text-xl tracking-wide">Veículos</h3>
-              <p className="text-base text-gray-600 mt-2 font-medium">Gerencie frota</p>
+          <div className="grid grid-cols-2 gap-4 md:gap-6 lg:gap-8 w-full max-w-md">
+            <div className="text-center p-4 md:p-6 lg:p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-white/20">
+              <Car className="h-8 w-8 md:h-10 md:w-10 lg:h-14 lg:w-14 text-teal-600 mx-auto mb-2 md:mb-3 lg:mb-4 drop-shadow-md" />
+              <h3 className="font-semibold text-gray-800 text-sm md:text-lg lg:text-xl tracking-wide">Veículos</h3>
+              <p className="text-xs md:text-sm lg:text-base text-gray-600 mt-1 md:mt-2 font-medium">Gerencie frota</p>
             </div>
-            <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-white/20">
-              <Users className="h-14 w-14 text-teal-600 mx-auto mb-4 drop-shadow-md" />
-              <h3 className="font-semibold text-gray-800 text-xl tracking-wide">Clientes</h3>
-              <p className="text-base text-gray-600 mt-2 font-medium">Base de dados</p>
+            <div className="text-center p-4 md:p-6 lg:p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-white/20">
+              <Users className="h-8 w-8 md:h-10 md:w-10 lg:h-14 lg:w-14 text-teal-600 mx-auto mb-2 md:mb-3 lg:mb-4 drop-shadow-md" />
+              <h3 className="font-semibold text-gray-800 text-sm md:text-lg lg:text-xl tracking-wide">Clientes</h3>
+              <p className="text-xs md:text-sm lg:text-base text-gray-600 mt-1 md:mt-2 font-medium">Base de dados</p>
             </div>
-            <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-white/20">
-              <Wrench className="h-14 w-14 text-teal-600 mx-auto mb-4 drop-shadow-md" />
-              <h3 className="font-semibold text-gray-800 text-xl tracking-wide">Serviços</h3>
-              <p className="text-base text-gray-600 mt-2 font-medium">Manutenções</p>
+            <div className="text-center p-4 md:p-6 lg:p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-white/20">
+              <Wrench className="h-8 w-8 md:h-10 md:w-10 lg:h-14 lg:w-14 text-teal-600 mx-auto mb-2 md:mb-3 lg:mb-4 drop-shadow-md" />
+              <h3 className="font-semibold text-gray-800 text-sm md:text-lg lg:text-xl tracking-wide">Serviços</h3>
+              <p className="text-xs md:text-sm lg:text-base text-gray-600 mt-1 md:mt-2 font-medium">Manutenções</p>
             </div>
-            <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-white/20">
-              <Calendar className="h-14 w-14 text-teal-600 mx-auto mb-4 drop-shadow-md" />
-              <h3 className="font-semibold text-gray-800 text-xl tracking-wide">Agenda</h3>
-              <p className="text-base text-gray-600 mt-2 font-medium">Compromissos</p>
+            <div className="text-center p-4 md:p-6 lg:p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-white/20">
+              <Calendar className="h-8 w-8 md:h-10 md:w-10 lg:h-14 lg:w-14 text-teal-600 mx-auto mb-2 md:mb-3 lg:mb-4 drop-shadow-md" />
+              <h3 className="font-semibold text-gray-800 text-sm md:text-lg lg:text-xl tracking-wide">Agenda</h3>
+              <p className="text-xs md:text-sm lg:text-base text-gray-600 mt-1 md:mt-2 font-medium">Compromissos</p>
             </div>
           </div>
         </div>
 
         {/* Right side - Login geometric form */}
         <div className="w-full max-w-lg">
+          {/* Mobile-first branding for small screens */}
+          <div className="md:hidden text-center mb-8">
+            <h1 className="text-4xl font-extrabold bg-gradient-to-r from-teal-600 via-cyan-500 to-emerald-600 bg-clip-text text-transparent mb-3 tracking-[0.15em] font-sans">
+              CAR<span className="font-light">HUB</span>
+            </h1>
+            <p className="text-lg text-gray-700 font-medium tracking-wider bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent">
+              Sistema de Gestão Automotiva
+            </p>
+          </div>
+          
           {/* Geometric login container inspired by the image */}
           <div className="relative">
-            {/* Main hexagonal shape */}
+            {/* Main hexagonal shape - responsive */}
             <div 
-              className="relative bg-gradient-to-br from-teal-600 to-emerald-700 shadow-2xl"
+              className="relative bg-gradient-to-br from-teal-600 to-emerald-700 shadow-2xl md:block"
               style={{
-                clipPath: "polygon(20% 0%, 80% 0%, 100% 35%, 80% 100%, 20% 100%, 0% 35%)",
-                padding: "60px 80px"
+                clipPath: window.innerWidth >= 768 ? "polygon(20% 0%, 80% 0%, 100% 35%, 80% 100%, 20% 100%, 0% 35%)" : "none",
+                padding: window.innerWidth >= 768 ? "60px 80px" : "40px 20px",
+                borderRadius: window.innerWidth < 768 ? "16px" : "0"
               }}
             >
               {/* Inner container */}
-              <div className="bg-gradient-to-br from-teal-700 to-emerald-800 rounded-lg p-8 shadow-inner">
+              <div className="bg-gradient-to-br from-teal-700 to-emerald-800 rounded-lg p-6 md:p-8 shadow-inner">
                 {/* Header */}
                 <div className="text-center mb-8">
                   <h2 className="text-3xl font-light text-cyan-100 tracking-[0.2em] mb-2 uppercase">
