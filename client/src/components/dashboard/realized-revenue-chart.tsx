@@ -24,8 +24,11 @@ export default function RealizedRevenueChart() {
   // Transform data for chart
   const chartData = revenueData?.map((item: any) => ({
     date: new Date(item.date).toLocaleDateString('pt-BR', { weekday: 'short' }),
-    revenue: item.revenue,
+    revenue: Number(item.revenue) || 0,
   })) || [];
+
+  // Debug: Log the chart data to console
+  console.log('Realized Revenue Chart Data:', chartData);
 
   if (isLoading) {
     return (
@@ -85,7 +88,7 @@ export default function RealizedRevenueChart() {
                 dx={-10}
               />
               <Tooltip 
-                formatter={(value: any) => [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Faturamento Realizado']}
+                formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'Faturamento Realizado']}
                 labelFormatter={(label) => `${label}`}
                 contentStyle={{
                   backgroundColor: 'white',
