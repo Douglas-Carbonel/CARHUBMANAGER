@@ -430,17 +430,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Dashboard revenue chart
-  app.get("/api/dashboard/revenue", requireAuth, async (req, res) => {
+  // Dashboard revenue data
+  app.get("/api/dashboard/revenue", async (req, res) => {
     try {
       const days = parseInt(req.query.days as string) || 7;
-      console.log(`Getting revenue data for ${days} days`);
-      const revenue = await storage.getRevenueData(days);
-      console.log(`Revenue data retrieved:`, revenue);
-      res.json(revenue);
+      console.log(`API: Getting revenue data for ${days} days`);
+      const revenueData = await storage.getRevenueByDays(days);
+      console.log('Revenue data retrieved:', revenueData);
+      res.json(revenueData);
     } catch (error) {
-      console.error("Error getting revenue data:", error);
-      res.status(500).json({ message: "Failed to get revenue data", error: error.message });
+      console.error('API Error getting revenue data:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Dashboard realized revenue data (completed services only)
+  app.get("/api/dashboard/realized-revenue", async (req, res) => {
+    try {
+      const days = parseInt(req.query.days as string) || 7;
+      console.log(`API: Getting realized revenue data for ${days} days`);
+      const realizedRevenueData = await storage.getRealizedRevenueByDays(days);
+      console.log('Realized revenue data retrieved:', realizedRevenueData);
+      res.json(realizedRevenueData);
+    } catch (error) {
+      console.error('API Error getting realized revenue data:', error);
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 

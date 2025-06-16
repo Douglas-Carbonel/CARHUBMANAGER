@@ -2,12 +2,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Area, AreaChart } from "recharts";
-import { MoreHorizontal, TrendingUp } from "lucide-react";
+import { MoreHorizontal, TrendingDown, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export default function RevenueChart() {
+export default function RealizedRevenueChart() {
   const { data: revenueData, isLoading } = useQuery({
-    queryKey: ["/api/dashboard/revenue?days=7"],
+    queryKey: ["/api/dashboard/realized-revenue?days=7"],
     staleTime: 30000,
     refetchOnWindowFocus: true,
   });
@@ -36,14 +36,14 @@ export default function RevenueChart() {
       <CardHeader className="pb-3 border-b border-gray-50">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
-              <TrendingUp className="h-5 w-5 text-white" />
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+              <CheckCircle className="h-5 w-5 text-white" />
             </div>
             <div>
               <CardTitle className="text-xl font-bold text-gray-900">
-                Faturamento Previsto dos Últimos 7 Dias
+                Faturamento Realizado dos Últimos 7 Dias
               </CardTitle>
-              <p className="text-sm text-gray-500 mt-1">Receita estimada + realizada</p>
+              <p className="text-sm text-gray-500 mt-1">Receita de serviços concluídos</p>
             </div>
           </div>
           <Button variant="ghost" size="sm" className="hover:bg-gray-100">
@@ -56,9 +56,9 @@ export default function RevenueChart() {
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
               <defs>
-                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                <linearGradient id="colorRealizedRevenue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <XAxis 
@@ -76,7 +76,7 @@ export default function RevenueChart() {
                 dx={-10}
               />
               <Tooltip 
-                formatter={(value: any) => [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Faturamento Previsto']}
+                formatter={(value: any) => [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Faturamento Realizado']}
                 labelFormatter={(label) => `${label}`}
                 contentStyle={{
                   backgroundColor: 'white',
@@ -90,11 +90,11 @@ export default function RevenueChart() {
               <Area
                 type="monotone"
                 dataKey="revenue"
-                stroke="#10B981"
+                stroke="#3B82F6"
                 strokeWidth={3}
-                fill="url(#colorRevenue)"
-                dot={{ fill: '#10B981', strokeWidth: 2, r: 6 }}
-                activeDot={{ r: 8, fill: '#10B981', strokeWidth: 0 }}
+                fill="url(#colorRealizedRevenue)"
+                dot={{ fill: '#3B82F6', strokeWidth: 2, r: 6 }}
+                activeDot={{ r: 8, fill: '#3B82F6', strokeWidth: 0 }}
               />
             </AreaChart>
           </ResponsiveContainer>

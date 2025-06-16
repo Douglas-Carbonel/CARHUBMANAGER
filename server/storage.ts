@@ -76,6 +76,7 @@ export interface IStorage {
     activeCustomers: number;
   }>;
   getRevenueByDays(days: number): Promise<{ date: string; revenue: number }[]>;
+  getRealizedRevenueByDays(days: number): Promise<{ date: string; revenue: number }[]>;
   getRevenueData(days: number): Promise<{ date: string; revenue: number }[]>;
   getTopServices(): Promise<{ name: string; count: number; revenue: number }[]>;
   getRecentServices(limit: number): Promise<any[]>;
@@ -709,6 +710,69 @@ export class DatabaseStorage implements IStorage {
         topServiceTypes: [],
         averageValue: 0
       };
+    }
+  }
+
+  async getRealizedRevenueByDays(days: number): Promise<{ date: string; revenue: number }[]> {
+    try {
+      console.log(`Getting realized revenue data for ${days} days (completed services only)`);
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+      const startDateStr = startDate.toISOString().split('T')[0];
+
+      console.log(`Querying completed services from ${startDateStr}`);
+
+      const revenueData = await db
+        .select({
+          date: services.scheduledDate,
+          finalValue: services.finalValue,
+          estimatedValue: services.estimatedValue,
+          status: services.status
+        })
+        .from(services)
+        .where(
+          and(
+            gte(services.scheduledDate, startDateStr),
+            eq(services.status, 'completed')
+          )
+        )
+        .orderBy(services.scheduledDate);
+
+      console.log(`Found ${revenueData.length} completed services in date range`);
+
+      // Group by date and sum revenue (only from completed services)
+      const revenueByDate: { [key: string]: number } = {};
+
+      revenueData.forEach(service => {
+        const date = service.date;
+        if (!date) return; // Skip services without dates
+
+        const revenue = service.finalValue 
+          ? Number(service.finalValue) 
+          : Number(service.estimatedValue || 0);
+
+        if (revenue > 0) {
+          revenueByDate[date] = (revenueByDate[date] || 0) + revenue;
+        }
+      });
+
+      // Create array with all days in range
+      const result = [];
+      for (let i = days - 1; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        result.push({
+          date: dateStr,
+          revenue: revenueByDate[dateStr] || 0
+        });
+      }
+
+      console.log(`Realized revenue data result:`, result);
+      return result;
+    } catch (error) {
+      console.error('Error getting realized revenue by days:', error);
+      throw error;
     }
   }
 
