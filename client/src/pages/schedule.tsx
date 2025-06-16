@@ -246,6 +246,16 @@ export default function SchedulePage() {
     if (service.scheduledDate && periodFilter !== "all") {
       const { start, end } = getDateRange(periodFilter);
       const serviceDate = service.scheduledDate;
+      
+      // Debug logging
+      console.log('Filtering service:', {
+        serviceDate,
+        period: periodFilter,
+        start,
+        end,
+        serviceId: service.id
+      });
+      
       matchesPeriod = serviceDate >= start && serviceDate <= end;
     }
 

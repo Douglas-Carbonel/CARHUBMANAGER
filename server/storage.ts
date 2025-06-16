@@ -20,7 +20,7 @@ import {
   type InsertPayment,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, and, gte, lte, lt, count, sum, sql, isNotNull, or } from "drizzle-orm";
+import { eq, desc, asc, and, gte, lte, lt, count, sum, sql, isNotNull, or, ne } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -486,59 +486,60 @@ export class DatabaseStorage implements IStorage {
   async getDashboardStats() {
     try {
       console.log('Getting dashboard stats...');
-      const today = new Date();
-      const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD format
-      console.log('Today date:', todayStr);
+      const today = new Date().toISOString().split('T')[0];
+      console.log('Today date:', today);
 
-      // Get today's revenue from completed services
-      const todayCompletedServices = await db
-        .select()
+      // Daily revenue from completed services OR services with estimated value for today
+      const dailyRevenue = await db
+        .select({ 
+          total: sql<number>`COALESCE(SUM(CASE WHEN ${services.finalValue} IS NOT NULL THEN ${services.finalValue} ELSE ${services.estimatedValue} END), 0)` 
+        })
         .from(services)
         .where(
           and(
-            eq(services.scheduledDate, todayStr),
-            eq(services.status, 'completed')
+            eq(services.scheduledDate, today),
+            or(
+              eq(services.status, 'completed'),
+              and(
+                ne(services.status, 'cancelled'),
+                isNotNull(services.estimatedValue)
+              )
+            )
           )
         );
 
-      console.log('Today completed services:', todayCompletedServices.length);
-
-      const dailyRevenue = todayCompletedServices.reduce((sum, service) => {
-        const value = Number(service.finalValue || service.estimatedValue || 0);
-        console.log('Service value:', value);
-        return sum + value;
-      }, 0);
-
-      // Get today's total services count (all statuses)
-      const todayServicesCount = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(services)
-        .where(eq(services.scheduledDate, todayStr));
-
-      // Get scheduled appointments for today and future dates
-      const scheduledAppointments = await db
+      // Daily services count (all except cancelled)
+      const dailyServices = await db
         .select({ count: sql<number>`count(*)` })
         .from(services)
         .where(
           and(
-            gte(services.scheduledDate, todayStr),
-            eq(services.status, 'scheduled')
+            eq(services.scheduledDate, today),
+            ne(services.status, 'cancelled')
           )
         );
+      console.log('Today services (non-cancelled):', Number(dailyServices[0]?.count) || 0);
 
-      // Get active customers (customers with services in last 30 days)
+      // Total appointments for today (all statuses)
+      const appointments = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(services)
+        .where(eq(services.scheduledDate, today));
+
+      // Active customers (customers with services in the last 30 days)
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
 
       const activeCustomers = await db
         .selectDistinct({ customerId: services.customerId })
         .from(services)
-        .where(gte(services.scheduledDate, thirtyDaysAgo.toISOString().split('T')[0]));
+        .where(gte(services.scheduledDate, thirtyDaysAgoStr));
 
       const stats = {
-        dailyRevenue: Number(dailyRevenue) || 0,
-        dailyServices: Number(todayServicesCount[0]?.count) || 0,
-        appointments: Number(scheduledAppointments[0]?.count) || 0,
+        dailyRevenue: Number(dailyRevenue[0]?.total) || 0,
+        dailyServices: Number(dailyServices[0]?.count) || 0,
+        appointments: Number(appointments[0]?.count) || 0,
         activeCustomers: activeCustomers.length || 0
       };
 
@@ -546,7 +547,12 @@ export class DatabaseStorage implements IStorage {
       return stats;
     } catch (error) {
       console.error('Error getting dashboard stats:', error);
-      throw error; // Re-throw to let the API route handle it
+      return {
+        dailyRevenue: 0,
+        dailyServices: 0,
+        appointments: 0,
+        activeCustomers: 0
+      };
     }
   }
 
@@ -709,15 +715,15 @@ export class DatabaseStorage implements IStorage {
 
       // Group by date and sum revenue
       const revenueByDate: { [key: string]: number } = {};
-      
+
       revenueData.forEach(service => {
         const date = service.date;
         if (!date) return; // Skip services without dates
-        
+
         const revenue = service.status === 'completed' && service.finalValue 
           ? Number(service.finalValue) 
           : Number(service.estimatedValue || 0);
-        
+
         if (revenue > 0) {
           revenueByDate[date] = (revenueByDate[date] || 0) + revenue;
         }
@@ -746,11 +752,11 @@ export class DatabaseStorage implements IStorage {
   async getTopServices(): Promise<{ name: string; count: number; revenue: number }[]> {
     try {
       console.log('Storage: Getting top services...');
-      
+
       // Primeiro, vamos verificar se temos serviços
       const totalServicesCheck = await db.select({ count: sql<number>`count(*)` }).from(services);
       console.log('Storage: Total services in database:', totalServicesCheck[0]?.count || 0);
-      
+
       if (totalServicesCheck[0]?.count === 0) {
         console.log('Storage: No services found, returning empty array');
         return [];
@@ -780,7 +786,7 @@ export class DatabaseStorage implements IStorage {
         count: Number(service.count),
         revenue: Number(service.totalRevenue || 0)
       }));
-      
+
       console.log('Storage: Top services result:', result);
       return result;
     } catch (error) {
@@ -792,11 +798,11 @@ export class DatabaseStorage implements IStorage {
   async getRecentServices(limit: number): Promise<any[]> {
     try {
       console.log('Storage: Getting recent services...');
-      
+
       // Verificar se temos serviços
       const totalServicesCheck = await db.select({ count: sql<number>`count(*)` }).from(services);
       console.log('Storage: Total services for recent check:', totalServicesCheck[0]?.count || 0);
-      
+
       if (totalServicesCheck[0]?.count === 0) {
         console.log('Storage: No services found for recent services');
         return [];
@@ -835,15 +841,15 @@ export class DatabaseStorage implements IStorage {
       console.log('Storage: Getting upcoming appointments...');
       const today = new Date().toISOString().split('T')[0];
       console.log('Storage: Today date for appointments:', today);
-      
+
       // Verificar se temos agendamentos
       const scheduledServicesCheck = await db
         .select({ count: sql<number>`count(*)` })
         .from(services)
         .where(eq(services.status, 'scheduled'));
-      
+
       console.log('Storage: Total scheduled services:', scheduledServicesCheck[0]?.count || 0);
-      
+
       if (scheduledServicesCheck[0]?.count === 0) {
         console.log('Storage: No scheduled services found');
         return [];
@@ -1271,7 +1277,7 @@ export class DatabaseStorage implements IStorage {
   async getTodayAppointments() {
     try {
       const today = new Date().toISOString().split('T')[0];
-      
+
       const todayAppointments = await db
         .select({
           id: services.id,
