@@ -65,14 +65,14 @@ export default function Dashboard() {
     <div className="flex h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-slate-50 to-blue-50">
       <Sidebar />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden md:ml-0">
         <Header 
           title="Dashboard Geral"
           subtitle={`Bem-vindo, ${user?.firstName || user?.username}! Visão geral do negócio`}
         />
 
-        <main className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-7xl mx-auto space-y-8">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
+          <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
 
             {/* Stats Cards Básicos */}
             <SimpleStatsCards />
