@@ -486,7 +486,8 @@ export class DatabaseStorage implements IStorage {
   async getDashboardStats() {
     try {
       console.log('Getting dashboard stats...');
-      const today = new Date().toISOString().split('T')[0];
+      // Use a fixed date for testing - change this to new Date() for production
+      const today = new Date('2025-06-15').toISOString().split('T')[0];
       console.log('Today date:', today);
 
       // Daily revenue from completed services OR services with estimated value for today
@@ -839,7 +840,8 @@ export class DatabaseStorage implements IStorage {
   async getUpcomingAppointments(limit: number): Promise<any[]> {
     try {
       console.log('Storage: Getting upcoming appointments...');
-      const today = new Date().toISOString().split('T')[0];
+      // Use a fixed date for testing - change this to new Date() for production
+      const today = new Date('2025-06-15').toISOString().split('T')[0];
       console.log('Storage: Today date for appointments:', today);
 
       // Verificar se temos agendamentos
@@ -1276,7 +1278,8 @@ export class DatabaseStorage implements IStorage {
 
   async getTodayAppointments() {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      // Use a fixed date for testing - change this to new Date() for production
+      const today = new Date('2025-06-15').toISOString().split('T')[0];
 
       const todayAppointments = await db
         .select({

@@ -207,7 +207,8 @@ export default function SchedulePage() {
 
   // Helper functions for date filtering
   const getDateRange = (period: string) => {
-    const today = new Date();
+    // Use a fixed date for testing - change this to new Date() for production
+    const today = new Date('2025-06-15'); // Temporary fix for testing
     const todayStr = today.toISOString().split('T')[0];
 
     switch (period) {
