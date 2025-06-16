@@ -111,26 +111,19 @@ export default function AuthPage() {
           {/* Geometric login container inspired by the image */}
           <div className="relative">
             {/* Main hexagonal shape - responsive */}
-            <div 
-              className="relative bg-gradient-to-br from-teal-600 to-emerald-700 shadow-2xl md:block"
-              style={{
-                clipPath: window.innerWidth >= 768 ? "polygon(20% 0%, 80% 0%, 100% 35%, 80% 100%, 20% 100%, 0% 35%)" : "none",
-                padding: window.innerWidth >= 768 ? "60px 80px" : "40px 20px",
-                borderRadius: window.innerWidth < 768 ? "16px" : "0"
-              }}
-            >
+            <div className="relative bg-gradient-to-br from-teal-600 to-emerald-700 shadow-2xl rounded-2xl md:rounded-none p-8 md:p-16 md:[clip-path:polygon(20%_0%,80%_0%,100%_35%,80%_100%,20%_100%,0%_35%)]">
               {/* Inner container */}
               <div className="bg-gradient-to-br from-teal-700 to-emerald-800 rounded-lg p-6 md:p-8 shadow-inner">
                 {/* Header */}
-                <div className="text-center mb-8">
-                  <h2 className="text-3xl font-light text-cyan-100 tracking-[0.2em] mb-2 uppercase">
+                <div className="text-center mb-6 md:mb-8">
+                  <h2 className="text-2xl md:text-3xl font-light text-cyan-100 tracking-[0.2em] mb-2 uppercase">
                     Login
                   </h2>
                   <div className="w-12 h-0.5 bg-gradient-to-r from-emerald-400 to-cyan-400 mx-auto mt-3"></div>
                 </div>
 
                 {/* Only login form now */}
-                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
+                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4 md:space-y-6">
                   <div className="relative">
                     <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                       <User className="h-5 w-5 text-cyan-300" />
@@ -138,7 +131,7 @@ export default function AuthPage() {
                     <Input
                       {...loginForm.register("username")}
                       placeholder="Usuário"
-                      className="pl-12 bg-teal-800/50 border-teal-600/50 text-cyan-100 placeholder:text-cyan-300 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg h-12"
+                      className="pl-12 bg-teal-800/50 border-teal-600/50 text-cyan-100 placeholder:text-cyan-300 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg h-10 md:h-12"
                     />
                     {loginForm.formState.errors.username && (
                       <p className="text-sm text-red-300 mt-1">
@@ -155,7 +148,7 @@ export default function AuthPage() {
                       type="password"
                       {...loginForm.register("password")}
                       placeholder="••••••••••"
-                      className="pl-12 bg-teal-800/50 border-teal-600/50 text-cyan-100 placeholder:text-cyan-300 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg h-12"
+                      className="pl-12 bg-teal-800/50 border-teal-600/50 text-cyan-100 placeholder:text-cyan-300 focus:border-emerald-400 focus:ring-emerald-400/30 rounded-lg h-10 md:h-12"
                     />
                     {loginForm.formState.errors.password && (
                       <p className="text-sm text-red-300 mt-1">
@@ -167,7 +160,7 @@ export default function AuthPage() {
                   <Button
                     type="submit"
                     disabled={loginMutation.isPending}
-                    className="w-full bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-500 hover:to-cyan-500 text-teal-900 font-semibold py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg tracking-wide uppercase disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+                    className="w-full bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-500 hover:to-cyan-500 text-teal-900 font-semibold py-3 md:py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-base md:text-lg tracking-wide uppercase disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
                   >
                     {loginMutation.isPending ? (
                       <div className="flex items-center justify-center">
