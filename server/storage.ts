@@ -1232,10 +1232,14 @@ export class DatabaseStorage implements IStorage {
   // Schedule-specific analytics
   async getScheduleStats() {
     try {
-      const today = new Date().toISOString().split('T')[0];
-      const oneWeekAgo = new Date();
+      // Use a fixed date for testing - change this to new Date() for production
+      const today = new Date('2025-06-15').toISOString().split('T')[0];
+      const oneWeekAgo = new Date('2025-06-15');
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
       const weekAgoStr = oneWeekAgo.toISOString().split('T')[0];
+
+      console.log('Schedule stats - Today date:', today);
+      console.log('Schedule stats - Week ago date:', weekAgoStr);
 
       // Today's appointments
       const todayCount = await db
@@ -1277,12 +1281,15 @@ export class DatabaseStorage implements IStorage {
           )
         );
 
-      return {
+      const result = {
         today: Number(todayCount[0]?.count) || 0,
         thisWeek: Number(thisWeekCount[0]?.count) || 0,
         completed: Number(completedCount[0]?.count) || 0,
         overdue: Number(overdueCount[0]?.count) || 0
       };
+
+      console.log('Schedule stats result:', result);
+      return result;
     } catch (error) {
       console.error('Error getting schedule stats:', error);
       return {
