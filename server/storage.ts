@@ -486,7 +486,7 @@ export class DatabaseStorage implements IStorage {
   async getDashboardStats() {
     try {
       console.log('Getting dashboard stats...');
-      // Use current date for real-time data
+      // Use current date in Brazilian format (YYYY-MM-DD for database queries)
       const today = new Date().toISOString().split('T')[0];
       console.log('Today date:', today);
 
@@ -858,7 +858,7 @@ export class DatabaseStorage implements IStorage {
   async getUpcomingAppointments(limit: number): Promise<any[]> {
     try {
       console.log('Storage: Getting upcoming appointments...');
-      // Use current date for real-time data
+      // Use current date in Brazilian format (YYYY-MM-DD for database queries)
       const today = new Date().toISOString().split('T')[0];
       console.log('Storage: Today date for appointments:', today);
 
@@ -917,8 +917,7 @@ export class DatabaseStorage implements IStorage {
     // Brand distribution
     const brandCounts = vehiclesData.reduce((acc, vehicle) => {
       acc[vehicle.brand] = (acc[vehicle.brand] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+      return acc;    }, {} as Record<string, number>);
 
     // Fuel type distribution  
     const fuelCounts = vehiclesData.reduce((acc, vehicle) => {
@@ -1232,7 +1231,7 @@ export class DatabaseStorage implements IStorage {
   // Schedule-specific analytics
   async getScheduleStats() {
     try {
-      // Use current date for real-time data
+      // Use current date in Brazilian format (YYYY-MM-DD for database queries)
       const today = new Date().toISOString().split('T')[0];
       const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
@@ -1303,7 +1302,7 @@ export class DatabaseStorage implements IStorage {
 
   async getTodayAppointments() {
     try {
-      // Use current date for real-time data
+      // Use current date in Brazilian format (YYYY-MM-DD for database queries)
       const today = new Date().toISOString().split('T')[0];
 
       const todayAppointments = await db
