@@ -17,6 +17,15 @@ export default function SimpleStatsCards() {
     refetchOnWindowFocus: true,
     retry: 3,
     retryDelay: 1000,
+    queryFn: async () => {
+      const response = await fetch("/api/dashboard/stats", {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    },
   });
 
   console.log('SimpleStatsCards - isLoading:', isLoading, 'error:', error, 'stats:', stats);
@@ -39,13 +48,14 @@ export default function SimpleStatsCards() {
   }
 
   if (error) {
+    console.error('Dashboard stats error:', error);
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <Card className="col-span-full">
           <CardContent className="p-6">
             <div className="flex items-center gap-2 text-red-600">
               <AlertTriangle className="h-5 w-5" />
-              <span>Erro ao carregar dados do dashboard. Verifique a conexão com o banco.</span>
+              <span>Erro ao carregar estatísticas: {error?.message || 'Problema de conexão'}</span>
             </div>
           </CardContent>
         </Card>

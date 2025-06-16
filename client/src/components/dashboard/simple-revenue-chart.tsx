@@ -14,6 +14,15 @@ export default function SimpleRevenueChart() {
     staleTime: 60000,
     retry: 3,
     retryDelay: 1000,
+    queryFn: async () => {
+      const response = await fetch("/api/dashboard/revenue", {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    },
   });
 
   if (isLoading) {
@@ -35,6 +44,7 @@ export default function SimpleRevenueChart() {
   }
 
   if (error || !revenueData) {
+    console.error('Revenue chart error:', error);
     return (
       <Card>
         <CardHeader>
@@ -46,7 +56,7 @@ export default function SimpleRevenueChart() {
         <CardContent>
           <div className="h-80 flex items-center justify-center gap-2 text-red-600">
             <AlertTriangle className="h-5 w-5" />
-            <span>Erro ao carregar dados de faturamento</span>
+            <span>Erro ao carregar faturamento: {error?.message || 'Problema de conexão'}</span>
           </div>
         </CardContent>
       </Card>

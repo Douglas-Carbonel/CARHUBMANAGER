@@ -20,7 +20,7 @@ import {
   type InsertPayment,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, and, gte, lte, count, sum, sql, isNotNull, or } from "drizzle-orm";
+import { eq, desc, asc, and, gte, lte, lt, count, sum, sql, isNotNull, or } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -485,8 +485,10 @@ export class DatabaseStorage implements IStorage {
   // Dashboard statistics
   async getDashboardStats() {
     try {
+      console.log('Getting dashboard stats...');
       const today = new Date();
       const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+      console.log('Today date:', todayStr);
 
       // Get today's revenue from completed services
       const todayCompletedServices = await db
@@ -499,8 +501,12 @@ export class DatabaseStorage implements IStorage {
           )
         );
 
+      console.log('Today completed services:', todayCompletedServices.length);
+
       const dailyRevenue = todayCompletedServices.reduce((sum, service) => {
-        return sum + Number(service.finalValue || service.estimatedValue || 0);
+        const value = Number(service.finalValue || service.estimatedValue || 0);
+        console.log('Service value:', value);
+        return sum + value;
       }, 0);
 
       // Get today's total services count (all statuses)
@@ -529,20 +535,18 @@ export class DatabaseStorage implements IStorage {
         .from(services)
         .where(gte(services.scheduledDate, thirtyDaysAgo.toISOString().split('T')[0]));
 
-      return {
-        dailyRevenue,
+      const stats = {
+        dailyRevenue: Number(dailyRevenue) || 0,
         dailyServices: Number(todayServicesCount[0]?.count) || 0,
         appointments: Number(scheduledAppointments[0]?.count) || 0,
-        activeCustomers: activeCustomers.length
+        activeCustomers: activeCustomers.length || 0
       };
+
+      console.log('Dashboard stats result:', stats);
+      return stats;
     } catch (error) {
       console.error('Error getting dashboard stats:', error);
-      return {
-        dailyRevenue: 0,
-        dailyServices: 0,
-        appointments: 0,
-        activeCustomers: 0
-      };
+      throw error; // Re-throw to let the API route handle it
     }
   }
 
