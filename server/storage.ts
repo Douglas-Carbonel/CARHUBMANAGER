@@ -522,8 +522,8 @@ export class DatabaseStorage implements IStorage {
 
       return {
         dailyRevenue,
-        dailyServices: todayServicesCount[0]?.count || 0,
-        appointments: scheduledAppointments[0]?.count || 0,
+        dailyServices: Number(todayServicesCount[0]?.count) || 0,
+        appointments: Number(scheduledAppointments[0]?.count) || 0,
         activeCustomers: activeCustomers.length
       };
     } catch (error) {
