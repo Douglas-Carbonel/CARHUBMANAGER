@@ -745,41 +745,63 @@ export class DatabaseStorage implements IStorage {
 
   async getTopServices(): Promise<{ name: string; count: number; revenue: number }[]> {
     try {
-      console.log('Getting top services...');
+      console.log('Storage: Getting top services...');
+      
+      // Primeiro, vamos verificar se temos serviços
+      const totalServicesCheck = await db.select({ count: sql<number>`count(*)` }).from(services);
+      console.log('Storage: Total services in database:', totalServicesCheck[0]?.count || 0);
+      
+      if (totalServicesCheck[0]?.count === 0) {
+        console.log('Storage: No services found, returning empty array');
+        return [];
+      }
+
       const topServices = await db
         .select({
           serviceName: serviceTypes.name,
-          count: sql<number>`count(*)`,
-          totalRevenue: sql<number>`sum(CASE 
-            WHEN ${services.status} = 'completed' AND ${services.finalValue} IS NOT NULL 
-            THEN CAST(${services.finalValue} AS DECIMAL(10,2))
-            ELSE CAST(COALESCE(${services.estimatedValue}, 0) AS DECIMAL(10,2))
-          END)`
+          count: sql<number>`count(${services.id})`,
+          totalRevenue: sql<number>`COALESCE(sum(
+            CASE 
+              WHEN ${services.status} = 'completed' AND ${services.finalValue} IS NOT NULL 
+              THEN CAST(${services.finalValue} AS NUMERIC)
+              ELSE CAST(COALESCE(${services.estimatedValue}, 0) AS NUMERIC)
+            END
+          ), 0)`
         })
         .from(services)
         .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
         .groupBy(serviceTypes.id, serviceTypes.name)
-        .orderBy(sql`count(*) desc`)
+        .orderBy(sql`count(${services.id}) desc`)
         .limit(5);
 
-      console.log(`Found ${topServices.length} top services`);
+      console.log(`Storage: Found ${topServices.length} top services`);
       const result = topServices.map(service => ({
         name: service.serviceName,
         count: Number(service.count),
         revenue: Number(service.totalRevenue || 0)
       }));
       
-      console.log('Top services result:', result);
+      console.log('Storage: Top services result:', result);
       return result;
     } catch (error) {
-      console.error('Error getting top services:', error);
-      return [];
+      console.error('Storage: Error getting top services:', error);
+      throw error; // Re-throw para que a API possa capturar o erro
     }
   }
 
   async getRecentServices(limit: number): Promise<any[]> {
     try {
-      console.log('Getting recent services...');
+      console.log('Storage: Getting recent services...');
+      
+      // Verificar se temos serviços
+      const totalServicesCheck = await db.select({ count: sql<number>`count(*)` }).from(services);
+      console.log('Storage: Total services for recent check:', totalServicesCheck[0]?.count || 0);
+      
+      if (totalServicesCheck[0]?.count === 0) {
+        console.log('Storage: No services found for recent services');
+        return [];
+      }
+
       const recentServices = await db
         .select({
           id: services.id,
@@ -800,20 +822,33 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(services.createdAt))
         .limit(limit);
 
-      console.log(`Found ${recentServices.length} recent services`);
+      console.log(`Storage: Found ${recentServices.length} recent services`);
       return recentServices;
     } catch (error) {
-      console.error('Error getting recent services:', error);
-      return [];
+      console.error('Storage: Error getting recent services:', error);
+      throw error; // Re-throw para que a API possa capturar o erro
     }
   }
 
   async getUpcomingAppointments(limit: number): Promise<any[]> {
     try {
-      console.log('Getting upcoming appointments...');
+      console.log('Storage: Getting upcoming appointments...');
       const today = new Date().toISOString().split('T')[0];
-      console.log('Today date for appointments:', today);
+      console.log('Storage: Today date for appointments:', today);
       
+      // Verificar se temos agendamentos
+      const scheduledServicesCheck = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(services)
+        .where(eq(services.status, 'scheduled'));
+      
+      console.log('Storage: Total scheduled services:', scheduledServicesCheck[0]?.count || 0);
+      
+      if (scheduledServicesCheck[0]?.count === 0) {
+        console.log('Storage: No scheduled services found');
+        return [];
+      }
+
       const upcomingAppointments = await db
         .select({
           id: services.id,
@@ -839,11 +874,11 @@ export class DatabaseStorage implements IStorage {
         .orderBy(services.scheduledDate, services.scheduledTime)
         .limit(limit);
 
-      console.log(`Found ${upcomingAppointments.length} upcoming appointments`);
+      console.log(`Storage: Found ${upcomingAppointments.length} upcoming appointments`);
       return upcomingAppointments;
     } catch (error) {
-      console.error('Error getting upcoming appointments:', error);
-      return [];
+      console.error('Storage: Error getting upcoming appointments:', error);
+      throw error; // Re-throw para que a API possa capturar o erro
     }
   }
 

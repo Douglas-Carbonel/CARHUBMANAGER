@@ -441,35 +441,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Top services
   app.get("/api/dashboard/top-services", requireAuth, async (req, res) => {
     try {
+      console.log("API: Getting top services...");
       const topServices = await storage.getTopServices();
+      console.log("API: Top services result:", topServices);
       res.json(topServices);
     } catch (error) {
-      console.error("Error getting top services:", error);
-      res.status(500).json({ message: "Failed to get top services" });
+      console.error("API Error getting top services:", error);
+      res.status(500).json({ message: "Failed to get top services", error: error.message });
     }
   });
 
   // Recent services
   app.get("/api/dashboard/recent-services", requireAuth, async (req, res) => {
     try {
+      console.log("API: Getting recent services...");
       const limit = parseInt(req.query.limit as string) || 5;
       const recentServices = await storage.getRecentServices(limit);
+      console.log("API: Recent services result:", recentServices.length, "services");
       res.json(recentServices);
     } catch (error) {
-      console.error("Error getting recent services:", error);
-      res.status(500).json({ message: "Failed to get recent services" });
+      console.error("API Error getting recent services:", error);
+      res.status(500).json({ message: "Failed to get recent services", error: error.message });
     }
   });
 
   // Upcoming appointments
   app.get("/api/dashboard/upcoming-appointments", requireAuth, async (req, res) => {
     try {
+      console.log("API: Getting upcoming appointments...");
       const limit = parseInt(req.query.limit as string) || 5;
       const appointments = await storage.getUpcomingAppointments(limit);
+      console.log("API: Upcoming appointments result:", appointments.length, "appointments");
       res.json(appointments);
     } catch (error) {
-      console.error("Error getting upcoming appointments:", error);
-      res.status(500).json({ message: "Failed to get upcoming appointments" });
+      console.error("API Error getting upcoming appointments:", error);
+      res.status(500).json({ message: "Failed to get upcoming appointments", error: error.message });
     }
   });
 

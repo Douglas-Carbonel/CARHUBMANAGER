@@ -24,6 +24,17 @@ export default function RecentServices() {
     queryKey: ["/api/dashboard/recent-services?limit=5"],
     staleTime: 30000,
     refetchOnWindowFocus: true,
+    retry: 2,
+    retryDelay: 1000,
+    queryFn: async () => {
+      const response = await fetch("/api/dashboard/recent-services?limit=5", {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    }
   });
 
   console.log('RecentServices - isLoading:', isLoading, 'error:', error, 'data:', recentServices);

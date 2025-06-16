@@ -9,6 +9,17 @@ export default function UpcomingAppointments() {
     queryKey: ["/api/dashboard/upcoming-appointments?limit=5"],
     staleTime: 30000,
     refetchOnWindowFocus: true,
+    retry: 2,
+    retryDelay: 1000,
+    queryFn: async () => {
+      const response = await fetch("/api/dashboard/upcoming-appointments?limit=5", {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    }
   });
 
   console.log('UpcomingAppointments - isLoading:', isLoading, 'error:', error, 'data:', upcomingAppointments);

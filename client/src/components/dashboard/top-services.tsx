@@ -28,6 +28,17 @@ export default function TopServices() {
     queryKey: ["/api/dashboard/top-services"],
     staleTime: 30000,
     refetchOnWindowFocus: true,
+    retry: 2,
+    retryDelay: 1000,
+    queryFn: async () => {
+      const response = await fetch("/api/dashboard/top-services", {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    }
   });
 
   console.log('TopServices - isLoading:', isLoading, 'error:', error, 'data:', topServices);
