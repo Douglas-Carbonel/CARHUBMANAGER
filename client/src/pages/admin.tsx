@@ -359,45 +359,45 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-teal-50 to-cyan-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-teal-50 to-cyan-50 p-4 md:p-6">
+      <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
         {/* Header executivo profissional otimizado */}
         <div className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-xl"></div>
           <div className="absolute inset-0 opacity-10 bg-gradient-to-br from-white/5 to-transparent rounded-xl"></div>
-          <div className="relative px-6 py-8">
-            <div className="flex items-center justify-between">
-              <div className="space-y-3">
-                <div className="flex items-center space-x-4">
+          <div className="relative px-4 md:px-6 py-6 md:py-8">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-4 lg:space-y-0">
+              <div className="space-y-3 w-full lg:w-auto">
+                <div className="flex items-start md:items-center space-x-3 md:space-x-4">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => window.location.href = '/dashboard'}
-                    className="text-white hover:bg-slate-700 mr-2 p-2"
+                    className="text-white hover:bg-slate-700 p-2 flex-shrink-0"
                     title="Voltar ao Dashboard"
                   >
-                    <ArrowLeft className="h-5 w-5" />
+                    <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
                   </Button>
-                  <div className="w-12 h-12 bg-gradient-to-r from-teal-400 to-emerald-400 rounded-xl flex items-center justify-center shadow-xl">
-                    <Shield className="h-6 w-6 text-white" />
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-teal-400 to-emerald-400 rounded-xl flex items-center justify-center shadow-xl flex-shrink-0">
+                    <Shield className="h-5 w-5 md:h-6 md:w-6 text-white" />
                   </div>
-                  <div>
-                    <h1 className="text-3xl font-bold text-white mb-1 tracking-tight">
+                  <div className="min-w-0 flex-1">
+                    <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-white mb-1 tracking-tight leading-tight">
                       Central Administrativa
                     </h1>
-                    <p className="text-slate-300 text-base font-medium">
+                    <p className="text-slate-300 text-sm md:text-base font-medium leading-relaxed">
                       Controle total do sistema • Gestão de usuários e permissões
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-6 text-slate-400 ml-20">
+                <div className="flex flex-wrap items-center gap-4 md:gap-6 text-slate-400 ml-0 md:ml-20">
                   <div className="flex items-center space-x-2">
-                    <Users className="h-4 w-4" />
-                    <span className="text-sm font-medium">{users.length} usuários</span>
+                    <Users className="h-3 w-3 md:h-4 md:w-4" />
+                    <span className="text-xs md:text-sm font-medium">{users.length} usuários</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Settings className="h-4 w-4" />
-                    <span className="text-sm font-medium">Sistema ativo</span>
+                    <Settings className="h-3 w-3 md:h-4 md:w-4" />
+                    <span className="text-xs md:text-sm font-medium">Sistema ativo</span>
                   </div>
                 </div>
               </div>
@@ -405,11 +405,12 @@ export default function AdminPage() {
                 <DialogTrigger asChild>
                   <Button 
                     onClick={resetForm} 
-                    size="lg"
-                    className="bg-white text-slate-900 hover:bg-slate-100 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 font-semibold px-6 py-3"
+                    size="sm"
+                    className="bg-white text-slate-900 hover:bg-slate-100 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 font-semibold px-4 py-2 md:px-6 md:py-3 text-sm md:text-base w-full lg:w-auto"
                   >
-                    <UserPlus className="h-5 w-5 mr-2" />
-                    Adicionar Usuário
+                    <UserPlus className="h-4 w-4 md:h-5 md:w-5 mr-2" />
+                    <span className="hidden sm:inline">Adicionar Usuário</span>
+                    <span className="sm:hidden">Novo</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-white border-0 shadow-2xl">
@@ -702,73 +703,75 @@ export default function AdminPage() {
               <div className="space-y-4">
                 {filteredUsers.map((user) => (
                   <Card key={user.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md bg-gradient-to-r from-white to-slate-50">
-                    <CardContent className="p-8">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-6">
-                          <div className="relative">
-                            <div className="w-20 h-20 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-700 flex items-center justify-center text-white font-bold text-xl shadow-2xl group-hover:scale-105 transition-transform duration-300">
+                    <CardContent className="p-4 md:p-6 lg:p-8">
+                      <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0">
+                        <div className="flex items-start md:items-center gap-4 md:gap-6 w-full md:w-auto">
+                          <div className="relative flex-shrink-0">
+                            <div className="w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded-xl md:rounded-2xl bg-gradient-to-r from-slate-800 to-slate-700 flex items-center justify-center text-white font-bold text-sm md:text-lg lg:text-xl shadow-2xl group-hover:scale-105 transition-transform duration-300">
                               {user.firstName?.[0]}{user.lastName?.[0]}
                             </div>
                             {user.isActive && (
-                              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white shadow-lg">
-                                <CheckCircle className="h-3 w-3 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+                              <div className="absolute -bottom-1 -right-1 w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 bg-green-500 rounded-full border-2 border-white shadow-lg">
+                                <CheckCircle className="h-2 w-2 md:h-3 md:w-3 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
                               </div>
                             )}
                           </div>
-                          <div className="flex-1 space-y-3">
-                            <div className="flex items-center gap-4">
-                              <h3 className="font-bold text-xl text-slate-800">
+                          <div className="flex-1 space-y-2 md:space-y-3 min-w-0">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                              <h3 className="font-bold text-base md:text-lg lg:text-xl text-slate-800 truncate">
                                 {user.firstName} {user.lastName}
                               </h3>
                               {getRoleBadge(user.role || "technician")}
                             </div>
-                            <div className="flex items-center gap-6 text-slate-600">
+                            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-6 text-slate-600 text-xs md:text-sm">
                               <div className="flex items-center gap-2">
-                                <Users className="h-4 w-4 text-slate-400" />
-                                <span className="font-medium">@{user.username}</span>
+                                <Users className="h-3 w-3 md:h-4 md:w-4 text-slate-400 flex-shrink-0" />
+                                <span className="font-medium truncate">@{user.username}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <Mail className="h-4 w-4 text-slate-400" />
-                                <span>{user.email || "Email não informado"}</span>
+                                <Mail className="h-3 w-3 md:h-4 md:w-4 text-slate-400 flex-shrink-0" />
+                                <span className="truncate">{user.email || "Email não informado"}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <Calendar className="h-4 w-4 text-slate-400" />
-                                <span className="text-sm">
+                                <Calendar className="h-3 w-3 md:h-4 md:w-4 text-slate-400 flex-shrink-0" />
+                                <span className="text-xs md:text-sm">
                                   Criado em {new Date(user.createdAt).toLocaleDateString('pt-BR')}
                                 </span>
                               </div>
                             </div>
-                            <div className="flex flex-wrap gap-2">
-                              {user.permissions?.slice(0, 5).map(permission => 
+                            <div className="flex flex-wrap gap-1 md:gap-2">
+                              {user.permissions?.slice(0, 3).map(permission => 
                                 getPermissionBadge(permission)
                               )}
-                              {user.permissions && user.permissions.length > 5 && (
-                                <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 border border-slate-300 text-slate-600">
-                                  +{user.permissions.length - 5} permissões
+                              {user.permissions && user.permissions.length > 3 && (
+                                <div className="inline-flex items-center px-2 md:px-3 py-1 rounded-full text-xs font-medium bg-slate-100 border border-slate-300 text-slate-600">
+                                  +{user.permissions.length - 3}
                                 </div>
                               )}
                             </div>
                           </div>
                         </div>
-                        <div className="flex space-x-3">
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full md:w-auto">
                           <Button
-                            size="lg"
+                            size="sm"
                             variant="outline"
                             onClick={() => handleEdit(user)}
-                            className="h-12 w-12 p-0 hover:bg-blue-50 hover:border-blue-300 border-slate-200"
+                            className="h-8 md:h-10 lg:h-12 px-3 md:px-4 lg:px-0 lg:w-12 hover:bg-blue-50 hover:border-blue-300 border-slate-200 flex items-center justify-center gap-2 lg:gap-0"
                             title="Editar usuário"
                           >
-                            <Edit className="h-5 w-5 text-blue-600" />
+                            <Edit className="h-3 w-3 md:h-4 md:w-4 lg:h-5 lg:w-5 text-blue-600" />
+                            <span className="lg:hidden text-xs md:text-sm">Editar</span>
                           </Button>
                           <Button
-                            size="lg"
+                            size="sm"
                             variant="outline"
                             onClick={() => handleDelete(user.id)}
                             disabled={user.id === 1}
-                            className="h-12 w-12 p-0 hover:bg-red-50 hover:border-red-300 disabled:opacity-50 border-slate-200"
+                            className="h-8 md:h-10 lg:h-12 px-3 md:px-4 lg:px-0 lg:w-12 hover:bg-red-50 hover:border-red-300 disabled:opacity-50 border-slate-200 flex items-center justify-center gap-2 lg:gap-0"
                             title={user.id === 1 ? "Usuário admin principal não pode ser excluído" : "Excluir usuário"}
                           >
-                            <Trash2 className="h-5 w-5 text-red-600" />
+                            <Trash2 className="h-3 w-3 md:h-4 md:w-4 lg:h-5 lg:w-5 text-red-600" />
+                            <span className="lg:hidden text-xs md:text-sm">Excluir</span>
                           </Button>
                         </div>
                       </div>
