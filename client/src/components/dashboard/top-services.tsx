@@ -30,6 +30,8 @@ export default function TopServices() {
     refetchOnWindowFocus: true,
   });
 
+  console.log('TopServices - isLoading:', isLoading, 'error:', error, 'data:', topServices);
+
   if (isLoading) {
     return (
       <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm animate-pulse">

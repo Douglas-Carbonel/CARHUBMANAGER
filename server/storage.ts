@@ -745,27 +745,32 @@ export class DatabaseStorage implements IStorage {
 
   async getTopServices(): Promise<{ name: string; count: number; revenue: number }[]> {
     try {
+      console.log('Getting top services...');
       const topServices = await db
         .select({
           serviceName: serviceTypes.name,
           count: sql<number>`count(*)`,
           totalRevenue: sql<number>`sum(CASE 
             WHEN ${services.status} = 'completed' AND ${services.finalValue} IS NOT NULL 
-            THEN ${services.finalValue}
-            ELSE COALESCE(${services.estimatedValue}, 0)
+            THEN CAST(${services.finalValue} AS DECIMAL(10,2))
+            ELSE CAST(COALESCE(${services.estimatedValue}, 0) AS DECIMAL(10,2))
           END)`
         })
         .from(services)
         .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
-        .groupBy(serviceTypes.name)
+        .groupBy(serviceTypes.id, serviceTypes.name)
         .orderBy(sql`count(*) desc`)
         .limit(5);
 
-      return topServices.map(service => ({
+      console.log(`Found ${topServices.length} top services`);
+      const result = topServices.map(service => ({
         name: service.serviceName,
-        count: service.count,
+        count: Number(service.count),
         revenue: Number(service.totalRevenue || 0)
       }));
+      
+      console.log('Top services result:', result);
+      return result;
     } catch (error) {
       console.error('Error getting top services:', error);
       return [];
@@ -774,11 +779,14 @@ export class DatabaseStorage implements IStorage {
 
   async getRecentServices(limit: number): Promise<any[]> {
     try {
+      console.log('Getting recent services...');
       const recentServices = await db
         .select({
           id: services.id,
           customerName: customers.name,
           vehiclePlate: vehicles.licensePlate,
+          vehicleBrand: vehicles.brand,
+          vehicleModel: vehicles.model,
           serviceTypeName: serviceTypes.name,
           scheduledDate: services.scheduledDate,
           status: services.status,
@@ -792,6 +800,7 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(services.createdAt))
         .limit(limit);
 
+      console.log(`Found ${recentServices.length} recent services`);
       return recentServices;
     } catch (error) {
       console.error('Error getting recent services:', error);
@@ -801,13 +810,17 @@ export class DatabaseStorage implements IStorage {
 
   async getUpcomingAppointments(limit: number): Promise<any[]> {
     try {
+      console.log('Getting upcoming appointments...');
       const today = new Date().toISOString().split('T')[0];
+      console.log('Today date for appointments:', today);
       
       const upcomingAppointments = await db
         .select({
           id: services.id,
           customerName: customers.name,
           vehiclePlate: vehicles.licensePlate,
+          vehicleBrand: vehicles.brand,
+          vehicleModel: vehicles.model,
           serviceTypeName: serviceTypes.name,
           scheduledDate: services.scheduledDate,
           scheduledTime: services.scheduledTime,
@@ -826,6 +839,7 @@ export class DatabaseStorage implements IStorage {
         .orderBy(services.scheduledDate, services.scheduledTime)
         .limit(limit);
 
+      console.log(`Found ${upcomingAppointments.length} upcoming appointments`);
       return upcomingAppointments;
     } catch (error) {
       console.error('Error getting upcoming appointments:', error);
