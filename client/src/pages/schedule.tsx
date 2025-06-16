@@ -324,10 +324,10 @@ export default function SchedulePage() {
                 </Select>
               </div>
 
-              <div className="flex items-center space-x-4">
-                <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-5 py-3 rounded-xl shadow-lg backdrop-blur-sm">
-                  <span className="font-bold text-lg">{filteredServices.length}</span>
-                  <span className="ml-2 text-sm font-medium">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full lg:w-auto">
+                <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-4 sm:px-5 py-3 rounded-xl shadow-lg backdrop-blur-sm">
+                  <span className="font-bold text-base sm:text-lg">{filteredServices.length}</span>
+                  <span className="ml-2 text-xs sm:text-sm font-medium">
                     {periodFilter === "day" ? "hoje" : 
                      periodFilter === "week" ? "esta semana" : 
                      periodFilter === "month" ? "este mês" : "agendamentos"}
@@ -336,7 +336,7 @@ export default function SchedulePage() {
                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                   <DialogTrigger asChild>
                     <Button 
-                      className="bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-500 hover:to-cyan-500 text-teal-900 shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-3 rounded-xl font-semibold"
+                      className="bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-500 hover:to-cyan-500 text-teal-900 shadow-lg hover:shadow-xl transition-all duration-200 px-4 sm:px-6 py-3 rounded-xl font-semibold text-sm sm:text-base w-full sm:w-auto"
                       onClick={() => {
                         setEditingService(null);
                         form.reset({
@@ -351,7 +351,7 @@ export default function SchedulePage() {
                         });
                       }}
                     >
-                      <Plus className="h-5 w-5 mr-2" />
+                      <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                       Novo Agendamento
                     </Button>
                   </DialogTrigger>
@@ -553,9 +553,9 @@ export default function SchedulePage() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {filteredServices.map((service) => (
-                  <Card key={service.id} className="group hover:shadow-2xl transition-all duration-300 bg-white/95 backdrop-blur-sm border border-teal-200/50 shadow-lg hover:-translate-y-2 hover:scale-105">
+                  <Card key={service.id} className="group hover:shadow-2xl transition-all duration-300 bg-white/95 backdrop-blur-sm border border-teal-200/50 shadow-lg hover:-translate-y-1 sm:hover:-translate-y-2 hover:scale-105">
                     <CardHeader className="pb-4">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center space-x-3">
