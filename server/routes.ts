@@ -428,11 +428,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/dashboard/revenue", requireAuth, async (req, res) => {
     try {
       const days = parseInt(req.query.days as string) || 7;
+      console.log(`Getting revenue data for ${days} days`);
       const revenue = await storage.getRevenueData(days);
+      console.log(`Revenue data retrieved:`, revenue);
       res.json(revenue);
     } catch (error) {
       console.error("Error getting revenue data:", error);
-      res.status(500).json({ message: "Failed to get revenue data" });
+      res.status(500).json({ message: "Failed to get revenue data", error: error.message });
     }
   });
 

@@ -674,9 +674,12 @@ export class DatabaseStorage implements IStorage {
 
   async getRevenueByDays(days: number): Promise<{ date: string; revenue: number }[]> {
     try {
+      console.log(`Getting revenue data for ${days} days`);
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
       const startDateStr = startDate.toISOString().split('T')[0];
+
+      console.log(`Querying services from ${startDateStr}`);
 
       const revenueData = await db
         .select({
@@ -688,6 +691,8 @@ export class DatabaseStorage implements IStorage {
         .from(services)
         .where(gte(services.scheduledDate, startDateStr))
         .orderBy(services.scheduledDate);
+
+      console.log(`Found ${revenueData.length} services in date range`);
 
       // Group by date and sum revenue
       const revenueByDate: { [key: string]: number } = {};
@@ -707,20 +712,21 @@ export class DatabaseStorage implements IStorage {
 
       // Create array with all days in range
       const result = [];
-      for (let i = 0; i < days; i++) {
+      for (let i = days - 1; i >= 0; i--) {
         const date = new Date();
         date.setDate(date.getDate() - i);
         const dateStr = date.toISOString().split('T')[0];
-        result.unshift({
+        result.push({
           date: dateStr,
           revenue: revenueByDate[dateStr] || 0
         });
       }
 
+      console.log(`Revenue data result:`, result);
       return result;
     } catch (error) {
       console.error('Error getting revenue by days:', error);
-      return [];
+      throw error;
     }
   }
 

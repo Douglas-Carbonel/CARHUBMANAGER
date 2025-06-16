@@ -2,6 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, DollarSign, Wrench, Calendar, Users, AlertTriangle } from "lucide-react";
 
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Alert, AlertDescription } from "../ui/alert";
+import { TrendingUp, DollarSign, Wrench, Calendar, Users, AlertTriangle } from "lucide-react";
+
 interface DashboardStats {
   dailyRevenue: number;
   dailyServices: number;
