@@ -486,9 +486,11 @@ export class DatabaseStorage implements IStorage {
   async getDashboardStats() {
     try {
       console.log('Getting dashboard stats...');
-      // Use current date in Brazilian format (YYYY-MM-DD for database queries)
-      const today = new Date().toISOString().split('T')[0];
-      console.log('Today date:', today);
+      // Use current date in Brazilian timezone (UTC-3)
+      const now = new Date();
+      const brazilianTime = new Date(now.getTime() - (3 * 60 * 60 * 1000)); // UTC-3
+      const today = brazilianTime.toISOString().split('T')[0];
+      console.log('Today date (Brazilian timezone):', today);
 
       // Completed revenue (services with status 'completed' and their final value or estimated value)
       const completedRevenue = await db
@@ -858,9 +860,11 @@ export class DatabaseStorage implements IStorage {
   async getUpcomingAppointments(limit: number): Promise<any[]> {
     try {
       console.log('Storage: Getting upcoming appointments...');
-      // Use current date in Brazilian format (YYYY-MM-DD for database queries)
-      const today = new Date().toISOString().split('T')[0];
-      console.log('Storage: Today date for appointments:', today);
+      // Use current date in Brazilian timezone (UTC-3)
+      const now = new Date();
+      const brazilianTime = new Date(now.getTime() - (3 * 60 * 60 * 1000)); // UTC-3
+      const today = brazilianTime.toISOString().split('T')[0];
+      console.log('Storage: Today date for appointments (Brazilian timezone):', today);
 
       // Verificar se temos agendamentos
       const scheduledServicesCheck = await db
@@ -1231,10 +1235,11 @@ export class DatabaseStorage implements IStorage {
   // Schedule-specific analytics
   async getScheduleStats() {
     try {
-      // Use current date in Brazilian format (YYYY-MM-DD for database queries)
-      const today = new Date().toISOString().split('T')[0];
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      // Use current date in Brazilian timezone (UTC-3)
+      const now = new Date();
+      const brazilianTime = new Date(now.getTime() - (3 * 60 * 60 * 1000)); // UTC-3
+      const today = brazilianTime.toISOString().split('T')[0];
+      const oneWeekAgo = new Date(brazilianTime.getTime() - (7 * 24 * 60 * 60 * 1000));
       const weekAgoStr = oneWeekAgo.toISOString().split('T')[0];
 
       console.log('Schedule stats - Today date:', today);
@@ -1302,8 +1307,10 @@ export class DatabaseStorage implements IStorage {
 
   async getTodayAppointments() {
     try {
-      // Use current date in Brazilian format (YYYY-MM-DD for database queries)
-      const today = new Date().toISOString().split('T')[0];
+      // Use current date in Brazilian timezone (UTC-3)
+      const now = new Date();
+      const brazilianTime = new Date(now.getTime() - (3 * 60 * 60 * 1000)); // UTC-3
+      const today = brazilianTime.toISOString().split('T')[0];
 
       const todayAppointments = await db
         .select({
