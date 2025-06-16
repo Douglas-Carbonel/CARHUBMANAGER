@@ -17,8 +17,14 @@ const serviceIconColors: { [key: string]: string } = {
   "Balanceamento": "bg-gradient-to-r from-orange-500 to-amber-600",
 };
 
+interface TopService {
+  name: string;
+  count: string | number;
+  revenue: string | number;
+}
+
 export default function TopServices() {
-  const { data: topServices, isLoading } = useQuery({
+  const { data: topServices, isLoading, error } = useQuery<TopService[]>({
     queryKey: ["/api/dashboard/top-services"],
     staleTime: 30000,
     refetchOnWindowFocus: true,
