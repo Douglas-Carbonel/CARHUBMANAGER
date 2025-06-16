@@ -69,7 +69,7 @@ export default function SchedulePage() {
       vehicleId: 0,
       serviceTypeId: 0,
       status: "scheduled",
-      scheduledDate: new Date().toISOString().split('T')[0], // Data atual como padrão
+      scheduledDate: new Date(new Date().toLocaleString("en-US", {timeZone: "America/Sao_Paulo"})).toISOString().split('T')[0], // Data atual brasileira como padrão
       estimatedValue: undefined,
       finalValue: undefined,
       notes: "",
@@ -207,16 +207,17 @@ export default function SchedulePage() {
 
   // Helper functions for date filtering
   const getDateRange = (period: string) => {
-    // Use a fixed date for testing - change this to new Date() for production
-    const today = new Date('2025-06-15'); // Temporary fix for testing
-    const todayStr = today.toISOString().split('T')[0];
+    // Use Brazilian timezone for today's date
+    const today = new Date();
+    const brazilTime = new Date(today.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+    const todayStr = brazilTime.toISOString().split('T')[0];
 
     switch (period) {
       case "day":
         return { start: todayStr, end: todayStr };
       case "week":
-        const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - today.getDay());
+        const startOfWeek = new Date(brazilTime);
+        startOfWeek.setDate(brazilTime.getDate() - brazilTime.getDay());
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6);
         return {
@@ -224,8 +225,8 @@ export default function SchedulePage() {
           end: endOfWeek.toISOString().split('T')[0]
         };
       case "month":
-        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-        const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        const startOfMonth = new Date(brazilTime.getFullYear(), brazilTime.getMonth(), 1);
+        const endOfMonth = new Date(brazilTime.getFullYear(), brazilTime.getMonth() + 1, 0);
         return {
           start: startOfMonth.toISOString().split('T')[0],
           end: endOfMonth.toISOString().split('T')[0]
@@ -343,7 +344,7 @@ export default function SchedulePage() {
                           vehicleId: 0,
                           serviceTypeId: 0,
                           status: "scheduled",
-                          scheduledDate: new Date().toISOString().split('T')[0],
+                          scheduledDate: new Date(new Date().toLocaleString("en-US", {timeZone: "America/Sao_Paulo"})).toISOString().split('T')[0],
                           estimatedValue: undefined,
                           finalValue: undefined,
                           notes: "",
