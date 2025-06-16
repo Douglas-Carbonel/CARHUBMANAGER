@@ -75,12 +75,12 @@ export default function TopServices() {
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">{service.name}</p>
-                    <p className="text-sm text-gray-500">{service.count} serviços realizados</p>
+                    <p className="text-sm text-gray-500">{Number(service.count)} serviços realizados</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <span className="text-lg font-bold text-gray-900">
-                    R$ {service.revenue.toLocaleString('pt-BR')}
+                    R$ {Number(service.revenue).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </span>
                   <p className="text-xs text-gray-500">faturamento</p>
                 </div>

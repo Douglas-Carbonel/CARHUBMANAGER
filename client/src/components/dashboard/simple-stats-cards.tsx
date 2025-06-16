@@ -19,6 +19,8 @@ export default function SimpleStatsCards() {
     retryDelay: 1000,
   });
 
+  console.log('SimpleStatsCards - isLoading:', isLoading, 'error:', error, 'stats:', stats);
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
