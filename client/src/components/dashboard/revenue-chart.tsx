@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Area, AreaChart } from "recharts";
+import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Area, AreaChart, Bar, BarChart } from "recharts";
 import { MoreHorizontal, TrendingUp, Calendar, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -101,17 +101,33 @@ export default function RevenueChart() {
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </div>
+        
+        {/* Total Previsto */}
+        <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-xl border border-green-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                <DollarSign className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-green-700">Total Previsto (7 dias)</p>
+                <p className="text-2xl font-bold text-green-900">
+                  R$ {totalEstimatedRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-green-600">{recentServices.length} serviços</p>
+              <p className="text-xs text-green-500">estimados</p>
+            </div>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="pt-6 space-y-6">
-        <div className="h-80">
+      <CardContent className="pt-6">
+        {/* Gráfico */}
+        <div className="h-80 mb-6">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-              <defs>
-                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
-                </linearGradient>
-              </defs>
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
               <XAxis 
                 dataKey="date" 
                 axisLine={false}
@@ -127,7 +143,7 @@ export default function RevenueChart() {
                 dx={-10}
               />
               <Tooltip 
-                formatter={(value: any) => [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Faturamento Previsto']}
+                formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'Faturamento Previsto']}
                 labelFormatter={(label) => `${label}`}
                 contentStyle={{
                   backgroundColor: 'white',
@@ -138,127 +154,66 @@ export default function RevenueChart() {
                   fontWeight: '500'
                 }}
               />
-              <Area
-                type="monotone"
+              <Bar
                 dataKey="revenue"
-                stroke="#10B981"
-                strokeWidth={3}
-                fill="url(#colorRevenue)"
-                dot={{ fill: '#10B981', strokeWidth: 2, r: 6 }}
-                activeDot={{ r: 8, fill: '#10B981', strokeWidth: 0 }}
+                fill="#10B981"
+                radius={[6, 6, 0, 0]}
+                opacity={0.8}
               />
-            </AreaChart>
+            </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Detalhes dos Serviços */}
-        <div className="border-t border-gray-100 pt-6">
-          <div className="grid grid-cols-2 gap-6">
-            {/* Serviços Concluídos */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <h4 className="font-semibold text-gray-900">Serviços Concluídos</h4>
-              </div>
-              <div className="space-y-3 max-h-32 overflow-y-auto">
-                {completedServices.length === 0 ? (
-                  <p className="text-sm text-gray-500 italic">Nenhum serviço concluído nos últimos 7 dias</p>
-                ) : (
-                  completedServices.map((service: any) => (
-                    <div key={service.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-100">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{service.serviceTypeName}</p>
-                        <p className="text-xs text-gray-600">{service.customerName} • {service.vehiclePlate}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Calendar className="h-3 w-3 text-gray-400" />
-                          <span className="text-xs text-gray-500">
-                            {new Date(service.scheduledDate).toLocaleDateString('pt-BR')}
-                          </span>
-                        </div>
+        {/* Lista de Serviços Previstos */}
+        <div className="border-t border-gray-100 pt-4">
+          <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <TrendingUp className="h-5 w-5 text-green-500 mr-2" />
+            Serviços Previstos Recentes
+          </h4>
+          
+          {recentServices.length > 0 ? (
+            <div className="space-y-3 max-h-48 overflow-y-auto">
+              {recentServices.map((service: any) => {
+                const serviceValue = service.finalValue ? Number(service.finalValue) : Number(service.estimatedValue || 0);
+                const isCompleted = service.status === 'completed';
+                return (
+                  <div key={service.id} className={`flex items-center justify-between p-3 rounded-lg border ${
+                    isCompleted 
+                      ? 'bg-green-50 border-green-200' 
+                      : 'bg-yellow-50 border-yellow-200'
+                  }`}>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <p className="font-medium text-gray-900">{service.customerName}</p>
+                        <span className="text-sm text-gray-500">•</span>
+                        <p className="text-sm text-gray-600">{service.serviceTypeName}</p>
                       </div>
-                      <div className="text-right">
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="h-3 w-3 text-green-600" />
-                          <span className="text-sm font-bold text-green-600">
-                            R$ {Number(service.finalValue || service.estimatedValue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </span>
-                        </div>
-                        <Badge variant="outline" className="text-xs bg-green-100 text-green-700 border-green-200">
-                          Concluído
-                        </Badge>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <p className="text-xs text-gray-500">{service.vehiclePlate}</p>
+                        <span className="text-xs text-gray-400">•</span>
+                        <p className="text-xs text-gray-500">
+                          {new Date(service.scheduledDate).toLocaleDateString('pt-BR')}
+                        </p>
                       </div>
                     </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* Serviços Estimados */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                <h4 className="font-semibold text-gray-900">Serviços Estimados</h4>
-              </div>
-              <div className="space-y-3 max-h-32 overflow-y-auto">
-                {estimatedServices.length === 0 ? (
-                  <p className="text-sm text-gray-500 italic">Nenhum serviço estimado nos últimos 7 dias</p>
-                ) : (
-                  estimatedServices.map((service: any) => (
-                    <div key={service.id} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-100">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{service.serviceTypeName}</p>
-                        <p className="text-xs text-gray-600">{service.customerName} • {service.vehiclePlate}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Calendar className="h-3 w-3 text-gray-400" />
-                          <span className="text-xs text-gray-500">
-                            {new Date(service.scheduledDate).toLocaleDateString('pt-BR')}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="h-3 w-3 text-blue-600" />
-                          <span className="text-sm font-bold text-blue-600">
-                            R$ {Number(service.estimatedValue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </span>
-                        </div>
-                        <Badge variant="outline" className={`text-xs ${
-                          service.status === 'scheduled' 
-                            ? 'bg-yellow-100 text-yellow-700 border-yellow-200' 
-                            : 'bg-blue-100 text-blue-700 border-blue-200'
-                        }`}>
-                          {service.status === 'scheduled' ? 'Agendado' : 'Em Andamento'}
-                        </Badge>
-                      </div>
+                    <div className="text-right">
+                      <p className={`font-bold ${isCompleted ? 'text-green-700' : 'text-yellow-700'}`}>
+                        R$ {serviceValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                      <p className={`text-xs ${isCompleted ? 'text-green-600' : 'text-yellow-600'}`}>
+                        {isCompleted ? 'Concluído' : service.status === 'in_progress' ? 'Em andamento' : 'Agendado'}
+                      </p>
                     </div>
-                  ))
-                )}
-              </div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
-
-          {/* Total Geral */}
-          <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center">
-                  <TrendingUp className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h5 className="font-bold text-gray-900">Total de Faturamento Previsto</h5>
-                  <p className="text-sm text-gray-600">Últimos 7 dias (concluído + estimado)</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-gray-900">
-                  R$ {totalEstimatedRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </div>
-                <p className="text-sm text-gray-600">
-                  {completedServices.length + estimatedServices.length} serviços
-                </p>
-              </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <TrendingUp className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <p>Nenhum serviço previsto nos últimos 7 dias</p>
             </div>
-          </div>
+          )}
         </div>
       </CardContent>
     </Card>
