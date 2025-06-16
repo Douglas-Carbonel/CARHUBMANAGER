@@ -10,6 +10,15 @@ export default function RevenueChart() {
     queryKey: ["/api/dashboard/revenue?days=7"],
     staleTime: 30000,
     refetchOnWindowFocus: true,
+    queryFn: async () => {
+      const response = await fetch("/api/dashboard/revenue?days=7", {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    },
   });
 
   // Transform data for chart
