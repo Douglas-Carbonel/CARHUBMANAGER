@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -82,6 +81,12 @@ export default function UpcomingAppointments() {
                   <p className="text-sm text-gray-500">
                     {appointment.vehicleBrand} {appointment.vehicleModel} • {appointment.vehiclePlate}
                   </p>
+                  <div className="text-sm text-gray-500">
+                    {appointment.scheduledDate && 
+                      new Date(appointment.scheduledDate + 'T00:00:00').toLocaleDateString('pt-BR')
+                    }
+                    {appointment.scheduledTime && ` às ${appointment.scheduledTime.slice(0, 5)}`}
+                  </div>
                 </div>
               </div>
               <Button
@@ -93,7 +98,7 @@ export default function UpcomingAppointments() {
               </Button>
             </div>
           ))}
-          
+
           {(!upcomingAppointments || upcomingAppointments.length === 0) && (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -103,7 +108,7 @@ export default function UpcomingAppointments() {
             </div>
           )}
         </div>
-        
+
         {upcomingAppointments && upcomingAppointments.length > 0 && (
           <Button 
             variant="ghost" 

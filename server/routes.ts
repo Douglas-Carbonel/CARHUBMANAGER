@@ -305,17 +305,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const serviceData = insertServiceSchema.parse(cleanedData);
       console.log('Parsed service data:', JSON.stringify(serviceData, null, 2));
 
-      // Se não foi informada data de agendamento, usar a data atual
+      // Se não foi informada data de agendamento, usar a data atual (sem conversão de timezone)
       if (!serviceData.scheduledDate || serviceData.scheduledDate === "") {
         const now = new Date();
-        serviceData.scheduledDate = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+        // Usar timezone local para evitar problemas de conversão
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        serviceData.scheduledDate = `${year}-${month}-${day}`;
       }
 
       // Se não foi informada hora de agendamento, usar a hora atual
       if (!serviceData.scheduledTime || serviceData.scheduledTime === "") {
         const now = new Date();
-        // Formatar hora como HH:MM:SS
-        serviceData.scheduledTime = now.toTimeString().split(' ')[0]; // HH:MM:SS format
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        serviceData.scheduledTime = `${hours}:${minutes}:${seconds}`;
       }
 
       console.log('Creating service with data:', JSON.stringify(serviceData, null, 2));

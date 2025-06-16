@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -108,7 +107,7 @@ export default function RecentServices() {
               </div>
             </div>
           ))}
-          
+
           {(!recentServices || recentServices.length === 0) && (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -118,7 +117,7 @@ export default function RecentServices() {
             </div>
           )}
         </div>
-        
+
         {recentServices && recentServices.length > 0 && (
           <Button 
             variant="ghost" 

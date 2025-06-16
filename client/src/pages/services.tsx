@@ -654,13 +654,15 @@ export default function Services() {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="space-y-2">
+                  <CardContent className="pt-4">
+                    <div className="space-y-3">
                       {service.scheduledDate && (
                         <div className="flex items-center text-sm text-gray-600">
-                          <Calendar className="h-4 w-4 mr-2" />
-                          {format(new Date(service.scheduledDate), 'dd/MM/yyyy')}
-                          {service.scheduledTime && ` às ${service.scheduledTime}`}
+                          <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+                          <span className="font-medium">
+                            {new Date(service.scheduledDate + 'T00:00:00').toLocaleDateString('pt-BR')}
+                            {service.scheduledTime && ` às ${service.scheduledTime.slice(0, 5)}`}
+                          </span>
                         </div>
                       )}
                       {service.estimatedValue && (

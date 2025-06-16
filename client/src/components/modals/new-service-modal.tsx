@@ -101,8 +101,11 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
       estimatedValue: data.estimatedValue && data.estimatedValue !== "" ? data.estimatedValue : undefined,
       notes: data.notes || undefined,
       scheduledTime: data.scheduledTime || undefined,
+      // Ensure date is in YYYY-MM-DD format without timezone conversion
+      scheduledDate: data.scheduledDate || new Date().toISOString().split('T')[0],
     };
 
+    console.log('New Service Modal - Submitting data:', serviceData);
     createMutation.mutate(serviceData);
   };
 
