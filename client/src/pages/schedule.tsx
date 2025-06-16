@@ -277,7 +277,7 @@ export default function SchedulePage() {
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden md:ml-0">
         <Header 
           title="Agendamentos"
           subtitle="Gerencie os agendamentos de serviços"
@@ -285,8 +285,8 @@ export default function SchedulePage() {
 
         <main className="flex-1 overflow-y-auto bg-gradient-to-br from-teal-50 via-emerald-50/30 to-cyan-50/20">
           {/* Header Section */}
-          <div className="bg-gradient-to-r from-white via-teal-50 to-white border-b border-teal-100 px-8 py-6 sticky top-0 z-10 shadow-lg backdrop-blur-sm bg-white/95">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+          <div className="bg-gradient-to-r from-white via-teal-50 to-white border-b border-teal-100 px-4 sm:px-6 md:px-8 py-4 sm:py-6 sticky top-0 z-10 shadow-lg backdrop-blur-sm bg-white/95">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 sm:gap-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-teal-400 h-5 w-5" />
@@ -294,12 +294,12 @@ export default function SchedulePage() {
                     placeholder="Buscar agendamentos..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 w-80 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm"
+                    className="pl-12 w-full sm:w-80 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm"
                   />
                 </div>
 
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-48 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm">
+                  <SelectTrigger className="w-full sm:w-48 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm">
                     <SelectValue placeholder="Filtrar por status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -312,7 +312,7 @@ export default function SchedulePage() {
                 </Select>
 
                 <Select value={periodFilter} onValueChange={setPeriodFilter}>
-                  <SelectTrigger className="w-48 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm">
+                  <SelectTrigger className="w-full sm:w-48 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm">
                     <SelectValue placeholder="Filtrar por período" />
                   </SelectTrigger>
                   <SelectContent>

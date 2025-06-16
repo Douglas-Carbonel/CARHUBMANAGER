@@ -78,35 +78,35 @@ export default function Dashboard() {
             <SimpleStatsCards />
 
             {/* Seções de Dashboard Especializadas */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {dashboardSections.map((section, index) => (
                 <Card 
                   key={index}
                   className={`border-0 shadow-lg bg-gradient-to-br ${section.bgColor} hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer`}
                   onClick={() => setLocation(section.route)}
                 >
-                  <CardHeader className="pb-4">
+                  <CardHeader className="pb-4 p-4 sm:p-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className={`w-12 h-12 bg-gradient-to-r ${section.color} rounded-xl flex items-center justify-center shadow-lg`}>
-                          <section.icon className="h-6 w-6 text-white" />
+                        <div className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r ${section.color} rounded-xl flex items-center justify-center shadow-lg`}>
+                          <section.icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                         </div>
                         <div>
-                          <CardTitle className="text-xl font-bold text-gray-900">
+                          <CardTitle className="text-lg sm:text-xl font-bold text-gray-900">
                             {section.title}
                           </CardTitle>
                         </div>
                       </div>
-                      <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                      <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600 text-sm leading-relaxed">
+                  <CardContent className="p-4 sm:p-6 pt-0">
+                    <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">
                       {section.description}
                     </p>
                     <Button 
                       variant="ghost" 
-                      className="w-full mt-4 justify-between text-gray-700 hover:bg-white/50"
+                      className="w-full mt-3 sm:mt-4 justify-between text-gray-700 hover:bg-white/50 text-sm"
                       onClick={(e) => {
                         e.preventDefault();
                         setLocation(section.route);
@@ -121,33 +121,33 @@ export default function Dashboard() {
             </div>
 
             {/* Resumo Rápido */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <TopServices />
             </div>
 
             {/* Second Row - Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
               <RevenueChart />
               <RealizedRevenueChart />
             </div>
 
             {/* Informações Rápidas */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <RecentServices />
               <UpcomingAppointments />
             </div>
 
             {/* Call to Action */}
             <Card className="border-0 shadow-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
-              <CardContent className="p-8">
-                <div className="flex items-center justify-between">
+              <CardContent className="p-4 sm:p-6 md:p-8">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
                   <div>
-                    <h3 className="text-2xl font-bold mb-2">Análises Avançadas</h3>
-                    <p className="text-indigo-100 mb-4">
+                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-2">Análises Avançadas</h3>
+                    <p className="text-indigo-100 mb-4 text-sm sm:text-base">
                       Acesse dashboards especializados para insights detalhados sobre cada área do seu negócio.
                     </p>
                   </div>
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-3 w-full sm:w-auto">
                     <Activity className="h-12 w-12 text-indigo-200" />
                     <TrendingUp className="h-12 w-12 text-indigo-200" />
                   </div>
