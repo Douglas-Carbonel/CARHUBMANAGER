@@ -4,9 +4,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/hooks/useAuth";
 import AuthPage from "@/pages/auth-page";
 import Dashboard from "@/pages/dashboard";
-import Services from "@/pages/services";
+import DashboardCustomers from "@/pages/dashboard-customers";
+import DashboardVehicles from "@/pages/dashboard-vehicles";
+import DashboardServices from "@/pages/dashboard-services";
+import DashboardSchedule from "@/pages/dashboard-schedule";
 import Customers from "@/pages/customers";
 import Vehicles from "@/pages/vehicles";
+import Services from "@/pages/services";
 import Schedule from "@/pages/schedule";
 import ReportsPage from "@/pages/reports";
 import VehicleHistoryPage from "@/pages/vehicle-history";
@@ -42,6 +46,26 @@ function App() {
           <Route path="/dashboard">
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/dashboard/customers">
+            <ProtectedRoute>
+              <DashboardCustomers />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/dashboard/vehicles">
+            <ProtectedRoute>
+              <DashboardVehicles />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/dashboard/services">
+            <ProtectedRoute>
+              <DashboardServices />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/dashboard/schedule">
+            <ProtectedRoute>
+              <DashboardSchedule />
             </ProtectedRoute>
           </Route>
           <Route path="/services">

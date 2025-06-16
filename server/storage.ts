@@ -117,6 +117,15 @@ export interface IStorage {
   // Basic loyalty operations
   addLoyaltyPoints(customerId: number, points: number): Promise<void>;
 
+  // Schedule-specific analytics
+  getScheduleStats(): Promise<{
+    today: number;
+    thisWeek: number;
+    completed: number;
+    overdue: number;
+  }>;
+  getTodayAppointments(): Promise<any[]>;
+
   // Dashboard analytics
   getDashboardAnalytics(): Promise<{
     topCustomers: Array<{ customerName: string; serviceCount: number; totalValue: number }>;
@@ -1138,6 +1147,99 @@ export class DatabaseStorage implements IStorage {
         monthlyAppointments: 0,
         weeklyEstimatedValue: 0
       };
+    }
+  }
+
+  // Schedule-specific analytics
+  async getScheduleStats() {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      const weekAgoStr = oneWeekAgo.toISOString().split('T')[0];
+
+      // Today's appointments
+      const todayCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(services)
+        .where(eq(services.scheduledDate, today));
+
+      // This week's appointments
+      const thisWeekCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(services)
+        .where(
+          and(
+            gte(services.scheduledDate, weekAgoStr),
+            lte(services.scheduledDate, today)
+          )
+        );
+
+      // Completed this week
+      const completedCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(services)
+        .where(
+          and(
+            gte(services.scheduledDate, weekAgoStr),
+            lte(services.scheduledDate, today),
+            eq(services.status, 'completed')
+          )
+        );
+
+      // Overdue (scheduled in the past but not completed)
+      const overdueCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(services)
+        .where(
+          and(
+            lt(services.scheduledDate, today),
+            eq(services.status, 'scheduled')
+          )
+        );
+
+      return {
+        today: Number(todayCount[0]?.count) || 0,
+        thisWeek: Number(thisWeekCount[0]?.count) || 0,
+        completed: Number(completedCount[0]?.count) || 0,
+        overdue: Number(overdueCount[0]?.count) || 0
+      };
+    } catch (error) {
+      console.error('Error getting schedule stats:', error);
+      return {
+        today: 0,
+        thisWeek: 0,
+        completed: 0,
+        overdue: 0
+      };
+    }
+  }
+
+  async getTodayAppointments() {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      const todayAppointments = await db
+        .select({
+          id: services.id,
+          customerName: customers.name,
+          vehiclePlate: vehicles.licensePlate,
+          serviceTypeName: serviceTypes.name,
+          scheduledDate: services.scheduledDate,
+          scheduledTime: services.scheduledTime,
+          status: services.status
+        })
+        .from(services)
+        .innerJoin(customers, eq(services.customerId, customers.id))
+        .innerJoin(vehicles, eq(services.vehicleId, vehicles.id))
+        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+        .where(eq(services.scheduledDate, today))
+        .orderBy(services.scheduledTime);
+
+      return todayAppointments;
+    } catch (error) {
+      console.error('Error getting today appointments:', error);
+      return [];
     }
   }
 }

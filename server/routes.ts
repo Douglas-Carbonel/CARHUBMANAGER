@@ -495,17 +495,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 app.get("/api/analytics/vehicles", requireAuth, async (req, res) => {
-  try {
-    const analytics = await storage.getVehicleAnalytics();
-    res.json(analytics);
-  } catch (error: any) {
-    console.error("Error fetching vehicle analytics:", error);
-    res.status(500).json({ 
-      error: "Failed to fetch vehicle analytics",
-      details: error.message 
-    });
-  }
-});
+    try {
+      const analytics = await storage.getVehicleAnalytics();
+      res.json(analytics);
+    } catch (error: any) {
+      console.error("Error fetching vehicle analytics:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch vehicle analytics",
+        details: error.message 
+      });
+    }
+  });
+
+  // Schedule-specific dashboard routes
+  app.get("/api/dashboard/schedule-stats", requireAuth, async (req, res) => {
+    try {
+      const stats = await storage.getScheduleStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error getting schedule stats:", error);
+      res.status(500).json({ message: "Failed to get schedule stats" });
+    }
+  });
+
+  app.get("/api/dashboard/today-appointments", requireAuth, async (req, res) => {
+    try {
+      const appointments = await storage.getTodayAppointments();
+      res.json(appointments);
+    } catch (error) {
+      console.error("Error getting today appointments:", error);
+      res.status(500).json({ message: "Failed to get today appointments" });
+    }
+  });
 
   // Admin user management routes
   app.get("/api/admin/users", requireAdmin, async (req, res) => {
