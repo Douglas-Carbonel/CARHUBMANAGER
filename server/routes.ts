@@ -416,7 +416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Dashboard stats API - User:", user.role, user.id);
       const technicianId = user.role === 'admin' ? null : user.id;
       console.log("Dashboard stats API - Using technicianId:", technicianId);
-      const stats = await storage.getDashboardStats(technicianId);
+      const stats = await getFixedDashboardStats(technicianId);
       console.log("Dashboard stats API - Result:", stats);
       res.json(stats);
     } catch (error) {
