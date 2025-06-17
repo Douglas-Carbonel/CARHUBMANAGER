@@ -30,81 +30,7 @@ export default function Dashboard() {
     return <div>Carregando...</div>;
   }
 
-  // Dashboard específico para técnicos - apenas informações de agenda
-  if (user.role === "technician") {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="p-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Dashboard - Agenda
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Bem-vindo, {user.firstName}! Veja seus agendamentos e atividades.
-              </p>
-            </div>
-          </div>
-
-          {/* Cards de estatísticas básicas (sem informações financeiras) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Serviços Hoje
-                </CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">0</div>
-                <p className="text-xs text-muted-foreground">
-                  Agendados para hoje
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Próximos Agendamentos
-                </CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">0</div>
-                <p className="text-xs text-muted-foreground">
-                  Nos próximos dias
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Serviços Ativos
-                </CardTitle>
-                <Wrench className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">0</div>
-                <p className="text-xs text-muted-foreground">
-                  Em andamento
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Próximos agendamentos */}
-            <UpcomingAppointments />
-
-            {/* Serviços recentes */}
-            <RecentServices />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  
   const [, setLocation] = useLocation();
 
   const dashboardSections = [
@@ -148,8 +74,11 @@ export default function Dashboard() {
 
       <div className="flex-1 flex flex-col overflow-hidden md:ml-0">
         <Header 
-          title="Dashboard Geral"
-          subtitle={`Bem-vindo, ${user?.firstName || user?.username}! Visão geral do negócio`}
+          title={user?.role === "admin" ? "Dashboard Geral" : "Dashboard - Agenda"}
+          subtitle={user?.role === "admin" 
+            ? `Bem-vindo, ${user?.firstName || user?.username}! Visão geral do negócio`
+            : `Bem-vindo, ${user?.firstName || user?.username}! Veja seus agendamentos e atividades.`
+          }
         />
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
@@ -158,9 +87,10 @@ export default function Dashboard() {
             {/* Cards de Estatísticas */}
             {user?.role === "admin" ? <SimpleStatsCards /> : <TechnicianStatsCards />}
 
-            {/* Seções de Dashboard Especializadas */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-              {dashboardSections.map((section, index) => (
+            {/* Seções de Dashboard Especializadas - Apenas para Admin */}
+            {user?.role === "admin" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                {dashboardSections.map((section, index) => (
                 <Card 
                   key={index}
                   className={`border-0 shadow-lg bg-gradient-to-br ${section.bgColor} hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer`}
@@ -198,19 +128,24 @@ export default function Dashboard() {
                     </Button>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
-            {/* Resumo Rápido */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              <TopServices />
-            </div>
+            {/* Resumo Rápido - Apenas para Admin */}
+            {user?.role === "admin" && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                <TopServices />
+              </div>
+            )}
 
-            {/* Second Row - Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-              <RevenueChart />
-              <RealizedRevenueChart />
-            </div>
+            {/* Second Row - Charts - Apenas para Admin */}
+            {user?.role === "admin" && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+                <RevenueChart />
+                <RealizedRevenueChart />
+              </div>
+            )}
 
             {/* Informações Rápidas */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
@@ -218,23 +153,25 @@ export default function Dashboard() {
               <UpcomingAppointments />
             </div>
 
-            {/* Call to Action */}
-            <Card className="border-0 shadow-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
-              <CardContent className="p-4 sm:p-6 md:p-8">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
-                  <div>
-                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-2">Análises Avançadas</h3>
-                    <p className="text-indigo-100 mb-4 text-sm sm:text-base">
-                      Acesse dashboards especializados para insights detalhados sobre cada área do seu negócio.
-                    </p>
+            {/* Call to Action - Apenas para Admin */}
+            {user?.role === "admin" && (
+              <Card className="border-0 shadow-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                <CardContent className="p-4 sm:p-6 md:p-8">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
+                    <div>
+                      <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-2">Análises Avançadas</h3>
+                      <p className="text-indigo-100 mb-4 text-sm sm:text-base">
+                        Acesse dashboards especializados para insights detalhados sobre cada área do seu negócio.
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-3 w-full sm:w-auto">
+                      <Activity className="h-12 w-12 text-indigo-200" />
+                      <TrendingUp className="h-12 w-12 text-indigo-200" />
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-3 w-full sm:w-auto">
-                    <Activity className="h-12 w-12 text-indigo-200" />
-                    <TrendingUp className="h-12 w-12 text-indigo-200" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
 
           </div>
         </main>
