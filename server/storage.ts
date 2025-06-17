@@ -495,112 +495,99 @@ export class DatabaseStorage implements IStorage {
   }> {
     console.log("Getting dashboard stats...", technicianId ? `for technician ${technicianId}` : "for admin");
 
-    // Usar timezone brasileiro para todas as consultas
-    const today = new Date().toLocaleDateString('pt-BR');
-    console.log("Today date (Brazilian timezone):", today);
-
-    const [year, month, day] = today.split('/').reverse();
-    const todayString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-
-    // Base condition for filtering by technician
-    const technicianCondition = technicianId ? sql`AND technician_id = ${technicianId}` : sql``;
+    const today = new Date().toISOString().split('T')[0];
+    console.log("Today date:", today);
 
     try {
-      // Receita diária (serviços agendados para hoje)
-      const dailyRevenueResult = await db.execute(sql`
-        SELECT COALESCE(SUM(
-          CASE 
-            WHEN estimated_value IS NOT NULL 
-            AND estimated_value != '' 
-            AND estimated_value ~ '^[0-9]+(\.[0-9]+)?$'
-            THEN estimated_value::NUMERIC
-            ELSE 0 
-          END
-        ), 0) as revenue
+      // Get all services and process in JavaScript to avoid SQL conversion errors
+      const whereCondition = technicianId 
+        ? sql`WHERE technician_id = ${technicianId}` 
+        : sql`WHERE 1=1`;
+
+      const allServicesResult = await db.execute(sql`
+        SELECT 
+          estimated_value, 
+          final_value, 
+          status, 
+          scheduled_date,
+          customer_id
         FROM services 
-        WHERE scheduled_date = ${todayString} 
-        AND status != 'cancelled'
-        ${technicianCondition}
+        ${whereCondition}
       `);
 
-      // Receita realizada (serviços concluídos)
-      const completedRevenueResult = await db.execute(sql`
-        SELECT COALESCE(SUM(
-          CASE 
-            WHEN final_value IS NOT NULL 
-            AND final_value != '' 
-            AND final_value ~ '^[0-9]+(\.[0-9]+)?$'
-            THEN final_value::NUMERIC
-            WHEN estimated_value IS NOT NULL 
-            AND estimated_value != '' 
-            AND estimated_value ~ '^[0-9]+(\.[0-9]+)?$'
-            THEN estimated_value::NUMERIC
-            ELSE 0 
-          END
-        ), 0) as revenue
-        FROM services 
-        WHERE status = 'completed'
-        ${technicianCondition}
-      `);
+      console.log("Total services found:", allServicesResult.rows.length);
 
-      // Receita prevista (todos os serviços não cancelados)
-      const predictedRevenueResult = await db.execute(sql`
-        SELECT COALESCE(SUM(
-          CASE 
-            WHEN estimated_value IS NOT NULL 
-            AND estimated_value != '' 
-            AND estimated_value ~ '^[0-9]+(\.[0-9]+)?$'
-            THEN estimated_value::NUMERIC
-            ELSE 0 
-          END
-        ), 0) as revenue
-        FROM services 
-        WHERE status != 'cancelled'
-        ${technicianCondition}
-      `);
-
-      // Serviços do dia
-      const dailyServicesResult = await db.execute(sql`
-        SELECT COUNT(*) as count
-        FROM services 
-        WHERE scheduled_date = ${todayString} 
-        AND status != 'cancelled'
-        ${technicianCondition}
-      `);
-
-      console.log("Today services (non-cancelled):", dailyServicesResult.rows[0]?.count);
-
-      // Agendamentos futuros
-      const appointmentsResult = await db.execute(sql`
-        SELECT COUNT(*) as count
-        FROM services 
-        WHERE scheduled_date > ${todayString}
-        AND status = 'scheduled'
-        ${technicianCondition}
-      `);
-
-      // Clientes ativos (com serviços nos últimos 30 dias)
-      const activeCustomersResult = await db.execute(sql`
-        SELECT COUNT(DISTINCT customer_id) as count
-        FROM services 
-        WHERE scheduled_date >= (CURRENT_DATE - INTERVAL '30 days')
-        ${technicianCondition}
-      `);
-
-      const stats = {
-        dailyRevenue: Number(dailyRevenueResult.rows[0]?.revenue || 0),
-        completedRevenue: Number(completedRevenueResult.rows[0]?.revenue || 0),
-        predictedRevenue: Number(predictedRevenueResult.rows[0]?.revenue || 0),
-        dailyServices: Number(dailyServicesResult.rows[0]?.count || 0),
-        appointments: Number(appointmentsResult.rows[0]?.count || 0),
-        activeCustomers: Number(activeCustomersResult.rows[0]?.count || 0),
+      // Helper function to safely parse numeric values
+      const parseValue = (value: any): number => {
+        if (value === null || value === undefined || value === '') return 0;
+        const parsed = parseFloat(String(value));
+        return isNaN(parsed) ? 0 : parsed;
       };
 
-      console.log("Dashboard stats result:", stats);
-      return stats;
+      let dailyRevenue = 0;
+      let completedRevenue = 0;
+      let predictedRevenue = 0;
+      let dailyServices = 0;
+      let appointments = 0;
+      const uniqueCustomers = new Set();
+
+      allServicesResult.rows.forEach((service: any) => {
+        const estimatedValue = parseValue(service.estimated_value);
+        const finalValue = parseValue(service.final_value);
+        const serviceDate = service.scheduled_date;
+        const status = service.status;
+
+        // Add to unique customers set
+        if (service.customer_id) {
+          uniqueCustomers.add(service.customer_id);
+        }
+
+        // Calculate daily revenue (today's services)
+        if (serviceDate === today && status !== 'cancelled') {
+          dailyRevenue += estimatedValue;
+          dailyServices++;
+        }
+
+        // Calculate completed revenue
+        if (status === 'completed') {
+          completedRevenue += finalValue > 0 ? finalValue : estimatedValue;
+        }
+
+        // Calculate predicted revenue (all non-cancelled)
+        if (status !== 'cancelled') {
+          predictedRevenue += estimatedValue;
+        }
+
+        // Count future appointments
+        if (serviceDate > today && status === 'scheduled') {
+          appointments++;
+        }
+      });
+
+
+
+      const result = {
+        dailyRevenue: Math.round(dailyRevenue * 100) / 100,
+        completedRevenue: Math.round(completedRevenue * 100) / 100,
+        predictedRevenue: Math.round(predictedRevenue * 100) / 100,
+        dailyServices,
+        appointments,
+        activeCustomers: uniqueCustomers.size
+      };
+
+      console.log("Dashboard stats result:", result);
+      return result;
+
     } catch (error) {
-      console.error("Error in getDashboardStats:", error);
-      throw error;
+      console.error('Error in getDashboardStats:', error);
+      return {
+        dailyRevenue: 0,
+        completedRevenue: 0,
+        predictedRevenue: 0,
+        dailyServices: 0,
+        appointments: 0,
+        activeCustomers: 0
+      };
     }
   }
 
