@@ -223,6 +223,7 @@ export default function Sidebar() {
             </Link>
           );
         })}
+        {user?.role === 'admin' && (
               <Link key="Fidelização" href="/loyalty">
               <Button
                 variant="ghost"
@@ -236,6 +237,7 @@ export default function Sidebar() {
                 {!isCollapsed && "Fidelização"}
               </Button>
             </Link>
+          )}
       </nav>
 
       {/* User info and logout */}
