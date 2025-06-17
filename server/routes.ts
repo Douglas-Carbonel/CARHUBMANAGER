@@ -411,7 +411,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard stats
   app.get("/api/dashboard/stats", requireAuth, async (req, res) => {
     try {
-      const stats = await storage.getDashboardStats();
+      const user = req.user!;
+      const stats = await storage.getDashboardStats(user.role === 'admin' ? null : user.id);
       res.json(stats);
     } catch (error) {
       console.error("Error getting dashboard stats:", error);
@@ -462,7 +463,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/dashboard/top-services", requireAuth, async (req, res) => {
     try {
       console.log("API: Getting top services...");
-      const topServices = await storage.getTopServices();
+      const user = req.user!;
+      const topServices = await storage.getTopServices(user.role === 'admin' ? null : user.id);
       console.log("API: Top services result:", topServices);
       res.json(topServices);
     } catch (error) {
@@ -475,8 +477,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/dashboard/recent-services", requireAuth, async (req, res) => {
     try {
       console.log("API: Getting recent services...");
+      const user = req.user!;
       const limit = parseInt(req.query.limit as string) || 5;
-      const recentServices = await storage.getRecentServices(limit);
+      const recentServices = await storage.getRecentServices(limit, user.role === 'admin' ? null : user.id);
       console.log("API: Recent services result:", recentServices.length, "services");
       res.json(recentServices);
     } catch (error) {
@@ -489,8 +492,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/dashboard/upcoming-appointments", requireAuth, async (req, res) => {
     try {
       console.log("API: Getting upcoming appointments...");
+      const user = req.user!;
       const limit = parseInt(req.query.limit as string) || 5;
-      const appointments = await storage.getUpcomingAppointments(limit);
+      const appointments = await storage.getUpcomingAppointments(limit, user.role === 'admin' ? null : user.id);
       console.log("API: Upcoming appointments result:", appointments.length, "appointments");
       res.json(appointments);
     } catch (error) {
@@ -499,8 +503,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Analytics routes
-  app.get("/api/analytics/services", requireAuth, async (req, res) => {
+  // Analytics routes - Admin only
+  app.get("/api/analytics/services", requireAdmin, async (req, res) => {
     try {
       const analytics = await storage.getServiceAnalytics();
       res.json(analytics);
@@ -510,7 +514,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/analytics/customers", requireAuth, async (req, res) => {
+  app.get("/api/analytics/customers", requireAdmin, async (req, res) => {
     try {
       const analytics = await storage.getCustomerAnalytics();
       res.json(analytics);
@@ -520,7 +524,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-app.get("/api/analytics/vehicles", requireAuth, async (req, res) => {
+app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     try {
       const analytics = await storage.getVehicleAnalytics();
       res.json(analytics);

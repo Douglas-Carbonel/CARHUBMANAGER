@@ -45,12 +45,16 @@ const getNavigation = (userRole: string | null) => {
       href: "/schedule",
       icon: Calendar,
     },
-    {
+  ];
+
+  // Adiciona Relatórios apenas para administradores
+  if (userRole === "admin") {
+    baseNavigation.push({
       name: "Relatórios",
       href: "/reports",
       icon: BarChart3,
-    },
-  ];
+    });
+  }
 
   return baseNavigation;
 };

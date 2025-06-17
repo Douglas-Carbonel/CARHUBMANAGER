@@ -69,8 +69,10 @@ export interface IStorage {
   createPayment(payment: InsertPayment): Promise<Payment>;
 
   // Dashboard statistics
-  getDashboardStats(): Promise<{
+  getDashboardStats(technicianId?: number | null): Promise<{
     dailyRevenue: number;
+    completedRevenue: number;
+    predictedRevenue: number;
     dailyServices: number;
     appointments: number;
     activeCustomers: number;
@@ -78,9 +80,9 @@ export interface IStorage {
   getRevenueByDays(days: number): Promise<{ date: string; revenue: number }[]>;
   getRealizedRevenueByDays(days: number): Promise<{ date: string; revenue: number }[]>;
   getRevenueData(days: number): Promise<{ date: string; revenue: number }[]>;
-  getTopServices(): Promise<{ name: string; count: number; revenue: number }[]>;
-  getRecentServices(limit: number): Promise<any[]>;
-  getUpcomingAppointments(limit: number): Promise<any[]>;
+  getTopServices(technicianId?: number | null): Promise<{ name: string; count: number; revenue: number }[]>;
+  getRecentServices(limit?: number, technicianId?: number | null): Promise<any[]>;
+  getUpcomingAppointments(limit?: number, technicianId?: number | null): Promise<any[]>;
 
   // Customer analytics
   getCustomerAnalytics(): Promise<{
@@ -483,98 +485,251 @@ export class DatabaseStorage implements IStorage {
     return newPayment;
   }
 
-  // Dashboard statistics
-  async getDashboardStats() {
+  async getDashboardStats(technicianId?: number | null): Promise<{
+    dailyRevenue: number;
+    completedRevenue: number;
+    predictedRevenue: number;
+    dailyServices: number;
+    appointments: number;
+    activeCustomers: number;
+  }> {
+    console.log("Getting dashboard stats...", technicianId ? `for technician ${technicianId}` : "for admin");
+
+    // Usar timezone brasileiro para todas as consultas
+    const today = new Date().toLocaleDateString('pt-BR');
+    console.log("Today date (Brazilian timezone):", today);
+
+    const [year, month, day] = today.split('/').reverse();
+    const todayString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+
+    // Base condition for filtering by technician
+    const technicianCondition = technicianId ? sql`AND technician_id = ${technicianId}` : sql``;
+
     try {
-      console.log('Getting dashboard stats...');
-      // Use current date in Brazilian timezone (UTC-3)
-      const now = new Date();
-      const brazilianTime = new Date(now.getTime() - (3 * 60 * 60 * 1000)); // UTC-3
-      const today = brazilianTime.toISOString().split('T')[0];
-      console.log('Today date (Brazilian timezone):', today);
+      // Receita diária (serviços agendados para hoje)
+      const dailyRevenueResult = await db.execute(sql`
+        SELECT COALESCE(SUM(CASE 
+          WHEN estimated_value IS NOT NULL AND estimated_value != '' 
+          THEN estimated_value::decimal 
+          ELSE 0 
+        END), 0) as revenue
+        FROM services 
+        WHERE scheduled_date = ${todayString} 
+        AND status != 'cancelled'
+        ${technicianCondition}
+      `);
 
-      // Completed revenue (services with status 'completed' and their final value or estimated value)
-      const completedRevenue = await db
-        .select({ 
-          total: sql<number>`COALESCE(SUM(CASE WHEN ${services.finalValue} IS NOT NULL THEN ${services.finalValue} ELSE ${services.estimatedValue} END), 0)` 
-        })
-        .from(services)
-        .where(
-          and(
-            eq(services.scheduledDate, today),
-            eq(services.status, 'completed')
-          )
-        );
+      // Receita realizada (serviços concluídos)
+      const completedRevenueResult = await db.execute(sql`
+        SELECT COALESCE(SUM(CASE 
+          WHEN final_value IS NOT NULL AND final_value != '' 
+          THEN final_value::decimal 
+          WHEN estimated_value IS NOT NULL AND estimated_value != '' 
+          THEN estimated_value::decimal 
+          ELSE 0 
+        END), 0) as revenue
+        FROM services 
+        WHERE status = 'completed'
+        ${technicianCondition}
+      `);
 
-      // Predicted revenue (services scheduled/in_progress with estimated value, excluding completed)
-      const predictedRevenue = await db
-        .select({ 
-          total: sql<number>`COALESCE(SUM(${services.estimatedValue}), 0)` 
-        })
-        .from(services)
-        .where(
-          and(
-            eq(services.scheduledDate, today),
-            or(
-              eq(services.status, 'scheduled'),
-              eq(services.status, 'in_progress')
-            ),
-            isNotNull(services.estimatedValue)
-          )
-        );
+      // Receita prevista (todos os serviços não cancelados)
+      const predictedRevenueResult = await db.execute(sql`
+        SELECT COALESCE(SUM(CASE 
+          WHEN estimated_value IS NOT NULL AND estimated_value != '' 
+          THEN estimated_value::decimal 
+          ELSE 0 
+        END), 0) as revenue
+        FROM services 
+        WHERE status != 'cancelled'
+        ${technicianCondition}
+      `);
 
-      // Total daily revenue (completed + predicted for display purposes)
-      const totalDailyRevenue = Number(completedRevenue[0]?.total || 0) + Number(predictedRevenue[0]?.total || 0);
+      // Serviços do dia
+      const dailyServicesResult = await db.execute(sql`
+        SELECT COUNT(*) as count
+        FROM services 
+        WHERE scheduled_date = ${todayString} 
+        AND status != 'cancelled'
+        ${technicianCondition}
+      `);
 
-      // Daily services count (all except cancelled)
-      const dailyServices = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(services)
-        .where(
-          and(
-            eq(services.scheduledDate, today),
-            ne(services.status, 'cancelled')
-          )
-        );
-      console.log('Today services (non-cancelled):', Number(dailyServices[0]?.count) || 0);
+      console.log("Today services (non-cancelled):", dailyServicesResult.rows[0]?.count);
 
-      // Total appointments for today (all statuses)
-      const appointments = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(services)
-        .where(eq(services.scheduledDate, today));
+      // Agendamentos futuros
+      const appointmentsResult = await db.execute(sql`
+        SELECT COUNT(*) as count
+        FROM services 
+        WHERE scheduled_date > ${todayString}
+        AND status = 'scheduled'
+        ${technicianCondition}
+      `);
 
-      // Active customers (customers with services in the last 30 days)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
-
-      const activeCustomers = await db
-        .selectDistinct({ customerId: services.customerId })
-        .from(services)
-        .where(gte(services.scheduledDate, thirtyDaysAgoStr));
+      // Clientes ativos (com serviços nos últimos 30 dias)
+      const activeCustomersResult = await db.execute(sql`
+        SELECT COUNT(DISTINCT customer_id) as count
+        FROM services 
+        WHERE scheduled_date >= (CURRENT_DATE - INTERVAL '30 days')
+        ${technicianCondition}
+      `);
 
       const stats = {
-        dailyRevenue: totalDailyRevenue,
-        completedRevenue: Number(completedRevenue[0]?.total) || 0,
-        predictedRevenue: Number(predictedRevenue[0]?.total) || 0,
-        dailyServices: Number(dailyServices[0]?.count) || 0,
-        appointments: Number(appointments[0]?.count) || 0,
-        activeCustomers: activeCustomers.length || 0
+        dailyRevenue: Number(dailyRevenueResult.rows[0]?.revenue || 0),
+        completedRevenue: Number(completedRevenueResult.rows[0]?.revenue || 0),
+        predictedRevenue: Number(predictedRevenueResult.rows[0]?.revenue || 0),
+        dailyServices: Number(dailyServicesResult.rows[0]?.count || 0),
+        appointments: Number(appointmentsResult.rows[0]?.count || 0),
+        activeCustomers: Number(activeCustomersResult.rows[0]?.count || 0),
       };
 
-      console.log('Dashboard stats result:', stats);
+      console.log("Dashboard stats result:", stats);
       return stats;
     } catch (error) {
-      console.error('Error getting dashboard stats:', error);
-      return {
-        dailyRevenue: 0,
-        completedRevenue: 0,
-        predictedRevenue: 0,
-        dailyServices: 0,
-        appointments: 0,
-        activeCustomers: 0
-      };
+      console.error("Error in getDashboardStats:", error);
+      throw error;
+    }
+  }
+
+  async getRecentServices(limit: number = 5, technicianId?: number | null): Promise<any[]> {
+    console.log("Storage: Getting recent services...", technicianId ? `for technician ${technicianId}` : "for admin");
+
+    try {
+      const technicianCondition = technicianId ? sql`WHERE s.technician_id = ${technicianId}` : sql``;
+
+      const result = await db.execute(sql`
+        SELECT 
+          s.id,
+          c.name as customer_name,
+          v.license_plate as vehicle_plate,
+          v.brand as vehicle_brand,
+          v.model as vehicle_model,
+          st.name as service_type_name,
+          s.scheduled_date,
+          s.status,
+          s.estimated_value,
+          s.final_value
+        FROM services s
+        JOIN customers c ON s.customer_id = c.id
+        JOIN vehicles v ON s.vehicle_id = v.id
+        JOIN service_types st ON s.service_type_id = st.id
+        ${technicianCondition}
+        ORDER BY s.created_at DESC
+        LIMIT ${limit}
+      `);
+
+      console.log("Storage: Total services for recent check:", result.rows.length);
+      const services = result.rows.map(row => ({
+        id: row.id,
+        customerName: row.customer_name,
+        vehiclePlate: row.vehicle_plate,
+        vehicleBrand: row.vehicle_brand,
+        vehicleModel: row.vehicle_model,
+        serviceTypeName: row.service_type_name,
+        scheduledDate: row.scheduled_date,
+        status: row.status,
+        estimatedValue: row.estimated_value,
+        finalValue: row.final_value,
+      }));
+
+      console.log("Storage: Found", services.length, "recent services");
+      return services;
+    } catch (error) {
+      console.error("Error getting recent services:", error);
+      throw error;
+    }
+  }
+
+  async getUpcomingAppointments(limit: number = 5, technicianId?: number | null): Promise<any[]> {
+    console.log("Storage: Getting upcoming appointments...", technicianId ? `for technician ${technicianId}` : "for admin");
+
+    // Get current date in Brazilian timezone
+    const today = new Date();
+    const brazilianDate = today.toLocaleDateString('en-CA'); // YYYY-MM-DD format
+    console.log("Storage: Today date for appointments (Brazilian timezone):", brazilianDate);
+
+    try {
+      const technicianCondition = technicianId ? sql`AND s.technician_id = ${technicianId}` : sql``;
+
+      const result = await db.execute(sql`
+        SELECT 
+          s.id,
+          c.name as customer_name,
+          v.license_plate as vehicle_plate,
+          v.brand as vehicle_brand,
+          v.model as vehicle_model,
+          st.name as service_type_name,
+          s.scheduled_date,
+          s.scheduled_time,
+          s.status
+        FROM services s
+        JOIN customers c ON s.customer_id = c.id
+        JOIN vehicles v ON s.vehicle_id = v.id
+        JOIN service_types st ON s.service_type_id = st.id
+        WHERE s.scheduled_date >= ${brazilianDate}
+        AND s.status = 'scheduled'
+        ${technicianCondition}
+        ORDER BY s.scheduled_date ASC, s.scheduled_time ASC
+        LIMIT ${limit}
+      `);
+
+      console.log("Storage: Total scheduled services:", result.rows.length);
+      const appointments = result.rows.map(row => ({
+        id: row.id,
+        customerName: row.customer_name,
+        vehiclePlate: row.vehicle_plate,
+        vehicleBrand: row.vehicle_brand,
+        vehicleModel: row.vehicle_model,
+        serviceTypeName: row.service_type_name,
+        scheduledDate: row.scheduled_date,
+        scheduledTime: row.scheduled_time,
+        status: row.status,
+      }));
+
+      console.log("Storage: Found", appointments.length, "upcoming appointments");
+      return appointments;
+    } catch (error) {
+      console.error("Error getting upcoming appointments:", error);
+      throw error;
+    }
+  }
+
+  async getTopServices(technicianId?: number | null): Promise<any[]> {
+    console.log("Storage: Getting top services...", technicianId ? `for technician ${technicianId}` : "for admin");
+
+    try {
+      const technicianCondition = technicianId ? sql`AND s.technician_id = ${technicianId}` : sql``;
+
+      const result = await db.execute(sql`
+        SELECT 
+          st.name,
+          COUNT(s.id) as count,
+          COALESCE(SUM(CASE 
+            WHEN s.final_value IS NOT NULL AND s.final_value != '' 
+            THEN s.final_value::decimal 
+            WHEN s.estimated_value IS NOT NULL AND s.estimated_value != '' 
+            THEN s.estimated_value::decimal 
+            ELSE 0 
+          END), 0) as revenue
+        FROM service_types st
+        LEFT JOIN services s ON st.id = s.service_type_id AND s.status != 'cancelled' ${technicianCondition}
+        GROUP BY st.id, st.name
+        HAVING COUNT(s.id) > 0
+        ORDER BY count DESC, revenue DESC
+        LIMIT 5
+      `);
+
+      console.log("Storage: Found", result.rows.length, "top services");
+      const topServices = result.rows.map(row => ({
+        name: row.name,
+        count: Number(row.count),
+        revenue: Number(row.revenue),
+      }));
+
+      console.log("Storage: Top services result:", topServices);
+      return topServices;
+    } catch (error) {
+      console.error("Error getting top services:", error);
+      throw error;
     }
   }
 
@@ -748,8 +903,7 @@ export class DatabaseStorage implements IStorage {
         if (!date) return; // Skip services without dates
 
         const revenue = service.finalValue 
-          ? Number(service.finalValue) 
-          : Number(service.estimatedValue || 0);
+          ? Number(service.finalValue): Number(service.estimatedValue || 0);
 
         if (revenue > 0) {
           revenueByDate[date] = (revenueByDate[date] || 0) + revenue;
@@ -834,122 +988,18 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getTopServices(): Promise<{ name: string; count: number; revenue: number }[]> {
+  async getTodayAppointments() {
     try {
-      console.log('Storage: Getting top services...');
-
-      // Primeiro, vamos verificar se temos serviços
-      const totalServicesCheck = await db.select({ count: sql<number>`count(*)` }).from(services);
-      console.log('Storage: Total services in database:', totalServicesCheck[0]?.count || 0);
-
-      if (totalServicesCheck[0]?.count === 0) {
-        console.log('Storage: No services found, returning empty array');
-        return [];
-      }
-
-      const topServices = await db
-        .select({
-          serviceName: serviceTypes.name,
-          count: sql<number>`count(${services.id})`,
-          totalRevenue: sql<number>`COALESCE(sum(
-            CASE 
-              WHEN ${services.status} = 'completed' AND ${services.finalValue} IS NOT NULL 
-              THEN CAST(${services.finalValue} AS NUMERIC)
-              ELSE CAST(COALESCE(${services.estimatedValue}, 0) AS NUMERIC)
-            END
-          ), 0)`
-        })
-        .from(services)
-        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
-        .groupBy(serviceTypes.id, serviceTypes.name)
-        .orderBy(sql`count(${services.id}) desc`)
-        .limit(5);
-
-      console.log(`Storage: Found ${topServices.length} top services`);
-      const result = topServices.map(service => ({
-        name: service.serviceName,
-        count: Number(service.count),
-        revenue: Number(service.totalRevenue || 0)
-      }));
-
-      console.log('Storage: Top services result:', result);
-      return result;
-    } catch (error) {
-      console.error('Storage: Error getting top services:', error);
-      throw error; // Re-throw para que a API possa capturar o erro
-    }
-  }
-
-  async getRecentServices(limit: number): Promise<any[]> {
-    try {
-      console.log('Storage: Getting recent services...');
-
-      // Verificar se temos serviços
-      const totalServicesCheck = await db.select({ count: sql<number>`count(*)` }).from(services);
-      console.log('Storage: Total services for recent check:', totalServicesCheck[0]?.count || 0);
-
-      if (totalServicesCheck[0]?.count === 0) {
-        console.log('Storage: No services found for recent services');
-        return [];
-      }
-
-      const recentServices = await db
-        .select({
-          id: services.id,
-          customerName: customers.name,
-          vehiclePlate: vehicles.licensePlate,
-          vehicleBrand: vehicles.brand,
-          vehicleModel: vehicles.model,
-          serviceTypeName: serviceTypes.name,
-          scheduledDate: services.scheduledDate,
-          status: services.status,
-          estimatedValue: services.estimatedValue,
-          finalValue: services.finalValue
-        })
-        .from(services)
-        .innerJoin(customers, eq(services.customerId, customers.id))
-        .innerJoin(vehicles, eq(services.vehicleId, vehicles.id))
-        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
-        .orderBy(desc(services.createdAt))
-        .limit(limit);
-
-      console.log(`Storage: Found ${recentServices.length} recent services`);
-      return recentServices;
-    } catch (error) {
-      console.error('Storage: Error getting recent services:', error);
-      throw error; // Re-throw para que a API possa capturar o erro
-    }
-  }
-
-  async getUpcomingAppointments(limit: number): Promise<any[]> {
-    try {
-      console.log('Storage: Getting upcoming appointments...');
       // Use current date in Brazilian timezone (UTC-3)
       const now = new Date();
       const brazilianTime = new Date(now.getTime() - (3 * 60 * 60 * 1000)); // UTC-3
       const today = brazilianTime.toISOString().split('T')[0];
-      console.log('Storage: Today date for appointments (Brazilian timezone):', today);
 
-      // Verificar se temos agendamentos
-      const scheduledServicesCheck = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(services)
-        .where(eq(services.status, 'scheduled'));
-
-      console.log('Storage: Total scheduled services:', scheduledServicesCheck[0]?.count || 0);
-
-      if (scheduledServicesCheck[0]?.count === 0) {
-        console.log('Storage: No scheduled services found');
-        return [];
-      }
-
-      const upcomingAppointments = await db
+      const todayAppointments = await db
         .select({
           id: services.id,
           customerName: customers.name,
           vehiclePlate: vehicles.licensePlate,
-          vehicleBrand: vehicles.brand,
-          vehicleModel: vehicles.model,
           serviceTypeName: serviceTypes.name,
           scheduledDate: services.scheduledDate,
           scheduledTime: services.scheduledTime,
@@ -959,25 +1009,16 @@ export class DatabaseStorage implements IStorage {
         .innerJoin(customers, eq(services.customerId, customers.id))
         .innerJoin(vehicles, eq(services.vehicleId, vehicles.id))
         .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
-        .where(
-          and(
-            gte(services.scheduledDate, today),
-            eq(services.status, 'scheduled')
-          )
-        )
-        .orderBy(services.scheduledDate, services.scheduledTime)
-        .limit(limit);
+        .where(eq(services.scheduledDate, today))
+        .orderBy(services.scheduledTime);
 
-      console.log(`Storage: Found ${upcomingAppointments.length} upcoming appointments`);
-      return upcomingAppointments;
+      return todayAppointments;
     } catch (error) {
-      console.error('Storage: Error getting upcoming appointments:', error);
-      throw error; // Re-throw para que a API possa capturar o erro
+      console.error('Error getting today appointments:', error);
+      return [];
     }
   }
-
-
-
+  
   // Vehicle analytics
   async getVehicleAnalytics() {
     const vehiclesData = await db.select().from(vehicles);
@@ -1129,7 +1170,7 @@ export class DatabaseStorage implements IStorage {
         })
         .from(customers)
         .innerJoin(services, eq(customers.id, services.customerId))
-        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+        .innerJoin(serviceTypes, eq(serviceTypes.id, services.serviceTypeId))
         .where(
           and(
             eq(serviceTypes.isRecurring, true),
@@ -1366,37 +1407,6 @@ export class DatabaseStorage implements IStorage {
         completed: 0,
         overdue: 0
       };
-    }
-  }
-
-  async getTodayAppointments() {
-    try {
-      // Use current date in Brazilian timezone (UTC-3)
-      const now = new Date();
-      const brazilianTime = new Date(now.getTime() - (3 * 60 * 60 * 1000)); // UTC-3
-      const today = brazilianTime.toISOString().split('T')[0];
-
-      const todayAppointments = await db
-        .select({
-          id: services.id,
-          customerName: customers.name,
-          vehiclePlate: vehicles.licensePlate,
-          serviceTypeName: serviceTypes.name,
-          scheduledDate: services.scheduledDate,
-          scheduledTime: services.scheduledTime,
-          status: services.status
-        })
-        .from(services)
-        .innerJoin(customers, eq(services.customerId, customers.id))
-        .innerJoin(vehicles, eq(services.vehicleId, vehicles.id))
-        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
-        .where(eq(services.scheduledDate, today))
-        .orderBy(services.scheduledTime);
-
-      return todayAppointments;
-    } catch (error) {
-      console.error('Error getting today appointments:', error);
-      return [];
     }
   }
 }
