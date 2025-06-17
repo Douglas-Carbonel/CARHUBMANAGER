@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import passport from "passport";
 import { storage } from "./storage";
 import { setupAuth, createInitialAdmin, hashPassword } from "./auth";
+import { getFixedDashboardStats } from "./storage-dashboard-fix";
 
 // Function to create initial service types
 async function createInitialServiceTypes() {
