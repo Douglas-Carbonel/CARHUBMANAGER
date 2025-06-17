@@ -4,6 +4,7 @@ import { useLocation } from "wouter";
 import Sidebar from "../components/layout/sidebar";
 import Header from "../components/layout/header";
 import SimpleStatsCards from "../components/dashboard/simple-stats-cards";
+import TechnicianStatsCards from "../components/dashboard/technician-stats-cards";
 import RevenueChart from "@/components/dashboard/revenue-chart";
 import RealizedRevenueChart from "@/components/dashboard/realized-revenue-chart";
 import TopServices from "@/components/dashboard/top-services";
