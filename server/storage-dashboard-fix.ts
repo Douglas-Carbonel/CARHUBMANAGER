@@ -2,6 +2,29 @@ import { db } from "./db";
 import { sql } from "drizzle-orm";
 
 // Fixed dashboard stats method that avoids SQL numeric conversion errors
+// Debug function to check database structure
+async function debugDatabaseStructure() {
+  try {
+    // Check table structure
+    const tableInfo = await db.execute(sql`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'services'
+      ORDER BY ordinal_position
+    `);
+    console.log("Services table structure:", tableInfo.rows);
+
+    // Get some sample data
+    const sampleData = await db.execute(sql`
+      SELECT * FROM services ORDER BY id DESC LIMIT 3
+    `);
+    console.log("Sample services data:", sampleData.rows);
+
+  } catch (error) {
+    console.error("Error in debug function:", error);
+  }
+}
+
 export async function getFixedDashboardStats(technicianId?: number | null): Promise<{
   dailyRevenue: number;
   completedRevenue: number;
@@ -12,16 +35,56 @@ export async function getFixedDashboardStats(technicianId?: number | null): Prom
 }> {
   console.log("Getting fixed dashboard stats...", technicianId ? `for technician ${technicianId}` : "for admin");
 
+  // Run debug function to understand the data structure
+  await debugDatabaseStructure();
+
   const today = new Date().toISOString().split('T')[0];
   console.log("Today date:", today);
 
   try {
-    // Get all services without problematic SQL conversions
+    // First, let's check if there are any services at all
+    const totalServicesResult = await db.execute(sql`
+      SELECT COUNT(*) as total FROM services
+    `);
+    console.log("Total services in database:", totalServicesResult.rows[0]);
+
+    // Check if technician_id column exists and has data
+    if (technicianId) {
+      const technicianServicesCheck = await db.execute(sql`
+        SELECT COUNT(*) as total FROM services WHERE technician_id = ${technicianId}
+      `);
+      console.log(`Services for technician ${technicianId}:`, technicianServicesCheck.rows[0]);
+      
+      // If no services found for technician, let's check if technician_id column has any data
+      const technicianIdCheck = await db.execute(sql`
+        SELECT COUNT(*) as with_technician FROM services WHERE technician_id IS NOT NULL
+      `);
+      console.log("Services with technician_id populated:", technicianIdCheck.rows[0]);
+    }
+
+    // For debugging, let's get all services first to see the structure
+    const allServicesResult = await db.execute(sql`
+      SELECT 
+        id,
+        estimated_value, 
+        final_value, 
+        status, 
+        scheduled_date,
+        customer_id,
+        technician_id
+      FROM services 
+      ORDER BY id DESC
+      LIMIT 10
+    `);
+
+    console.log("Sample services from database:", allServicesResult.rows);
+
+    // Now get services with the actual filter
     const whereCondition = technicianId 
       ? sql`WHERE technician_id = ${technicianId}` 
       : sql`WHERE 1=1`;
 
-    const allServicesResult = await db.execute(sql`
+    const filteredServicesResult = await db.execute(sql`
       SELECT 
         estimated_value, 
         final_value, 
@@ -32,7 +95,7 @@ export async function getFixedDashboardStats(technicianId?: number | null): Prom
       ${whereCondition}
     `);
 
-    console.log("Total services found:", allServicesResult.rows.length);
+    console.log("Filtered services found:", filteredServicesResult.rows.length);
 
     // Helper function to safely parse numeric values
     const parseValue = (value: any): number => {
@@ -48,7 +111,7 @@ export async function getFixedDashboardStats(technicianId?: number | null): Prom
     let appointments = 0;
     const uniqueCustomers = new Set();
 
-    allServicesResult.rows.forEach((service: any) => {
+    filteredServicesResult.rows.forEach((service: any) => {
       const estimatedValue = parseValue(service.estimated_value);
       const finalValue = parseValue(service.final_value);
       const serviceDate = service.scheduled_date;
