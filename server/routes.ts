@@ -554,11 +554,14 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
 
   app.get("/api/dashboard/today-appointments", requireAuth, async (req, res) => {
     try {
-      const appointments = await storage.getTodayAppointments();
+      console.log("API: Getting today appointments...");
+      const user = req.user!;
+      const appointments = await storage.getTodayAppointments(user.role === 'admin' ? null : user.id);
+      console.log("API: Today appointments result:", appointments.length, "appointments");
       res.json(appointments);
     } catch (error) {
-      console.error("Error getting today appointments:", error);
-      res.status(500).json({ message: "Failed to get today appointments" });
+      console.error("API Error getting today appointments:", error);
+      res.status(500).json({ message: "Failed to get today appointments", error: error.message });
     }
   });
 

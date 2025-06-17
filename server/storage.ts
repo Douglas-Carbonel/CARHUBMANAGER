@@ -1431,6 +1431,59 @@ export class DatabaseStorage implements IStorage {
       };
     }
   }
+
+  // Get today's appointments
+  async getTodayAppointments(technicianId?: number | null): Promise<any[]> {
+    console.log("Storage: Getting today's appointments...", technicianId ? `for technician ${technicianId}` : "for admin");
+
+    // Get current date in Brazilian timezone
+    const today = new Date();
+    const brazilianDate = today.toLocaleDateString('en-CA'); // YYYY-MM-DD format
+    console.log("Storage: Today date for appointments (Brazilian timezone):", brazilianDate);
+
+    try {
+      const technicianCondition = technicianId ? sql`AND s.technician_id = ${technicianId}` : sql``;
+
+      const result = await db.execute(sql`
+        SELECT 
+          s.id,
+          c.name as customer_name,
+          v.license_plate as vehicle_plate,
+          v.brand as vehicle_brand,
+          v.model as vehicle_model,
+          st.name as service_type_name,
+          s.scheduled_date,
+          s.scheduled_time,
+          s.status
+        FROM services s
+        JOIN customers c ON s.customer_id = c.id
+        JOIN vehicles v ON s.vehicle_id = v.id
+        JOIN service_types st ON s.service_type_id = st.id
+        WHERE s.scheduled_date = ${brazilianDate}
+        ${technicianCondition}
+        ORDER BY s.scheduled_time ASC
+      `);
+
+      console.log("Storage: Total today's appointments:", result.rows.length);
+      const appointments = result.rows.map(row => ({
+        id: row.id,
+        customerName: row.customer_name,
+        vehiclePlate: row.vehicle_plate,
+        vehicleBrand: row.vehicle_brand,
+        vehicleModel: row.vehicle_model,
+        serviceTypeName: row.service_type_name,
+        scheduledDate: row.scheduled_date,
+        scheduledTime: row.scheduled_time,
+        status: row.status,
+      }));
+
+      console.log("Storage: Found", appointments.length, "today's appointments");
+      return appointments;
+    } catch (error) {
+      console.error("Error getting today's appointments:", error);
+      throw error;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
