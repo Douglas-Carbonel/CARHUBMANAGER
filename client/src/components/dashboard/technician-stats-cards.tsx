@@ -77,6 +77,14 @@ export default function TechnicianStatsCards() {
       bgColor: "bg-blue-50",
     },
     {
+      title: "Serviços esta semana",
+      value: stats?.weeklyServices || 0,
+      icon: Calendar,
+      description: "Agendados esta semana",
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
+    },
+    {
       title: "Próximos Agendamentos", 
       value: stats?.appointments || 0,
       icon: Users,
