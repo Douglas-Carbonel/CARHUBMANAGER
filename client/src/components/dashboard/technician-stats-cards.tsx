@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Users, Wrench, AlertTriangle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
 interface TechnicianStats {
   dailyServices: number;
@@ -48,66 +47,59 @@ export default function TechnicianStatsCards() {
 
   if (error) {
     return (
-      <Card className="col-span-full">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-2 text-red-600">
-            <AlertTriangle className="h-5 w-5" />
-            <span>Erro ao carregar estatísticas: {error.message}</span>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[
+          { title: "Serviços Hoje", icon: Calendar, description: "Agendados para hoje" },
+          { title: "Próximos Agendamentos", icon: Users, description: "Nos próximos dias" },
+          { title: "Clientes Ativos", icon: Wrench, description: "Com serviços pendentes" },
+        ].map((card, index) => (
+          <Card key={index}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+              <card.icon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">-</div>
+              <p className="text-xs text-muted-foreground">{card.description}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     );
   }
 
-  const statCards = [
+  const cards = [
     {
       title: "Serviços Hoje",
       value: stats?.dailyServices || 0,
-      icon: Wrench,
-      description: "Serviços agendados para hoje",
-      color: "from-blue-500 to-blue-600",
-      bgColor: "from-blue-50 to-blue-100"
+      icon: Calendar,
+      description: "Agendados para hoje",
     },
     {
-      title: "Próximos Agendamentos", 
+      title: "Próximos Agendamentos",
       value: stats?.appointments || 0,
-      icon: Calendar,
-      description: "Serviços futuros agendados",
-      color: "from-green-500 to-green-600",
-      bgColor: "from-green-50 to-green-100"
+      icon: Users,
+      description: "Nos próximos dias",
     },
     {
       title: "Clientes Ativos",
       value: stats?.activeCustomers || 0,
-      icon: Users,
-      description: "Clientes com serviços nos últimos 30 dias",
-      color: "from-purple-500 to-purple-600",
-      bgColor: "from-purple-50 to-purple-100"
-    }
+      icon: Wrench,
+      description: "Com serviços pendentes",
+    },
   ];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {statCards.map((card, index) => (
-        <Card 
-          key={index}
-          className={`border-0 shadow-lg bg-gradient-to-br ${card.bgColor} hover:shadow-xl transition-all duration-300`}
-        >
+      {cards.map((card, index) => (
+        <Card key={index}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">
-              {card.title}
-            </CardTitle>
-            <div className={`w-8 h-8 bg-gradient-to-r ${card.color} rounded-lg flex items-center justify-center`}>
-              <card.icon className="h-4 w-4 text-white" />
-            </div>
+            <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+            <card.icon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900 mb-1">
-              {card.value.toLocaleString()}
-            </div>
-            <p className="text-xs text-gray-600">
-              {card.description}
-            </p>
+            <div className="text-2xl font-bold">{card.value}</div>
+            <p className="text-xs text-muted-foreground">{card.description}</p>
           </CardContent>
         </Card>
       ))}

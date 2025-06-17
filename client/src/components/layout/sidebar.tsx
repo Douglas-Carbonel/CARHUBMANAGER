@@ -47,7 +47,7 @@ const getNavigation = (userRole: string | null) => {
     },
   ];
 
-  // Only show reports and admin for admin users
+  // Only administrators can access reports
   if (userRole === "admin") {
     baseNavigation.push({
       name: "Relatórios",

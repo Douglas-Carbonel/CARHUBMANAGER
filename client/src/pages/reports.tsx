@@ -54,21 +54,37 @@ export default function ReportsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState("30");
   const [selectedReport, setSelectedReport] = useState("overview");
 
-  // Redirect non-admin users
+  // Bloquear acesso para usuários não-admin
   if (user?.role !== "admin") {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <Shield className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Acesso Negado</h1>
-          <p className="text-gray-600">Você não tem permissão para acessar esta página.</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
+        <div className="max-w-4xl mx-auto">
+          <Card className="border-0 shadow-lg">
+            <CardContent className="p-8 text-center">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="p-4 bg-red-100 rounded-full">
+                  <Shield className="h-8 w-8 text-red-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900">Acesso Negado</h2>
+                <p className="text-gray-600 max-w-md">
+                  Você não tem permissão para acessar relatórios. Apenas administradores podem visualizar esta página.
+                </p>
+                <Button 
+                  onClick={() => window.history.back()}
+                  className="mt-4"
+                >
+                  Voltar ao Dashboard
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
   }
 
-  // Verificar se o usuário é admin
-  if (user?.role !== "admin") {
+  // Verificação redundante removida - já foi verificada acima
+  if (false) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
