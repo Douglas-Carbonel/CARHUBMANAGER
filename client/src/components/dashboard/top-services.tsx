@@ -1,7 +1,7 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Wrench, Droplets, Cog, SprayCan, Star } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const serviceIcons: { [key: string]: any } = {
   "Troca de Óleo": Droplets,
@@ -24,6 +24,7 @@ interface TopService {
 }
 
 export default function TopServices() {
+  const { user } = useAuth();
   const { data: topServices, isLoading, error } = useQuery<TopService[]>({
     queryKey: ["/api/dashboard/top-services"],
     staleTime: 30000,
@@ -80,7 +81,7 @@ export default function TopServices() {
           {topServices?.map((service: any, index: number) => {
             const IconComponent = serviceIcons[service.name] || Wrench;
             const iconStyle = serviceIconColors[service.name] || "bg-gradient-to-r from-gray-500 to-gray-600";
-            
+
             return (
               <div key={index} className="flex items-center justify-between p-4 bg-gray-50/80 rounded-xl hover:bg-gray-100/80 transition-colors duration-200">
                 <div className="flex items-center space-x-4">
@@ -98,15 +99,17 @@ export default function TopServices() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="text-lg font-bold text-gray-900">
-                    R$ {Number(service.revenue).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </span>
+                  {user?.role === "admin" && (
+                    <span className="text-lg font-bold text-gray-900">
+                      R$ {Number(service.revenue).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </span>
+                  )}
                   <p className="text-xs text-gray-500">faturamento</p>
                 </div>
               </div>
             );
           })}
-          
+
           {(!topServices || topServices.length === 0) && (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">

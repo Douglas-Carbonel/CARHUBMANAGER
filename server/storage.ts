@@ -509,7 +509,7 @@ export class DatabaseStorage implements IStorage {
       // Receita diária (serviços agendados para hoje)
       const dailyRevenueResult = await db.execute(sql`
         SELECT COALESCE(SUM(CASE 
-          WHEN estimated_value IS NOT NULL AND estimated_value != '' 
+          WHEN estimated_value IS NOT NULL AND estimated_value != '' AND estimated_value ~ '^[0-9]+\.?[0-9]*$'
           THEN estimated_value::decimal 
           ELSE 0 
         END), 0) as revenue
@@ -522,9 +522,9 @@ export class DatabaseStorage implements IStorage {
       // Receita realizada (serviços concluídos)
       const completedRevenueResult = await db.execute(sql`
         SELECT COALESCE(SUM(CASE 
-          WHEN final_value IS NOT NULL AND final_value != '' 
+          WHEN final_value IS NOT NULL AND final_value != '' AND final_value ~ '^[0-9]+\.?[0-9]*$'
           THEN final_value::decimal 
-          WHEN estimated_value IS NOT NULL AND estimated_value != '' 
+          WHEN estimated_value IS NOT NULL AND estimated_value != '' AND estimated_value ~ '^[0-9]+\.?[0-9]*$'
           THEN estimated_value::decimal 
           ELSE 0 
         END), 0) as revenue
@@ -536,7 +536,7 @@ export class DatabaseStorage implements IStorage {
       // Receita prevista (todos os serviços não cancelados)
       const predictedRevenueResult = await db.execute(sql`
         SELECT COALESCE(SUM(CASE 
-          WHEN estimated_value IS NOT NULL AND estimated_value != '' 
+          WHEN estimated_value IS NOT NULL AND estimated_value != '' AND estimated_value ~ '^[0-9]+\.?[0-9]*$'
           THEN estimated_value::decimal 
           ELSE 0 
         END), 0) as revenue
@@ -704,9 +704,9 @@ export class DatabaseStorage implements IStorage {
           st.name,
           COUNT(s.id) as count,
           COALESCE(SUM(CASE 
-            WHEN s.final_value IS NOT NULL AND s.final_value != '' 
+            WHEN s.final_value IS NOT NULL AND s.final_value != '' AND s.final_value ~ '^[0-9]+\.?[0-9]*$'
             THEN s.final_value::decimal 
-            WHEN s.estimated_value IS NOT NULL AND s.estimated_value != '' 
+            WHEN s.estimated_value IS NOT NULL AND s.estimated_value != '' AND s.estimated_value ~ '^[0-9]+\.?[0-9]*$'
             THEN s.estimated_value::decimal 
             ELSE 0 
           END), 0) as revenue
@@ -902,8 +902,13 @@ export class DatabaseStorage implements IStorage {
         const date = service.date;
         if (!date) return; // Skip services without dates
 
-        const revenue = service.finalValue 
-          ? Number(service.finalValue): Number(service.estimatedValue || 0);
+        let revenue = 0;
+        if (service.finalValue && String(service.finalValue).match(/^[0-9]+\.?[0-9]*$/)) {
+          revenue = Number(service.finalValue);
+        } else if (service.estimatedValue && 
+                   String(service.estimatedValue).match(/^[0-9]+\.?[0-9]*$/)) {
+          revenue = Number(service.estimatedValue);
+        }
 
         if (revenue > 0) {
           revenueByDate[date] = (revenueByDate[date] || 0) + revenue;
@@ -959,9 +964,14 @@ export class DatabaseStorage implements IStorage {
         const date = service.date;
         if (!date) return; // Skip services without dates
 
-        const revenue = service.status === 'completed' && service.finalValue 
-          ? Number(service.finalValue) 
-          : Number(service.estimatedValue || 0);
+        let revenue = 0;
+        if (service.status === 'completed' && service.finalValue && 
+            String(service.finalValue).match(/^[0-9]+\.?[0-9]*$/)) {
+          revenue = Number(service.finalValue);
+        } else if (service.estimatedValue && 
+                   String(service.estimatedValue).match(/^[0-9]+\.?[0-9]*$/)) {
+          revenue = Number(service.estimatedValue);
+        }
 
         if (revenue > 0) {
           revenueByDate[date] = (revenueByDate[date] || 0) + revenue;

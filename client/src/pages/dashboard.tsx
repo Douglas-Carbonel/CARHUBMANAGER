@@ -74,8 +74,8 @@ export default function Dashboard() {
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
           <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
 
-            {/* Stats Cards Básicos */}
-            <SimpleStatsCards />
+            {/* Cards de Estatísticas */}
+            {user?.role === "admin" ? <SimpleStatsCards /> : <TechnicianStatsCards />}
 
             {/* Seções de Dashboard Especializadas */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
