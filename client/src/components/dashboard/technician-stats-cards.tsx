@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Users, Wrench } from "lucide-react";
@@ -24,13 +23,13 @@ export default function TechnicianStatsCards() {
       const response = await fetch("/api/dashboard/stats", {
         credentials: "include",
       });
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.log("TechnicianStatsCards: API Error:", response.status, response.statusText, errorText);
         throw new Error(`Erro ${response.status}: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log("TechnicianStatsCards: Data received:", data);
       return data;
@@ -41,7 +40,7 @@ export default function TechnicianStatsCards() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[...Array(3)].map((_, i) => (
           <Card key={i} className="animate-pulse">
             <CardHeader>
@@ -58,7 +57,7 @@ export default function TechnicianStatsCards() {
 
   if (error) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="border-red-200 bg-red-50">
           <CardContent className="p-6">
             <p className="text-red-600">Erro ao carregar dados do dashboard</p>
@@ -96,7 +95,7 @@ export default function TechnicianStatsCards() {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {cards.map((card, index) => (
         <Card key={index} className={`border-l-4 border-l-${card.color.replace('text-', '')} hover:shadow-lg transition-shadow`}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

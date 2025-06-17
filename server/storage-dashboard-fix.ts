@@ -30,6 +30,7 @@ export async function getFixedDashboardStats(technicianId?: number | null): Prom
   completedRevenue: number;
   predictedRevenue: number;
   dailyServices: number;
+  weeklyServices: number;
   appointments: number;
   activeCustomers: number;
 }> {
@@ -39,7 +40,21 @@ export async function getFixedDashboardStats(technicianId?: number | null): Prom
   await debugDatabaseStructure();
 
   const today = new Date().toISOString().split('T')[0];
+  
+  // Calculate start of week (Monday)
+  const todayDate = new Date();
+  const dayOfWeek = todayDate.getDay();
+  const startOfWeek = new Date(todayDate);
+  startOfWeek.setDate(todayDate.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+  const weekStart = startOfWeek.toISOString().split('T')[0];
+  
+  // Calculate end of week (Sunday)
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  const weekEnd = endOfWeek.toISOString().split('T')[0];
+  
   console.log("Today date:", today);
+  console.log("Week range:", weekStart, "to", weekEnd);
 
   try {
     // First, let's check if there are any services at all
@@ -108,6 +123,7 @@ export async function getFixedDashboardStats(technicianId?: number | null): Prom
     let completedRevenue = 0;
     let predictedRevenue = 0;
     let dailyServices = 0;
+    let weeklyServices = 0;
     let appointments = 0;
     const uniqueCustomers = new Set();
 
@@ -126,6 +142,11 @@ export async function getFixedDashboardStats(technicianId?: number | null): Prom
       if (serviceDate === today && status !== 'cancelled') {
         dailyRevenue += estimatedValue;
         dailyServices++;
+      }
+
+      // Calculate weekly services (this week's services)
+      if (serviceDate >= weekStart && serviceDate <= weekEnd && status !== 'cancelled') {
+        weeklyServices++;
       }
 
       // Calculate completed revenue
@@ -149,6 +170,7 @@ export async function getFixedDashboardStats(technicianId?: number | null): Prom
       completedRevenue: Math.round(completedRevenue * 100) / 100,
       predictedRevenue: Math.round(predictedRevenue * 100) / 100,
       dailyServices,
+      weeklyServices,
       appointments,
       activeCustomers: uniqueCustomers.size
     };
@@ -163,6 +185,7 @@ export async function getFixedDashboardStats(technicianId?: number | null): Prom
       completedRevenue: 0,
       predictedRevenue: 0,
       dailyServices: 0,
+      weeklyServices: 0,
       appointments: 0,
       activeCustomers: 0
     };
