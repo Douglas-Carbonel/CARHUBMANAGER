@@ -54,6 +54,19 @@ export default function ReportsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState("30");
   const [selectedReport, setSelectedReport] = useState("overview");
 
+  // Redirect non-admin users
+  if (user?.role !== "admin") {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Shield className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Acesso Negado</h1>
+          <p className="text-gray-600">Você não tem permissão para acessar esta página.</p>
+        </div>
+      </div>
+    );
+  }
+
   // Verificar se o usuário é admin
   if (user?.role !== "admin") {
     return (

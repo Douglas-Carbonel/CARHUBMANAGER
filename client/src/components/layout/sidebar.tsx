@@ -47,7 +47,7 @@ const getNavigation = (userRole: string | null) => {
     },
   ];
 
-  // Adiciona Relatórios apenas para administradores
+  // Only show reports and admin for admin users
   if (userRole === "admin") {
     baseNavigation.push({
       name: "Relatórios",
@@ -70,7 +70,7 @@ export default function Sidebar() {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);

@@ -891,7 +891,7 @@ export class DatabaseStorage implements IStorage {
             eq(services.status, 'completed')
           )
         )
-        .orderBy(services.scheduledDate);
+        .orderBy(services.scheduledDate);```text
 
       console.log(`Found ${revenueData.length} completed services in date range`);
 
@@ -1028,7 +1028,7 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
-  
+
   // Vehicle analytics
   async getVehicleAnalytics() {
     const vehiclesData = await db.select().from(vehicles);
@@ -1145,7 +1145,7 @@ export class DatabaseStorage implements IStorage {
         })
         .from(customers)
         .innerJoin(services, eq(customers.id, services.customerId))
-        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+        .innerJoin(serviceTypes, eq(serviceTypes.serviceTypeId, serviceTypes.id))
         .where(
           and(
             eq(serviceTypes.isRecurring, true),
