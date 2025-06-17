@@ -567,7 +567,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
   });
 
   // Admin user management routes
-  app.get("/api/admin/users", requireAdmin, async (req, res) => {
+  app.get("/api/admin/users", requireAuth, async (req, res) => {
     try {
       const users = await storage.getAllUsers();
       res.json(users);

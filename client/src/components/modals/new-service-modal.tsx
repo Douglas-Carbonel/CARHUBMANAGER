@@ -29,6 +29,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
       customerId: 0,
       vehicleId: 0,
       serviceTypeId: 0,
+      technicianId: 0,
       status: "scheduled",
       scheduledDate: "",
       scheduledTime: "",
@@ -49,6 +50,11 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
 
   const { data: serviceTypes, isLoading: loadingServiceTypes } = useQuery({
     queryKey: ["/api/service-types"],
+    enabled: isOpen,
+  });
+
+  const { data: users, isLoading: loadingUsers } = useQuery({
+    queryKey: ["/api/admin/users"],
     enabled: isOpen,
   });
 
@@ -237,6 +243,43 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                           ))
                         ) : (
                           <SelectItem value="empty" disabled>Nenhum tipo de serviço encontrado</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="technicianId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Técnico Responsável</FormLabel>
+                    <Select 
+                      onValueChange={(value) => {
+                        const numValue = parseInt(value);
+                        field.onChange(numValue);
+                      }}
+                      value={field.value ? field.value.toString() : ""}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o técnico" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {loadingUsers ? (
+                          <SelectItem value="loading" disabled>Carregando...</SelectItem>
+                        ) : users && users.length > 0 ? (
+                          users.map((user: any) => (
+                            <SelectItem key={user.id} value={user.id.toString()}>
+                              {user.firstName} {user.lastName} ({user.username})
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="empty" disabled>Nenhum técnico encontrado</SelectItem>
                         )}
                       </SelectContent>
                     </Select>

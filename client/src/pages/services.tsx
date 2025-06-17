@@ -26,6 +26,7 @@ const serviceFormSchema = insertServiceSchema.extend({
   customerId: z.number().min(1, "Cliente é obrigatório"),
   vehicleId: z.number().min(1, "Veículo é obrigatório"),
   serviceTypeId: z.number().min(1, "Tipo de serviço é obrigatório"),
+  technicianId: z.number().min(1, "Técnico é obrigatório"),
   estimatedValue: z.string().optional(),
 });
 
@@ -62,6 +63,7 @@ export default function Services() {
       customerId: 0,
       vehicleId: 0,
       serviceTypeId: 0,
+      technicianId: 0,
       scheduledDate: "",
       scheduledTime: "",
       estimatedValue: "",
@@ -113,6 +115,19 @@ export default function Services() {
     queryKey: ["/api/service-types"],
     queryFn: async () => {
       const res = await fetch("/api/service-types", {
+        credentials: "include",
+      });
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${res.statusText}`);
+      }
+      return await res.json();
+    },
+  });
+
+  const { data: users = [] } = useQuery<any[]>({
+    queryKey: ["/api/admin/users"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/users", {
         credentials: "include",
       });
       if (!res.ok) {
@@ -187,6 +202,7 @@ export default function Services() {
       customerId: service.customerId,
       vehicleId: service.vehicleId,
       serviceTypeId: service.serviceTypeId,
+      technicianId: service.technicianId || 0,
       scheduledDate: service.scheduledDate || "",
       scheduledTime: service.scheduledTime || "",
       estimatedValue: service.estimatedValue?.toString() || "",
@@ -402,21 +418,25 @@ export default function Services() {
 
                       <FormField
                         control={form.control}
-                        name="status"
+                        name="technicianId"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Status</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormLabel>Técnico Responsável</FormLabel>
+                            <Select 
+                              onValueChange={(value) => field.onChange(Number(value))} 
+                              value={field.value > 0 ? field.value.toString() : ""}
+                            >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue />
+                                  <SelectValue placeholder="Selecione o técnico" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="scheduled">Agendado</SelectItem>
-                                <SelectItem value="in_progress">Em Andamento</SelectItem>
-                                <SelectItem value="completed">Concluído</SelectItem>
-                                <SelectItem value="cancelled">Cancelado</SelectItem>
+                                {users.map((technician: any) => (
+                                  <SelectItem key={technician.id} value={technician.id.toString()}>
+                                    {technician.firstName} {technician.lastName} ({technician.username})
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -424,6 +444,30 @@ export default function Services() {
                         )}
                       />
                     </div>
+
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Status</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="scheduled">Agendado</SelectItem>
+                              <SelectItem value="in_progress">Em Andamento</SelectItem>
+                              <SelectItem value="completed">Concluído</SelectItem>
+                              <SelectItem value="cancelled">Cancelado</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     <div className="grid grid-cols-3 gap-4">
                       <FormField

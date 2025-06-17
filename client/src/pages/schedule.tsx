@@ -68,6 +68,7 @@ export default function SchedulePage() {
       customerId: 0,
       vehicleId: 0,
       serviceTypeId: 0,
+      technicianId: user?.role === 'technician' ? user.id : 0,
       status: "scheduled",
       scheduledDate: new Date(new Date().toLocaleString("en-US", {timeZone: "America/Sao_Paulo"})).toISOString().split('T')[0], // Data atual brasileira como padrão
       estimatedValue: undefined,
@@ -104,6 +105,14 @@ export default function SchedulePage() {
     queryKey: ["/api/service-types"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/service-types");
+      return await res.json();
+    },
+  });
+
+  const { data: users = [] } = useQuery<any[]>({
+    queryKey: ["/api/admin/users"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/admin/users");
       return await res.json();
     },
   });
@@ -190,6 +199,7 @@ export default function SchedulePage() {
       customerId: service.customerId,
       vehicleId: service.vehicleId,
       serviceTypeId: service.serviceTypeId,
+      technicianId: service.technicianId || 0,
       status: service.status as "scheduled" | "in_progress" | "completed" | "cancelled",
       scheduledDate: service.scheduledDate ? new Date(service.scheduledDate).toISOString().slice(0, 10) : "",
       estimatedValue: service.estimatedValue || undefined,
@@ -343,6 +353,7 @@ export default function SchedulePage() {
                           customerId: 0,
                           vehicleId: 0,
                           serviceTypeId: 0,
+                          technicianId: user?.role === 'technician' ? user.id : 0,
                           status: "scheduled",
                           scheduledDate: new Date(new Date().toLocaleString("en-US", {timeZone: "America/Sao_Paulo"})).toISOString().split('T')[0],
                           estimatedValue: undefined,
@@ -431,6 +442,30 @@ export default function SchedulePage() {
                                     {serviceTypes.map((serviceType) => (
                                       <SelectItem key={serviceType.id} value={serviceType.id.toString()}>
                                         {serviceType.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="technicianId"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Técnico Responsável</FormLabel>
+                                <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Selecione o técnico" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {users.map((technician) => (
+                                      <SelectItem key={technician.id} value={technician.id.toString()}>
+                                        {technician.firstName} {technician.lastName} ({technician.username})
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
