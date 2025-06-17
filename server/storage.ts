@@ -891,7 +891,7 @@ export class DatabaseStorage implements IStorage {
             eq(services.status, 'completed')
           )
         )
-        .orderBy(services.scheduledDate);```text
+        .orderBy(services.scheduledDate);
 
       console.log(`Found ${revenueData.length} completed services in date range`);
 
