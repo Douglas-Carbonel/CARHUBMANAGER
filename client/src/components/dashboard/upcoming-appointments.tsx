@@ -69,6 +69,36 @@ export default function UpcomingAppointments() {
     return time.slice(0, 2); // Just the hour
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'scheduled':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'Concluído';
+      case 'in_progress':
+        return 'Em Andamento';
+      case 'scheduled':
+        return 'Agendado';
+      case 'cancelled':
+        return 'Cancelado';
+      default:
+        return status;
+    }
+  };
+
   return (
     <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-shadow duration-300">
       <CardHeader className="pb-3 border-b border-gray-50">
@@ -100,21 +130,27 @@ export default function UpcomingAppointments() {
                   <p className="text-sm text-gray-500">
                     {appointment.vehicleBrand} {appointment.vehicleModel} • {appointment.vehiclePlate}
                   </p>
-                  <div className="text-sm text-gray-500">
-                    {appointment.scheduledDate && 
-                      new Date(appointment.scheduledDate + 'T00:00:00').toLocaleDateString('pt-BR')
-                    }
-                    {appointment.scheduledTime && ` às ${appointment.scheduledTime.slice(0, 5)}`}
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-sm text-gray-500">
+                      {appointment.scheduledDate && 
+                        new Date(appointment.scheduledDate + 'T00:00:00').toLocaleDateString('pt-BR')
+                      }
+                    </span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(appointment.status)}`}>
+                      {getStatusText(appointment.status)}
+                    </span>
                   </div>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-green-600 hover:text-green-700 hover:bg-green-50 rounded-xl"
-              >
-                <Phone className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-green-600 hover:text-green-700 hover:bg-green-50 rounded-xl"
+                >
+                  <Phone className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           ))}
 
