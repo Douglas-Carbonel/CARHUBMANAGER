@@ -3,6 +3,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Phone, Calendar, ArrowRight } from "lucide-react";
 
+// Helper function to get time number from scheduled time
+const getTimeNumber = (scheduledTime: string | null | undefined): string => {
+  if (!scheduledTime) return "??";
+  
+  try {
+    // If it's a full time string like "14:30:00", extract the hour
+    const timeParts = scheduledTime.split(":");
+    if (timeParts.length >= 2) {
+      return timeParts[0]; // Return just the hour
+    }
+    
+    // If it's already just a number, return it
+    return scheduledTime.slice(0, 2);
+  } catch (error) {
+    console.warn("Error parsing time:", scheduledTime, error);
+    return "??";
+  }
+};
+
 export default function UpcomingAppointments() {
   const { data: upcomingAppointments, isLoading, error } = useQuery({
     queryKey: ["/api/dashboard/upcoming-appointments", { limit: 5 }],

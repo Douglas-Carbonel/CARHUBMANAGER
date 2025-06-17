@@ -1010,36 +1010,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getTodayAppointments() {
-    try {
-      // Use current date in Brazilian timezone (UTC-3)
-      const now = new Date();
-      const brazilianTime = new Date(now.getTime() - (3 * 60 * 60 * 1000)); // UTC-3
-      const today = brazilianTime.toISOString().split('T')[0];
 
-      const todayAppointments = await db
-        .select({
-          id: services.id,
-          customerName: customers.name,
-          vehiclePlate: vehicles.licensePlate,
-          serviceTypeName: serviceTypes.name,
-          scheduledDate: services.scheduledDate,
-          scheduledTime: services.scheduledTime,
-          status: services.status
-        })
-        .from(services)
-        .innerJoin(customers, eq(services.customerId, customers.id))
-        .innerJoin(vehicles, eq(services.vehicleId, vehicles.id))
-        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
-        .where(eq(services.scheduledDate, today))
-        .orderBy(services.scheduledTime);
-
-      return todayAppointments;
-    } catch (error) {
-      console.error('Error getting today appointments:', error);
-      return [];
-    }
-  }
 
   // Vehicle analytics
   async getVehicleAnalytics() {
@@ -1157,7 +1128,7 @@ export class DatabaseStorage implements IStorage {
         })
         .from(customers)
         .innerJoin(services, eq(customers.id, services.customerId))
-        .innerJoin(serviceTypes, eq(serviceTypes.serviceTypeId, serviceTypes.id))
+        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
         .where(
           and(
             eq(serviceTypes.isRecurring, true),
@@ -1192,7 +1163,7 @@ export class DatabaseStorage implements IStorage {
         })
         .from(customers)
         .innerJoin(services, eq(customers.id, services.customerId))
-        .innerJoin(serviceTypes, eq(serviceTypes.id, services.serviceTypeId))
+        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
         .where(
           and(
             eq(serviceTypes.isRecurring, true),
