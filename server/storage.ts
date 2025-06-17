@@ -508,13 +508,15 @@ export class DatabaseStorage implements IStorage {
     try {
       // Receita diária (serviços agendados para hoje)
       const dailyRevenueResult = await db.execute(sql`
-        SELECT COALESCE(SUM(CASE 
-          WHEN estimated_value IS NOT NULL 
-          AND estimated_value != '' 
-          AND estimated_value ~ '^[0-9]+(\.[0-9]+)?$'
-          THEN CAST(estimated_value AS DECIMAL)
-          ELSE 0 
-        END), 0) as revenue
+        SELECT COALESCE(SUM(
+          CASE 
+            WHEN estimated_value IS NOT NULL 
+            AND estimated_value != '' 
+            AND estimated_value ~ '^[0-9]+(\.[0-9]+)?$'
+            THEN estimated_value::NUMERIC
+            ELSE 0 
+          END
+        ), 0) as revenue
         FROM services 
         WHERE scheduled_date = ${todayString} 
         AND status != 'cancelled'
@@ -523,17 +525,19 @@ export class DatabaseStorage implements IStorage {
 
       // Receita realizada (serviços concluídos)
       const completedRevenueResult = await db.execute(sql`
-        SELECT COALESCE(SUM(CASE 
-          WHEN final_value IS NOT NULL 
-          AND final_value != '' 
-          AND final_value ~ '^[0-9]+(\.[0-9]+)?$'
-          THEN CAST(final_value AS DECIMAL)
-          WHEN estimated_value IS NOT NULL 
-          AND estimated_value != '' 
-          AND estimated_value ~ '^[0-9]+(\.[0-9]+)?$'
-          THEN CAST(estimated_value AS DECIMAL)
-          ELSE 0 
-        END), 0) as revenue
+        SELECT COALESCE(SUM(
+          CASE 
+            WHEN final_value IS NOT NULL 
+            AND final_value != '' 
+            AND final_value ~ '^[0-9]+(\.[0-9]+)?$'
+            THEN final_value::NUMERIC
+            WHEN estimated_value IS NOT NULL 
+            AND estimated_value != '' 
+            AND estimated_value ~ '^[0-9]+(\.[0-9]+)?$'
+            THEN estimated_value::NUMERIC
+            ELSE 0 
+          END
+        ), 0) as revenue
         FROM services 
         WHERE status = 'completed'
         ${technicianCondition}
@@ -541,13 +545,15 @@ export class DatabaseStorage implements IStorage {
 
       // Receita prevista (todos os serviços não cancelados)
       const predictedRevenueResult = await db.execute(sql`
-        SELECT COALESCE(SUM(CASE 
-          WHEN estimated_value IS NOT NULL 
-          AND estimated_value != '' 
-          AND estimated_value ~ '^[0-9]+(\.[0-9]+)?$'
-          THEN CAST(estimated_value AS DECIMAL)
-          ELSE 0 
-        END), 0) as revenue
+        SELECT COALESCE(SUM(
+          CASE 
+            WHEN estimated_value IS NOT NULL 
+            AND estimated_value != '' 
+            AND estimated_value ~ '^[0-9]+(\.[0-9]+)?$'
+            THEN estimated_value::NUMERIC
+            ELSE 0 
+          END
+        ), 0) as revenue
         FROM services 
         WHERE status != 'cancelled'
         ${technicianCondition}
