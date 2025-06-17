@@ -509,7 +509,9 @@ export class DatabaseStorage implements IStorage {
       // Receita diária (serviços agendados para hoje)
       const dailyRevenueResult = await db.execute(sql`
         SELECT COALESCE(SUM(CASE 
-          WHEN estimated_value IS NOT NULL AND estimated_value != '' AND estimated_value ~ '^[0-9]+([.][0-9]+)?$'
+          WHEN estimated_value IS NOT NULL 
+          AND estimated_value != '' 
+          AND estimated_value ~ '^[0-9]+(\.[0-9]+)?$'
           THEN CAST(estimated_value AS DECIMAL)
           ELSE 0 
         END), 0) as revenue
@@ -522,9 +524,13 @@ export class DatabaseStorage implements IStorage {
       // Receita realizada (serviços concluídos)
       const completedRevenueResult = await db.execute(sql`
         SELECT COALESCE(SUM(CASE 
-          WHEN final_value IS NOT NULL AND final_value != '' AND final_value ~ '^[0-9]+([.][0-9]+)?$'
+          WHEN final_value IS NOT NULL 
+          AND final_value != '' 
+          AND final_value ~ '^[0-9]+(\.[0-9]+)?$'
           THEN CAST(final_value AS DECIMAL)
-          WHEN estimated_value IS NOT NULL AND estimated_value != '' AND estimated_value ~ '^[0-9]+([.][0-9]+)?$'
+          WHEN estimated_value IS NOT NULL 
+          AND estimated_value != '' 
+          AND estimated_value ~ '^[0-9]+(\.[0-9]+)?$'
           THEN CAST(estimated_value AS DECIMAL)
           ELSE 0 
         END), 0) as revenue
@@ -536,7 +542,9 @@ export class DatabaseStorage implements IStorage {
       // Receita prevista (todos os serviços não cancelados)
       const predictedRevenueResult = await db.execute(sql`
         SELECT COALESCE(SUM(CASE 
-          WHEN estimated_value IS NOT NULL AND estimated_value != '' AND estimated_value ~ '^[0-9]+([.][0-9]+)?$'
+          WHEN estimated_value IS NOT NULL 
+          AND estimated_value != '' 
+          AND estimated_value ~ '^[0-9]+(\.[0-9]+)?$'
           THEN CAST(estimated_value AS DECIMAL)
           ELSE 0 
         END), 0) as revenue
@@ -704,9 +712,13 @@ export class DatabaseStorage implements IStorage {
           st.name,
           COUNT(s.id) as count,
           COALESCE(SUM(CASE 
-            WHEN s.final_value IS NOT NULL AND s.final_value != '' AND s.final_value ~ '^[0-9]+([.][0-9]+)?$'
+            WHEN s.final_value IS NOT NULL 
+            AND s.final_value != '' 
+            AND s.final_value ~ '^[0-9]+(\.[0-9]+)?$'
             THEN CAST(s.final_value AS DECIMAL)
-            WHEN s.estimated_value IS NOT NULL AND s.estimated_value != '' AND s.estimated_value ~ '^[0-9]+([.][0-9]+)?$'
+            WHEN s.estimated_value IS NOT NULL 
+            AND s.estimated_value != '' 
+            AND s.estimated_value ~ '^[0-9]+(\.[0-9]+)?$'
             THEN CAST(s.estimated_value AS DECIMAL)
             ELSE 0 
           END), 0) as revenue
@@ -903,9 +915,9 @@ export class DatabaseStorage implements IStorage {
         if (!date) return; // Skip services without dates
 
         let revenue = 0;
-        if (service.finalValue && String(service.finalValue).match(/^[0-9]+(\.[0-9]+)?$/)) {
+        if (service.finalValue && service.finalValue !== '' && String(service.finalValue).match(/^[0-9]+(\.[0-9]+)?$/)) {
           revenue = Number(service.finalValue);
-        } else if (service.estimatedValue && 
+        } else if (service.estimatedValue && service.estimatedValue !== '' &&
                    String(service.estimatedValue).match(/^[0-9]+(\.[0-9]+)?$/)) {
           revenue = Number(service.estimatedValue);
         }
@@ -965,10 +977,10 @@ export class DatabaseStorage implements IStorage {
         if (!date) return; // Skip services without dates
 
         let revenue = 0;
-        if (service.status === 'completed' && service.finalValue && 
+        if (service.status === 'completed' && service.finalValue && service.finalValue !== '' &&
             String(service.finalValue).match(/^[0-9]+(\.[0-9]+)?$/)) {
           revenue = Number(service.finalValue);
-        } else if (service.estimatedValue && 
+        } else if (service.estimatedValue && service.estimatedValue !== '' &&
                    String(service.estimatedValue).match(/^[0-9]+(\.[0-9]+)?$/)) {
           revenue = Number(service.estimatedValue);
         }

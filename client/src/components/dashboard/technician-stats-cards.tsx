@@ -16,13 +16,18 @@ export default function TechnicianStatsCards() {
     retry: 3,
     retryDelay: 1000,
     queryFn: async () => {
+      console.log('TechnicianStatsCards: Fetching dashboard stats...');
       const response = await fetch("/api/dashboard/stats", {
         credentials: "include",
       });
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('TechnicianStatsCards: API Error:', response.status, response.statusText, errorText);
         throw new Error(`Erro ${response.status}: ${response.statusText}`);
       }
-      return response.json();
+      const result = await response.json();
+      console.log('TechnicianStatsCards: Data received:', result);
+      return result;
     },
   });
 

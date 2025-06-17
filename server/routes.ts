@@ -412,11 +412,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/dashboard/stats", requireAuth, async (req, res) => {
     try {
       const user = req.user!;
-      const stats = await storage.getDashboardStats(user.role === 'admin' ? null : user.id);
+      console.log("Dashboard stats API - User:", user.role, user.id);
+      const technicianId = user.role === 'admin' ? null : user.id;
+      console.log("Dashboard stats API - Using technicianId:", technicianId);
+      const stats = await storage.getDashboardStats(technicianId);
+      console.log("Dashboard stats API - Result:", stats);
       res.json(stats);
     } catch (error) {
       console.error("Error getting dashboard stats:", error);
-      res.status(500).json({ message: "Failed to get dashboard stats" });
+      res.status(500).json({ message: "Failed to get dashboard stats", error: error.message });
     }
   });
 
