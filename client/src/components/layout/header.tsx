@@ -13,7 +13,7 @@ export default function Header({ title, subtitle, action }: HeaderProps) {
   const { user } = useAuth();
 
   return (
-    <header className="bg-gradient-to-r from-teal-50 via-emerald-50/50 to-cyan-50 border-b border-teal-200/50 px-4 md:px-8 py-4 md:py-6 sticky top-0 z-20 shadow-lg backdrop-blur-sm bg-white/95">
+    <header className="bg-gradient-to-r from-teal-50 via-emerald-50/50 to-cyan-50 border-b border-teal-200/50 px-4 md:px-8 py-4 md:py-6 sticky top-0 z-20 shadow-lg backdrop-blur-sm bg-white/95 pl-16 md:pl-8">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-4">
           <div>
