@@ -141,27 +141,25 @@ export const loyaltyTracking = pgTable("loyalty_tracking", {
 
 export const photos = pgTable("photos", {
   id: serial("id").primaryKey(),
-  customerId: integer("customer_id").references(() => customers.id),
-  vehicleId: integer("vehicle_id").references(() => vehicles.id),
-  serviceId: integer("service_id").references(() => services.id),
-  filename: varchar("filename").notNull(),
-  originalName: varchar("original_name").notNull(),
-  mimeType: varchar("mime_type").notNull(),
-  size: integer("size").notNull(),
-  url: varchar("url").notNull(),
-  description: text("description"),
+  entityType: varchar("entity_type", { enum: ["customer", "vehicle", "service"] }),
+  entityId: integer("entity_id"),
   category: varchar("category", { 
     enum: ["vehicle", "service", "damage", "before", "after", "other"] 
   }).default("other"),
+  fileName: varchar("file_name").notNull(),
+  originalName: varchar("original_name").notNull(),
+  mimeType: varchar("mime_type").notNull(),
+  fileSize: integer("file_size").notNull(),
+  url: varchar("url").notNull(),
+  description: text("description"),
+  uploadedBy: integer("uploaded_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Relations
 export const customersRelations = relations(customers, ({ many }) => ({
   vehicles: many(vehicles),
   services: many(services),
-  photos: many(photos),
 }));
 
 export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
@@ -225,17 +223,9 @@ export const loyaltyTrackingRelations = relations(loyaltyTracking, ({ one }) => 
 }));
 
 export const photosRelations = relations(photos, ({ one }) => ({
-  customer: one(customers, {
-    fields: [photos.customerId],
-    references: [customers.id],
-  }),
-  vehicle: one(vehicles, {
-    fields: [photos.vehicleId],
-    references: [vehicles.id],
-  }),
-  service: one(services, {
-    fields: [photos.serviceId],
-    references: [services.id],
+  uploader: one(users, {
+    fields: [photos.uploadedBy],
+    references: [users.id],
   }),
 }));
 
