@@ -44,12 +44,14 @@ async function apiRequest(method: string, url: string, data?: any): Promise<Resp
 }
 
 const customerFormSchema = insertCustomerSchema.extend({
-  document: z.string().min(1, "Documento é obrigatório").refine((doc) => {
+  document: z.string().optional().refine((doc) => {
+    if (!doc || doc.trim() === '') return true;
     const cleanDoc = doc.replace(/\D/g, '');
     return cleanDoc.length === 11 ? validateCPF(cleanDoc) : validateCNPJ(cleanDoc);
   }, "CPF ou CNPJ inválido"),
 }).transform((data) => ({
   ...data,
+  document: data.document || "",
   email: data.email || null,
   phone: data.phone || null,
   address: data.address || null,
@@ -201,8 +203,8 @@ export default function CustomersPage() {
       name: customer.name,
       email: customer.email || "",
       phone: customer.phone || "",
-      document: customer.document,
-      documentType: customer.documentType as "cpf" | "cnpj",
+      document: customer.document || "",
+      documentType: (customer.documentType as "cpf" | "cnpj") || "cpf",
       address: customer.address || "",
       observations: customer.observations || "",
     });
@@ -217,7 +219,7 @@ export default function CustomersPage() {
 
   const filteredCustomers = customers.filter((customer: Customer) =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.document.includes(searchTerm) ||
+    (customer.document && customer.document.includes(searchTerm)) ||
     customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -290,23 +292,6 @@ export default function CustomersPage() {
                       });
                     })} className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="code"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Código</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  placeholder="Auto-gerado se vazio" 
-                                  {...field} 
-                                  disabled={!editingCustomer}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
                         <FormField
                           control={form.control}
                           name="name"

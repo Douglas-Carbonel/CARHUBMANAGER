@@ -46,8 +46,8 @@ export const users = pgTable('users', {
 export const customers = pgTable("customers", {
   id: serial("id").primaryKey(),
   code: varchar("code").unique().notNull(),
-  document: varchar("document").unique().notNull(), // CPF or CNPJ
-  documentType: varchar("document_type", { enum: ["cpf", "cnpj"] }).notNull(),
+  document: varchar("document").unique(), // CPF or CNPJ
+  documentType: varchar("document_type", { enum: ["cpf", "cnpj"] }),
   name: varchar("name").notNull(),
   email: varchar("email"),
   phone: varchar("phone"),
