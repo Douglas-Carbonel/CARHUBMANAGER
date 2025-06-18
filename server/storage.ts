@@ -6,7 +6,7 @@ import {
   serviceTypes,
   payments,
   loyaltyTracking,
-  photos,
+  // photos,
   type User,
   type InsertUser,
   type Customer,
@@ -1210,13 +1210,19 @@ export class DatabaseStorage implements IStorage {
       
       if (filters) {
         const conditions = [];
-        if (filters.customerId) conditions.push(eq(photos.customerId, filters.customerId));
-        if (filters.vehicleId) conditions.push(eq(photos.vehicleId, filters.vehicleId));
-        if (filters.serviceId) conditions.push(eq(photos.serviceId, filters.serviceId));
+        if (filters.customerId) {
+          conditions.push(and(eq(photos.entityType, 'customer'), eq(photos.entityId, filters.customerId)));
+        }
+        if (filters.vehicleId) {
+          conditions.push(and(eq(photos.entityType, 'vehicle'), eq(photos.entityId, filters.vehicleId)));
+        }
+        if (filters.serviceId) {
+          conditions.push(and(eq(photos.entityType, 'service'), eq(photos.entityId, filters.serviceId)));
+        }
         if (filters.category) conditions.push(eq(photos.category, filters.category));
         
         if (conditions.length > 0) {
-          query = query.where(and(...conditions));
+          query = query.where(or(...conditions));
         }
       }
       
@@ -1242,7 +1248,6 @@ export class DatabaseStorage implements IStorage {
       const [newPhoto] = await db.insert(photos).values({
         ...photo,
         createdAt: new Date(),
-        updatedAt: new Date(),
       }).returning();
       return newPhoto;
     } catch (error) {

@@ -168,7 +168,6 @@ export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
     references: [customers.id],
   }),
   services: many(services),
-  photos: many(photos),
 }));
 
 export const servicesRelations = relations(services, ({ one, many }) => ({
@@ -189,7 +188,6 @@ export const servicesRelations = relations(services, ({ one, many }) => ({
     references: [users.id],
   }),
   payments: many(payments),
-  photos: many(photos),
 }));
 
 export const serviceTypesRelations = relations(serviceTypes, ({ many }) => ({
@@ -267,7 +265,6 @@ export const insertUserSchema = createInsertSchema(users).omit({
 export const insertPhotoSchema = createInsertSchema(photos).omit({
   id: true,
   createdAt: true,
-  updatedAt: true,
 });
 
 // Loyalty tracking schema temporarily removed
