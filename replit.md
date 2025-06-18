@@ -134,6 +134,9 @@ This is a comprehensive automotive service management system built as a full-sta
 
 ```
 Changelog:
+- June 18, 2025. Successfully migrated from Replit Agent to standard Replit environment
+- June 18, 2025. Fixed photos database schema and constraints - camera functionality now working
+- June 18, 2025. Implemented custom photos storage layer to handle database structure mismatch
 - June 15, 2025. Dashboard migrado para Replit com dados reais do Supabase
 - June 15, 2025. Corrigido sistema de autenticação e APIs do dashboard
 - June 15, 2025. Implementado dashboard funcional com gráficos e estatísticas em tempo real
