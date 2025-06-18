@@ -792,8 +792,8 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
         mimeType: 'image/jpeg',
         fileSize: compressedStats.size,
         url: `/uploads/${compressedFilename}`,
-        description: description || null,
-        uploadedBy: req.user?.id || null,
+        description: description || undefined,
+        uploadedBy: req.user?.id || undefined,
       };
 
       const photo = await photosStorage.createPhoto(entityType, entityId, photoData);
