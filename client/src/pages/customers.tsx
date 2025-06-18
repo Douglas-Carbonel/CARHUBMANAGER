@@ -48,11 +48,13 @@ const customerFormSchema = insertCustomerSchema.extend({
     const cleanDoc = doc.replace(/\D/g, '');
     return cleanDoc.length === 11 ? validateCPF(cleanDoc) : validateCNPJ(cleanDoc);
   }, "CPF ou CNPJ inválido"),
-  email: z.string().optional().nullable(),
-  phone: z.string().optional().nullable(),
-  address: z.string().optional().nullable(),
-  observations: z.string().optional().nullable(),
-});
+}).transform((data) => ({
+  ...data,
+  email: data.email || null,
+  phone: data.phone || null,
+  address: data.address || null,
+  observations: data.observations || null,
+}));
 type CustomerFormData = z.infer<typeof customerFormSchema>;
 
 export default function CustomersPage() {
@@ -346,6 +348,7 @@ export default function CustomersPage() {
                                 <Input 
                                   placeholder="(11) 99999-9999" 
                                   {...field}
+                                  value={field.value || ""}
                                   onChange={(e) => {
                                     field.onChange(applyPhoneMask(e.target.value));
                                   }}
@@ -408,7 +411,11 @@ export default function CustomersPage() {
                             <FormItem className="col-span-2">
                               <FormLabel>Endereço</FormLabel>
                               <FormControl>
-                                <Input placeholder="Endereço completo" {...field} />
+                                <Input 
+                                  placeholder="Endereço completo" 
+                                  {...field} 
+                                  value={field.value || ""}
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -421,7 +428,11 @@ export default function CustomersPage() {
                             <FormItem className="col-span-2">
                               <FormLabel>Observações</FormLabel>
                               <FormControl>
-                                <Input placeholder="Observações adicionais" {...field} />
+                                <Input 
+                                  placeholder="Observações adicionais" 
+                                  {...field} 
+                                  value={field.value || ""}
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>

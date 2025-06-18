@@ -707,10 +707,12 @@ export class DatabaseStorage implements IStorage {
           COALESCE(SUM(CASE 
             WHEN s.final_value IS NOT NULL 
             AND s.final_value != '' 
+            AND s.final_value != '0'
             AND s.final_value ~ '^[0-9]+(\.[0-9]+)?$'
             THEN CAST(s.final_value AS DECIMAL)
             WHEN s.estimated_value IS NOT NULL 
             AND s.estimated_value != '' 
+            AND s.estimated_value != '0'
             AND s.estimated_value ~ '^[0-9]+(\.[0-9]+)?$'
             THEN CAST(s.estimated_value AS DECIMAL)
             ELSE 0 
