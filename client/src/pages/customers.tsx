@@ -23,7 +23,8 @@ import CustomerAnalytics from "@/components/dashboard/customer-analytics";
 import PhotoGallery from "@/components/photos/photo-gallery";
 import { z } from "zod";
 import { insertCustomerSchema } from "@shared/schema";
-import PhotoUpload from "@/components/photos/photo-upload"; // Import the new PhotoUpload component
+import PhotoUpload from "@/components/photos/photo-upload";
+import CameraCapture from "@/components/camera/camera-capture";
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
   console.log(`API Request: ${method} ${url}`, data);
@@ -74,6 +75,7 @@ export default function CustomersPage() {
   const [selectedCustomerForPhotos, setSelectedCustomerForPhotos] = useState<Customer | null>(null);
   const [isPhotosModalOpen, setIsPhotosModalOpen] = useState(false);
   const [currentCustomerPhotos, setCurrentCustomerPhotos] = useState<string[]>([]);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
 
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerFormSchema),
@@ -250,6 +252,16 @@ export default function CustomersPage() {
       });
       setCurrentCustomerPhotos([]);
     }
+  };
+
+  const handlePhotoTaken = () => {
+    if (editingCustomer) {
+      fetchCustomerPhotos(editingCustomer.id);
+    }
+    toast({
+      title: "Foto capturada",
+      description: "Foto foi adicionada com sucesso.",
+    });
   };
 
   const filteredCustomers = customers.filter((customer: Customer) =>
@@ -463,12 +475,27 @@ export default function CustomersPage() {
 
                       {/* Photos Section */}
                       <div className="col-span-2 border-t pt-4">
-                        <PhotoUpload
-                          photos={currentCustomerPhotos}
-                          onPhotoUploaded={() => fetchCustomerPhotos(editingCustomer?.id)}
-                          customerId={editingCustomer?.id}
-                          maxPhotos={7}
-                        />
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-medium text-gray-700">Fotos do Cliente</h4>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setIsCameraOpen(true)}
+                              className="flex items-center gap-2"
+                            >
+                              <Camera className="h-4 w-4" />
+                              Tirar Foto
+                            </Button>
+                          </div>
+                          <PhotoUpload
+                            photos={currentCustomerPhotos}
+                            onPhotoUploaded={() => fetchCustomerPhotos(editingCustomer?.id)}
+                            customerId={editingCustomer?.id}
+                            maxPhotos={7}
+                          />
+                        </div>
                       </div>
 
                       <div className="flex justify-end gap-4 pt-4">
@@ -708,6 +735,14 @@ export default function CustomersPage() {
                 )}
               </DialogContent>
             </Dialog>
+
+            {/* Camera Capture Modal */}
+            <CameraCapture
+              isOpen={isCameraOpen}
+              onClose={() => setIsCameraOpen(false)}
+              onPhotoTaken={handlePhotoTaken}
+              customerId={editingCustomer?.id}
+            />
           </div>
         </main>
       </div>

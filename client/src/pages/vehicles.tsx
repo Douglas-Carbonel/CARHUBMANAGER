@@ -43,6 +43,122 @@ async function apiRequest(method: string, url: string, data?: any): Promise<Resp
 const vehicleFormSchema = insertVehicleSchema;
 type VehicleFormData = z.infer<typeof vehicleFormSchema>;
 
+// CameraCapture Component
+interface CameraCaptureProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onPhotoTaken: (photo: string, vehicleId?: number) => void;
+  vehicleId?: number;
+}
+
+const CameraCapture: React.FC<CameraCaptureProps> = ({ isOpen, onClose, onPhotoTaken, vehicleId }) => {
+  const [hasPhoto, setHasPhoto] = useState(false);
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [isCameraReady, setIsCameraReady] = useState(false);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    let stream: MediaStream | null = null;
+
+    const startCamera = async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.onloadedmetadata = () => {
+            setIsCameraReady(true);
+          };
+        }
+      } catch (error) {
+        console.error("Erro ao acessar a câmera:", error);
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      startCamera();
+    } else {
+      // Stop the camera stream when the modal is closed
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      setIsCameraReady(false);
+    }
+
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [isOpen, onClose]);
+
+  const takePhoto = () => {
+    if (videoRef.current && canvasRef.current && isCameraReady) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context?.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+
+      const dataUrl = canvas.toDataURL('image/png');
+      setPhoto(dataUrl);
+      setHasPhoto(true);
+    }
+  };
+
+  const retakePhoto = () => {
+    setPhoto(null);
+    setHasPhoto(false);
+  };
+
+  const savePhoto = () => {
+    if (photo) {
+      onPhotoTaken(photo, vehicleId);
+      onClose();
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Capturar Foto</DialogTitle>
+        </DialogHeader>
+        {!hasPhoto ? (
+          <>
+            <video ref={videoRef} autoPlay className="w-full aspect-video rounded-md" style={{ display: isCameraReady ? 'block' : 'none' }} />
+            {!isCameraReady && <p>Aguardando a câmera...</p>}
+            <canvas ref={canvasRef} style={{ display: 'none' }} />
+            <div className="flex justify-around mt-4">
+              <Button type="button" variant="secondary" onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button type="button" onClick={takePhoto} disabled={!isCameraReady}>
+                Tirar Foto
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            {photo && <img src={photo} alt="Captured" className="w-full rounded-md" />}
+            <div className="flex justify-around mt-4">
+              <Button type="button" variant="secondary" onClick={retakePhoto}>
+                Retirar
+              </Button>
+              <Button type="button" onClick={savePhoto}>
+                Salvar
+              </Button>
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export default function VehiclesPage() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -60,6 +176,7 @@ export default function VehiclesPage() {
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
   const [currentVehiclePhotos, setCurrentVehiclePhotos] = useState<Photo[]>([]);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
 
   // Check URL parameters for customer filtering
   useEffect(() => {
@@ -295,6 +412,32 @@ export default function VehiclesPage() {
 
     return matchesSearch && matchesCustomer;
   });
+
+  const handlePhotoTaken = async (photo: string, vehicleId?: number) => {
+    if (!vehicleId) {
+      console.error("Vehicle ID is required to save the photo.");
+      return;
+    }
+
+    try {
+      const res = await apiRequest("POST", `/api/vehicles/${vehicleId}/photos`, { photo });
+      if (res.ok) {
+        toast({
+          title: "Foto salva!",
+          description: "A foto foi salva com sucesso.",
+        });
+        fetchVehiclePhotos(vehicleId); // Refresh vehicle photos
+      } else {
+        throw new Error("Failed to save photo");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erro ao salvar foto",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   if (!user) {
     return null;
@@ -637,6 +780,15 @@ export default function VehiclesPage() {
                             vehicleId={editingVehicle?.id}
                             maxPhotos={7}
                           />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              setIsCameraOpen(true);
+                            }}
+                          >
+                            Tirar Foto
+                          </Button>
                         </div>
                       </div>
 
@@ -662,6 +814,14 @@ export default function VehiclesPage() {
                   </Form>
                 </DialogContent>
               </Dialog>
+
+            {/* Camera Capture Modal */}
+            <CameraCapture
+              isOpen={isCameraOpen}
+              onClose={() => setIsCameraOpen(false)}
+              onPhotoTaken={handlePhotoTaken}
+              vehicleId={editingVehicle?.id}
+            />
             </div>
 
             {/* Analytics Modal */}

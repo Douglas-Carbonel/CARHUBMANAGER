@@ -22,6 +22,7 @@ import { format } from "date-fns";
 import ServiceAnalytics from "@/components/dashboard/service-analytics";
 import { useLocation } from "wouter";
 import PhotoUpload from "@/components/photos/photo-upload";
+import CameraCapture from "@/components/camera/camera-capture";
 
 const serviceFormSchema = insertServiceSchema.extend({
   customerId: z.number().min(1, "Cliente é obrigatório"),
@@ -56,6 +57,7 @@ export default function Services() {
   const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
   const [currentServicePhotos, setCurrentServicePhotos] = useState<Photo[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
 
   const fetchServicePhotos = async (serviceId: number | undefined) => {
     if (!serviceId) {
@@ -78,6 +80,16 @@ export default function Services() {
       });
       setCurrentServicePhotos([]);
     }
+  };
+
+  const handlePhotoTaken = () => {
+    if (editingService) {
+      fetchServicePhotos(editingService.id);
+    }
+    toast({
+      title: "Foto capturada",
+      description: "Foto foi adicionada com sucesso.",
+    });
   };
 
   const queryClient = useQueryClient();
@@ -563,7 +575,19 @@ export default function Services() {
                     {/* Photos Section */}
                     <div className="col-span-2 border-t pt-4">
                       <div className="space-y-4">
-                        <h4 className="text-sm font-medium text-gray-700">Fotos do Serviço</h4>
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-medium text-gray-700">Fotos do Serviço</h4>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsCameraOpen(true)}
+                            className="flex items-center gap-2"
+                          >
+                            <Camera className="h-4 w-4" />
+                            Tirar Foto
+                          </Button>
+                        </div>
                         <PhotoUpload
                           photos={currentServicePhotos}
                           onPhotoUploaded={() => fetchServicePhotos(editingService?.id)}
@@ -610,6 +634,14 @@ export default function Services() {
                 <ServiceAnalytics />
               </DialogContent>
             </Dialog>
+
+            {/* Camera Capture Modal */}
+            <CameraCapture
+              isOpen={isCameraOpen}
+              onClose={() => setIsCameraOpen(false)}
+              onPhotoTaken={handlePhotoTaken}
+              serviceId={editingService?.id}
+            />
           </div>
 
           {/* Search and Filter */}
