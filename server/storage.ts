@@ -207,6 +207,10 @@ export class DatabaseStorage implements IStorage {
 
   async getCustomerByDocument(document: string): Promise<Customer | undefined> {
     try {
+      // If document is empty or null, don't search for it
+      if (!document || document.trim() === '') {
+        return undefined;
+      }
       const [customer] = await db.select().from(customers).where(eq(customers.document, document));
       return customer;
     } catch (error) {

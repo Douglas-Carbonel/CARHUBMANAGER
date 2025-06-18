@@ -171,11 +171,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const customerData = insertCustomerSchema.parse(req.body);
       console.log('POST /api/customers - Parsed data:', JSON.stringify(customerData, null, 2));
 
-      // Check if document already exists
-      const existingCustomer = await storage.getCustomerByDocument(customerData.document);
-      if (existingCustomer) {
-        console.log('POST /api/customers - Document already exists:', customerData.document);
-        return res.status(400).json({ message: "Document already registered" });
+      // Check if document already exists (only if document is provided)
+      if (customerData.document && customerData.document.trim() !== '') {
+        const existingCustomer = await storage.getCustomerByDocument(customerData.document);
+        if (existingCustomer) {
+          console.log('POST /api/customers - Document already exists:', customerData.document);
+          return res.status(400).json({ message: "Document already registered" });
+        }
       }
 
       console.log('POST /api/customers - Creating customer...');
