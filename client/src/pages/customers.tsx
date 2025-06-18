@@ -44,6 +44,7 @@ async function apiRequest(method: string, url: string, data?: any): Promise<Resp
 }
 
 const customerFormSchema = insertCustomerSchema.extend({
+  name: z.string().min(1, "Nome é obrigatório"),
   document: z.string().optional().refine((doc) => {
     if (!doc || doc.trim() === '') return true;
     const cleanDoc = doc.replace(/\D/g, '');
@@ -297,9 +298,9 @@ export default function CustomersPage() {
                           name="name"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Nome</FormLabel>
+                              <FormLabel>Nome <span className="text-red-500">*</span></FormLabel>
                               <FormControl>
-                                <Input placeholder="Nome completo" {...field} />
+                                <Input placeholder="Nome completo" {...field} required />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
