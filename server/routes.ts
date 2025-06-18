@@ -2,6 +2,7 @@ import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import passport from "passport";
 import { storage } from "./storage";
+import { photosStorage } from "./photos-storage.js";
 import type { User } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -716,7 +717,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
       if (serviceId) filters.serviceId = parseInt(serviceId as string);
       if (category) filters.category = category as string;
 
-      const photos = await storage.getPhotos(filters);
+      const photos = await photosStorage.getPhotos(filters);
       res.json(photos);
     } catch (error) {
       console.error("Error getting photos:", error);
@@ -769,20 +770,33 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
       // Get compressed file stats
       const compressedStats = fs.statSync(compressedPath);
 
+      // Determine entity type and ID based on what's provided
+      let entityType = 'other';
+      let entityId = 0;
+      
+      if (customerId) {
+        entityType = 'customer';
+        entityId = parseInt(customerId);
+      } else if (vehicleId) {
+        entityType = 'vehicle';
+        entityId = parseInt(vehicleId);
+      } else if (serviceId) {
+        entityType = 'service';
+        entityId = parseInt(serviceId);
+      }
+
       const photoData = {
-        customerId: customerId ? parseInt(customerId) : null,
-        vehicleId: vehicleId ? parseInt(vehicleId) : null,
-        serviceId: serviceId ? parseInt(serviceId) : null,
-        filename: compressedFilename,
+        category: category || 'other',
+        fileName: compressedFilename,
         originalName: req.file.originalname,
         mimeType: 'image/jpeg',
-        size: compressedStats.size,
+        fileSize: compressedStats.size,
         url: `/uploads/${compressedFilename}`,
         description: description || null,
-        category: category || 'other',
+        uploadedBy: req.user?.id || null,
       };
 
-      const photo = await storage.createPhoto(photoData);
+      const photo = await photosStorage.createPhoto(entityType, entityId, photoData);
       res.status(201).json(photo);
     } catch (error) {
       console.error("Error uploading photo:", error);
@@ -807,16 +821,8 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     try {
       const photoId = parseInt(req.params.id);
 
-      // Get photo info to delete file
-      const photo = await storage.getPhoto(photoId);
-      if (photo) {
-        const filePath = path.join(uploadsDir, photo.filename);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-      }
-
-      await storage.deletePhoto(photoId);
+      // Delete photo from database and file system
+      await photosStorage.deletePhoto(photoId);
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting photo:", error);
