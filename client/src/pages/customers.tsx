@@ -25,7 +25,7 @@ import { insertCustomerSchema } from "@shared/schema";
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
   console.log(`API Request: ${method} ${url}`, data);
-  
+
   const res = await fetch(url, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
@@ -154,14 +154,11 @@ export default function CustomersPage() {
 
   const onSubmit = (data: CustomerFormData) => {
     console.log('Form submitted with data:', data);
-    console.log('Form errors:', form.formState.errors);
-    
+
     try {
       if (editingCustomer) {
-        console.log('Updating customer:', editingCustomer.id);
         updateMutation.mutate({ id: editingCustomer.id, data });
       } else {
-        console.log('Creating new customer');
         createMutation.mutate(data);
       }
     } catch (error) {
@@ -260,7 +257,14 @@ export default function CustomersPage() {
                     </DialogTitle>
                   </DialogHeader>
                   <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
+                      console.log('Form validation errors:', errors);
+                      toast({
+                        title: "Erro de validação",
+                        description: "Por favor, verifique os campos obrigatórios",
+                        variant: "destructive",
+                      });
+                    })} className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
                           control={form.control}
