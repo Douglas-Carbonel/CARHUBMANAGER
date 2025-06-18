@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,12 +17,13 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Edit, Trash2, Car, User, Check, ChevronsUpDown, Wrench, FileText } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertVehicleSchema, type Vehicle, type Customer } from "@shared/schema";
+import { insertVehicleSchema, type Vehicle, type Customer, type Photo } from "@shared/schema";
 import { z } from "zod";
 import { vehicleBrands, vehicleModels, fuelTypes } from "@/lib/vehicle-data";
 import { cn } from "@/lib/utils";
 import VehicleAnalytics from "@/components/dashboard/vehicle-analytics";
 import { BarChart3 } from "lucide-react";
+import PhotoUpload from "@/components/photos/photo-upload";
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
   const res = await fetch(url, {
@@ -59,6 +59,7 @@ export default function VehiclesPage() {
   const [showCustomModel, setShowCustomModel] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
+  const [currentVehiclePhotos, setCurrentVehiclePhotos] = useState<Photo[]>([]);
 
   // Check URL parameters for customer filtering
   useEffect(() => {
@@ -73,7 +74,7 @@ export default function VehiclesPage() {
   const formatLicensePlate = (value: string): string => {
     // Remove tudo que não for letra ou número
     const cleaned = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-    
+
     // Aplica formatação baseada no padrão brasileiro
     if (cleaned.length <= 3) {
       return cleaned;
@@ -115,6 +116,26 @@ export default function VehiclesPage() {
     },
   });
 
+    const fetchVehiclePhotos = async (vehicleId: number | undefined) => {
+    if (!vehicleId) {
+      setCurrentVehiclePhotos([]);
+      return;
+    }
+
+    try {
+      const res = await apiRequest("GET", `/api/vehicles/${vehicleId}/photos`);
+      const photos = await res.json() as Photo[];
+      setCurrentVehiclePhotos(photos);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao carregar fotos do veículo",
+        description: error.message,
+        variant: "destructive",
+      });
+      setCurrentVehiclePhotos([]);
+    }
+  };
+
   const createMutation = useMutation({
     mutationFn: async (data: VehicleFormData) => {
       const res = await apiRequest("POST", "/api/vehicles", data);
@@ -127,7 +148,7 @@ export default function VehiclesPage() {
       form.reset();
       setShowCustomModel(false);
       setCustomModel("");
-      
+
       toast({
         title: "Veículo cadastrado!",
         description: "Veículo foi adicionado com sucesso à frota!",
@@ -171,13 +192,13 @@ export default function VehiclesPage() {
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
       const response = await apiRequest("DELETE", `/api/vehicles/${id}`);
-      
+
       // Se a resposta não for ok, lançar erro com a mensagem do servidor
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Erro ao remover veículo");
       }
-      
+
       return response;
     },
     onSuccess: () => {
@@ -212,11 +233,11 @@ export default function VehiclesPage() {
   const handleEdit = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle);
     setSelectedBrand(vehicle.brand);
-    
+
     // Verificar se o modelo existe na lista ou é customizado
     const modelsForBrand = vehicleModels[vehicle.brand] || [];
     const isCustomModel = !modelsForBrand.includes(vehicle.model);
-    
+
     if (isCustomModel) {
       setShowCustomModel(true);
       setCustomModel(vehicle.model);
@@ -234,6 +255,7 @@ export default function VehiclesPage() {
       fuelType: vehicle.fuelType as "gasoline" | "ethanol" | "flex" | "diesel",
       customerId: vehicle.customerId,
     });
+    fetchVehiclePhotos(vehicle.id);
     setIsModalOpen(true);
   };
 
@@ -243,7 +265,7 @@ export default function VehiclesPage() {
       "ATENÇÃO: O veículo não poderá ser removido se houver serviços em aberto " +
       "(agendados ou em andamento). Finalize ou cancele todos os serviços antes de excluir."
     );
-    
+
     if (confirmed) {
       deleteMutation.mutate(id);
     }
@@ -268,9 +290,9 @@ export default function VehiclesPage() {
       vehicle.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
       vehicle.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (vehicle.color || "").toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesCustomer = customerFilter ? vehicle.customerId === customerFilter : true;
-    
+
     return matchesSearch && matchesCustomer;
   });
 
@@ -343,6 +365,7 @@ export default function VehiclesPage() {
                       setCustomModel("");
                       setSelectedBrand("");
                       form.reset();
+                      setCurrentVehiclePhotos([]);
                     }}
                   >
                     <Plus className="h-5 w-5 mr-2" />
@@ -603,11 +626,25 @@ export default function VehiclesPage() {
                           )}
                         />
                       </div>
+
+                      {/* Photos Section */}
+                      <div className="col-span-2 border-t pt-4">
+                        <PhotoUpload
+                          photos={currentVehiclePhotos}
+                          onPhotoUploaded={() => fetchVehiclePhotos(editingVehicle?.id)}
+                          vehicleId={editingVehicle?.id}
+                          maxPhotos={7}
+                        />
+                      </div>
+
                       <div className="flex justify-end gap-4 pt-4">
                         <Button 
                           type="button" 
-                          variant="outline" 
-                          onClick={() => setIsModalOpen(false)}
+                          variant="outline"
+                          onClick={() => {
+                            setIsModalOpen(false);
+                            setCurrentVehiclePhotos([]);
+                          }}
                         >
                           Cancelar
                         </Button>
@@ -687,7 +724,7 @@ export default function VehiclesPage() {
                     <div key={vehicle.id} className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-teal-200 overflow-hidden">
                       {/* Background gradient sutil */}
                       <div className="absolute inset-0 bg-gradient-to-br from-teal-50/30 to-emerald-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      
+
                       {/* Header colorido */}
                       <div className="relative h-20 bg-gradient-to-r from-teal-500 to-emerald-600 p-4 flex items-center justify-between">
                         <div className="flex items-center space-x-3">
@@ -705,7 +742,7 @@ export default function VehiclesPage() {
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* Actions no header */}
                         <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button
@@ -749,7 +786,7 @@ export default function VehiclesPage() {
                               {vehicle.year}
                             </span>
                           </div>
-                          
+
                           <div className="flex items-center text-sm">
                             <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
                               <span className="text-gray-500 text-xs">🎨</span>
@@ -758,7 +795,7 @@ export default function VehiclesPage() {
                               {vehicle.color}
                             </span>
                           </div>
-                          
+
                           <div className="flex items-center text-sm">
                             <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
                               <span className="text-gray-500 text-xs">⛽</span>
@@ -779,7 +816,7 @@ export default function VehiclesPage() {
                             <Wrench className="h-4 w-4 mr-2" />
                             Serviços
                           </Button>
-                          
+
                           <Button
                             variant="outline"
                             size="sm"

@@ -23,6 +23,7 @@ import CustomerAnalytics from "@/components/dashboard/customer-analytics";
 import PhotoGallery from "@/components/photos/photo-gallery";
 import { z } from "zod";
 import { insertCustomerSchema } from "@shared/schema";
+import PhotoUpload from "@/components/photos/photo-upload"; // Import the new PhotoUpload component
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
   console.log(`API Request: ${method} ${url}`, data);
@@ -72,6 +73,7 @@ export default function CustomersPage() {
   const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
   const [selectedCustomerForPhotos, setSelectedCustomerForPhotos] = useState<Customer | null>(null);
   const [isPhotosModalOpen, setIsPhotosModalOpen] = useState(false);
+  const [currentCustomerPhotos, setCurrentCustomerPhotos] = useState<string[]>([]);
 
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerFormSchema),
@@ -107,6 +109,7 @@ export default function CustomersPage() {
       setIsModalOpen(false);
       setEditingCustomer(null);
       form.reset();
+      setCurrentCustomerPhotos([]);
       toast({
         title: "Cliente criado",
         description: "Cliente foi criado com sucesso.",
@@ -134,6 +137,7 @@ export default function CustomersPage() {
       setIsModalOpen(false);
       setEditingCustomer(null);
       form.reset();
+      setCurrentCustomerPhotos([]);
       toast({
         title: "Cliente atualizado",
         description: "Cliente foi atualizado com sucesso.",
@@ -213,6 +217,7 @@ export default function CustomersPage() {
       observations: customer.observations || "",
     });
     setIsModalOpen(true);
+    fetchCustomerPhotos(customer.id);
   };
 
   const handleDelete = (id: number) => {
@@ -224,6 +229,27 @@ export default function CustomersPage() {
   const handleViewPhotos = (customer: Customer) => {
     setSelectedCustomerForPhotos(customer);
     setIsPhotosModalOpen(true);
+  };
+
+  const fetchCustomerPhotos = async (customerId: number | undefined) => {
+    if (!customerId) {
+      setCurrentCustomerPhotos([]);
+      return;
+    }
+
+    try {
+      const res = await apiRequest("GET", `/api/customers/${customerId}/photos`);
+      const photos = await res.json();
+      setCurrentCustomerPhotos(photos);
+    } catch (error) {
+      console.error("Failed to fetch customer photos:", error);
+      toast({
+        title: "Erro",
+        description: "Falha ao carregar fotos do cliente",
+        variant: "destructive",
+      });
+      setCurrentCustomerPhotos([]);
+    }
   };
 
   const filteredCustomers = customers.filter((customer: Customer) =>
@@ -279,6 +305,7 @@ export default function CustomersPage() {
                     onClick={() => {
                       setEditingCustomer(null);
                       form.reset();
+                      setCurrentCustomerPhotos([]);
                     }}
                   >
                     <Plus className="h-5 w-5 mr-2" />
@@ -433,6 +460,17 @@ export default function CustomersPage() {
                           )}
                         />
                       </div>
+
+                      {/* Photos Section */}
+                      <div className="col-span-2 border-t pt-4">
+                        <PhotoUpload
+                          photos={currentCustomerPhotos}
+                          onPhotoUploaded={() => fetchCustomerPhotos(editingCustomer?.id)}
+                          customerId={editingCustomer?.id}
+                          maxPhotos={7}
+                        />
+                      </div>
+
                       <div className="flex justify-end gap-4 pt-4">
                         <Button 
                           type="button" 
@@ -493,6 +531,7 @@ export default function CustomersPage() {
                       setEditingCustomer(null);
                       form.reset();
                       setIsModalOpen(true);
+                      setCurrentCustomerPhotos([]);
                     }}
                   >
                     <Plus className="h-5 w-5 mr-2" />

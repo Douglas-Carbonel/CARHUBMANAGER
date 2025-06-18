@@ -7,6 +7,7 @@ import { z } from "zod";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import sharp from "sharp";
 import { fileURLToPath } from "url";
 
 // Configure multer for file uploads
@@ -747,15 +748,36 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
 
       const { customerId, vehicleId, serviceId, category, description } = req.body;
 
+      // Compress and resize image
+      const compressedFilename = `compressed_${req.file.filename}`;
+      const compressedPath = path.join(uploadsDir, compressedFilename);
+
+      await sharp(req.file.path)
+        .resize(480, 480, { 
+          fit: 'inside',
+          withoutEnlargement: true 
+        })
+        .jpeg({ 
+          quality: 70,
+          progressive: true 
+        })
+        .toFile(compressedPath);
+
+      // Remove original file
+      fs.unlinkSync(req.file.path);
+
+      // Get compressed file stats
+      const compressedStats = fs.statSync(compressedPath);
+
       const photoData = {
         customerId: customerId ? parseInt(customerId) : null,
         vehicleId: vehicleId ? parseInt(vehicleId) : null,
         serviceId: serviceId ? parseInt(serviceId) : null,
-        filename: req.file.filename,
+        filename: compressedFilename,
         originalName: req.file.originalname,
-        mimeType: req.file.mimetype,
-        size: req.file.size,
-        url: `/uploads/${req.file.filename}`,
+        mimeType: 'image/jpeg',
+        size: compressedStats.size,
+        url: `/uploads/${compressedFilename}`,
         description: description || null,
         category: category || 'other',
       };

@@ -53,6 +53,7 @@ export default function Services() {
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
+  const [currentServicePhotos, setCurrentServicePhotos] = useState<Photo[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const queryClient = useQueryClient();
@@ -209,6 +210,7 @@ export default function Services() {
       status: service.status || "scheduled",
       notes: service.notes || "",
     });
+    fetchServicePhotos(service.id);
     setIsDialogOpen(true);
   };
 
@@ -302,6 +304,7 @@ export default function Services() {
                   onClick={() => {
                     setEditingService(null);
                     form.reset();
+                    setCurrentServicePhotos([]);
                   }}
                 >
                   <Plus className="h-5 w-5 mr-2" />
@@ -533,11 +536,24 @@ export default function Services() {
                       )}
                     />
 
+                    {/* Photos Section */}
+                    <div className="col-span-2 border-t pt-4">
+                      <PhotoUpload
+                        photos={currentServicePhotos}
+                        onPhotoUploaded={() => fetchServicePhotos(editingService?.id)}
+                        serviceId={editingService?.id}
+                        maxPhotos={7}
+                      />
+                    </div>
+
                     <div className="flex justify-end space-x-3 pt-4">
                       <Button 
                         type="button" 
                         variant="outline" 
-                        onClick={() => setIsDialogOpen(false)}
+                        onClick={() => {
+                          setIsDialogOpen(false);
+                          setCurrentServicePhotos([]);
+                        }}
                         className="px-6 py-2 font-medium"
                       >
                         Cancelar
