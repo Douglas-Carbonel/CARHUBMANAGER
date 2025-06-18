@@ -6,6 +6,7 @@ import {
   serviceTypes,
   payments,
   loyaltyTracking,
+  photos,
   type User,
   type InsertUser,
   type Customer,
@@ -18,6 +19,8 @@ import {
   type InsertServiceType,
   type Payment,
   type InsertPayment,
+  type Photo,
+  type InsertPhoto,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, gte, lte, lt, count, sum, sql, isNotNull, or, ne } from "drizzle-orm";
@@ -119,6 +122,13 @@ export interface IStorage {
 
   // Basic loyalty operations
   addLoyaltyPoints(customerId: number, points: number): Promise<void>;
+
+  // Photo operations
+  getPhotos(filters?: { customerId?: number; vehicleId?: number; serviceId?: number; category?: string }): Promise<Photo[]>;
+  getPhoto(id: number): Promise<Photo | undefined>;
+  createPhoto(photo: InsertPhoto): Promise<Photo>;
+  updatePhoto(id: number, photo: Partial<InsertPhoto>): Promise<Photo>;
+  deletePhoto(id: number): Promise<void>;
 
   // Schedule-specific analytics
   getScheduleStats(): Promise<{
@@ -1191,6 +1201,77 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       })
       .where(eq(customers.id, customerId));
+  }
+
+  // Photo operations
+  async getPhotos(filters?: { customerId?: number; vehicleId?: number; serviceId?: number; category?: string }): Promise<Photo[]> {
+    try {
+      let query = db.select().from(photos);
+      
+      if (filters) {
+        const conditions = [];
+        if (filters.customerId) conditions.push(eq(photos.customerId, filters.customerId));
+        if (filters.vehicleId) conditions.push(eq(photos.vehicleId, filters.vehicleId));
+        if (filters.serviceId) conditions.push(eq(photos.serviceId, filters.serviceId));
+        if (filters.category) conditions.push(eq(photos.category, filters.category));
+        
+        if (conditions.length > 0) {
+          query = query.where(and(...conditions));
+        }
+      }
+      
+      return await query.orderBy(desc(photos.createdAt));
+    } catch (error) {
+      console.error('Error fetching photos:', error);
+      throw error;
+    }
+  }
+
+  async getPhoto(id: number): Promise<Photo | undefined> {
+    try {
+      const [photo] = await db.select().from(photos).where(eq(photos.id, id));
+      return photo;
+    } catch (error) {
+      console.error('Error fetching photo:', error);
+      throw error;
+    }
+  }
+
+  async createPhoto(photo: InsertPhoto): Promise<Photo> {
+    try {
+      const [newPhoto] = await db.insert(photos).values({
+        ...photo,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }).returning();
+      return newPhoto;
+    } catch (error) {
+      console.error('Error creating photo:', error);
+      throw error;
+    }
+  }
+
+  async updatePhoto(id: number, photo: Partial<InsertPhoto>): Promise<Photo> {
+    try {
+      const [updatedPhoto] = await db
+        .update(photos)
+        .set({ ...photo, updatedAt: new Date() })
+        .where(eq(photos.id, id))
+        .returning();
+      return updatedPhoto;
+    } catch (error) {
+      console.error('Error updating photo:', error);
+      throw error;
+    }
+  }
+
+  async deletePhoto(id: number): Promise<void> {
+    try {
+      await db.delete(photos).where(eq(photos.id, id));
+    } catch (error) {
+      console.error('Error deleting photo:', error);
+      throw error;
+    }
   }
 
   // Dashboard analytics

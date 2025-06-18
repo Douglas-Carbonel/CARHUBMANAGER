@@ -139,10 +139,29 @@ export const loyaltyTracking = pgTable("loyalty_tracking", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const photos = pgTable("photos", {
+  id: serial("id").primaryKey(),
+  customerId: integer("customer_id").references(() => customers.id),
+  vehicleId: integer("vehicle_id").references(() => vehicles.id),
+  serviceId: integer("service_id").references(() => services.id),
+  filename: varchar("filename").notNull(),
+  originalName: varchar("original_name").notNull(),
+  mimeType: varchar("mime_type").notNull(),
+  size: integer("size").notNull(),
+  url: varchar("url").notNull(),
+  description: text("description"),
+  category: varchar("category", { 
+    enum: ["vehicle", "service", "damage", "before", "after", "other"] 
+  }).default("other"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const customersRelations = relations(customers, ({ many }) => ({
   vehicles: many(vehicles),
   services: many(services),
+  photos: many(photos),
 }));
 
 export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
@@ -151,6 +170,7 @@ export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
     references: [customers.id],
   }),
   services: many(services),
+  photos: many(photos),
 }));
 
 export const servicesRelations = relations(services, ({ one, many }) => ({
@@ -171,6 +191,7 @@ export const servicesRelations = relations(services, ({ one, many }) => ({
     references: [users.id],
   }),
   payments: many(payments),
+  photos: many(photos),
 }));
 
 export const serviceTypesRelations = relations(serviceTypes, ({ many }) => ({
@@ -200,6 +221,21 @@ export const loyaltyTrackingRelations = relations(loyaltyTracking, ({ one }) => 
   serviceType: one(serviceTypes, {
     fields: [loyaltyTracking.serviceTypeId],
     references: [serviceTypes.id],
+  }),
+}));
+
+export const photosRelations = relations(photos, ({ one }) => ({
+  customer: one(customers, {
+    fields: [photos.customerId],
+    references: [customers.id],
+  }),
+  vehicle: one(vehicles, {
+    fields: [photos.vehicleId],
+    references: [vehicles.id],
+  }),
+  service: one(services, {
+    fields: [photos.serviceId],
+    references: [services.id],
   }),
 }));
 
@@ -238,6 +274,12 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
 });
 
+export const insertPhotoSchema = createInsertSchema(photos).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Loyalty tracking schema temporarily removed
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -252,4 +294,6 @@ export type InsertServiceType = z.infer<typeof insertServiceTypeSchema>;
 export type ServiceType = typeof serviceTypes.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type Payment = typeof payments.$inferSelect;
+export type InsertPhoto = z.infer<typeof insertPhotoSchema>;
+export type Photo = typeof photos.$inferSelect;
 // Loyalty tracking types temporarily removed

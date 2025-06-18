@@ -13,13 +13,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MoreHorizontal, Plus, Search, Edit, Trash2, User, Phone, Mail, FileText, MapPin, BarChart3, Car, Wrench } from "lucide-react";
+import { MoreHorizontal, Plus, Search, Edit, Trash2, User, Phone, Mail, FileText, MapPin, BarChart3, Car, Wrench, Camera } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type Customer } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import { validateCPF, validateCNPJ, formatCPF, formatCNPJ, applyCPFMask, applyCNPJMask, applyPhoneMask } from "@/lib/cpf-cnpj";
 import CustomerAnalytics from "@/components/dashboard/customer-analytics";
+import PhotoGallery from "@/components/photos/photo-gallery";
 import { z } from "zod";
 import { insertCustomerSchema } from "@shared/schema";
 
@@ -69,6 +70,8 @@ export default function CustomersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
+  const [selectedCustomerForPhotos, setSelectedCustomerForPhotos] = useState<Customer | null>(null);
+  const [isPhotosModalOpen, setIsPhotosModalOpen] = useState(false);
 
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerFormSchema),
@@ -216,6 +219,11 @@ export default function CustomersPage() {
     if (confirm("Tem certeza que deseja remover este cliente?")) {
       deleteMutation.mutate(id);
     }
+  };
+
+  const handleViewPhotos = (customer: Customer) => {
+    setSelectedCustomerForPhotos(customer);
+    setIsPhotosModalOpen(true);
   };
 
   const filteredCustomers = customers.filter((customer: Customer) =>
@@ -594,7 +602,7 @@ export default function CustomersPage() {
                           Veículos
                         </Button>
 
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-3 gap-2">
                           <Button
                             variant="outline"
                             size="sm"
@@ -603,6 +611,15 @@ export default function CustomersPage() {
                           >
                             <Wrench className="h-3 w-3 mr-1" />
                             <span className="text-xs">Serviços</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewPhotos(customer)}
+                            className="border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl h-9"
+                          >
+                            <Camera className="h-3 w-3 mr-1" />
+                            <span className="text-xs">Fotos</span>
                           </Button>
                           <Button
                             variant="outline"
@@ -631,6 +648,25 @@ export default function CustomersPage() {
                   </DialogTitle>
                 </DialogHeader>
                 <CustomerAnalytics />
+              </DialogContent>
+            </Dialog>
+
+            {/* Photos Modal */}
+            <Dialog open={isPhotosModalOpen} onOpenChange={setIsPhotosModalOpen}>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center">
+                    <Camera className="h-5 w-5 mr-2" />
+                    Fotos - {selectedCustomerForPhotos?.name}
+                  </DialogTitle>
+                </DialogHeader>
+                {selectedCustomerForPhotos && (
+                  <PhotoGallery 
+                    customerId={selectedCustomerForPhotos.id}
+                    title="Fotos do Cliente"
+                    showAddButton={true}
+                  />
+                )}
               </DialogContent>
             </Dialog>
           </div>

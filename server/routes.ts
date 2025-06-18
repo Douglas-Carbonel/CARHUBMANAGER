@@ -2,6 +2,40 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import passport from "passport";
 import { storage } from "./storage";
+import type { User } from "@shared/schema";
+import { z } from "zod";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+
+// Configure multer for file uploads
+const uploadsDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, uploadsDir);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+  }),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
 import { setupAuth, createInitialAdmin, hashPassword } from "./auth";
 import { getFixedDashboardStats } from "./storage-dashboard-fix";
 
@@ -132,6 +166,9 @@ const requireAdmin = (req: any, res: any, next: any) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  const express = require('express');
+  const router = express.Router();
+
   // Set up authentication
   setupAuth(app);
 
@@ -167,7 +204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('POST /api/customers - Request body:', JSON.stringify(req.body, null, 2));
       console.log('POST /api/customers - User:', req.user?.username);
-      
+
       const customerData = insertCustomerSchema.parse(req.body);
       console.log('POST /api/customers - Parsed data:', JSON.stringify(customerData, null, 2));
 
@@ -667,6 +704,109 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     // Redirect to auth page when accessing login via GET
     res.redirect("/auth");
   });
+
+  // Photo routes
+  router.get("/api/photos", requireAuth, async (req, res) => {
+    try {
+      const { customerId, vehicleId, serviceId, category } = req.query;
+      const filters: any = {};
+
+      if (customerId) filters.customerId = parseInt(customerId as string);
+      if (vehicleId) filters.vehicleId = parseInt(vehicleId as string);
+      if (serviceId) filters.serviceId = parseInt(serviceId as string);
+      if (category) filters.category = category as string;
+
+      const photos = await storage.getPhotos(filters);
+      res.json(photos);
+    } catch (error) {
+      console.error("Error getting photos:", error);
+      res.status(500).json({ message: "Failed to get photos" });
+    }
+  });
+
+  router.get("/api/photos/:id", requireAuth, async (req, res) => {
+    try {
+      const photoId = parseInt(req.params.id);
+      const photo = await storage.getPhoto(photoId);
+
+      if (!photo) {
+        return res.status(404).json({ message: "Photo not found" });
+      }
+
+      res.json(photo);
+    } catch (error) {
+      console.error("Error getting photo:", error);
+      res.status(500).json({ message: "Failed to get photo" });
+    }
+  });
+
+  router.post("/api/photos/upload", requireAuth, upload.single('photo'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No photo file provided" });
+      }
+
+      const { customerId, vehicleId, serviceId, category, description } = req.body;
+
+      const photoData = {
+        customerId: customerId ? parseInt(customerId) : null,
+        vehicleId: vehicleId ? parseInt(vehicleId) : null,
+        serviceId: serviceId ? parseInt(serviceId) : null,
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+        mimeType: req.file.mimetype,
+        size: req.file.size,
+        url: `/uploads/${req.file.filename}`,
+        description: description || null,
+        category: category || 'other',
+      };
+
+      const photo = await storage.createPhoto(photoData);
+      res.status(201).json(photo);
+    } catch (error) {
+      console.error("Error uploading photo:", error);
+      res.status(500).json({ message: "Failed to upload photo" });
+    }
+  });
+
+  router.put("/api/photos/:id", requireAuth, async (req, res) => {
+    try {
+      const photoId = parseInt(req.params.id);
+      const updateData = req.body;
+
+      const photo = await storage.updatePhoto(photoId, updateData);
+      res.json(photo);
+    } catch (error) {
+      console.error("Error updating photo:", error);
+      res.status(500).json({ message: "Failed to update photo" });
+    }
+  });
+
+  router.delete("/api/photos/:id", requireAuth, async (req, res) => {
+    try {
+      const photoId = parseInt(req.params.id);
+
+      // Get photo info to delete file
+      const photo = await storage.getPhoto(photoId);
+      if (photo) {
+        const filePath = path.join(uploadsDir, photo.filename);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+
+      await storage.deletePhoto(photoId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting photo:", error);
+      res.status(500).json({ message: "Failed to delete photo" });
+    }
+  });
+
+  // Serve uploaded files
+  router.use('/uploads', express.static(uploadsDir));
+
+  app.use('/', router);
 
   const httpServer = createServer(app);
   return httpServer;
