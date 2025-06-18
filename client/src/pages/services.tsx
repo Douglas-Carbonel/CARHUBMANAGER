@@ -33,7 +33,7 @@ const serviceFormSchema = insertServiceSchema.extend({
 
 export default function Services() {
   const { toast } = useToast();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
 
   // Get customer filter from URL params
   const urlParams = new URLSearchParams(window.location.search);
