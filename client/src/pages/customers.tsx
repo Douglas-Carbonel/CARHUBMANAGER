@@ -24,6 +24,8 @@ import { z } from "zod";
 import { insertCustomerSchema } from "@shared/schema";
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
+  console.log(`API Request: ${method} ${url}`, data);
+  
   const res = await fetch(url, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
@@ -31,8 +33,11 @@ async function apiRequest(method: string, url: string, data?: any): Promise<Resp
     credentials: "include",
   });
 
+  console.log(`API Response: ${method} ${url} - Status: ${res.status}`);
+
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
+    console.error(`API Error: ${method} ${url} - ${res.status}: ${text}`);
     throw new Error(`${res.status}: ${text}`);
   }
   return res;
@@ -74,6 +79,7 @@ export default function CustomersPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: CustomerFormData) => {
+      console.log('Creating customer with data:', data);
       const res = await apiRequest("POST", "/api/customers", data);
       return await res.json();
     },
@@ -88,10 +94,11 @@ export default function CustomersPage() {
         description: "Cliente foi criado com sucesso.",
       });
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
+      console.error('Error creating customer:', error);
       toast({
         title: "Erro",
-        description: error.message,
+        description: error.message || "Falha ao criar cliente",
         variant: "destructive",
       });
     },
@@ -99,6 +106,7 @@ export default function CustomersPage() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: CustomerFormData }) => {
+      console.log('Updating customer with data:', data);
       const res = await apiRequest("PUT", `/api/customers/${id}`, data);
       return await res.json();
     },
@@ -113,10 +121,11 @@ export default function CustomersPage() {
         description: "Cliente foi atualizado com sucesso.",
       });
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
+      console.error('Error updating customer:', error);
       toast({
         title: "Erro",
-        description: error.message,
+        description: error.message || "Falha ao atualizar cliente",
         variant: "destructive",
       });
     },
@@ -144,10 +153,24 @@ export default function CustomersPage() {
   });
 
   const onSubmit = (data: CustomerFormData) => {
-    if (editingCustomer) {
-      updateMutation.mutate({ id: editingCustomer.id, data });
-    } else {
-      createMutation.mutate(data);
+    console.log('Form submitted with data:', data);
+    console.log('Form errors:', form.formState.errors);
+    
+    try {
+      if (editingCustomer) {
+        console.log('Updating customer:', editingCustomer.id);
+        updateMutation.mutate({ id: editingCustomer.id, data });
+      } else {
+        console.log('Creating new customer');
+        createMutation.mutate(data);
+      }
+    } catch (error) {
+      console.error('Error in onSubmit:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao processar formulário",
+        variant: "destructive",
+      });
     }
   };
 
@@ -362,14 +385,18 @@ export default function CustomersPage() {
                           type="button" 
                           variant="outline" 
                           onClick={() => setIsModalOpen(false)}
+                          disabled={createMutation.isPending || updateMutation.isPending}
                         >
                           Cancelar
                         </Button>
                         <Button 
                           type="submit" 
-                          disabled={createMutation.isPending || updateMutation.isPending}
+                          disabled={createMutation.isPending || updateMutation.isPending || !form.formState.isValid}
                         >
-                          {editingCustomer ? "Atualizar" : "Criar"}
+                          {createMutation.isPending || updateMutation.isPending 
+                            ? "Processando..." 
+                            : (editingCustomer ? "Atualizar" : "Criar")
+                          }
                         </Button>
                       </div>
                     </form>

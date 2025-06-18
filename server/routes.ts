@@ -165,21 +165,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/customers", requireAuth, async (req, res) => {
     try {
-      console.log('Creating customer with data:', req.body);
+      console.log('POST /api/customers - Request body:', JSON.stringify(req.body, null, 2));
+      console.log('POST /api/customers - User:', req.user?.username);
+      
       const customerData = insertCustomerSchema.parse(req.body);
+      console.log('POST /api/customers - Parsed data:', JSON.stringify(customerData, null, 2));
 
       // Check if document already exists
       const existingCustomer = await storage.getCustomerByDocument(customerData.document);
       if (existingCustomer) {
+        console.log('POST /api/customers - Document already exists:', customerData.document);
         return res.status(400).json({ message: "Document already registered" });
       }
 
+      console.log('POST /api/customers - Creating customer...');
       const customer = await storage.createCustomer(customerData);
-      console.log('Customer created successfully:', customer);
+      console.log('POST /api/customers - Customer created successfully:', customer);
       res.status(201).json(customer);
     } catch (error: any) {
-      console.error('Error creating customer:', error);
+      console.error('POST /api/customers - Error:', error);
       if (error.name === 'ZodError') {
+        console.error('POST /api/customers - Validation errors:', error.errors);
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to create customer", error: error.message });
