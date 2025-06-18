@@ -184,7 +184,7 @@ export default function CustomersPage() {
       if (!editingCustomer && !data.code) {
         data.code = generateCustomerCode();
       }
-      
+
       if (editingCustomer) {
         updateMutation.mutate({ id: editingCustomer.id, data });
       } else {
