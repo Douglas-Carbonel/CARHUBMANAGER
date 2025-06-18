@@ -43,7 +43,16 @@ async function apiRequest(method: string, url: string, data?: any): Promise<Resp
   return res;
 }
 
-const customerFormSchema = insertCustomerSchema;
+const customerFormSchema = insertCustomerSchema.extend({
+  document: z.string().min(1, "Documento é obrigatório").refine((doc) => {
+    const cleanDoc = doc.replace(/\D/g, '');
+    return cleanDoc.length === 11 ? validateCPF(cleanDoc) : validateCNPJ(cleanDoc);
+  }, "CPF ou CNPJ inválido"),
+  email: z.string().optional().nullable(),
+  phone: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  observations: z.string().optional().nullable(),
+});
 type CustomerFormData = z.infer<typeof customerFormSchema>;
 
 export default function CustomersPage() {
@@ -59,6 +68,7 @@ export default function CustomersPage() {
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerFormSchema),
     defaultValues: {
+      code: "",
       name: "",
       email: "",
       phone: "",
@@ -152,10 +162,21 @@ export default function CustomersPage() {
     },
   });
 
+  const generateCustomerCode = () => {
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `${timestamp}${random}`;
+  };
+
   const onSubmit = (data: CustomerFormData) => {
     console.log('Form submitted with data:', data);
 
     try {
+      // Auto-generate code for new customers if not provided
+      if (!editingCustomer && !data.code) {
+        data.code = generateCustomerCode();
+      }
+      
       if (editingCustomer) {
         updateMutation.mutate({ id: editingCustomer.id, data });
       } else {
@@ -174,6 +195,7 @@ export default function CustomersPage() {
   const handleEdit = (customer: Customer) => {
     setEditingCustomer(customer);
     form.reset({
+      code: customer.code,
       name: customer.name,
       email: customer.email || "",
       phone: customer.phone || "",
@@ -268,6 +290,23 @@ export default function CustomersPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
                           control={form.control}
+                          name="code"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Código</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Auto-gerado se vazio" 
+                                  {...field} 
+                                  disabled={!editingCustomer}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
                           name="name"
                           render={({ field }) => (
                             <FormItem>
@@ -286,7 +325,12 @@ export default function CustomersPage() {
                             <FormItem>
                               <FormLabel>Email</FormLabel>
                               <FormControl>
-                                <Input placeholder="email@exemplo.com" type="email" {...field} />
+                                <Input 
+                                  placeholder="email@exemplo.com" 
+                                  type="email" 
+                                  {...field}
+                                  value={field.value || ""}
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
