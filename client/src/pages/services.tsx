@@ -16,11 +16,12 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, DollarSign, MoreHorizontal, Plus, Search, Edit, Trash2, Clock, User, Car, Wrench, CheckCircle, XCircle, Timer, BarChart3, FileText } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertServiceSchema, type Service, type Customer, type Vehicle, type ServiceType } from "@shared/schema";
+import { insertServiceSchema, type Service, type Customer, type Vehicle, type ServiceType, type Photo } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
 import ServiceAnalytics from "@/components/dashboard/service-analytics";
 import { useLocation } from "wouter";
+import PhotoUpload from "@/components/photos/photo-upload";
 
 const serviceFormSchema = insertServiceSchema.extend({
   customerId: z.number().min(1, "Cliente é obrigatório"),
@@ -55,6 +56,29 @@ export default function Services() {
   const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
   const [currentServicePhotos, setCurrentServicePhotos] = useState<Photo[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const fetchServicePhotos = async (serviceId: number | undefined) => {
+    if (!serviceId) {
+      setCurrentServicePhotos([]);
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/photos?serviceId=${serviceId}`, {
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
+      const photos = await res.json();
+      setCurrentServicePhotos(photos);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao carregar fotos do serviço",
+        description: error.message,
+        variant: "destructive",
+      });
+      setCurrentServicePhotos([]);
+    }
+  };
 
   const queryClient = useQueryClient();
 
@@ -538,12 +562,15 @@ export default function Services() {
 
                     {/* Photos Section */}
                     <div className="col-span-2 border-t pt-4">
-                      <PhotoUpload
-                        photos={currentServicePhotos}
-                        onPhotoUploaded={() => fetchServicePhotos(editingService?.id)}
-                        serviceId={editingService?.id}
-                        maxPhotos={7}
-                      />
+                      <div className="space-y-4">
+                        <h4 className="text-sm font-medium text-gray-700">Fotos do Serviço</h4>
+                        <PhotoUpload
+                          photos={currentServicePhotos}
+                          onPhotoUploaded={() => fetchServicePhotos(editingService?.id)}
+                          serviceId={editingService?.id}
+                          maxPhotos={7}
+                        />
+                      </div>
                     </div>
 
                     <div className="flex justify-end space-x-3 pt-4">
@@ -695,6 +722,15 @@ export default function Services() {
                           {service.status === 'completed' && 'Concluído'}
                           {service.status === 'cancelled' && 'Cancelado'}
                         </Badge>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setLocation(`/service-photos?serviceId=${service.id}`)}
+                          className="h-8 w-8 p-0 hover:bg-blue-100 text-blue-600"
+                          title="Ver fotos do serviço"
+                        >
+                          <Camera className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"

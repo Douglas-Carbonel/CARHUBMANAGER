@@ -629,12 +629,15 @@ export default function VehiclesPage() {
 
                       {/* Photos Section */}
                       <div className="col-span-2 border-t pt-4">
-                        <PhotoUpload
-                          photos={currentVehiclePhotos}
-                          onPhotoUploaded={() => fetchVehiclePhotos(editingVehicle?.id)}
-                          vehicleId={editingVehicle?.id}
-                          maxPhotos={7}
-                        />
+                        <div className="space-y-4">
+                          <h4 className="text-sm font-medium text-gray-700">Fotos do Veículo</h4>
+                          <PhotoUpload
+                            photos={currentVehiclePhotos}
+                            onPhotoUploaded={() => fetchVehiclePhotos(editingVehicle?.id)}
+                            vehicleId={editingVehicle?.id}
+                            maxPhotos={7}
+                          />
+                        </div>
                       </div>
 
                       <div className="flex justify-end gap-4 pt-4">
@@ -817,15 +820,27 @@ export default function VehiclesPage() {
                             Serviços
                           </Button>
 
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setLocation(`/vehicle-history?vehicleId=${vehicle.id}&vehiclePlate=${encodeURIComponent(vehicle.licensePlate)}`)}
-                            className="w-full border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl h-9"
-                          >
-                            <FileText className="h-3 w-3 mr-2" />
-                            <span className="text-xs">Histórico</span>
-                          </Button>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setLocation(`/vehicle-photos?vehicleId=${vehicle.id}&vehiclePlate=${encodeURIComponent(vehicle.licensePlate)}`)}
+                              className="border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl h-9"
+                            >
+                              <Camera className="h-3 w-3 mr-1" />
+                              <span className="text-xs">Fotos</span>
+                            </Button>
+
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setLocation(`/vehicle-history?vehicleId=${vehicle.id}&vehiclePlate=${encodeURIComponent(vehicle.licensePlate)}`)}
+                              className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl h-9"
+                            >
+                              <FileText className="h-3 w-3 mr-2" />
+                              <span className="text-xs">Histórico</span>
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>

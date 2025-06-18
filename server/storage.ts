@@ -914,9 +914,7 @@ export class DatabaseStorage implements IStorage {
         )
         .orderBy(services.scheduledDate);
 
-      console.log(`Found ${revenueData.length} completed services in date range`);
-
-      // Group by date and sum revenue (only from completed services)
+      console.log(`Found ${revenueData.length} completed services in date range`);      // Group by date and sum revenue (only from completed services)
       const revenueByDate: { [key: string]: number } = {};
 
       revenueData.forEach(service => {
@@ -1207,7 +1205,7 @@ export class DatabaseStorage implements IStorage {
   async getPhotos(filters?: { customerId?: number; vehicleId?: number; serviceId?: number; category?: string }): Promise<Photo[]> {
     try {
       let query = db.select().from(photos);
-      
+
       if (filters) {
         const conditions = [];
         if (filters.customerId) {
@@ -1220,12 +1218,12 @@ export class DatabaseStorage implements IStorage {
           conditions.push(and(eq(photos.entityType, 'service'), eq(photos.entityId, filters.serviceId)));
         }
         if (filters.category) conditions.push(eq(photos.category, filters.category));
-        
+
         if (conditions.length > 0) {
           query = query.where(or(...conditions));
         }
       }
-      
+
       return await query.orderBy(desc(photos.createdAt));
     } catch (error) {
       console.error('Error fetching photos:', error);
@@ -1537,6 +1535,60 @@ export class DatabaseStorage implements IStorage {
       return appointments;
     } catch (error) {
       console.error("Error getting today's appointments:", error);
+      throw error;
+    }
+  }
+
+  async getServices(userId: number): Promise<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]> {
+    const result = await db
+      .select({
+        service: services,
+        customer: customers,
+        vehicle: vehicles,
+        serviceType: serviceTypes,
+      })
+      .from(services)
+      .leftJoin(customers, eq(services.customerId, customers.id))
+      .leftJoin(vehicles, eq(services.vehicleId, vehicles.id))
+      .leftJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+      .where(eq(customers.id, userId))
+      .orderBy(desc(services.createdAt));
+
+    return result.map(row => ({
+      ...row.service,
+      customer: row.customer!,
+      vehicle: row.vehicle!,
+      serviceType: row.serviceType!,
+    }));
+  }
+
+  async getServiceById(serviceId: number): Promise<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType }) | undefined> {
+    try {
+      const [service] = await db
+        .select({
+          service: services,
+          customer: customers,
+          vehicle: vehicles,
+          serviceType: serviceTypes,
+        })
+        .from(services)
+        .leftJoin(customers, eq(services.customerId, customers.id))
+        .leftJoin(vehicles, eq(services.vehicleId, vehicles.id))
+        .leftJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+        .where(eq(services.id, serviceId));
+
+      if (!service) {
+        return undefined;
+      }
+
+      return {
+        ...service.service,
+        customer: service.customer!,
+        vehicle: service.vehicle!,
+        serviceType: service.serviceType!,
+      };
+    } catch (error) {
+      console.error('Error fetching service:', error);
       throw error;
     }
   }

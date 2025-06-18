@@ -313,23 +313,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Service routes
-  app.get("/api/services", requireAuth, async (req, res) => {
+  router.get("/api/services", requireAuth, async (req, res) => {
     try {
-      const services = await storage.getServices();
+      const services = await storage.getServices(req.user!.id);
       res.json(services);
     } catch (error) {
+      console.error("Error fetching services:", error);
       res.status(500).json({ message: "Failed to fetch services" });
     }
   });
 
-  app.get("/api/services/:id", requireAuth, async (req, res) => {
+  router.get("/api/services/:id", requireAuth, async (req, res) => {
     try {
-      const service = await storage.getService(parseInt(req.params.id));
+      const serviceId = parseInt(req.params.id);
+      const service = await storage.getServiceById(serviceId, req.user!.id);
       if (!service) {
         return res.status(404).json({ message: "Service not found" });
       }
       res.json(service);
     } catch (error) {
+      console.error("Error fetching service:", error);
       res.status(500).json({ message: "Failed to fetch service" });
     }
   });
@@ -773,7 +776,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
       // Determine entity type and ID based on what's provided
       let entityType = 'other';
       let entityId = 0;
-      
+
       if (customerId) {
         entityType = 'customer';
         entityId = parseInt(customerId);
@@ -806,6 +809,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
 
   router.put("/api/photos/:id", requireAuth, async (req, res) => {
     try {
+      ```text
       const photoId = parseInt(req.params.id);
       const updateData = req.body;
 

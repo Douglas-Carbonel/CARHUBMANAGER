@@ -13,7 +13,9 @@ import Vehicles from "@/pages/vehicles";
 import Services from "@/pages/services";
 import Schedule from "@/pages/schedule";
 import ReportsPage from "@/pages/reports";
-import VehicleHistoryPage from "@/pages/vehicle-history";
+import VehicleHistory from "@/pages/vehicle-history";
+import VehiclePhotos from "@/pages/vehicle-photos";
+import ServicePhotos from "@/pages/service-photos";
 import LoyaltyPage from "@/pages/loyalty";
 import Admin from "@/pages/admin";
 import NotFoundPage from "@/pages/not-found";
@@ -95,7 +97,17 @@ function App() {
           </Route>
           <Route path="/vehicle-history">
             <ProtectedRoute>
-              <VehicleHistoryPage />
+              <VehicleHistory />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/vehicle-photos">
+            <ProtectedRoute>
+              <VehiclePhotos />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/service-photos">
+            <ProtectedRoute>
+              <ServicePhotos />
             </ProtectedRoute>
           </Route>
           <Route path="/loyalty">
