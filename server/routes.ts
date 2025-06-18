@@ -809,7 +809,6 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
 
   router.put("/api/photos/:id", requireAuth, async (req, res) => {
     try {
-      ```text
       const photoId = parseInt(req.params.id);
       const updateData = req.body;
 
