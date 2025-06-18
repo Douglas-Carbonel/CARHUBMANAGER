@@ -166,7 +166,6 @@ const requireAdmin = (req: any, res: any, next: any) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  const express = require('express');
   const router = express.Router();
 
   // Set up authentication
