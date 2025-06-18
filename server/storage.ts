@@ -722,13 +722,13 @@ export class DatabaseStorage implements IStorage {
             WHEN s.final_value IS NOT NULL 
             AND s.final_value != '' 
             AND s.final_value != '0'
-            AND s.final_value ~ '^[0-9]+(\.[0-9]+)?$'
-            THEN CAST(s.final_value AS DECIMAL)
+            AND s.final_value::text ~ '^[0-9]+(\.[0-9]+)?$'
+            THEN s.final_value::numeric
             WHEN s.estimated_value IS NOT NULL 
             AND s.estimated_value != '' 
             AND s.estimated_value != '0'
-            AND s.estimated_value ~ '^[0-9]+(\.[0-9]+)?$'
-            THEN CAST(s.estimated_value AS DECIMAL)
+            AND s.estimated_value::text ~ '^[0-9]+(\.[0-9]+)?$'
+            THEN s.estimated_value::numeric
             ELSE 0 
           END), 0) as revenue
         FROM service_types st
@@ -1539,8 +1539,8 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getServices(userId: number): Promise<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]> {
-    const result = await db
+  async getServices(userId?: number): Promise<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]> {
+    let query = db
       .select({
         service: services,
         customer: customers,
@@ -1550,9 +1550,13 @@ export class DatabaseStorage implements IStorage {
       .from(services)
       .leftJoin(customers, eq(services.customerId, customers.id))
       .leftJoin(vehicles, eq(services.vehicleId, vehicles.id))
-      .leftJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
-      .where(eq(customers.id, userId))
-      .orderBy(desc(services.createdAt));
+      .leftJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id));
+
+    if (userId) {
+      query = query.where(eq(services.technicianId, userId));
+    }
+
+    const result = await query.orderBy(desc(services.createdAt));
 
     return result.map(row => ({
       ...row.service,
@@ -1562,7 +1566,7 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
-  async getServiceById(serviceId: number): Promise<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType }) | undefined> {
+  async getServiceById(serviceId: number, userId?: number): Promise<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType }) | undefined> {
     try {
       const [service] = await db
         .select({

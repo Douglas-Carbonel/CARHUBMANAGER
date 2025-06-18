@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2, Car, User, Check, ChevronsUpDown, Wrench, FileText } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Car, User, Check, ChevronsUpDown, Wrench, FileText, Camera } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertVehicleSchema, type Vehicle, type Customer, type Photo } from "@shared/schema";

@@ -313,9 +313,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Service routes
-  router.get("/api/services", requireAuth, async (req, res) => {
+  app.get("/api/services", requireAuth, async (req, res) => {
     try {
-      const services = await storage.getServices(req.user!.id);
+      const user = req.user!;
+      const services = await storage.getServices(user.role === 'admin' ? undefined : user.id);
       res.json(services);
     } catch (error) {
       console.error("Error fetching services:", error);
@@ -323,10 +324,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  router.get("/api/services/:id", requireAuth, async (req, res) => {
+  app.get("/api/services/:id", requireAuth, async (req, res) => {
     try {
       const serviceId = parseInt(req.params.id);
-      const service = await storage.getServiceById(serviceId, req.user!.id);
+      const user = req.user!;
+      const service = await storage.getServiceById(serviceId, user.role === 'admin' ? undefined : user.id);
       if (!service) {
         return res.status(404).json({ message: "Service not found" });
       }
@@ -710,7 +712,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
   });
 
   // Photo routes
-  router.get("/api/photos", requireAuth, async (req, res) => {
+  app.get("/api/photos", requireAuth, async (req, res) => {
     try {
       const { customerId, vehicleId, serviceId, category } = req.query;
       const filters: any = {};
@@ -728,7 +730,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     }
   });
 
-  router.get("/api/photos/:id", requireAuth, async (req, res) => {
+  app.get("/api/photos/:id", requireAuth, async (req, res) => {
     try {
       const photoId = parseInt(req.params.id);
       const photo = await storage.getPhoto(photoId);
@@ -744,7 +746,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     }
   });
 
-  router.post("/api/photos/upload", requireAuth, upload.single('photo'), async (req, res) => {
+  app.post("/api/photos/upload", requireAuth, upload.single('photo'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "No photo file provided" });
@@ -807,7 +809,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     }
   });
 
-  router.put("/api/photos/:id", requireAuth, async (req, res) => {
+  app.put("/api/photos/:id", requireAuth, async (req, res) => {
     try {
       const photoId = parseInt(req.params.id);
       const updateData = req.body;
@@ -820,7 +822,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     }
   });
 
-  router.delete("/api/photos/:id", requireAuth, async (req, res) => {
+  app.delete("/api/photos/:id", requireAuth, async (req, res) => {
     try {
       const photoId = parseInt(req.params.id);
 
@@ -834,9 +836,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
   });
 
   // Serve uploaded files
-  router.use('/uploads', express.static(uploadsDir));
-
-  app.use('/', router);
+  app.use('/uploads', express.static(uploadsDir));
 
   const httpServer = createServer(app);
   return httpServer;
