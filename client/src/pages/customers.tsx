@@ -391,7 +391,7 @@ export default function CustomersPage() {
                         </Button>
                         <Button 
                           type="submit" 
-                          disabled={createMutation.isPending || updateMutation.isPending || !form.formState.isValid}
+                          disabled={createMutation.isPending || updateMutation.isPending}
                         >
                           {createMutation.isPending || updateMutation.isPending 
                             ? "Processando..." 
