@@ -780,22 +780,46 @@ export default function VehiclesPage() {
                       {/* Photos Section */}
                       <div className="col-span-2 border-t pt-4">
                         <div className="space-y-4">
-                          <h4 className="text-sm font-medium text-gray-700">Fotos do Veículo</h4>
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-medium text-gray-700">Fotos</h4>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setIsCameraOpen(true)}
+                                className="flex items-center gap-2"
+                              >
+                                <Camera className="h-4 w-4" />
+                                Tirar Foto
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => document.getElementById('vehicle-photo-upload')?.click()}
+                                className="flex items-center gap-2"
+                              >
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                Adicionar Fotos
+                              </Button>
+                              <input
+                                type="file"
+                                multiple
+                                accept="image/*"
+                                className="hidden"
+                                id="vehicle-photo-upload"
+                              />
+                            </div>
+                          </div>
                           <PhotoUpload
                             photos={currentVehiclePhotos}
                             onPhotoUploaded={() => fetchVehiclePhotos(editingVehicle?.id)}
                             vehicleId={editingVehicle?.id}
                             maxPhotos={7}
                           />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                              setIsCameraOpen(true);
-                            }}
-                          >
-                            Tirar Foto
-                          </Button>
                         </div>
                       </div>
 
