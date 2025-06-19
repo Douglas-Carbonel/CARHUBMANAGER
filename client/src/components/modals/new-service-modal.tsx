@@ -9,10 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertServiceSchema, type Customer, type Vehicle, type ServiceType } from "@shared/schema";
 import { z } from "zod";
+import ServiceExtras from "@/components/service/service-extras";
 
 interface NewServiceModalProps {
   isOpen: boolean;
@@ -22,6 +24,7 @@ interface NewServiceModalProps {
 export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [serviceExtras, setServiceExtras] = useState<any[]>([]);
 
   const form = useForm<z.infer<typeof insertServiceSchema>>({
     resolver: zodResolver(insertServiceSchema),
@@ -79,6 +82,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
       });
       onClose();
       form.reset();
+      setServiceExtras([]);
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -123,6 +127,35 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   };
 
   const selectedCustomerId = form.watch("customerId");
+  const selectedServiceTypeId = form.watch("serviceTypeId");
+
+  // Calculate total value
+  const calculateTotalValue = () => {
+    let total = 0;
+    
+    // Add service type value
+    if (selectedServiceTypeId && serviceTypes) {
+      const selectedServiceType = serviceTypes.find((st: ServiceType) => st.id === selectedServiceTypeId);
+      if (selectedServiceType?.defaultPrice) {
+        total += Number(selectedServiceType.defaultPrice);
+      }
+    }
+    
+    // Add service extras values
+    serviceExtras.forEach(extra => {
+      if (extra.valor && !isNaN(Number(extra.valor))) {
+        total += Number(extra.valor);
+      }
+    });
+    
+    return total.toFixed(2);
+  };
+
+  // Update estimated value when service type or extras change
+  const totalValue = calculateTotalValue();
+  if (form.getValues("estimatedValue") !== totalValue) {
+    form.setValue("estimatedValue", totalValue);
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -318,19 +351,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                 />
               </div>
 
-              <FormField
-                control={form.control}
-                name="estimatedValue"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Valor Estimado</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="number" step="0.01" placeholder="0,00" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              
 
               <FormField
                 control={form.control}
@@ -346,7 +367,51 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                 )}
               />
 
-              <div className="flex justify-end space-x-3 pt-4">
+              {/* Service Extras Section */}
+              <div className="col-span-1 md:col-span-2">
+                <Card className="border border-gray-200">
+                  <CardContent className="p-4">
+                    {selectedServiceTypeId ? (
+                      <ServiceExtras
+                        onChange={setServiceExtras}
+                        initialExtras={[]}
+                      />
+                    ) : (
+                      <div className="text-center py-6 text-gray-500">
+                        <p className="text-sm">Selecione um tipo de serviço primeiro para adicionar extras</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Total Value Display */}
+              <div className="col-span-1 md:col-span-2">
+                <Card className="border border-emerald-200 bg-emerald-50">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-semibold text-emerald-800">Valor Total:</span>
+                      <span className="text-xl font-bold text-emerald-700">R$ {totalValue}</span>
+                    </div>
+                    {selectedServiceTypeId && serviceTypes && (
+                      <div className="mt-2 text-sm text-emerald-600">
+                        <div className="flex justify-between">
+                          <span>Tipo de serviço:</span>
+                          <span>R$ {Number(serviceTypes.find((st: ServiceType) => st.id === selectedServiceTypeId)?.defaultPrice || 0).toFixed(2)}</span>
+                        </div>
+                        {serviceExtras.length > 0 && (
+                          <div className="flex justify-between">
+                            <span>Adicionais:</span>
+                            <span>R$ {serviceExtras.reduce((sum, extra) => sum + Number(extra.valor || 0), 0).toFixed(2)}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 col-span-1 md:col-span-2">
                 <Button 
                   type="button" 
                   variant="outline"

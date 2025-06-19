@@ -261,7 +261,7 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
                   />
                 </div>
 
-                <div className="col-span-1 flex gap-1">
+                <div className="col-span-1 flex gap-1 justify-end">
                   {!extra.id && serviceId && extra.serviceExtraId > 0 && (
                     <Button
                       type="button"
