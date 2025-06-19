@@ -687,7 +687,7 @@ export default function Services() {
                             {/* Service Extras Details */}
                             {serviceExtras.length > 0 && (
                               <div className="bg-white border border-slate-200 rounded-lg p-3">
-                                <div className="text-sm font-medium text-slate-800 mb-2">Adicionais Inclusos:</div>
+                                <div className="text-sm font-bold text-slate-800 mb-2">Adicionais Inclusos</div>
                                 <div className="space-y-2">
                                   {serviceExtras.map((extra, index) => (
                                     <div key={index} className="flex justify-between items-center text-sm">

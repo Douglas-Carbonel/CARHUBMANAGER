@@ -134,6 +134,10 @@ This is a comprehensive automotive service management system built as a full-sta
 
 ```
 Changelog:
+- June 19, 2025. Reorganized service form UI with improved payment and value sections
+- June 19, 2025. Implemented comprehensive payment methods modal (PIX, Cash, Check, Card)
+- June 19, 2025. Enhanced service resume modal with complete service overview
+- June 19, 2025. Improved service values section with detailed base service and extras display
 - June 18, 2025. Successfully migrated from Replit Agent to standard Replit environment
 - June 18, 2025. Fixed photos database schema and constraints - camera functionality now working
 - June 18, 2025. Implemented custom photos storage layer to handle database structure mismatch
