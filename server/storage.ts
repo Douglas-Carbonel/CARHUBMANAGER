@@ -6,6 +6,8 @@ import {
   serviceTypes,
   payments,
   loyaltyTracking,
+  serviceExtras,
+  serviceExtrasItems,
   // photos,
   type User,
   type InsertUser,
@@ -21,6 +23,10 @@ import {
   type InsertPayment,
   type Photo,
   type InsertPhoto,
+  type ServiceExtra,
+  type InsertServiceExtra,
+  type ServiceExtraItem,
+  type InsertServiceExtraItem,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, gte, lte, lt, count, sum, sql, isNotNull, or, ne } from "drizzle-orm";
@@ -152,6 +158,19 @@ export interface IStorage {
     monthlyAppointments: number;
     weeklyEstimatedValue: number;
   }>;
+
+  // Service extras operations
+  getServiceExtras(): Promise<ServiceExtra[]>;
+  getServiceExtra(id: number): Promise<ServiceExtra | undefined>;
+  createServiceExtra(serviceExtra: InsertServiceExtra): Promise<ServiceExtra>;
+  updateServiceExtra(id: number, serviceExtra: Partial<InsertServiceExtra>): Promise<ServiceExtra>;
+  deleteServiceExtra(id: number): Promise<void>;
+
+  // Service extras items operations
+  getServiceExtraItems(serviceId: number): Promise<(ServiceExtraItem & { serviceExtra: ServiceExtra })[]>;
+  createServiceExtraItem(item: InsertServiceExtraItem): Promise<ServiceExtraItem>;
+  updateServiceExtraItem(id: number, item: Partial<InsertServiceExtraItem>): Promise<ServiceExtraItem>;
+  deleteServiceExtraItem(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -722,13 +741,13 @@ export class DatabaseStorage implements IStorage {
             WHEN s.final_value IS NOT NULL 
             AND s.final_value != '' 
             AND s.final_value != '0'
-            AND s.final_value::text ~ '^[0-9]+(\.[0-9]+)?$'
-            THEN s.final_value::numeric
+            AND CAST(s.final_value AS TEXT) ~ '^[0-9]+(\.[0-9]+)?$'
+            THEN CAST(s.final_value AS NUMERIC)
             WHEN s.estimated_value IS NOT NULL 
             AND s.estimated_value != '' 
             AND s.estimated_value != '0'
-            AND s.estimated_value::text ~ '^[0-9]+(\.[0-9]+)?$'
-            THEN s.estimated_value::numeric
+            AND CAST(s.estimated_value AS TEXT) ~ '^[0-9]+(\.[0-9]+)?$'
+            THEN CAST(s.estimated_value AS NUMERIC)
             ELSE 0 
           END), 0) as revenue
         FROM service_types st
@@ -750,6 +769,118 @@ export class DatabaseStorage implements IStorage {
       return topServices;
     } catch (error) {
       console.error("Error getting top services:", error);
+      throw error;
+    }
+  }
+
+  // Service extras operations
+  async getServiceExtras(): Promise<ServiceExtra[]> {
+    try {
+      return await db.select().from(serviceExtras).where(eq(serviceExtras.isActive, true)).orderBy(serviceExtras.descricao);
+    } catch (error) {
+      console.error('Error fetching service extras:', error);
+      throw error;
+    }
+  }
+
+  async getServiceExtra(id: number): Promise<ServiceExtra | undefined> {
+    try {
+      const [extra] = await db.select().from(serviceExtras).where(eq(serviceExtras.id, id));
+      return extra;
+    } catch (error) {
+      console.error('Error fetching service extra:', error);
+      throw error;
+    }
+  }
+
+  async createServiceExtra(serviceExtra: InsertServiceExtra): Promise<ServiceExtra> {
+    try {
+      const [newExtra] = await db.insert(serviceExtras).values({
+        ...serviceExtra,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }).returning();
+      return newExtra;
+    } catch (error) {
+      console.error('Error creating service extra:', error);
+      throw error;
+    }
+  }
+
+  async updateServiceExtra(id: number, serviceExtra: Partial<InsertServiceExtra>): Promise<ServiceExtra> {
+    try {
+      const [updatedExtra] = await db
+        .update(serviceExtras)
+        .set({ ...serviceExtra, updatedAt: new Date() })
+        .where(eq(serviceExtras.id, id))
+        .returning();
+      return updatedExtra;
+    } catch (error) {
+      console.error('Error updating service extra:', error);
+      throw error;
+    }
+  }
+
+  async deleteServiceExtra(id: number): Promise<void> {
+    try {
+      await db.update(serviceExtras).set({ isActive: false }).where(eq(serviceExtras.id, id));
+    } catch (error) {
+      console.error('Error deleting service extra:', error);
+      throw error;
+    }
+  }
+
+  // Service extras items operations
+  async getServiceExtraItems(serviceId: number): Promise<(ServiceExtraItem & { serviceExtra: ServiceExtra })[]> {
+    try {
+      const result = await db
+        .select({
+          item: serviceExtrasItems,
+          serviceExtra: serviceExtras,
+        })
+        .from(serviceExtrasItems)
+        .innerJoin(serviceExtras, eq(serviceExtrasItems.serviceExtraId, serviceExtras.id))
+        .where(eq(serviceExtrasItems.serviceId, serviceId));
+
+      return result.map(row => ({
+        ...row.item,
+        serviceExtra: row.serviceExtra,
+      }));
+    } catch (error) {
+      console.error('Error fetching service extra items:', error);
+      throw error;
+    }
+  }
+
+  async createServiceExtraItem(item: InsertServiceExtraItem): Promise<ServiceExtraItem> {
+    try {
+      const [newItem] = await db.insert(serviceExtrasItems).values(item).returning();
+      return newItem;
+    } catch (error) {
+      console.error('Error creating service extra item:', error);
+      throw error;
+    }
+  }
+
+  async updateServiceExtraItem(id: number, item: Partial<InsertServiceExtraItem>): Promise<ServiceExtraItem> {
+    try {
+      const [updatedItem] = await db
+        .update(serviceExtrasItems)
+        .set(item)
+        .where(eq(serviceExtrasItems.id, id))
+        .returning();
+      return updatedItem;
+    } catch (error) {
+      console.error('Error updating service extra item:', error);
+      throw error;
+    }
+  }
+
+  async deleteServiceExtraItem(id: number): Promise<void> {
+    try {
+      await db.delete(serviceExtrasItems).where(eq(serviceExtrasItems.id, id));
+    } catch (error) {
+      console.error('Error deleting service extra item:', error);
       throw error;
     }
   }

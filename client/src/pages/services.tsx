@@ -23,6 +23,7 @@ import ServiceAnalytics from "@/components/dashboard/service-analytics";
 import { useLocation } from "wouter";
 import PhotoUpload from "@/components/photos/photo-upload";
 import CameraCapture from "@/components/camera/camera-capture";
+import ServiceExtras from "@/components/service/service-extras";
 
 const serviceFormSchema = insertServiceSchema.extend({
   customerId: z.number().min(1, "Cliente é obrigatório"),
@@ -58,6 +59,7 @@ export default function Services() {
   const [currentServicePhotos, setCurrentServicePhotos] = useState<Photo[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [serviceExtras, setServiceExtras] = useState<any[]>([]);
 
   const fetchServicePhotos = async (serviceId: number | undefined) => {
     if (!serviceId) {
@@ -341,6 +343,7 @@ export default function Services() {
                     setEditingService(null);
                     form.reset();
                     setCurrentServicePhotos([]);
+                    setServiceExtras([]);
                   }}
                 >
                   <Plus className="h-5 w-5 mr-2" />
@@ -572,6 +575,14 @@ export default function Services() {
                       )}
                     />
 
+                    {/* Service Extras Section */}
+                    <div className="col-span-2 border-t pt-4">
+                      <ServiceExtras
+                        serviceId={editingService?.id}
+                        onChange={setServiceExtras}
+                      />
+                    </div>
+
                     {/* Photos Section */}
                     <div className="col-span-2 border-t pt-4">
                       <div className="space-y-4">
@@ -604,6 +615,7 @@ export default function Services() {
                         onClick={() => {
                           setIsDialogOpen(false);
                           setCurrentServicePhotos([]);
+                          setServiceExtras([]);
                         }}
                         className="px-6 py-2 font-medium"
                       >

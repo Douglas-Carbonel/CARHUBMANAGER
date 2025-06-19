@@ -156,6 +156,24 @@ export const photos = pgTable("photos", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const serviceExtras = pgTable("service_extras", {
+  id: serial("id").primaryKey(),
+  descricao: varchar("descricao").notNull(),
+  valorPadrao: decimal("valor_padrao", { precision: 10, scale: 2 }).default("0.00"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const serviceExtrasItems = pgTable("service_extras_items", {
+  id: serial("id").primaryKey(),
+  serviceId: integer("service_id").references(() => services.id, { onDelete: "cascade" }).notNull(),
+  serviceExtraId: integer("service_extra_id").references(() => serviceExtras.id).notNull(),
+  valor: decimal("valor", { precision: 10, scale: 2 }).notNull(),
+  observacao: text("observacao"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const customersRelations = relations(customers, ({ many }) => ({
   vehicles: many(vehicles),
@@ -227,6 +245,21 @@ export const photosRelations = relations(photos, ({ one }) => ({
   }),
 }));
 
+export const serviceExtrasRelations = relations(serviceExtras, ({ many }) => ({
+  items: many(serviceExtrasItems),
+}));
+
+export const serviceExtrasItemsRelations = relations(serviceExtrasItems, ({ one }) => ({
+  service: one(services, {
+    fields: [serviceExtrasItems.serviceId],
+    references: [services.id],
+  }),
+  serviceExtra: one(serviceExtras, {
+    fields: [serviceExtrasItems.serviceExtraId],
+    references: [serviceExtras.id],
+  }),
+}));
+
 // Insert schemas
 export const insertCustomerSchema = createInsertSchema(customers).omit({
   id: true,
@@ -267,6 +300,17 @@ export const insertPhotoSchema = createInsertSchema(photos).omit({
   createdAt: true,
 });
 
+export const insertServiceExtraSchema = createInsertSchema(serviceExtras).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertServiceExtraItemSchema = createInsertSchema(serviceExtrasItems).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Loyalty tracking schema temporarily removed
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -283,4 +327,8 @@ export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type Payment = typeof payments.$inferSelect;
 export type InsertPhoto = z.infer<typeof insertPhotoSchema>;
 export type Photo = typeof photos.$inferSelect;
+export type InsertServiceExtra = z.infer<typeof insertServiceExtraSchema>;
+export type ServiceExtra = typeof serviceExtras.$inferSelect;
+export type InsertServiceExtraItem = z.infer<typeof insertServiceExtraItemSchema>;
+export type ServiceExtraItem = typeof serviceExtrasItems.$inferSelect;
 // Loyalty tracking types temporarily removed

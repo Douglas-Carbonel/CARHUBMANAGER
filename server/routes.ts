@@ -144,7 +144,9 @@ import {
   insertServiceSchema,
   insertServiceTypeSchema,
   insertPaymentSchema,
-  insertUserSchema
+  insertUserSchema,
+  insertServiceExtraSchema,
+  insertServiceExtraItemSchema
 } from "@shared/schema";
 
 
@@ -832,6 +834,98 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     } catch (error) {
       console.error("Error deleting photo:", error);
       res.status(500).json({ message: "Failed to delete photo" });
+    }
+  });
+
+  // Service extras routes
+  app.get("/api/service-extras", requireAuth, async (req, res) => {
+    try {
+      const serviceExtras = await storage.getServiceExtras();
+      res.json(serviceExtras);
+    } catch (error) {
+      console.error("Error fetching service extras:", error);
+      res.status(500).json({ message: "Failed to fetch service extras" });
+    }
+  });
+
+  app.post("/api/service-extras", requireAuth, async (req, res) => {
+    try {
+      const serviceExtraData = insertServiceExtraSchema.parse(req.body);
+      const serviceExtra = await storage.createServiceExtra(serviceExtraData);
+      res.status(201).json(serviceExtra);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create service extra" });
+    }
+  });
+
+  app.put("/api/service-extras/:id", requireAuth, async (req, res) => {
+    try {
+      const serviceExtraData = insertServiceExtraSchema.partial().parse(req.body);
+      const serviceExtra = await storage.updateServiceExtra(parseInt(req.params.id), serviceExtraData);
+      res.json(serviceExtra);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update service extra" });
+    }
+  });
+
+  app.delete("/api/service-extras/:id", requireAuth, async (req, res) => {
+    try {
+      await storage.deleteServiceExtra(parseInt(req.params.id));
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete service extra" });
+    }
+  });
+
+  // Service extra items routes
+  app.get("/api/services/:serviceId/extras", requireAuth, async (req, res) => {
+    try {
+      const items = await storage.getServiceExtraItems(parseInt(req.params.serviceId));
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching service extra items:", error);
+      res.status(500).json({ message: "Failed to fetch service extra items" });
+    }
+  });
+
+  app.post("/api/service-extra-items", requireAuth, async (req, res) => {
+    try {
+      const itemData = insertServiceExtraItemSchema.parse(req.body);
+      const item = await storage.createServiceExtraItem(itemData);
+      res.status(201).json(item);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create service extra item" });
+    }
+  });
+
+  app.put("/api/service-extra-items/:id", requireAuth, async (req, res) => {
+    try {
+      const itemData = insertServiceExtraItemSchema.partial().parse(req.body);
+      const item = await storage.updateServiceExtraItem(parseInt(req.params.id), itemData);
+      res.json(item);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update service extra item" });
+    }
+  });
+
+  app.delete("/api/service-extra-items/:id", requireAuth, async (req, res) => {
+    try {
+      await storage.deleteServiceExtraItem(parseInt(req.params.id));
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete service extra item" });
     }
   });
 
