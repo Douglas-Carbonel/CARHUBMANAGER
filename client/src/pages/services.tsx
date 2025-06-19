@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, DollarSign, MoreHorizontal, Plus, Search, Edit, Trash2, Clock, User, Car, Wrench, CheckCircle, XCircle, Timer, BarChart3, FileText, Camera } from "lucide-react";
+import { Calendar, DollarSign, MoreHorizontal, Plus, Search, Edit, Trash2, Clock, User, Car, Wrench, CheckCircle, XCircle, Timer, BarChart3, FileText, Camera, Coins } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertServiceSchema, type Service, type Customer, type Vehicle, type ServiceType, type Photo } from "@shared/schema";
@@ -34,6 +34,7 @@ const serviceFormSchema = insertServiceSchema.extend({
   scheduledTime: z.string().optional(),
   status: z.enum(["scheduled", "in_progress", "completed", "cancelled"]).optional(),
   notes: z.string().optional(),
+  valorPago: z.string().optional(), // Campo de valor pago
 });
 
 export default function Services() {
@@ -111,6 +112,7 @@ export default function Services() {
       scheduledTime: "",
       status: "scheduled",
       notes: "",
+      valorPago: "0", // Valor pago inicializado como string "0"
     },
   });
 
@@ -253,7 +255,8 @@ export default function Services() {
     const totalValue = calculateTotalValue();
     const serviceData = {
       ...data,
-      estimatedValue: Number(totalValue)
+      estimatedValue: Number(totalValue),
+      valorPago: data.valorPago ? data.valorPago : "0", // Garante que valorPago esteja presente
     };
 
     if (editingService) {
@@ -274,6 +277,7 @@ export default function Services() {
       scheduledTime: service.scheduledTime || "",
       status: service.status || "scheduled",
       notes: service.notes || "",
+      valorPago: service.valorPago || "0",
     });
     fetchServicePhotos(service.id);
     setIsDialogOpen(true);
@@ -341,6 +345,32 @@ export default function Services() {
       cancelled: "bg-red-100 text-red-800",
     };
     return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-800";
+  };
+
+  const getPaymentStatus = (valorPago: string, totalValue: string) => {
+    const pago = Number(valorPago);
+    const total = Number(totalValue);
+
+    if (pago === 0) {
+      return { label: "Pendente", color: "text-red-600", bgColor: "bg-red-100" };
+    } else if (pago < total) {
+      return { label: "Parcial", color: "text-yellow-600", bgColor: "bg-yellow-100" };
+    } else {
+      return { label: "Concluído", color: "text-green-600", bgColor: "bg-green-100" };
+    }
+  };
+
+  const getPaymentIconColor = (valorPago: string, totalValue: string) => {
+    const pago = Number(valorPago);
+    const total = Number(totalValue);
+
+    if (pago === 0) {
+      return "text-red-600";
+    } else if (pago < total) {
+      return "text-yellow-600";
+    } else {
+      return "text-green-600";
+    }
   };
 
   return (
@@ -593,6 +623,45 @@ export default function Services() {
                         </FormItem>
                       )}
                     />
+
+              {/* Campo de Valor Pago */}
+              <FormField
+                control={form.control}
+                name="valorPago"
+                render={({ field }) => {
+                  const totalValue = calculateTotalValue();
+                  const paymentStatus = getPaymentStatus(field.value || "0", totalValue);
+                  const iconColor = getPaymentIconColor(field.value || "0", totalValue);
+
+                  return (
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                        <Coins className={`h-4 w-4 mr-2 ${iconColor}`} />
+                        Valor Pago
+                      </FormLabel>
+                      <div className="relative">
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            type="number" 
+                            step="0.01"
+                            min="0"
+                            placeholder="0.00"
+                            value={field.value || ""}
+                            className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md pl-10"
+                          />
+                        </FormControl>
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">R$</span>
+                      </div>
+                      <div className={`text-xs px-2 py-1 rounded-full inline-flex items-center ${paymentStatus.bgColor} ${paymentStatus.color} font-medium`}>
+                        <Coins className={`h-3 w-3 mr-1 ${paymentStatus.color}`} />
+                        {paymentStatus.label}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
 
                     {/* Service Extras Section */}
                     <div className="col-span-2 border-t pt-4">
@@ -867,7 +936,11 @@ export default function Services() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredServices.map((service) => (
+              {filteredServices.map((service) => {
+                 const totalValue = service.estimatedValue || "0";
+                 const paymentStatus = getPaymentStatus(service.valorPago || "0", totalValue);
+
+                return (
                 <Card key={service.id} className="bg-white/90 backdrop-blur-sm border border-teal-200 hover:shadow-lg transition-all duration-300 hover:border-emerald-300">
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
@@ -885,12 +958,16 @@ export default function Services() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Badge className={`${getStatusBadge(service.status || 'scheduled')} font-medium`}>
-                          {service.status === 'scheduled' && 'Agendado'}
-                          {service.status === 'in_progress' && 'Em Andamento'}
-                          {service.status === 'completed' && 'Concluído'}
-                          {service.status === 'cancelled' && 'Cancelado'}
-                        </Badge>
+                      <div className="flex items-center space-x-2">
+                          <div className="relative">
+                            <Coins className={`h-5 w-5 ${paymentStatus.color} cursor-pointer`} title={paymentStatus.label} />
+                          </div>
+                          <Badge className={`${getStatusBadge(service.status || 'scheduled')} font-medium`}>
+                            {service.status === 'scheduled' && 'Agendado'}
+                            {service.status === 'in_progress' && 'Em Andamento'}
+                            {service.status === 'completed' && 'Concluído'}
+                            {service.status === 'cancelled' && 'Cancelado'}
+                          </Badge>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -945,7 +1022,8 @@ export default function Services() {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+              )
+              })}
             </div>
           )}
         </main>

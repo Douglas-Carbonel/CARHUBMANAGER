@@ -106,6 +106,7 @@ export const services = pgTable("services", {
   completedAt: timestamp("completed_at"),
   estimatedValue: decimal("estimated_value", { precision: 10, scale: 2 }),
   finalValue: decimal("final_value", { precision: 10, scale: 2 }),
+  valorPago: decimal("valor_pago", { precision: 10, scale: 2 }).default("0.00"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
