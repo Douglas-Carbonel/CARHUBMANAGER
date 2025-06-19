@@ -624,45 +624,6 @@ export default function Services() {
                       )}
                     />
 
-              {/* Campo de Valor Pago */}
-              <FormField
-                control={form.control}
-                name="valorPago"
-                render={({ field }) => {
-                  const totalValue = calculateTotalValue();
-                  const paymentStatus = getPaymentStatus(field.value || "0", totalValue);
-                  const iconColor = getPaymentIconColor(field.value || "0", totalValue);
-
-                  return (
-                    <FormItem className="space-y-2">
-                      <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
-                        <Coins className={`h-4 w-4 mr-2 ${iconColor}`} />
-                        Valor Pago
-                      </FormLabel>
-                      <div className="relative">
-                        <FormControl>
-                          <Input 
-                            {...field} 
-                            type="number" 
-                            step="0.01"
-                            min="0"
-                            placeholder="0.00"
-                            value={field.value || ""}
-                            className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md pl-10"
-                          />
-                        </FormControl>
-                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">R$</span>
-                      </div>
-                      <div className={`text-xs px-2 py-1 rounded-full inline-flex items-center ${paymentStatus.bgColor} ${paymentStatus.color} font-medium`}>
-                        <Coins className={`h-3 w-3 mr-1 ${paymentStatus.color}`} />
-                        {paymentStatus.label}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  );
-                }}
-              />
-
                     {/* Service Extras Section */}
                     <div className="col-span-2 border-t pt-4">
                       <ServiceExtras
@@ -671,16 +632,59 @@ export default function Services() {
                       />
                     </div>
 
-                    {/* Total Value Section */}
+                    {/* Total Value and Payment Section */}
                     <div className="col-span-2 border-t pt-4">
                       <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center mb-4">
                           <span className="text-lg font-bold text-emerald-800">Valor Total:</span>
                           <span className="text-xl font-bold text-emerald-700">
                             R$ {calculateTotalValue()}
                           </span>
                         </div>
-                        <div className="mt-3 flex justify-center">
+                        
+                        {/* Payment Field */}
+                        <FormField
+                          control={form.control}
+                          name="valorPago"
+                          render={({ field }) => {
+                            const totalValue = calculateTotalValue();
+                            const paymentStatus = getPaymentStatus(field.value || "0", totalValue);
+                            const iconColor = getPaymentIconColor(field.value || "0", totalValue);
+
+                            return (
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                    <Coins className={`h-4 w-4 mr-2 ${iconColor}`} />
+                                    Valor Pago:
+                                  </FormLabel>
+                                  <div className={`text-xs px-2 py-1 rounded-full inline-flex items-center ${paymentStatus.bgColor} ${paymentStatus.color} font-medium`}>
+                                    <Coins className={`h-3 w-3 mr-1 ${paymentStatus.color}`} />
+                                    {paymentStatus.label}
+                                  </div>
+                                </div>
+                                <div className="relative">
+                                  <FormControl>
+                                    <Input 
+                                      {...field} 
+                                      type="number" 
+                                      step="0.01"
+                                      min="0"
+                                      max={totalValue}
+                                      placeholder="0.00"
+                                      value={field.value || ""}
+                                      className="h-11 border-2 border-emerald-300 focus:border-emerald-500 rounded-lg shadow-sm bg-white transition-all duration-200 hover:shadow-md pl-10"
+                                    />
+                                  </FormControl>
+                                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-emerald-600 text-sm font-medium">R$</span>
+                                </div>
+                                <FormMessage />
+                              </div>
+                            );
+                          }}
+                        />
+                        
+                        <div className="mt-4 flex justify-center">
                           <Button
                             type="button"
                             variant="outline"
@@ -1007,9 +1011,17 @@ export default function Services() {
                         </div>
                       )}
                       {service.estimatedValue && (
-                        <div className="flex items-center text-sm font-semibold text-emerald-600">
-                          <DollarSign className="h-4 w-4 mr-2" />
-                          R$ {Number(service.estimatedValue).toFixed(2)}
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="flex items-center font-semibold text-emerald-600">
+                            <DollarSign className="h-4 w-4 mr-2" />
+                            R$ {Number(service.estimatedValue).toFixed(2)}
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <span className="text-xs text-gray-500">Pago:</span>
+                            <span className="text-xs font-semibold text-emerald-600">
+                              R$ {Number(service.valorPago || 0).toFixed(2)}
+                            </span>
+                          </div>
                         </div>
                       )}
                       {service.notes && (
