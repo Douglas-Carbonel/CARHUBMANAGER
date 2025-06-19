@@ -648,7 +648,7 @@ export default function Services() {
                         <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
                           <h3 className="text-lg font-semibold text-slate-700 mb-3 flex items-center">
                             <Calculator className="h-5 w-5 mr-2 text-slate-600" />
-                            Orçamento do Serviço
+                            Valores do Serviço
                           </h3>
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
@@ -663,7 +663,7 @@ export default function Services() {
                             )}
                             <div className="border-t border-slate-300 pt-2 mt-2">
                               <div className="flex justify-between items-center">
-                                <span className="text-lg font-bold text-slate-800">Total Orçado:</span>
+                                <span className="text-lg font-bold text-slate-800">Total do Serviço:</span>
                                 <span className="text-xl font-bold text-slate-700">
                                   R$ {calculateTotalValue()}
                                 </span>
@@ -676,7 +676,7 @@ export default function Services() {
                         <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
                           <h3 className="text-lg font-semibold text-emerald-800 mb-3 flex items-center">
                             <DollarSign className="h-5 w-5 mr-2 text-emerald-600" />
-                            Controle de Pagamentos
+                            Pagamentos
                           </h3>
                           
                           <div className="grid grid-cols-3 gap-4 mb-4">
@@ -739,16 +739,30 @@ export default function Services() {
                                   Registrar Pagamento
                                 </FormLabel>
                                 <FormControl>
-                                  <div className="relative">
-                                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-600" />
-                                    <Input
-                                      {...field}
-                                      type="number"
-                                      step="0.01"
-                                      placeholder="0.00"
-                                      className="pl-10 h-11 border-2 border-emerald-200 focus:border-emerald-400 rounded-lg bg-white"
-                                      value={field.value || ""}
-                                    />
+                                  <div className="flex space-x-2">
+                                    <div className="relative flex-1">
+                                      <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-600" />
+                                      <Input
+                                        {...field}
+                                        type="number"
+                                        step="0.01"
+                                        placeholder="0.00"
+                                        className="pl-10 h-11 border-2 border-emerald-200 focus:border-emerald-400 rounded-lg bg-white"
+                                        value={field.value || ""}
+                                      />
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        // Aqui abriria o modal de opções de pagamento (Pix, Dinheiro, Cheque, Cartão)
+                                        console.log("Abrir modal de formas de pagamento");
+                                      }}
+                                      className="h-11 px-4 border-2 border-emerald-200 hover:border-emerald-400 text-emerald-700 hover:text-emerald-800 transition-all duration-200"
+                                    >
+                                      <Coins className="h-4 w-4" />
+                                    </Button>
                                   </div>
                                 </FormControl>
                                 <FormMessage />
