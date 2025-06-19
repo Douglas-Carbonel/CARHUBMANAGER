@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, DollarSign, MoreHorizontal, Plus, Search, Edit, Trash2, Clock, User, Car, Wrench, CheckCircle, XCircle, Timer, BarChart3, FileText, Camera, Coins } from "lucide-react";
+import { Calendar, DollarSign, MoreHorizontal, Plus, Search, Edit, Trash2, Clock, User, Car, Wrench, CheckCircle, XCircle, Timer, BarChart3, FileText, Camera, Coins, Calculator } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertServiceSchema, type Service, type Customer, type Vehicle, type ServiceType, type Photo } from "@shared/schema";
@@ -227,6 +227,27 @@ export default function Services() {
       toast({ title: "Erro ao excluir serviço", variant: "destructive" });
     },
   });
+
+  // Get service type price
+  const getServiceTypePrice = () => {
+    const selectedServiceTypeId = form.watch("serviceTypeId");
+    if (selectedServiceTypeId && serviceTypes) {
+      const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
+      return Number(selectedServiceType?.defaultPrice || 0).toFixed(2);
+    }
+    return "0.00";
+  };
+
+  // Calculate extras total
+  const calculateExtrasTotal = () => {
+    let extrasTotal = 0;
+    serviceExtras.forEach(extra => {
+      if (extra.valor && !isNaN(Number(extra.valor))) {
+        extrasTotal += Number(extra.valor);
+      }
+    });
+    return extrasTotal.toFixed(2);
+  };
 
   // Calculate total value
   const calculateTotalValue = () => {
@@ -620,35 +641,132 @@ export default function Services() {
                       />
                     </div>
 
-                    {/* Total Value and Payment Section */}
-                    <div className="col-span-2 border-t pt-4">
-                      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-                        <div className="flex justify-between items-center mb-4">
-                          <span className="text-lg font-bold text-emerald-800">Valor Total:</span>
-                          <span className="text-xl font-bold text-emerald-700">
-                            R$ {calculateTotalValue()}
-                          </span>
+                    {/* Service Budget Section */}
+                    <div className="col-span-2 border-t pt-6">
+                      <div className="space-y-4">
+                        {/* Budget Summary */}
+                        <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                          <h3 className="text-lg font-semibold text-slate-700 mb-3 flex items-center">
+                            <Calculator className="h-5 w-5 mr-2 text-slate-600" />
+                            Orçamento do Serviço
+                          </h3>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-slate-600">Serviço Base:</span>
+                              <span className="font-medium">R$ {getServiceTypePrice()}</span>
+                            </div>
+                            {serviceExtras.length > 0 && (
+                              <div className="flex justify-between text-sm">
+                                <span className="text-slate-600">Extras:</span>
+                                <span className="font-medium">R$ {calculateExtrasTotal()}</span>
+                              </div>
+                            )}
+                            <div className="border-t border-slate-300 pt-2 mt-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-lg font-bold text-slate-800">Total Orçado:</span>
+                                <span className="text-xl font-bold text-slate-700">
+                                  R$ {calculateTotalValue()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Payment Control Section */}
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                          <h3 className="text-lg font-semibold text-emerald-800 mb-3 flex items-center">
+                            <DollarSign className="h-5 w-5 mr-2 text-emerald-600" />
+                            Controle de Pagamentos
+                          </h3>
+                          
+                          <div className="grid grid-cols-3 gap-4 mb-4">
+                            <div className="text-center">
+                              <div className="text-xs text-slate-600 mb-1">Valor Total</div>
+                              <div className="text-lg font-bold text-slate-700">R$ {calculateTotalValue()}</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-xs text-slate-600 mb-1">Valor Pago</div>
+                              <div className="text-lg font-bold text-emerald-600">
+                                R$ {Number(form.watch("valorPago") || 0).toFixed(2)}
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-xs text-slate-600 mb-1">Saldo</div>
+                              <div className={`text-lg font-bold ${
+                                (Number(calculateTotalValue()) - Number(form.watch("valorPago") || 0)) <= 0 
+                                  ? 'text-green-600' 
+                                  : 'text-red-600'
+                              }`}>
+                                R$ {(Number(calculateTotalValue()) - Number(form.watch("valorPago") || 0)).toFixed(2)}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Payment Status */}
+                          <div className="flex items-center justify-center mb-4">
+                            <div className="flex items-center space-x-2">
+                              <div className={`w-3 h-3 rounded-full ${
+                                Number(form.watch("valorPago") || 0) === 0 
+                                  ? 'bg-red-500' 
+                                  : Number(form.watch("valorPago") || 0) >= Number(calculateTotalValue())
+                                    ? 'bg-green-500'
+                                    : 'bg-yellow-500'
+                              }`}></div>
+                              <span className={`text-sm font-medium ${
+                                Number(form.watch("valorPago") || 0) === 0 
+                                  ? 'text-red-700' 
+                                  : Number(form.watch("valorPago") || 0) >= Number(calculateTotalValue())
+                                    ? 'text-green-700'
+                                    : 'text-yellow-700'
+                              }`}>
+                                {Number(form.watch("valorPago") || 0) === 0 
+                                  ? 'Pendente' 
+                                  : Number(form.watch("valorPago") || 0) >= Number(calculateTotalValue())
+                                    ? 'Pago'
+                                    : 'Pagamento Parcial'
+                                }
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Payment Input */}
+                          <FormField
+                            control={form.control}
+                            name="valorPago"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-sm font-medium text-emerald-700">
+                                  Registrar Pagamento
+                                </FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-600" />
+                                    <Input
+                                      {...field}
+                                      type="number"
+                                      step="0.01"
+                                      placeholder="0.00"
+                                      className="pl-10 h-11 border-2 border-emerald-200 focus:border-emerald-400 rounded-lg bg-white"
+                                      value={field.value || ""}
+                                    />
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
                         </div>
                         
-                        {/* Payment Manager */}
-                        <PaymentManager
-                          totalValue={Number(calculateTotalValue())}
-                          currentPaidValue={Number(form.watch("valorPago") || 0)}
-                          onPaymentChange={(newValue) => {
-                            form.setValue("valorPago", newValue.toString());
-                          }}
-                        />
-                        
-                        <div className="mt-4 flex justify-center">
+                        <div className="flex justify-center">
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
                             onClick={() => setIsResumeModalOpen(true)}
-                            className="bg-white hover:bg-emerald-50 text-emerald-700 border-emerald-300 hover:border-emerald-400 font-medium px-4 py-2 text-sm transition-all duration-200"
+                            className="bg-white hover:bg-slate-50 text-slate-700 border-slate-300 hover:border-slate-400 font-medium px-4 py-2 text-sm transition-all duration-200"
                           >
                             <FileText className="h-4 w-4 mr-2" />
-                            Ver Resumo
+                            Ver Resumo Completo
                           </Button>
                         </div>
                       </div>
