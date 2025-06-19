@@ -30,7 +30,10 @@ const serviceFormSchema = insertServiceSchema.extend({
   vehicleId: z.number().min(1, "Veículo é obrigatório"),
   serviceTypeId: z.number().min(1, "Tipo de serviço é obrigatório"),
   technicianId: z.number().min(1, "Técnico é obrigatório"),
-  estimatedValue: z.string().optional(),
+  scheduledDate: z.string().optional(),
+  scheduledTime: z.string().optional(),
+  status: z.enum(["scheduled", "in_progress", "completed", "cancelled"]).optional(),
+  notes: z.string().optional(),
 });
 
 export default function Services() {
@@ -105,13 +108,12 @@ export default function Services() {
       technicianId: 0,
       scheduledDate: "",
       scheduledTime: "",
-      estimatedValue: "",
       status: "scheduled",
       notes: "",
     },
   });
 
-  const { data: services = [], isLoading } = useQuery<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]>({
+  const { data: services = [] } = useQuery<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]>({
     queryKey: ["/api/services"],
     queryFn: async () => {
       const res = await fetch("/api/services", {
@@ -219,13 +221,35 @@ export default function Services() {
     },
   });
 
+  // Calculate total value
+  const calculateTotalValue = () => {
+    let total = 0;
+
+    // Add service type value
+    const selectedServiceTypeId = form.watch("serviceTypeId");
+    if (selectedServiceTypeId && serviceTypes) {
+      const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
+      if (selectedServiceType?.defaultPrice) {
+        total += Number(selectedServiceType.defaultPrice);
+      }
+    }
+
+    // Add service extras values
+    serviceExtras.forEach(extra => {
+      if (extra.valor && !isNaN(Number(extra.valor))) {
+        total += Number(extra.valor);
+      }
+    });
+
+    return total.toFixed(2);
+  };
+
   const onSubmit = (data: z.infer<typeof serviceFormSchema>) => {
-    // Transform the data to match the backend schema
+    // Calculate and add total value
+    const totalValue = calculateTotalValue();
     const serviceData = {
       ...data,
-      estimatedValue: data.estimatedValue && data.estimatedValue !== "" ? data.estimatedValue : undefined,
-      notes: data.notes || undefined,
-      scheduledTime: data.scheduledTime || undefined,
+      estimatedValue: Number(totalValue)
     };
 
     if (editingService) {
@@ -244,7 +268,6 @@ export default function Services() {
       technicianId: service.technicianId || 0,
       scheduledDate: service.scheduledDate || "",
       scheduledTime: service.scheduledTime || "",
-      estimatedValue: service.estimatedValue?.toString() || "",
       status: service.status || "scheduled",
       notes: service.notes || "",
     });
@@ -534,26 +557,6 @@ export default function Services() {
                             <FormLabel>Hora</FormLabel>
                             <FormControl>
                               <Input {...field} type="time" value={field.value || ""} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="estimatedValue"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Valor Estimado</FormLabel>
-                            <FormControl>
-                              <Input 
-                                {...field} 
-                                type="number" 
-                                step="0.01"
-                                placeholder="0.00"
-                                value={field.value || ""}
-                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
