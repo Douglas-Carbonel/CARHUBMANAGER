@@ -958,16 +958,15 @@ export default function Services() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                      <div className="flex items-center space-x-2">
-                          <div className="relative">
-                            <Coins className={`h-5 w-5 ${paymentStatus.color} cursor-pointer`} title={paymentStatus.label} />
-                          </div>
-                          <Badge className={`${getStatusBadge(service.status || 'scheduled')} font-medium`}>
-                            {service.status === 'scheduled' && 'Agendado'}
-                            {service.status === 'in_progress' && 'Em Andamento'}
-                            {service.status === 'completed' && 'Concluído'}
-                            {service.status === 'cancelled' && 'Cancelado'}
-                          </Badge>
+                        <div className="relative">
+                          <Coins className={`h-5 w-5 ${paymentStatus.color} cursor-pointer`} title={paymentStatus.label} />
+                        </div>
+                        <Badge className={`${getStatusBadge(service.status || 'scheduled')} font-medium`}>
+                          {service.status === 'scheduled' && 'Agendado'}
+                          {service.status === 'in_progress' && 'Em Andamento'}
+                          {service.status === 'completed' && 'Concluído'}
+                          {service.status === 'cancelled' && 'Cancelado'}
+                        </Badge>
                         <Button
                           variant="ghost"
                           size="sm"
