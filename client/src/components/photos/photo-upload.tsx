@@ -232,35 +232,6 @@ export default function PhotoUpload({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h4 className="text-sm font-medium">
-          Fotos ({photos.length}/{maxPhotos})
-        </h4>
-        
-        {photos.length < maxPhotos && (
-          <div className="flex gap-2">
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="hidden"
-              id="photo-upload"
-              disabled={uploading}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => document.getElementById('photo-upload')?.click()}
-              disabled={uploading}
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              {uploading ? 'Enviando...' : 'Adicionar Fotos'}
-            </Button>
-          </div>
-        )}
-      </div>
 
       {photos.length === 0 ? (
         <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center">
