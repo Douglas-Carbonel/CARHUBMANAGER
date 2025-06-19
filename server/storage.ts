@@ -384,25 +384,30 @@ export class DatabaseStorage implements IStorage {
 
   // Service operations
   async getServices(): Promise<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]> {
-    const result = await db
-      .select({
-        service: services,
-        customer: customers,
-        vehicle: vehicles,
-        serviceType: serviceTypes,
-      })
-      .from(services)
-      .leftJoin(customers, eq(services.customerId, customers.id))
-      .leftJoin(vehicles, eq(services.vehicleId, vehicles.id))
-      .leftJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
-      .orderBy(desc(services.createdAt));
+    try {
+      const result = await db
+        .select({
+          service: services,
+          customer: customers,
+          vehicle: vehicles,
+          serviceType: serviceTypes,
+        })
+        .from(services)
+        .leftJoin(customers, eq(services.customerId, customers.id))
+        .leftJoin(vehicles, eq(services.vehicleId, vehicles.id))
+        .leftJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+        .orderBy(desc(services.createdAt));
 
-    return result.map(row => ({
-      ...row.service,
-      customer: row.customer!,
-      vehicle: row.vehicle!,
-      serviceType: row.serviceType!,
-    }));
+      return result.map(row => ({
+        ...row.service,
+        customer: row.customer!,
+        vehicle: row.vehicle!,
+        serviceType: row.serviceType!,
+      }));
+    } catch (error) {
+      console.error('Error fetching services:', error);
+      throw error;
+    }
   }
 
   async getService(id: number): Promise<Service | undefined> {
@@ -741,12 +746,14 @@ export class DatabaseStorage implements IStorage {
             WHEN s.final_value IS NOT NULL 
             AND s.final_value != '' 
             AND s.final_value != '0'
-            AND CAST(s.final_value AS TEXT) ~ '^[0-9]+(\.[0-9]+)?$'
+            AND s.final_value != '0.00'
+            AND s.final_value ~ '^[0-9]+(\.[0-9]+)?$'
             THEN CAST(s.final_value AS NUMERIC)
             WHEN s.estimated_value IS NOT NULL 
             AND s.estimated_value != '' 
             AND s.estimated_value != '0'
-            AND CAST(s.estimated_value AS TEXT) ~ '^[0-9]+(\.[0-9]+)?$'
+            AND s.estimated_value != '0.00'
+            AND s.estimated_value ~ '^[0-9]+(\.[0-9]+)?$'
             THEN CAST(s.estimated_value AS NUMERIC)
             ELSE 0 
           END), 0) as revenue
@@ -762,14 +769,14 @@ export class DatabaseStorage implements IStorage {
       const topServices = result.rows.map(row => ({
         name: row.name,
         count: Number(row.count),
-        revenue: Number(row.revenue),
+        revenue: Number(row.revenue || 0),
       }));
 
       console.log("Storage: Top services result:", topServices);
       return topServices;
     } catch (error) {
       console.error("Error getting top services:", error);
-      throw error;
+      return []; // Return empty array instead of throwing
     }
   }
 

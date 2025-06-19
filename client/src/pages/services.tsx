@@ -24,6 +24,7 @@ import { useLocation } from "wouter";
 import PhotoUpload from "@/components/photos/photo-upload";
 import CameraCapture from "@/components/camera/camera-capture";
 import ServiceExtras from "@/components/service/service-extras";
+import PaymentManager from "@/components/service/payment-manager";
 
 const serviceFormSchema = insertServiceSchema.extend({
   customerId: z.number().min(1, "Cliente é obrigatório"),
@@ -360,19 +361,6 @@ export default function Services() {
     }
   };
 
-  const getPaymentIconColor = (valorPago: string, totalValue: string) => {
-    const pago = Number(valorPago);
-    const total = Number(totalValue);
-
-    if (pago === 0) {
-      return "text-red-600";
-    } else if (pago < total) {
-      return "text-yellow-600";
-    } else {
-      return "text-green-600";
-    }
-  };
-
   return (
     <div className="flex h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-emerald-50">
       <Sidebar />
@@ -642,45 +630,12 @@ export default function Services() {
                           </span>
                         </div>
                         
-                        {/* Payment Field */}
-                        <FormField
-                          control={form.control}
-                          name="valorPago"
-                          render={({ field }) => {
-                            const totalValue = calculateTotalValue();
-                            const paymentStatus = getPaymentStatus(field.value || "0", totalValue);
-                            const iconColor = getPaymentIconColor(field.value || "0", totalValue);
-
-                            return (
-                              <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                  <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
-                                    <Coins className={`h-4 w-4 mr-2 ${iconColor}`} />
-                                    Valor Pago:
-                                  </FormLabel>
-                                  <div className={`text-xs px-2 py-1 rounded-full inline-flex items-center ${paymentStatus.bgColor} ${paymentStatus.color} font-medium`}>
-                                    <Coins className={`h-3 w-3 mr-1 ${paymentStatus.color}`} />
-                                    {paymentStatus.label}
-                                  </div>
-                                </div>
-                                <div className="relative">
-                                  <FormControl>
-                                    <Input 
-                                      {...field} 
-                                      type="number" 
-                                      step="0.01"
-                                      min="0"
-                                      max={totalValue}
-                                      placeholder="0.00"
-                                      value={field.value || ""}
-                                      className="h-11 border-2 border-emerald-300 focus:border-emerald-500 rounded-lg shadow-sm bg-white transition-all duration-200 hover:shadow-md pl-10"
-                                    />
-                                  </FormControl>
-                                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-emerald-600 text-sm font-medium">R$</span>
-                                </div>
-                                <FormMessage />
-                              </div>
-                            );
+                        {/* Payment Manager */}
+                        <PaymentManager
+                          totalValue={Number(calculateTotalValue())}
+                          currentPaidValue={Number(form.watch("valorPago") || 0)}
+                          onPaymentChange={(newValue) => {
+                            form.setValue("valorPago", newValue.toString());
                           }}
                         />
                         
