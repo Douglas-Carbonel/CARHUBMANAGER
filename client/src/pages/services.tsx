@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -883,19 +883,39 @@ export default function Services() {
                     {/* Photos Section */}
                     <div className="col-span-2 border-t pt-4">
                       <div className="space-y-4">
+                        {/* Header with title and buttons */}
                         <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-medium text-gray-700">Fotos do Serviço</h4>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setIsCameraOpen(true)}
-                            className="flex items-center gap-2"
-                          >
-                            <Camera className="h-4 w-4" />
-                            Tirar Foto
-                          </Button>
+                          <h4 className="text-sm font-medium text-gray-700">
+                            Fotos ({currentServicePhotos.length})
+                          </h4>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setIsCameraOpen(true)}
+                              className="flex items-center gap-1 text-xs px-3 py-1"
+                            >
+                              <Camera className="h-3 w-3" />
+                              Tirar Foto
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled
+                              className="flex items-center gap-1 text-xs px-3 py-1 opacity-50 cursor-not-allowed"
+                              title="Use a área de upload abaixo para adicionar fotos"
+                            >
+                              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                              </svg>
+                              Adicionar Fotos
+                            </Button>
+                          </div>
                         </div>
+                        
+                        {/* Photos preview */}
                         <PhotoUpload
                           photos={currentServicePhotos}
                           onPhotoUploaded={() => fetchServicePhotos(editingService?.id)}
