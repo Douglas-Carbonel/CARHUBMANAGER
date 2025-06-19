@@ -63,6 +63,7 @@ export default function Services() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [serviceExtras, setServiceExtras] = useState<any[]>([]);
+  const [isResumeModalOpen, setIsResumeModalOpen] = useState(false);
 
   const fetchServicePhotos = async (serviceId: number | undefined) => {
     if (!serviceId) {
@@ -598,8 +599,17 @@ export default function Services() {
                             R$ {calculateTotalValue()}
                           </span>
                         </div>
-                        <div className="mt-2 text-sm text-emerald-600">
-                          Soma do tipo de serviço + adicionais
+                        <div className="mt-3 flex justify-center">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsResumeModalOpen(true)}
+                            className="bg-white hover:bg-emerald-50 text-emerald-700 border-emerald-300 hover:border-emerald-400 font-medium px-4 py-2 text-sm transition-all duration-200"
+                          >
+                            <FileText className="h-4 w-4 mr-2" />
+                            Ver Resumo
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -675,6 +685,88 @@ export default function Services() {
               onPhotoTaken={handlePhotoTaken}
               serviceId={editingService?.id}
             />
+
+            {/* Service Resume Modal */}
+            <Dialog open={isResumeModalOpen} onOpenChange={setIsResumeModalOpen}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center text-emerald-800">
+                    <FileText className="h-5 w-5 mr-2" />
+                    Resumo do Serviço
+                  </DialogTitle>
+                </DialogHeader>
+
+                <div className="space-y-4">
+                  {/* Service Type */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center">
+                        <Wrench className="h-5 w-5 text-blue-600 mr-2" />
+                        <span className="font-medium text-blue-800">Tipo de Serviço</span>
+                      </div>
+                    </div>
+                    <div className="mt-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-blue-700">
+                          {(() => {
+                            const selectedServiceTypeId = form.watch("serviceTypeId");
+                            const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
+                            return selectedServiceType?.name || "Nenhum tipo selecionado";
+                          })()}
+                        </span>
+                        <span className="text-sm font-bold text-blue-800">
+                          R$ {(() => {
+                            const selectedServiceTypeId = form.watch("serviceTypeId");
+                            const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
+                            return Number(selectedServiceType?.defaultPrice || 0).toFixed(2);
+                          })()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Service Extras */}
+                  {serviceExtras.length > 0 && (
+                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
+                      <div className="flex items-center mb-3">
+                        <Plus className="h-5 w-5 text-purple-600 mr-2" />
+                        <span className="font-medium text-purple-800">Adicionais</span>
+                      </div>
+                      <div className="space-y-2">
+                        {serviceExtras.map((extra, index) => (
+                          <div key={index} className="flex justify-between items-center text-sm">
+                            <span className="text-purple-700">{extra.adicional || "Adicional"}</span>
+                            <span className="font-medium text-purple-800">
+                              R$ {Number(extra.valor || 0).toFixed(2)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* No Extras Message */}
+                  {serviceExtras.length === 0 && (
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                      <span className="text-sm text-gray-600">Nenhum adicional selecionado</span>
+                    </div>
+                  )}
+
+                  {/* Total */}
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-300 rounded-lg p-4">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center">
+                        <DollarSign className="h-6 w-6 text-emerald-600 mr-2" />
+                        <span className="text-lg font-bold text-emerald-800">Valor Total</span>
+                      </div>
+                      <span className="text-2xl font-bold text-emerald-700">
+                        R$ {calculateTotalValue()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
           {/* Search and Filter */}
