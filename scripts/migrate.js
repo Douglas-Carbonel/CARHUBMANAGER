@@ -115,6 +115,30 @@ async function runMigration() {
       console.log(`  - ${row.column_name}: ${row.data_type}`);
     });
 
+    // Verificar se as tabelas de service extras existem
+    const checkServiceExtrasTable = await pool.query(`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_name IN ('service_extras', 'service_extras_items')
+    `);
+
+    console.log('Tabelas de service extras encontradas:', checkServiceExtrasTable.rows.length);
+
+    if (checkServiceExtrasTable.rows.length < 2) {
+      console.log('Executando migração de service extras...');
+      
+      // Ler e executar a migração 0008_add_service_extras.sql
+      const serviceExtrasMigrationPath = path.join(process.cwd(), 'migrations', '0008_add_service_extras.sql');
+      const serviceExtrasMigrationSQL = fs.readFileSync(serviceExtrasMigrationPath, 'utf8');
+
+      console.log('Executando SQL da migração de service extras...');
+      await pool.query(serviceExtrasMigrationSQL);
+
+      console.log('Migração de service extras executada com sucesso!');
+    } else {
+      console.log('Tabelas de service extras já existem.');
+    }
+
     console.log('\n✅ Migração concluída com sucesso!');
 
   } catch (error) {
