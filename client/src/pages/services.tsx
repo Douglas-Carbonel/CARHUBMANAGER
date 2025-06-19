@@ -378,22 +378,25 @@ export default function Services() {
                 </Button>
               </DialogTrigger>
 
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-slate-50 to-blue-50/30">
+                <DialogHeader className="pb-6">
+                  <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent">
                     {editingService ? "Editar Serviço" : "Novo Serviço"}
                   </DialogTitle>
                 </DialogHeader>
 
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <div className="grid grid-cols-2 gap-6">
                       <FormField
                         control={form.control}
                         name="customerId"
                         render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Cliente</FormLabel>
+                          <FormItem className="space-y-2">
+                            <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                              <User className="h-4 w-4 mr-2 text-teal-600" />
+                              Cliente
+                            </FormLabel>
                             <Select 
                               onValueChange={(value) => {
                                 field.onChange(Number(value));
@@ -402,7 +405,7 @@ export default function Services() {
                               value={field.value > 0 ? field.value.toString() : ""}
                             >
                               <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
                                   <SelectValue placeholder="Selecione um cliente" />
                                 </SelectTrigger>
                               </FormControl>
@@ -429,15 +432,18 @@ export default function Services() {
                           );
 
                           return (
-                            <FormItem>
-                              <FormLabel>Veículo</FormLabel>
+                            <FormItem className="space-y-2">
+                              <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                <Car className="h-4 w-4 mr-2 text-teal-600" />
+                                Veículo
+                              </FormLabel>
                               <Select 
                                 onValueChange={(value) => field.onChange(Number(value))} 
                                 value={field.value > 0 ? field.value.toString() : ""}
                                 disabled={!selectedCustomerId}
                               >
                                 <FormControl>
-                                  <SelectTrigger>
+                                  <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md disabled:opacity-50">
                                     <SelectValue placeholder={selectedCustomerId ? "Selecione um veículo" : "Primeiro selecione um cliente"} />
                                   </SelectTrigger>
                                 </FormControl>
@@ -456,19 +462,22 @@ export default function Services() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-6">
                       <FormField
                         control={form.control}
                         name="serviceTypeId"
                         render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Tipo de Serviço</FormLabel>
+                          <FormItem className="space-y-2">
+                            <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                              <Wrench className="h-4 w-4 mr-2 text-teal-600" />
+                              Tipo de Serviço
+                            </FormLabel>
                             <Select 
                               onValueChange={(value) => field.onChange(Number(value))} 
                               value={field.value > 0 ? field.value.toString() : ""}
                             >
                               <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
                                   <SelectValue placeholder="Selecione um tipo" />
                                 </SelectTrigger>
                               </FormControl>
@@ -489,14 +498,17 @@ export default function Services() {
                         control={form.control}
                         name="technicianId"
                         render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Técnico Responsável</FormLabel>
+                          <FormItem className="space-y-2">
+                            <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                              <User className="h-4 w-4 mr-2 text-teal-600" />
+                              Técnico Responsável
+                            </FormLabel>
                             <Select 
                               onValueChange={(value) => field.onChange(Number(value))} 
                               value={field.value > 0 ? field.value.toString() : ""}
                             >
                               <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
                                   <SelectValue placeholder="Selecione o técnico" />
                                 </SelectTrigger>
                               </FormControl>
@@ -518,12 +530,12 @@ export default function Services() {
                       control={form.control}
                       name="status"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Status</FormLabel>
+                        <FormItem className="space-y-2">
+                          <FormLabel className="text-sm font-semibold text-slate-700">Status</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value || ""}>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue />
+                              <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
+                                <SelectValue placeholder="Selecione o status" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>

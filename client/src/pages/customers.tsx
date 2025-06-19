@@ -324,9 +324,9 @@ export default function CustomersPage() {
                     Novo Cliente
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>
+                <DialogContent className="max-w-2xl bg-gradient-to-br from-slate-50 to-blue-50/30">
+                  <DialogHeader className="pb-6">
+                    <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
                       {editingCustomer ? "Editar Cliente" : "Novo Cliente"}
                     </DialogTitle>
                   </DialogHeader>
@@ -338,16 +338,24 @@ export default function CustomersPage() {
                         description: "Por favor, verifique os campos obrigatórios",
                         variant: "destructive",
                       });
-                    })} className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    })} className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField
                           control={form.control}
                           name="name"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Nome <span className="text-red-500">*</span></FormLabel>
+                            <FormItem className="space-y-2">
+                              <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                <User className="h-4 w-4 mr-2 text-emerald-600" />
+                                Nome <span className="text-red-500 ml-1">*</span>
+                              </FormLabel>
                               <FormControl>
-                                <Input placeholder="Nome completo" {...field} required />
+                                <Input 
+                                  placeholder="Nome completo" 
+                                  {...field} 
+                                  required 
+                                  className="h-11 border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md"
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -357,14 +365,18 @@ export default function CustomersPage() {
                           control={form.control}
                           name="email"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email</FormLabel>
+                            <FormItem className="space-y-2">
+                              <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                <Mail className="h-4 w-4 mr-2 text-emerald-600" />
+                                Email
+                              </FormLabel>
                               <FormControl>
                                 <Input 
                                   placeholder="email@exemplo.com" 
                                   type="email" 
                                   {...field}
                                   value={field.value || ""}
+                                  className="h-11 border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md"
                                 />
                               </FormControl>
                               <FormMessage />
@@ -375,8 +387,11 @@ export default function CustomersPage() {
                           control={form.control}
                           name="phone"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Telefone</FormLabel>
+                            <FormItem className="space-y-2">
+                              <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                <Phone className="h-4 w-4 mr-2 text-emerald-600" />
+                                Telefone
+                              </FormLabel>
                               <FormControl>
                                 <Input 
                                   placeholder="(11) 99999-9999" 
@@ -385,6 +400,7 @@ export default function CustomersPage() {
                                   onChange={(e) => {
                                     field.onChange(applyPhoneMask(e.target.value));
                                   }}
+                                  className="h-11 border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md"
                                 />
                               </FormControl>
                               <FormMessage />
@@ -395,11 +411,11 @@ export default function CustomersPage() {
                           control={form.control}
                           name="documentType"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Tipo de Documento</FormLabel>
+                            <FormItem className="space-y-2">
+                              <FormLabel className="text-sm font-semibold text-slate-700">Tipo de Documento</FormLabel>
                               <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
-                                  <SelectTrigger>
+                                  <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
                                     <SelectValue placeholder="Selecione o tipo" />
                                   </SelectTrigger>
                                 </FormControl>
@@ -416,8 +432,8 @@ export default function CustomersPage() {
                           control={form.control}
                           name="document"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Documento</FormLabel>
+                            <FormItem className="space-y-2">
+                              <FormLabel className="text-sm font-semibold text-slate-700">Documento</FormLabel>
                               <FormControl>
                                 <Input 
                                   placeholder={form.watch("documentType") === "cpf" ? "000.000.000-00" : "00.000.000/0000-00"}
@@ -431,6 +447,7 @@ export default function CustomersPage() {
                                       field.onChange(applyCNPJMask(value));
                                     }
                                   }}
+                                  className="h-11 border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md"
                                 />
                               </FormControl>
                               <FormMessage />
@@ -441,13 +458,14 @@ export default function CustomersPage() {
                           control={form.control}
                           name="address"
                           render={({ field }) => (
-                            <FormItem className="col-span-2">
-                              <FormLabel>Endereço</FormLabel>
+                            <FormItem className="col-span-2 space-y-2">
+                              <FormLabel className="text-sm font-semibold text-slate-700">Endereço</FormLabel>
                               <FormControl>
                                 <Input 
                                   placeholder="Endereço completo" 
                                   {...field} 
                                   value={field.value || ""}
+                                  className="h-11 border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md"
                                 />
                               </FormControl>
                               <FormMessage />
@@ -458,13 +476,15 @@ export default function CustomersPage() {
                           control={form.control}
                           name="observations"
                           render={({ field }) => (
-                            <FormItem className="col-span-2">
-                              <FormLabel>Observações</FormLabel>
+                            <FormItem className="col-span-2 space-y-2">
+                              <FormLabel className="text-sm font-semibold text-slate-700">Observações</FormLabel>
                               <FormControl>
-                                <Input 
-                                  placeholder="Observações adicionais" 
+                                <Textarea 
+                                  placeholder="Observações adicionais sobre o cliente..." 
                                   {...field} 
                                   value={field.value || ""}
+                                  className="min-h-[80px] border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md resize-none"
+                                  rows={3}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -498,22 +518,24 @@ export default function CustomersPage() {
                         </div>
                       </div>
 
-                      <div className="flex justify-end gap-4 pt-4">
+                      <div className="flex justify-end gap-4 pt-6 border-t border-slate-200 mt-6">
                         <Button 
                           type="button" 
                           variant="outline" 
                           onClick={() => setIsModalOpen(false)}
                           disabled={createMutation.isPending || updateMutation.isPending}
+                          className="h-11 px-6 border-2 border-slate-300 hover:border-slate-400 rounded-lg font-semibold transition-all duration-200"
                         >
                           Cancelar
                         </Button>
                         <Button 
                           type="submit" 
                           disabled={createMutation.isPending || updateMutation.isPending}
+                          className="h-11 px-6 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg hover:shadow-xl rounded-lg font-semibold transition-all duration-200"
                         >
                           {createMutation.isPending || updateMutation.isPending 
                             ? "Processando..." 
-                            : (editingCustomer ? "Atualizar" : "Criar")
+                            : (editingCustomer ? "Atualizar Cliente" : "Criar Cliente")
                           }
                         </Button>
                       </div>

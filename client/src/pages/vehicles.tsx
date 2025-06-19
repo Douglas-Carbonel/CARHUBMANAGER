@@ -515,24 +515,27 @@ export default function VehiclesPage() {
                     Novo Veículo
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>
+                <DialogContent className="max-w-2xl bg-gradient-to-br from-slate-50 to-blue-50/30">
+                  <DialogHeader className="pb-6">
+                    <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent">
                       {editingVehicle ? "Editar Veículo" : "Novo Veículo"}
                     </DialogTitle>
                   </DialogHeader>
                   <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField
                           control={form.control}
                           name="customerId"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Cliente</FormLabel>
+                            <FormItem className="space-y-2">
+                              <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                <User className="h-4 w-4 mr-2 text-teal-600" />
+                                Cliente
+                              </FormLabel>
                               <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
                                 <FormControl>
-                                  <SelectTrigger>
+                                  <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
                                     <SelectValue placeholder="Selecione o cliente" />
                                   </SelectTrigger>
                                 </FormControl>
@@ -552,8 +555,11 @@ export default function VehiclesPage() {
                           control={form.control}
                           name="licensePlate"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Placa</FormLabel>
+                            <FormItem className="space-y-2">
+                              <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                <Car className="h-4 w-4 mr-2 text-teal-600" />
+                                Placa
+                              </FormLabel>
                               <FormControl>
                                 <Input 
                                   placeholder="ABC-1234 ou ABC1D23" 
@@ -563,6 +569,7 @@ export default function VehiclesPage() {
                                     field.onChange(formatted);
                                   }}
                                   maxLength={8}
+                                  className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md"
                                 />
                               </FormControl>
                               <FormMessage />

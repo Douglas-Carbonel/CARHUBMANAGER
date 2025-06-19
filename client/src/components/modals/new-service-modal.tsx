@@ -150,9 +150,11 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle>Novo Serviço</DialogTitle>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col bg-gradient-to-br from-slate-50 to-blue-50/30">
+        <DialogHeader className="pb-6">
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent">
+            Novo Serviço
+          </DialogTitle>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto">
@@ -428,7 +430,36 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
 
               <FormField
                 control={form.control}
-                name="notes"map((extra, index) => (
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Observações</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Observações sobre o serviço..."
+                        rows={3}
+                        {...field}
+                        value={field.value || ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {selectedServiceTypeId && (
+                <Card className="border-emerald-200 bg-emerald-50/50 backdrop-blur-sm shadow-sm">
+                  <CardContent className="p-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-emerald-700">Serviço Base:</span>
+                        <span className="text-sm font-medium text-emerald-700">
+                          R$ {Number(selectedServiceType?.defaultPrice || 0).toFixed(2)}
+                        </span>
+                      </div>
+                      {serviceExtras.length > 0 && (
+                        <>
+                          {serviceExtras.map((extra, index) => (
                             <div key={index} className="flex justify-between items-center">
                               <span className="text-xs text-emerald-600">
                                 {extra.serviceExtra?.descricao || 'Adicional'}
