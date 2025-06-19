@@ -735,7 +735,7 @@ export default function Services() {
                       <div className="space-y-2">
                         {serviceExtras.map((extra, index) => (
                           <div key={index} className="flex justify-between items-center text-sm">
-                            <span className="text-purple-700">{extra.adicional || "Adicional"}</span>
+                            <span className="text-purple-700">{extra.serviceExtra?.descricao || "Adicional"}</span>
                             <span className="font-medium text-purple-800">
                               R$ {Number(extra.valor || 0).toFixed(2)}
                             </span>

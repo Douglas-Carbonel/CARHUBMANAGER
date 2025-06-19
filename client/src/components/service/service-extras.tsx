@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +9,40 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Trash2 } from "lucide-react";
 import type { ServiceExtra, ServiceExtraItem } from "@shared/schema";
+
+// Utility functions for currency formatting
+const formatCurrency = (value: string): string => {
+  if (!value) return '';
+  
+  // Remove tudo que não for número
+  let numericValue = value.replace(/[^\d]/g, '');
+  
+  // Se for vazio, retorna vazio
+  if (!numericValue) return '';
+  
+  // Converte para número e divide por 100 para ter centavos
+  const numberValue = parseInt(numericValue) / 100;
+  
+  // Formata para moeda brasileira
+  return numberValue.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};
+
+const parseCurrency = (formattedValue: string): string => {
+  if (!formattedValue) return '0.00';
+  
+  // Remove tudo que não for número
+  const numericValue = formattedValue.replace(/[^\d]/g, '');
+  
+  if (!numericValue) return '0.00';
+  
+  // Converte para formato decimal americano
+  const numberValue = parseInt(numericValue) / 100;
+  
+  return numberValue.toFixed(2);
+};
 
 interface ServiceExtraRow {
   id?: number;
@@ -241,11 +274,13 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
                 <div className="col-span-2">
                   <Label className="text-xs text-gray-600">Valor</Label>
                   <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={extra.valor}
-                    onChange={(e) => updateExtra(index, 'valor', e.target.value)}
+                    type="text"
+                    placeholder="0,00"
+                    value={formatCurrency(extra.valor)}
+                    onChange={(e) => {
+                      const rawValue = parseCurrency(e.target.value);
+                      updateExtra(index, 'valor', rawValue);
+                    }}
                     className="h-9"
                   />
                 </div>
