@@ -351,7 +351,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         customerId: Number(req.body.customerId),
         vehicleId: Number(req.body.vehicleId),
         serviceTypeId: Number(req.body.serviceTypeId),
-        estimatedValue: req.body.estimatedValue && req.body.estimatedValue !== "" ? req.body.estimatedValue : undefined,
+        estimatedValue: req.body.estimatedValue && req.body.estimatedValue !== "" ? String(req.body.estimatedValue) : undefined,
+        valorPago: req.body.valorPago && req.body.valorPago !== "" ? String(req.body.valorPago) : "0.00",
         notes: req.body.notes || undefined,
         scheduledTime: req.body.scheduledTime || undefined,
       };

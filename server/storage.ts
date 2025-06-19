@@ -911,7 +911,7 @@ export class DatabaseStorage implements IStorage {
         .where(gte(customers.createdAt, lastWeek));
 
       // New customers this month
-      const newCustomersMonth = await db
+      const newCustomersMonth= await db
         .select({ count: sql<number>`count(*)` })
         .from(customers)
         .where(gte(customers.createdAt, lastMonth));
