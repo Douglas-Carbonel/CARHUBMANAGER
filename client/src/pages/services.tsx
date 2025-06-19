@@ -66,6 +66,13 @@ export default function Services() {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [serviceExtras, setServiceExtras] = useState<any[]>([]);
   const [isResumeModalOpen, setIsResumeModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState({
+    pix: "",
+    dinheiro: "",
+    cheque: "",
+    cartao: ""
+  });
 
   const fetchServicePhotos = async (serviceId: number | undefined) => {
     if (!serviceId) {
@@ -755,10 +762,7 @@ export default function Services() {
                                       type="button"
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => {
-                                        // Aqui abriria o modal de opções de pagamento (Pix, Dinheiro, Cheque, Cartão)
-                                        console.log("Abrir modal de formas de pagamento");
-                                      }}
+                                      onClick={() => setIsPaymentModalOpen(true)}
                                       className="h-11 px-4 border-2 border-emerald-200 hover:border-emerald-400 text-emerald-700 hover:text-emerald-800 transition-all duration-200"
                                     >
                                       <Coins className="h-4 w-4" />
@@ -935,6 +939,128 @@ export default function Services() {
                         R$ {calculateTotalValue()}
                       </span>
                     </div>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            {/* Payment Methods Modal */}
+            <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center text-emerald-800">
+                    <Coins className="h-5 w-5 mr-2" />
+                    Formas de Pagamento
+                  </DialogTitle>
+                </DialogHeader>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* PIX */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-700">PIX</label>
+                      <div className="relative">
+                        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-600" />
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={paymentMethods.pix}
+                          onChange={(e) => setPaymentMethods(prev => ({ ...prev, pix: e.target.value }))}
+                          className="pl-10 h-11 border-2 border-emerald-200 focus:border-emerald-400 rounded-lg bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Dinheiro */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-700">Dinheiro</label>
+                      <div className="relative">
+                        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-600" />
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={paymentMethods.dinheiro}
+                          onChange={(e) => setPaymentMethods(prev => ({ ...prev, dinheiro: e.target.value }))}
+                          className="pl-10 h-11 border-2 border-emerald-200 focus:border-emerald-400 rounded-lg bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Cheque */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-700">Cheque</label>
+                      <div className="relative">
+                        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-600" />
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={paymentMethods.cheque}
+                          onChange={(e) => setPaymentMethods(prev => ({ ...prev, cheque: e.target.value }))}
+                          className="pl-10 h-11 border-2 border-emerald-200 focus:border-emerald-400 rounded-lg bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Cartão */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-700">Cartão</label>
+                      <div className="relative">
+                        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-600" />
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={paymentMethods.cartao}
+                          onChange={(e) => setPaymentMethods(prev => ({ ...prev, cartao: e.target.value }))}
+                          className="pl-10 h-11 border-2 border-emerald-200 focus:border-emerald-400 rounded-lg bg-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Total das formas de pagamento */}
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-emerald-700">Total:</span>
+                      <span className="text-lg font-bold text-emerald-800">
+                        R$ {(
+                          Number(paymentMethods.pix || 0) +
+                          Number(paymentMethods.dinheiro || 0) +
+                          Number(paymentMethods.cheque || 0) +
+                          Number(paymentMethods.cartao || 0)
+                        ).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end space-x-3 pt-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setIsPaymentModalOpen(false)}
+                      className="px-6 py-2 font-medium"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button 
+                      type="button" 
+                      className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-2 font-semibold"
+                      onClick={() => {
+                        const totalPayment = (
+                          Number(paymentMethods.pix || 0) +
+                          Number(paymentMethods.dinheiro || 0) +
+                          Number(paymentMethods.cheque || 0) +
+                          Number(paymentMethods.cartao || 0)
+                        ).toFixed(2);
+                        form.setValue("valorPago", totalPayment);
+                        setIsPaymentModalOpen(false);
+                      }}
+                    >
+                      Aplicar Pagamento
+                    </Button>
                   </div>
                 </div>
               </DialogContent>
