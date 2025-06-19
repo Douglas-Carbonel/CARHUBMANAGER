@@ -404,6 +404,31 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                           <div className="border-t border-emerald-300 my-2"></div>
                           <div className="text-xs font-medium text-emerald-800 mb-1">Adicionais:</div>
                           {serviceExtras.map((extra, index) => (
+                            <div key={index} className="flex justify-between items-center text-xs">
+                              <span className="text-emerald-700">{extra.descricao}:</span>
+                              <span className="font-medium text-emerald-700">
+                                R$ {Number(extra.valor || 0).toFixed(2)}
+                              </span>
+                            </div>
+                          ))}
+                          <div className="border-t border-emerald-400 mt-2 pt-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm font-bold text-emerald-800">Valor Total:</span>
+                              <span className="text-sm font-bold text-emerald-800">
+                                R$ {calculateTotalValue()}
+                              </span>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              <FormField
+                control={form.control}
+                name="notes"map((extra, index) => (
                             <div key={index} className="flex justify-between items-center">
                               <span className="text-xs text-emerald-600">
                                 {extra.serviceExtra?.descricao || 'Adicional'}
