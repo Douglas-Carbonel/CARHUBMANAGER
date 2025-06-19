@@ -660,9 +660,12 @@ export default function Services() {
                           <div className="space-y-3">
                             {/* Service Type Details */}
                             <div className="bg-white border border-slate-200 rounded-lg p-3">
+                              <div className="mb-2">
+                                <div className="text-sm font-bold text-slate-800">Serviço Base</div>
+                              </div>
                               <div className="flex justify-between items-start">
                                 <div className="flex-1">
-                                  <div className="text-sm font-medium text-slate-800">
+                                  <div className="text-sm font-medium text-slate-700">
                                     {(() => {
                                       const selectedServiceTypeId = form.watch("serviceTypeId");
                                       const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
