@@ -97,6 +97,30 @@ export default function Services() {
     }
   };
 
+  const fetchServiceExtras = async (serviceId: number) => {
+    try {
+      const response = await fetch(`/api/services/${serviceId}/extras`, {
+        credentials: "include",
+      });
+      if (response.ok) {
+        const existingExtras = await response.json();
+        console.log('Loaded existing service extras:', existingExtras);
+        
+        // Convert existing extras to the format expected by serviceExtras state
+        const mappedExtras = existingExtras.map((item: any) => ({
+          serviceExtraId: item.serviceExtraId,
+          valor: item.valor || "0.00",
+          observacao: item.observacao || "",
+          serviceExtra: item.serviceExtra,
+        }));
+        
+        setServiceExtras(mappedExtras);
+      }
+    } catch (error) {
+      console.error("Error fetching service extras:", error);
+    }
+  };
+
   const handlePhotoTaken = () => {
     if (editingService) {
       fetchServicePhotos(editingService.id);
@@ -286,7 +310,11 @@ export default function Services() {
       ...data,
       estimatedValue: Number(totalValue),
       valorPago: data.valorPago ? data.valorPago : "0", // Garante que valorPago esteja presente
+      serviceExtras: serviceExtras, // Inclui os adicionais selecionados
     };
+
+    console.log('Service data being submitted:', serviceData);
+    console.log('Service extras:', serviceExtras);
 
     if (editingService) {
       updateMutation.mutate({ id: editingService.id, data: serviceData });
@@ -309,6 +337,8 @@ export default function Services() {
       valorPago: service.valorPago || "0",
     });
     fetchServicePhotos(service.id);
+    // Load existing service extras
+    fetchServiceExtras(service.id);
     setIsDialogOpen(true);
   };
 

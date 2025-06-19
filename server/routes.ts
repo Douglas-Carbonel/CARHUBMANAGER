@@ -382,6 +382,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Creating service with data:', JSON.stringify(serviceData, null, 2));
       const service = await storage.createService(serviceData);
       console.log('Service created successfully:', service);
+      
+      // Process service extras if they exist
+      if (req.body.serviceExtras && Array.isArray(req.body.serviceExtras) && req.body.serviceExtras.length > 0) {
+        console.log('Processing service extras:', req.body.serviceExtras);
+        
+        for (const extra of req.body.serviceExtras) {
+          const extraItem = {
+            serviceId: service.id,
+            serviceExtraId: extra.serviceExtraId,
+            valor: extra.valor || "0.00",
+            observacao: extra.observacao || "",
+          };
+          
+          console.log('Creating service extra item:', extraItem);
+          await storage.createServiceExtraItem(extraItem);
+        }
+        
+        console.log('All service extras processed successfully');
+      }
+      
       res.status(201).json(service);
     } catch (error: any) {
       console.error('Error creating service:', error);
@@ -395,10 +415,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/services/:id", requireAuth, async (req, res) => {
     try {
+      const serviceId = parseInt(req.params.id);
       const serviceData = insertServiceSchema.partial().parse(req.body);
-      const service = await storage.updateService(parseInt(req.params.id), serviceData);
+      const service = await storage.updateService(serviceId, serviceData);
+      
+      // Process service extras if they exist
+      if (req.body.serviceExtras && Array.isArray(req.body.serviceExtras)) {
+        console.log('Updating service extras for service ID:', serviceId);
+        console.log('Service extras data:', req.body.serviceExtras);
+        
+        // First, remove existing service extras for this service
+        await storage.deleteServiceExtraItemsByServiceId(serviceId);
+        
+        // Then add the new ones
+        for (const extra of req.body.serviceExtras) {
+          const extraItem = {
+            serviceId: serviceId,
+            serviceExtraId: extra.serviceExtraId,
+            valor: extra.valor || "0.00",
+            observacao: extra.observacao || "",
+          };
+          
+          console.log('Creating updated service extra item:', extraItem);
+          await storage.createServiceExtraItem(extraItem);
+        }
+        
+        console.log('Service extras updated successfully');
+      }
+      
       res.json(service);
     } catch (error: any) {
+      console.error('Error updating service:', error);
       if (error.name === 'ZodError') {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }

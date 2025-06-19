@@ -171,6 +171,7 @@ export interface IStorage {
   createServiceExtraItem(item: InsertServiceExtraItem): Promise<ServiceExtraItem>;
   updateServiceExtraItem(id: number, item: Partial<InsertServiceExtraItem>): Promise<ServiceExtraItem>;
   deleteServiceExtraItem(id: number): Promise<void>;
+  deleteServiceExtraItemsByServiceId(serviceId: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -888,6 +889,15 @@ export class DatabaseStorage implements IStorage {
       await db.delete(serviceExtrasItems).where(eq(serviceExtrasItems.id, id));
     } catch (error) {
       console.error('Error deleting service extra item:', error);
+      throw error;
+    }
+  }
+
+  async deleteServiceExtraItemsByServiceId(serviceId: number): Promise<void> {
+    try {
+      await db.delete(serviceExtrasItems).where(eq(serviceExtrasItems.serviceId, serviceId));
+    } catch (error) {
+      console.error('Error deleting service extra items by service ID:', error);
       throw error;
     }
   }
