@@ -178,6 +178,9 @@ export default function Services() {
     },
   });
 
+  // Define isLoading based on the main queries
+  const isLoading = false; // Since we're using individual queries with default values, we don't need loading state
+
   const createMutation = useMutation({
     mutationFn: (data: any) =>
       apiRequest("POST", "/api/services", data),
