@@ -366,27 +366,30 @@ export default function SchedulePage() {
                       Novo Agendamento
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                      <DialogTitle>
+                  <DialogContent className="max-w-2xl bg-gradient-to-br from-slate-50 to-blue-50/30">
+                    <DialogHeader className="pb-6">
+                      <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent">
                         {editingService ? "Editar Agendamento" : "Novo Agendamento"}
                       </DialogTitle>
                     </DialogHeader>
                     <Form {...form}>
-                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <FormField
                             control={form.control}
                             name="customerId"
                             render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Cliente</FormLabel>
+                              <FormItem className="space-y-2">
+                                <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                  <User className="h-4 w-4 mr-2 text-teal-600" />
+                                  Cliente
+                                </FormLabel>
                                 <Select onValueChange={(value) => {
                                   field.onChange(parseInt(value));
                                   form.setValue("vehicleId", 0);
                                 }} value={field.value?.toString()}>
                                   <FormControl>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
                                       <SelectValue placeholder="Selecione o cliente" />
                                     </SelectTrigger>
                                   </FormControl>
@@ -406,11 +409,14 @@ export default function SchedulePage() {
                             control={form.control}
                             name="vehicleId"
                             render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Veículo</FormLabel>
+                              <FormItem className="space-y-2">
+                                <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                  <Car className="h-4 w-4 mr-2 text-teal-600" />
+                                  Veículo
+                                </FormLabel>
                                 <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
                                   <FormControl>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
                                       <SelectValue placeholder="Selecione o veículo" />
                                     </SelectTrigger>
                                   </FormControl>
@@ -430,11 +436,14 @@ export default function SchedulePage() {
                             control={form.control}
                             name="serviceTypeId"
                             render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Tipo de Serviço</FormLabel>
+                              <FormItem className="space-y-2">
+                                <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                  <Car className="h-4 w-4 mr-2 text-teal-600" />
+                                  Tipo de Serviço
+                                </FormLabel>
                                 <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
                                   <FormControl>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
                                       <SelectValue placeholder="Selecione o tipo de serviço" />
                                     </SelectTrigger>
                                   </FormControl>
@@ -454,11 +463,14 @@ export default function SchedulePage() {
                             control={form.control}
                             name="technicianId"
                             render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Técnico Responsável</FormLabel>
+                              <FormItem className="space-y-2">
+                                <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                  <User className="h-4 w-4 mr-2 text-teal-600" />
+                                  Técnico Responsável
+                                </FormLabel>
                                 <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
                                   <FormControl>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
                                       <SelectValue placeholder="Selecione o técnico" />
                                     </SelectTrigger>
                                   </FormControl>
@@ -478,10 +490,18 @@ export default function SchedulePage() {
                             control={form.control}
                             name="scheduledDate"
                             render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Data do Agendamento</FormLabel>
+                              <FormItem className="space-y-2">
+                                <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                  <Calendar className="h-4 w-4 mr-2 text-teal-600" />
+                                  Data do Agendamento
+                                </FormLabel>
                                 <FormControl>
-                                  <Input type="date" {...field} value={field.value || ""} />
+                                  <Input 
+                                    type="date" 
+                                    {...field} 
+                                    value={field.value || ""} 
+                                    className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md"
+                                  />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -491,11 +511,11 @@ export default function SchedulePage() {
                             control={form.control}
                             name="status"
                             render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Status</FormLabel>
+                              <FormItem className="space-y-2">
+                                <FormLabel className="text-sm font-semibold text-slate-700">Status</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value || "scheduled"}>
                                   <FormControl>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
                                       <SelectValue placeholder="Selecione o status" />
                                     </SelectTrigger>
                                   </FormControl>
@@ -514,8 +534,8 @@ export default function SchedulePage() {
                             control={form.control}
                             name="estimatedValue"
                             render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Valor Estimado (R$)</FormLabel>
+                              <FormItem className="space-y-2">
+                                <FormLabel className="text-sm font-semibold text-slate-700">Valor Estimado (R$)</FormLabel>
                                 <FormControl>
                                   <Input 
                                     type="number" 
@@ -525,6 +545,7 @@ export default function SchedulePage() {
                                     {...field}
                                     value={field.value || ""}
                                     onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                                    className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md"
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -535,27 +556,34 @@ export default function SchedulePage() {
                             control={form.control}
                             name="notes"
                             render={({ field }) => (
-                              <FormItem className="md:col-span-2">
-                                <FormLabel>Observações</FormLabel>
+                              <FormItem className="md:col-span-2 space-y-2">
+                                <FormLabel className="text-sm font-semibold text-slate-700">Observações</FormLabel>
                                 <FormControl>
-                                  <Textarea placeholder="Observações adicionais..." {...field} value={field.value || ""} />
+                                  <Textarea 
+                                    placeholder="Observações adicionais..." 
+                                    {...field} 
+                                    value={field.value || ""} 
+                                    className="border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md resize-none"
+                                  />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
                         </div>
-                        <div className="flex justify-end gap-4 pt-4">
+                        <div className="flex justify-end gap-4 pt-6 border-t border-slate-200">
                           <Button 
                             type="button" 
                             variant="outline" 
                             onClick={() => setIsModalOpen(false)}
+                            className="px-6 py-2 border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all duration-200"
                           >
                             Cancelar
                           </Button>
                           <Button 
                             type="submit" 
                             disabled={createMutation.isPending || updateMutation.isPending}
+                            className="px-6 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
                           >
                             {editingService ? "Atualizar" : "Agendar"}
                           </Button>

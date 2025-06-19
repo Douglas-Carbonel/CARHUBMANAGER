@@ -15,6 +15,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertServiceSchema, type Customer, type Vehicle, type ServiceType } from "@shared/schema";
 import { z } from "zod";
+import { User, Car, Wrench, Calendar, Clock } from "lucide-react";
 import ServiceExtras from "@/components/service/service-extras";
 
 interface NewServiceModalProps {
@@ -165,8 +166,11 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                   control={form.control}
                   name="customerId"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cliente</FormLabel>
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                        <User className="h-4 w-4 mr-2 text-teal-600" />
+                        Cliente
+                      </FormLabel>
                       <Select 
                         onValueChange={(value) => {
                           const numValue = parseInt(value);
@@ -176,7 +180,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                         value={field.value ? field.value.toString() : ""}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
                             <SelectValue placeholder="Selecione um cliente" />
                           </SelectTrigger>
                         </FormControl>
@@ -203,8 +207,11 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                   control={form.control}
                   name="vehicleId"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Veículo</FormLabel>
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                        <Car className="h-4 w-4 mr-2 text-teal-600" />
+                        Veículo
+                      </FormLabel>
                       <Select 
                         onValueChange={(value) => {
                           const numValue = parseInt(value);
@@ -214,7 +221,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                         disabled={!selectedCustomerId}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md disabled:opacity-50">
                             <SelectValue placeholder={!selectedCustomerId ? "Selecione um cliente primeiro" : "Selecione um veículo"} />
                           </SelectTrigger>
                         </FormControl>
@@ -244,8 +251,11 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                 control={form.control}
                 name="serviceTypeId"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tipo de Serviço</FormLabel>
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                      <Wrench className="h-4 w-4 mr-2 text-teal-600" />
+                      Tipo de Serviço
+                    </FormLabel>
                     <Select 
                       onValueChange={(value) => {
                         const numValue = parseInt(value);
@@ -256,7 +266,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                       value={field.value ? field.value.toString() : ""}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
                           <SelectValue placeholder="Selecione o tipo de serviço" />
                         </SelectTrigger>
                       </FormControl>
@@ -283,8 +293,11 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                 control={form.control}
                 name="technicianId"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Técnico Responsável</FormLabel>
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                      <User className="h-4 w-4 mr-2 text-teal-600" />
+                      Técnico Responsável
+                    </FormLabel>
                     <Select 
                       onValueChange={(value) => {
                         const numValue = parseInt(value);
@@ -293,7 +306,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                       value={field.value ? field.value.toString() : ""}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
                           <SelectValue placeholder="Selecione o técnico" />
                         </SelectTrigger>
                       </FormControl>
@@ -321,10 +334,18 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                   control={form.control}
                   name="scheduledDate"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data Agendada</FormLabel>
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                        <Calendar className="h-4 w-4 mr-2 text-teal-600" />
+                        Data Agendada
+                      </FormLabel>
                       <FormControl>
-                        <Input {...field} type="date" />
+                        <Input 
+                          {...field} 
+                          type="date" 
+                          value={field.value || ""}
+                          className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -335,10 +356,18 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                   control={form.control}
                   name="scheduledTime"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Horário</FormLabel>
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                        <Clock className="h-4 w-4 mr-2 text-teal-600" />
+                        Horário
+                      </FormLabel>
                       <FormControl>
-                        <Input {...field} type="time" />
+                        <Input 
+                          {...field} 
+                          type="time" 
+                          value={field.value || ""}
+                          className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -350,10 +379,16 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                 control={form.control}
                 name="notes"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Observações</FormLabel>
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-sm font-semibold text-slate-700">Observações</FormLabel>
                     <FormControl>
-                      <Textarea {...field} rows={3} placeholder="Observações sobre o serviço..." />
+                      <Textarea 
+                        {...field} 
+                        rows={3} 
+                        placeholder="Observações sobre o serviço..." 
+                        value={field.value || ""}
+                        className="border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md resize-none"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
