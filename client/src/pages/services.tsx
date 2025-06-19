@@ -589,6 +589,21 @@ export default function Services() {
                       />
                     </div>
 
+                    {/* Total Value Section */}
+                    <div className="col-span-2 border-t pt-4">
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-lg font-bold text-emerald-800">Valor Total:</span>
+                          <span className="text-xl font-bold text-emerald-700">
+                            R$ {calculateTotalValue()}
+                          </span>
+                        </div>
+                        <div className="mt-2 text-sm text-emerald-600">
+                          Soma do tipo de serviço + adicionais
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Photos Section */}
                     <div className="col-span-2 border-t pt-4">
                       <div className="space-y-4">
