@@ -657,15 +657,48 @@ export default function Services() {
                             <Calculator className="h-5 w-5 mr-2 text-slate-600" />
                             Valores do Serviço
                           </h3>
-                          <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                              <span className="text-slate-600">Serviço Base:</span>
-                              <span className="font-medium">R$ {getServiceTypePrice()}</span>
+                          <div className="space-y-3">
+                            {/* Service Type Details */}
+                            <div className="bg-white border border-slate-200 rounded-lg p-3">
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <div className="text-sm font-medium text-slate-800">
+                                    {(() => {
+                                      const selectedServiceTypeId = form.watch("serviceTypeId");
+                                      const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
+                                      return selectedServiceType?.name || "Nenhum serviço selecionado";
+                                    })()}
+                                  </div>
+                                  <div className="text-xs text-slate-500 mt-1">
+                                    {(() => {
+                                      const selectedServiceTypeId = form.watch("serviceTypeId");
+                                      const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
+                                      return selectedServiceType?.description || "";
+                                    })()}
+                                  </div>
+                                </div>
+                                <span className="text-sm font-medium text-slate-700">R$ {getServiceTypePrice()}</span>
+                              </div>
                             </div>
+
+                            {/* Service Extras Details */}
                             {serviceExtras.length > 0 && (
-                              <div className="flex justify-between text-sm">
-                                <span className="text-slate-600">Extras:</span>
-                                <span className="font-medium">R$ {calculateExtrasTotal()}</span>
+                              <div className="bg-white border border-slate-200 rounded-lg p-3">
+                                <div className="text-sm font-medium text-slate-800 mb-2">Adicionais Inclusos:</div>
+                                <div className="space-y-2">
+                                  {serviceExtras.map((extra, index) => (
+                                    <div key={index} className="flex justify-between items-center text-sm">
+                                      <span className="text-slate-600">{extra.serviceExtra?.descricao || `Adicional ${index + 1}`}</span>
+                                      <span className="font-medium text-slate-700">R$ {Number(extra.valor || 0).toFixed(2)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="border-t border-slate-200 pt-2 mt-2">
+                                  <div className="flex justify-between text-sm">
+                                    <span className="text-slate-600 font-medium">Subtotal Extras:</span>
+                                    <span className="font-medium text-slate-700">R$ {calculateExtrasTotal()}</span>
+                                  </div>
+                                </div>
                               </div>
                             )}
                             <div className="border-t border-slate-300 pt-2 mt-2">
@@ -864,82 +897,181 @@ export default function Services() {
 
             {/* Service Resume Modal */}
             <Dialog open={isResumeModalOpen} onOpenChange={setIsResumeModalOpen}>
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="flex items-center text-emerald-800">
                     <FileText className="h-5 w-5 mr-2" />
-                    Resumo do Serviço
+                    Resumo Completo do Serviço
                   </DialogTitle>
                 </DialogHeader>
 
-                <div className="space-y-4">
-                  {/* Service Type */}
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center">
-                        <Wrench className="h-5 w-5 text-blue-600 mr-2" />
-                        <span className="font-medium text-blue-800">Tipo de Serviço</span>
+                <div className="space-y-6">
+                  {/* Client and Vehicle Info */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-center mb-3">
+                        <User className="h-5 w-5 text-blue-600 mr-2" />
+                        <span className="font-medium text-blue-800">Cliente</span>
+                      </div>
+                      <div className="text-sm text-blue-700">
+                        {(() => {
+                          const selectedCustomerId = form.watch("customerId");
+                          const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
+                          return selectedCustomer?.name || "Nenhum cliente selecionado";
+                        })()}
                       </div>
                     </div>
-                    <div className="mt-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-blue-700">
+
+                    <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                      <div className="flex items-center mb-3">
+                        <Car className="h-5 w-5 text-indigo-600 mr-2" />
+                        <span className="font-medium text-indigo-800">Veículo</span>
+                      </div>
+                      <div className="text-sm text-indigo-700">
+                        {(() => {
+                          const selectedVehicleId = form.watch("vehicleId");
+                          const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);
+                          return selectedVehicle ? `${selectedVehicle.brand} ${selectedVehicle.model} - ${selectedVehicle.licensePlate}` : "Nenhum veículo selecionado";
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Service Details */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                    <div className="flex items-center mb-3">
+                      <Calendar className="h-5 w-5 text-slate-600 mr-2" />
+                      <span className="font-medium text-slate-800">Agendamento</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-slate-600">Data:</span>
+                        <span className="ml-2 font-medium">{form.watch("scheduledDate") || "Não definida"}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-600">Hora:</span>
+                        <span className="ml-2 font-medium">{form.watch("scheduledTime") || "Não definida"}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-600">Status:</span>
+                        <span className="ml-2 font-medium capitalize">{form.watch("status") || "agendado"}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-600">Técnico:</span>
+                        <span className="ml-2 font-medium">
                           {(() => {
-                            const selectedServiceTypeId = form.watch("serviceTypeId");
-                            const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
-                            return selectedServiceType?.name || "Nenhum tipo selecionado";
+                            const selectedTechnicianId = form.watch("technicianId");
+                            const selectedTechnician = users.find(u => u.id === selectedTechnicianId);
+                            return selectedTechnician ? `${selectedTechnician.firstName} ${selectedTechnician.lastName}` : "Não atribuído";
                           })()}
                         </span>
-                        <span className="text-sm font-bold text-blue-800">
-                          R$ {(() => {
-                            const selectedServiceTypeId = form.watch("serviceTypeId");
-                            const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
-                            return Number(selectedServiceType?.defaultPrice || 0).toFixed(2);
-                          })()}
-                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Service Type */}
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                    <div className="flex items-center mb-3">
+                      <Wrench className="h-5 w-5 text-emerald-600 mr-2" />
+                      <span className="font-medium text-emerald-800">Tipo de Serviço</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-medium text-emerald-700">
+                            {(() => {
+                              const selectedServiceTypeId = form.watch("serviceTypeId");
+                              const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
+                              return selectedServiceType?.name || "Nenhum tipo selecionado";
+                            })()}
+                          </div>
+                          <div className="text-sm text-emerald-600">
+                            {(() => {
+                              const selectedServiceTypeId = form.watch("serviceTypeId");
+                              const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
+                              return selectedServiceType?.description || "";
+                            })()}
+                          </div>
+                        </div>
+                        <span className="font-bold text-emerald-800">R$ {getServiceTypePrice()}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Service Extras */}
                   {serviceExtras.length > 0 && (
-                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                       <div className="flex items-center mb-3">
                         <Plus className="h-5 w-5 text-purple-600 mr-2" />
-                        <span className="font-medium text-purple-800">Adicionais</span>
+                        <span className="font-medium text-purple-800">Adicionais Inclusos</span>
                       </div>
                       <div className="space-y-2">
                         {serviceExtras.map((extra, index) => (
                           <div key={index} className="flex justify-between items-center text-sm">
-                            <span className="text-purple-700">{extra.serviceExtra?.descricao || "Adicional"}</span>
-                            <span className="font-medium text-purple-800">
-                              R$ {Number(extra.valor || 0).toFixed(2)}
-                            </span>
+                            <span className="text-purple-700">{extra.serviceExtra?.descricao || `Adicional ${index + 1}`}</span>
+                            <span className="font-medium text-purple-800">R$ {Number(extra.valor || 0).toFixed(2)}</span>
                           </div>
                         ))}
+                        <div className="border-t border-purple-300 pt-2 mt-2">
+                          <div className="flex justify-between font-medium">
+                            <span className="text-purple-700">Subtotal Extras:</span>
+                            <span className="text-purple-800">R$ {calculateExtrasTotal()}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
 
-                  {/* No Extras Message */}
-                  {serviceExtras.length === 0 && (
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-                      <span className="text-sm text-gray-600">Nenhum adicional selecionado</span>
+                  {/* Financial Summary */}
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-lg p-4">
+                    <div className="flex items-center mb-3">
+                      <DollarSign className="h-5 w-5 text-emerald-600 mr-2" />
+                      <span className="font-medium text-emerald-800">Resumo Financeiro</span>
                     </div>
-                  )}
-
-                  {/* Total */}
-                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-300 rounded-lg p-4">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center">
-                        <DollarSign className="h-6 w-6 text-emerald-600 mr-2" />
-                        <span className="text-lg font-bold text-emerald-800">Valor Total</span>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-emerald-700">Valor do Serviço:</span>
+                        <span className="font-medium">R$ {getServiceTypePrice()}</span>
                       </div>
-                      <span className="text-2xl font-bold text-emerald-700">
-                        R$ {calculateTotalValue()}
-                      </span>
+                      {serviceExtras.length > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-emerald-700">Adicionais:</span>
+                          <span className="font-medium">R$ {calculateExtrasTotal()}</span>
+                        </div>
+                      )}
+                      <div className="border-t border-emerald-300 pt-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-lg font-bold text-emerald-800">Total do Serviço:</span>
+                          <span className="text-xl font-bold text-emerald-700">R$ {calculateTotalValue()}</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-emerald-700">Valor Pago:</span>
+                        <span className="font-medium">R$ {Number(form.watch("valorPago") || 0).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-emerald-700">Saldo:</span>
+                        <span className={`font-medium ${
+                          (Number(calculateTotalValue()) - Number(form.watch("valorPago") || 0)) <= 0 
+                            ? 'text-green-600' 
+                            : 'text-red-600'
+                        }`}>
+                          R$ {(Number(calculateTotalValue()) - Number(form.watch("valorPago") || 0)).toFixed(2)}
+                        </span>
+                      </div>
                     </div>
                   </div>
+
+                  {/* Notes */}
+                  {form.watch("notes") && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <div className="flex items-center mb-3">
+                        <FileText className="h-5 w-5 text-yellow-600 mr-2" />
+                        <span className="font-medium text-yellow-800">Observações</span>
+                      </div>
+                      <div className="text-sm text-yellow-700">{form.watch("notes")}</div>
+                    </div>
+                  )}
                 </div>
               </DialogContent>
             </Dialog>
