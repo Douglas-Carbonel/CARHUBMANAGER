@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertServiceSchema, type Customer, type Vehicle, type ServiceType } from "@shared/schema";
@@ -21,13 +22,15 @@ interface NewServiceModalProps {
   onClose: () => void;
 }
 
+const serviceSchemaWithoutEstimated = insertServiceSchema.omit({ estimatedValue: true });
+
 export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [serviceExtras, setServiceExtras] = useState<any[]>([]);
 
-  const form = useForm<z.infer<typeof insertServiceSchema>>({
-    resolver: zodResolver(insertServiceSchema),
+  const form = useForm<z.infer<typeof serviceSchemaWithoutEstimated>>({
+    resolver: zodResolver(serviceSchemaWithoutEstimated),
     defaultValues: {
       customerId: 0,
       vehicleId: 0,
@@ -36,7 +39,6 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
       status: "scheduled",
       scheduledDate: "",
       scheduledTime: "",
-      estimatedValue: "",
       notes: "",
     },
   });
@@ -61,15 +63,19 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
     enabled: isOpen,
   });
 
-  // Debug logs
-  console.log('Modal aberto:', isOpen);
-  console.log('Customers:', customers);
-  console.log('Vehicles:', vehicles);
-  console.log('Service Types:', serviceTypes);
-
   const createMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof insertServiceSchema>) => {
-      await apiRequest("POST", "/api/services", data);
+    mutationFn: async (data: any) => {
+      const totalValue = calculateTotalValue();
+      const serviceData = {
+        ...data,
+        estimatedValue: totalValue,
+        notes: data.notes || undefined,
+        scheduledTime: data.scheduledTime || undefined,
+        scheduledDate: data.scheduledDate || new Date().toISOString().split('T')[0],
+      };
+      
+      console.log('Creating service with data:', serviceData);
+      await apiRequest("POST", "/api/services", serviceData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
@@ -104,25 +110,14 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
     },
   });
 
-  const onSubmit = (data: z.infer<typeof insertServiceSchema>) => {
-    // Transform the data to match the backend schema
-    const serviceData = {
-      ...data,
-      estimatedValue: data.estimatedValue && data.estimatedValue !== "" ? data.estimatedValue : undefined,
-      notes: data.notes || undefined,
-      scheduledTime: data.scheduledTime || undefined,
-      // Ensure date is in YYYY-MM-DD format without timezone conversion
-      scheduledDate: data.scheduledDate || new Date().toISOString().split('T')[0],
-    };
-
-    console.log('New Service Modal - Submitting data:', serviceData);
-    createMutation.mutate(serviceData);
+  const onSubmit = (data: z.infer<typeof serviceSchemaWithoutEstimated>) => {
+    console.log('New Service Modal - Submitting data:', data);
+    createMutation.mutate(data);
   };
 
   const getCustomerVehicles = (customerId: number) => {
     if (!customerId || !vehicles) return [];
     const customerVehicles = vehicles.filter((v: Vehicle) => v.customerId === customerId);
-    console.log('Veículos para cliente', customerId, ':', customerVehicles);
     return customerVehicles;
   };
 
@@ -151,11 +146,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
     return total.toFixed(2);
   };
 
-  // Update estimated value when service type or extras change
-  const totalValue = calculateTotalValue();
-  if (form.getValues("estimatedValue") !== totalValue) {
-    form.setValue("estimatedValue", totalValue);
-  }
+  const selectedServiceType = serviceTypes?.find((st: ServiceType) => st.id === selectedServiceTypeId);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -178,7 +169,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                         onValueChange={(value) => {
                           const numValue = parseInt(value);
                           field.onChange(numValue);
-                          form.setValue("vehicleId", 0); // Reset vehicle when customer changes
+                          form.setValue("vehicleId", 0);
                         }}
                         value={field.value ? field.value.toString() : ""}
                       >
@@ -257,6 +248,8 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                       onValueChange={(value) => {
                         const numValue = parseInt(value);
                         field.onChange(numValue);
+                        // Reset extras when service type changes
+                        setServiceExtras([]);
                       }}
                       value={field.value ? field.value.toString() : ""}
                     >
@@ -271,7 +264,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                         ) : serviceTypes && serviceTypes.length > 0 ? (
                           serviceTypes.map((serviceType: ServiceType) => (
                             <SelectItem key={serviceType.id} value={serviceType.id.toString()}>
-                              {serviceType.name}
+                              {serviceType.name} - R$ {Number(serviceType.defaultPrice || 0).toFixed(2)}
                             </SelectItem>
                           ))
                         ) : (
@@ -351,8 +344,6 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                 />
               </div>
 
-              
-
               <FormField
                 control={form.control}
                 name="notes"
@@ -368,9 +359,12 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
               />
 
               {/* Service Extras Section */}
-              <div className="col-span-1 md:col-span-2">
+              <div>
                 <Card className="border border-gray-200">
-                  <CardContent className="p-4">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-gray-700">Adicionais do Serviço</CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     {selectedServiceTypeId ? (
                       <ServiceExtras
                         onChange={setServiceExtras}
@@ -385,33 +379,53 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                 </Card>
               </div>
 
-              {/* Total Value Display */}
-              <div className="col-span-1 md:col-span-2">
+              {/* Service Summary */}
+              {selectedServiceTypeId && (
                 <Card className="border border-emerald-200 bg-emerald-50">
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-lg font-semibold text-emerald-800">Valor Total:</span>
-                      <span className="text-xl font-bold text-emerald-700">R$ {totalValue}</span>
-                    </div>
-                    {selectedServiceTypeId && serviceTypes && (
-                      <div className="mt-2 text-sm text-emerald-600">
-                        <div className="flex justify-between">
-                          <span>Tipo de serviço:</span>
-                          <span>R$ {Number(serviceTypes.find((st: ServiceType) => st.id === selectedServiceTypeId)?.defaultPrice || 0).toFixed(2)}</span>
-                        </div>
-                        {serviceExtras.length > 0 && (
-                          <div className="flex justify-between">
-                            <span>Adicionais:</span>
-                            <span>R$ {serviceExtras.reduce((sum, extra) => sum + Number(extra.valor || 0), 0).toFixed(2)}</span>
-                          </div>
-                        )}
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-emerald-800">Resumo do Serviço</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-emerald-700">Tipo de serviço:</span>
+                        <span className="text-sm font-medium text-emerald-700">
+                          {selectedServiceType?.name}
+                        </span>
                       </div>
-                    )}
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-emerald-700">Valor base:</span>
+                        <span className="text-sm font-medium text-emerald-700">
+                          R$ {Number(selectedServiceType?.defaultPrice || 0).toFixed(2)}
+                        </span>
+                      </div>
+                      {serviceExtras.length > 0 && (
+                        <>
+                          <div className="border-t border-emerald-300 my-2"></div>
+                          <div className="text-xs font-medium text-emerald-800 mb-1">Adicionais:</div>
+                          {serviceExtras.map((extra, index) => (
+                            <div key={index} className="flex justify-between items-center">
+                              <span className="text-xs text-emerald-600">
+                                {extra.serviceExtra?.descricao || 'Adicional'}
+                              </span>
+                              <span className="text-xs font-medium text-emerald-600">
+                                R$ {Number(extra.valor || 0).toFixed(2)}
+                              </span>
+                            </div>
+                          ))}
+                        </>
+                      )}
+                      <div className="border-t border-emerald-300 my-2"></div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-semibold text-emerald-800">Valor Total:</span>
+                        <span className="text-xl font-bold text-emerald-700">R$ {calculateTotalValue()}</span>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
-              </div>
+              )}
 
-              <div className="flex justify-end space-x-3 pt-4 col-span-1 md:col-span-2">
+              <div className="flex justify-end space-x-3 pt-4">
                 <Button 
                   type="button" 
                   variant="outline"
@@ -422,7 +436,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                 <Button 
                   type="submit"
                   className="bg-primary hover:bg-primary/90"
-                  disabled={createMutation.isPending}
+                  disabled={createMutation.isPending || !selectedServiceTypeId}
                 >
                   {createMutation.isPending ? "Criando..." : "Criar Serviço"}
                 </Button>
