@@ -308,7 +308,7 @@ export default function Services() {
     const totalValue = calculateTotalValue();
     const serviceData = {
       ...data,
-      estimatedValue: Number(totalValue),
+      estimatedValue: String(totalValue), // Converte para string como esperado pelo schema
       valorPago: data.valorPago ? data.valorPago : "0", // Garante que valorPago esteja presente
       serviceExtras: serviceExtras, // Inclui os adicionais selecionados
     };

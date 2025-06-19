@@ -134,6 +134,8 @@ This is a comprehensive automotive service management system built as a full-sta
 
 ```
 Changelog:
+- June 19, 2025. Fixed critical bug: service extras now save correctly and load in edit mode
+- June 19, 2025. Enhanced payment status indicators with prominent colors and badges
 - June 19, 2025. Reorganized service form UI with improved payment and value sections
 - June 19, 2025. Implemented comprehensive payment methods modal (PIX, Cash, Check, Card)
 - June 19, 2025. Enhanced service resume modal with complete service overview
