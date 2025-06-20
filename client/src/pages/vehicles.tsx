@@ -535,7 +535,10 @@ export default function VehiclesPage() {
         body: JSON.stringify({ 
           photo, 
           category,
-          description: 'Foto capturada pela câmera'
+          description: category === 'vehicle' ? 'Veículo' : 
+                      category === 'damage' ? 'Dano' :
+                      category === 'before' ? 'Antes' :
+                      category === 'after' ? 'Depois' : 'Outro'
         }),
         credentials: 'include',
       });
@@ -931,6 +934,27 @@ export default function VehiclesPage() {
                                 </svg>
                                 Adicionar Fotos
                               </Button>
+                            </div>
+                          </div>
+                          
+                          {/* Categoria para upload - aparece sempre */}
+                          <div className="flex items-center gap-2">
+                            <label className="text-xs text-gray-600 whitespace-nowrap">Categoria das fotos:</label>
+                            <Select value={uploadCategory} onValueChange={setUploadCategory}>
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="vehicle">Veículo</SelectItem>
+                                <SelectItem value="damage">Dano</SelectItem>
+                                <SelectItem value="before">Antes</SelectItem>
+                                <SelectItem value="after">Depois</SelectItem>
+                                <SelectItem value="other">Outro</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
                               <input
                                 type="file"
                                 multiple
@@ -954,7 +978,10 @@ export default function VehiclesPage() {
                                         body: JSON.stringify({ 
                                           photo: compressedPhoto, 
                                           category: uploadCategory,
-                                          description: 'Foto enviada pelo usuário'
+                                          description: uploadCategory === 'vehicle' ? 'Veículo' : 
+                                                      uploadCategory === 'damage' ? 'Dano' :
+                                                      uploadCategory === 'before' ? 'Antes' :
+                                                      uploadCategory === 'after' ? 'Depois' : 'Outro'
                                         }),
                                         credentials: 'include',
                                       });
