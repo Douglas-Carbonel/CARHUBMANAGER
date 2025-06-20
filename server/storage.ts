@@ -576,9 +576,11 @@ export class DatabaseStorage implements IStorage {
       let appointments = 0;
       const uniqueCustomers = new Set();
 
-      // Calculate week start (7 days ago)
-      const oneWeekAgo = new Date(brazilTime.getTime() - (7 * 24 * 60 * 60 * 1000));
-      const weekAgoStr = oneWeekAgo.toISOString().split('T')[0];
+      // Calculate actual week start (Monday) in Brazilian timezone
+      const currentDay = brazilTime.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1; // If Sunday, go back 6 days
+      const weekStart = new Date(brazilTime.getTime() - (daysFromMonday * 24 * 60 * 60 * 1000));
+      const weekStartStr = weekStart.toISOString().split('T')[0];
 
       allServicesResult.rows.forEach((service: any) => {
         const estimatedValue = parseValue(service.estimated_value);
@@ -598,8 +600,8 @@ export class DatabaseStorage implements IStorage {
           console.log(`Daily service found: ID ${service.id}, Date: ${serviceDate}, Value: ${estimatedValue}, Status: ${status}`);
         }
 
-        // Calculate weekly services (this week's services)
-        if (serviceDate >= weekAgoStr && serviceDate <= todayStr && status !== 'cancelled') {
+        // Calculate weekly services (this week's services from Monday to today)
+        if (serviceDate >= weekStartStr && serviceDate <= todayStr && status !== 'cancelled') {
           weeklyServices++;
         }
 
@@ -1587,8 +1589,11 @@ export class DatabaseStorage implements IStorage {
       const now = new Date();
       const brazilianTime = new Date(now.getTime() - (3 * 60 * 60 * 1000)); // UTC-3
       const today = brazilianTime.toISOString().split('T')[0];
-      const oneWeekAgo = new Date(brazilianTime.getTime() - (7 * 24 * 60 * 60 * 1000));
-      const weekAgoStr = oneWeekAgo.toISOString().split('T')[0];
+      // Calculate actual week start (Monday) in Brazilian timezone
+      const currentDay = brazilianTime.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1; // If Sunday, go back 6 days
+      const weekStart = new Date(brazilianTime.getTime() - (daysFromMonday * 24 * 60 * 60 * 1000));
+      const weekStartStr = weekStart.toISOString().split('T')[0];
 
       console.log('Schedule stats - Today date:', today);
       console.log('Schedule stats - Week ago date:', weekAgoStr);
@@ -1607,7 +1612,7 @@ export class DatabaseStorage implements IStorage {
       const thisWeekResult = await db.execute(sql`
         SELECT COUNT(*) as count
         FROM services 
-        WHERE scheduled_date >= ${weekAgoStr}
+        WHERE scheduled_date >= ${weekStartStr}
         AND scheduled_date <= ${today}
         ${technicianCondition}
       `);
@@ -1616,7 +1621,7 @@ export class DatabaseStorage implements IStorage {
       const completedResult = await db.execute(sql`
         SELECT COUNT(*) as count
         FROM services 
-        WHERE scheduled_date >= ${weekAgoStr}
+        WHERE scheduled_date >= ${weekStartStr}
         AND scheduled_date <= ${today}
         AND status = 'completed'
         ${technicianCondition}

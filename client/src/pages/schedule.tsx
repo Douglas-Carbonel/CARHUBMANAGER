@@ -70,7 +70,11 @@ export default function SchedulePage() {
       serviceTypeId: 0,
       technicianId: user?.role === 'technician' ? user.id : 0,
       status: "scheduled",
-      scheduledDate: new Date(new Date().toLocaleString("en-US", {timeZone: "America/Sao_Paulo"})).toISOString().split('T')[0], // Data atual brasileira como padrão
+      scheduledDate: (() => {
+        const today = new Date();
+        const brazilTime = new Date(today.getTime() - (3 * 60 * 60 * 1000));
+        return brazilTime.toISOString().split('T')[0];
+      })(), // Data atual brasileira como padrão
       estimatedValue: undefined,
       finalValue: undefined,
       notes: "",
@@ -217,17 +221,21 @@ export default function SchedulePage() {
 
   // Helper functions for date filtering
   const getDateRange = (period: string) => {
-    // Use Brazilian timezone for today's date
+    // Use Brazilian timezone (UTC-3) consistently
     const today = new Date();
-    const brazilTime = new Date(today.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+    const brazilTime = new Date(today.getTime() - (3 * 60 * 60 * 1000));
     const todayStr = brazilTime.toISOString().split('T')[0];
+
+    console.log('Schedule getDateRange - Brazilian date:', todayStr, 'for period:', period);
 
     switch (period) {
       case "day":
         return { start: todayStr, end: todayStr };
       case "week":
         const startOfWeek = new Date(brazilTime);
-        startOfWeek.setDate(brazilTime.getDate() - brazilTime.getDay());
+        const dayOfWeek = startOfWeek.getDay();
+        const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // If Sunday, go back 6 days
+        startOfWeek.setDate(brazilTime.getDate() - daysFromMonday);
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6);
         return {
@@ -259,14 +267,16 @@ export default function SchedulePage() {
       const { start, end } = getDateRange(periodFilter);
       const serviceDate = service.scheduledDate;
       
-      // Debug logging
-      console.log('Filtering service:', {
-        serviceDate,
-        period: periodFilter,
-        start,
-        end,
-        serviceId: service.id
-      });
+      // Debug logging for today filter specifically
+      if (periodFilter === "day") {
+        console.log('Schedule - Filtering service for TODAY:', {
+          serviceId: service.id,
+          serviceDate,
+          customerName: service.customer?.name,
+          expectedDate: start,
+          matches: serviceDate === start
+        });
+      }
       
       matchesPeriod = serviceDate >= start && serviceDate <= end;
     }
@@ -355,7 +365,11 @@ export default function SchedulePage() {
                           serviceTypeId: 0,
                           technicianId: user?.role === 'technician' ? user.id : 0,
                           status: "scheduled",
-                          scheduledDate: new Date(new Date().toLocaleString("en-US", {timeZone: "America/Sao_Paulo"})).toISOString().split('T')[0],
+                          scheduledDate: (() => {
+                            const today = new Date();
+                            const brazilTime = new Date(today.getTime() - (3 * 60 * 60 * 1000));
+                            return brazilTime.toISOString().split('T')[0];
+                          })(),
                           estimatedValue: undefined,
                           finalValue: undefined,
                           notes: "",
