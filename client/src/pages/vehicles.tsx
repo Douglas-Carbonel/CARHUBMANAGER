@@ -448,6 +448,10 @@ export default function VehiclesPage() {
           description: "A foto foi salva com sucesso.",
         });
         fetchVehiclePhotos(vehicleId);
+        // Refresh the main vehicles list to update photo counts in cards
+        queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
+        // Refresh the main vehicles list to update photo counts in cards
+        queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
       }
     } catch (error) {
       console.error('Error saving photo:', error);
@@ -857,7 +861,11 @@ export default function VehiclesPage() {
                             
                             <PhotoUpload
                               photos={currentVehiclePhotos}
-                              onPhotoUploaded={() => fetchVehiclePhotos(editingVehicle?.id)}
+                              onPhotoUploaded={() => {
+                                fetchVehiclePhotos(editingVehicle?.id);
+                                // Invalidate vehicles query to refresh the main list without closing modal
+                                queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
+                              }}
                               vehicleId={editingVehicle?.id}
                               maxPhotos={7}
                             />

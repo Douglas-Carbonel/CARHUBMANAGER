@@ -134,6 +134,7 @@ This is a comprehensive automotive service management system built as a full-sta
 
 ```
 Changelog:
+- January 18, 2025. Fixed photo management issues - photos now refresh properly in cards after camera capture and deletion doesn't close edit modal
 - January 18, 2025. Fixed vehicles page data loading issue - added missing queryFn to useQuery hooks
 - January 18, 2025. Fixed React Select component empty value error in vehicles page
 - January 18, 2025. Migration from Replit Agent to standard Replit completed successfully
