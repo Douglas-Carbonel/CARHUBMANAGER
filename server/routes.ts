@@ -760,43 +760,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     }
   });
 
-  // Loyalty tracking routes
-  app.get("/api/loyalty/tracking", requireAuth, async (req, res) => {
-    try {
-      const tracking = await storage.getLoyaltyTracking();
-      res.json(tracking);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch loyalty tracking" });
-    }
-  });
 
-  app.get("/api/loyalty/customer/:customerId", requireAuth, async (req, res) => {
-    try {
-      const tracking = await storage.getLoyaltyTrackingByCustomer(parseInt(req.params.customerId));
-      res.json(tracking);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch customer loyalty tracking" });
-    }
-  });
-
-  app.get("/api/loyalty/overdue", requireAuth, async (req, res) => {
-    try {
-      const overdue = await storage.getOverdueLoyaltyServices();
-      res.json(overdue);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch overdue loyalty services" });
-    }
-  });
-
-  app.get("/api/loyalty/upcoming/:days", requireAuth, async (req, res) => {
-    try {
-      const days = parseInt(req.params.days) || 30;
-      const upcoming = await storage.getUpcomingLoyaltyServices(days);
-      res.json(upcoming);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch upcoming loyalty services" });
-    }
-  });
 
   app.get("/api/login", (req, res) => {
     // Redirect to auth page when accessing login via GET

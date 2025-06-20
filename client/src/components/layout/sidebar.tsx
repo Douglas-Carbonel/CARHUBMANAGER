@@ -15,7 +15,7 @@ import {
   LogOut,
   Menu,
   X,
-  Star,
+
 } from "lucide-react";
 
 const getNavigation = (userRole: string | null) => {
@@ -223,21 +223,7 @@ export default function Sidebar() {
             </Link>
           );
         })}
-        {user?.role === 'admin' && (
-              <Link key="Fidelização" href="/loyalty">
-              <Button
-                variant="ghost"
-                className={cn(
-                  "w-full justify-start text-left text-cyan-200 hover:text-white hover:bg-teal-600/50 rounded-lg transition-all duration-200 font-medium",
-                  location === "/loyalty" && "bg-gradient-to-r from-emerald-400 to-cyan-400 text-teal-900 shadow-lg font-semibold",
-                  isCollapsed && "px-2"
-                )}
-              >
-                <Star className={cn("h-5 w-5", !isCollapsed && "mr-3")} />
-                {!isCollapsed && "Fidelização"}
-              </Button>
-            </Link>
-          )}
+
       </nav>
 
       {/* User info and logout */}

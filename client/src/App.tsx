@@ -16,7 +16,7 @@ import ReportsPage from "@/pages/reports";
 import VehicleHistory from "@/pages/vehicle-history";
 import VehiclePhotos from "@/pages/vehicle-photos";
 import ServicePhotos from "@/pages/service-photos";
-import LoyaltyPage from "@/pages/loyalty";
+
 import Admin from "@/pages/admin";
 import NotFoundPage from "@/pages/not-found";
 import { ProtectedRoute } from "@/lib/protected-route";
@@ -110,11 +110,7 @@ function App() {
               <ServicePhotos />
             </ProtectedRoute>
           </Route>
-          <Route path="/loyalty">
-            <ProtectedRoute>
-              <LoyaltyPage />
-            </ProtectedRoute>
-          </Route>
+
           <Route path="/admin">
             <ProtectedRoute>
               <Admin />

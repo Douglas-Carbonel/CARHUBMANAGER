@@ -39,7 +39,6 @@ This is a comprehensive automotive service management system built as a full-sta
 
 ### Customer Management
 - **Document Validation**: Brazilian CPF/CNPJ validation and formatting
-- **Loyalty System**: Points-based customer loyalty tracking
 - **Profile Management**: Complete customer information with contact details
 
 ### Vehicle Management
@@ -51,13 +50,9 @@ This is a comprehensive automotive service management system built as a full-sta
 - **Service Types**: Configurable service categories with pricing
 - **Scheduling**: Date and time-based appointment system
 - **Status Tracking**: Complete service lifecycle management
-- **Recurring Services**: Automated loyalty tracking for recurring services
 
-### Loyalty Program
-- **Points System**: Configurable points per service type
-- **Recurring Services**: Automatic tracking of service intervals
-- **Due Date Management**: Proactive customer notification system
-- **Customer Retention**: Analytics for customer service patterns
+
+
 
 ### Reporting System
 - **Financial Analytics**: Revenue tracking and service profitability
@@ -79,13 +74,9 @@ This is a comprehensive automotive service management system built as a full-sta
 2. Service appointments scheduled with type and pricing
 3. Service status tracked through completion lifecycle
 4. Payment processing and service completion recording
-5. Loyalty points awarded and recurring service tracking updated
+5. Payment processing and service completion recording
 
-### Loyalty System Flow
-1. Service completion triggers loyalty point calculation
-2. Recurring services create tracking entries with due dates
-3. System monitors due dates for proactive notifications
-4. Customer loyalty status influences service recommendations
+
 
 ## External Dependencies
 
@@ -134,6 +125,7 @@ This is a comprehensive automotive service management system built as a full-sta
 
 ```
 Changelog:
+- June 20, 2025. Removed loyalty/fidelization functionality from the system
 - June 20, 2025. Added payment status filters to services page (Pagos, Pendentes, Parcial)
 - June 20, 2025. Fixed photo deletion preventing form submission with proper event handling
 - January 18, 2025. Fixed photo management issues - photos now refresh properly in cards after camera capture and deletion doesn't close edit modal
