@@ -507,14 +507,14 @@ export default function VehiclesPage() {
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-gray-500" />
                   <Select 
-                    value={customerFilter?.toString() || ""} 
-                    onValueChange={(value) => setCustomerFilter(value ? parseInt(value) : null)}
+                    value={customerFilter?.toString() || "all"} 
+                    onValueChange={(value) => setCustomerFilter(value === "all" ? null : parseInt(value))}
                   >
                     <SelectTrigger className="h-10 bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-lg">
                       <SelectValue placeholder="Filtrar por cliente" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos os clientes</SelectItem>
+                      <SelectItem value="all">Todos os clientes</SelectItem>
                       {customers.map((customer: Customer) => (
                         <SelectItem key={customer.id} value={customer.id.toString()}>
                           {customer.name}
