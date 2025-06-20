@@ -128,20 +128,28 @@ export default function PhotoUpload({
 
         const formData = new FormData();
         formData.append('photo', compressedFile);
-        if (customerId) formData.append('customerId', customerId.toString());
-        if (vehicleId) formData.append('vehicleId', vehicleId.toString());
-        if (serviceId) formData.append('serviceId', serviceId.toString());
-        formData.append('category', 'other');
+        formData.append('category', 'vehicle');
         formData.append('description', '');
 
-        const res = await fetch('/api/photos/upload', {
+        // Use specific route based on entity type
+        let uploadUrl = '/api/photos/upload';
+        if (vehicleId) {
+          uploadUrl = `/api/vehicles/${vehicleId}/photos`;
+        } else if (customerId) {
+          formData.append('customerId', customerId.toString());
+        } else if (serviceId) {
+          formData.append('serviceId', serviceId.toString());
+        }
+
+        const res = await fetch(uploadUrl, {
           method: 'POST',
           body: formData,
           credentials: 'include',
         });
 
         if (!res.ok) {
-          throw new Error(`${res.status}: ${res.statusText}`);
+          const errorText = await res.text();
+          throw new Error(`${res.status}: ${errorText}`);
         }
       }
 

@@ -416,11 +416,28 @@ export default function VehiclesPage() {
   const handlePhotoTaken = async (photo: string, vehicleId?: number) => {
     if (!vehicleId) {
       console.error("Vehicle ID is required to save the photo.");
+      toast({
+        title: "Erro",
+        description: "ID do veículo é obrigatório para salvar a foto.",
+        variant: "destructive",
+      });
       return;
     }
 
     try {
-      const res = await apiRequest("POST", `/api/vehicles/${vehicleId}/photos`, { photo });
+      const res = await fetch(`/api/vehicles/${vehicleId}/photos`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          photo, 
+          category: 'vehicle',
+          description: 'Foto capturada pela câmera'
+        }),
+        credentials: 'include',
+      });
+
       if (res.ok) {
         toast({
           title: "Foto salva!",
@@ -428,9 +445,11 @@ export default function VehiclesPage() {
         });
         fetchVehiclePhotos(vehicleId); // Refresh vehicle photos
       } else {
-        throw new Error("Failed to save photo");
+        const errorText = await res.text();
+        throw new Error(`Failed to save photo: ${errorText}`);
       }
     } catch (error: any) {
+      console.error("Error saving photo:", error);
       toast({
         title: "Erro ao salvar foto",
         description: error.message,
@@ -797,7 +816,12 @@ export default function VehiclesPage() {
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                onClick={() => document.getElementById('vehicle-photo-upload')?.click()}
+                                onClick={() => {
+                                  const fileInput = document.getElementById('vehicle-photo-upload') as HTMLInputElement;
+                                  if (fileInput) {
+                                    fileInput.click();
+                                  }
+                                }}
                                 className="flex items-center gap-2"
                               >
                                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -811,6 +835,35 @@ export default function VehiclesPage() {
                                 accept="image/*"
                                 className="hidden"
                                 id="vehicle-photo-upload"
+                                onChange={async (e) => {
+                                  if (!editingVehicle?.id || !e.target.files) return;
+                                  
+                                  const files = Array.from(e.target.files);
+                                  for (const file of files) {
+                                    const formData = new FormData();
+                                    formData.append('photo', file);
+                                    formData.append('category', 'vehicle');
+                                    
+                                    try {
+                                      const res = await fetch(`/api/vehicles/${editingVehicle.id}/photos`, {
+                                        method: 'POST',
+                                        body: formData,
+                                        credentials: 'include',
+                                      });
+                                      
+                                      if (res.ok) {
+                                        fetchVehiclePhotos(editingVehicle.id);
+                                        toast({
+                                          title: "Foto adicionada",
+                                          description: "A foto foi adicionada com sucesso.",
+                                        });
+                                      }
+                                    } catch (error) {
+                                      console.error('Error uploading photo:', error);
+                                    }
+                                  }
+                                  e.target.value = '';
+                                }}
                               />
                             </div>
                           </div>

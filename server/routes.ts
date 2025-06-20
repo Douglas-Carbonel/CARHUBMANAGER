@@ -1030,6 +1030,128 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     }
   });
 
+  // Vehicle photos routes
+  app.get("/api/vehicles/:vehicleId/photos", requireAuth, async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.vehicleId);
+      const photos = await photosStorage.getPhotos({ vehicleId });
+      res.json(photos);
+    } catch (error) {
+      console.error("Error getting vehicle photos:", error);
+      res.status(500).json({ message: "Failed to get vehicle photos" });
+    }
+  });
+
+  app.post("/api/vehicles/:vehicleId/photos", requireAuth, async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.vehicleId);
+      
+      // Check if it's a file upload or base64 data
+      if (req.headers['content-type']?.includes('multipart/form-data')) {
+        // Handle file upload using multer middleware
+        upload.single('photo')(req, res, async (err) => {
+          if (err) {
+            console.error("Multer error:", err);
+            return res.status(400).json({ message: "File upload error" });
+          }
+
+          if (!req.file) {
+            return res.status(400).json({ message: "No photo file provided" });
+          }
+
+          const { category, description } = req.body;
+
+          try {
+            // Compress and resize image
+            const compressedFilename = `compressed_${req.file.filename}`;
+            const compressedPath = path.join(uploadsDir, compressedFilename);
+
+            await sharp(req.file.path)
+              .resize(480, 480, { 
+                fit: 'inside',
+                withoutEnlargement: true 
+              })
+              .jpeg({ 
+                quality: 70,
+                progressive: true 
+              })
+              .toFile(compressedPath);
+
+            // Remove original file
+            fs.unlinkSync(req.file.path);
+
+            // Get compressed file stats
+            const compressedStats = fs.statSync(compressedPath);
+
+            const photoData = {
+              category: category || 'vehicle',
+              fileName: compressedFilename,
+              originalName: req.file.originalname,
+              mimeType: 'image/jpeg',
+              fileSize: compressedStats.size,
+              url: `/uploads/${compressedFilename}`,
+              description: description || undefined,
+              uploadedBy: req.user?.id || undefined,
+            };
+
+            const photo = await photosStorage.createPhoto('vehicle', vehicleId, photoData);
+            res.status(201).json(photo);
+          } catch (error) {
+            console.error("Error processing uploaded photo:", error);
+            res.status(500).json({ message: "Failed to process uploaded photo" });
+          }
+        });
+      } else {
+        // Handle base64 photo data (from camera)
+        const { photo, category, description } = req.body;
+
+        if (!photo) {
+          return res.status(400).json({ message: "No photo data provided" });
+        }
+
+        // Convert base64 to buffer
+        const base64Data = photo.replace(/^data:image\/\w+;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+
+        // Create filename
+        const filename = `camera_${Date.now()}-${Math.round(Math.random() * 1E9)}.jpg`;
+        const filepath = path.join(uploadsDir, filename);
+
+        // Process and save image
+        await sharp(buffer)
+          .resize(480, 480, { 
+            fit: 'inside',
+            withoutEnlargement: true 
+          })
+          .jpeg({ 
+            quality: 70,
+            progressive: true 
+          })
+          .toFile(filepath);
+
+        // Get file stats
+        const stats = fs.statSync(filepath);
+
+        const photoData = {
+          category: category || 'vehicle',
+          fileName: filename,
+          originalName: `camera_capture_${Date.now()}.jpg`,
+          mimeType: 'image/jpeg',
+          fileSize: stats.size,
+          url: `/uploads/${filename}`,
+          description: description || undefined,
+          uploadedBy: req.user?.id || undefined,
+        };
+
+        const savedPhoto = await photosStorage.createPhoto('vehicle', vehicleId, photoData);
+        res.status(201).json(savedPhoto);
+      }
+    } catch (error) {
+      console.error("Error handling vehicle photo:", error);
+      res.status(500).json({ message: "Failed to handle vehicle photo" });
+    }
+  });
+
   // Serve uploaded files
   app.use('/uploads', express.static(uploadsDir));
 
