@@ -55,7 +55,23 @@ export class PhotosStorage {
       query += ' ORDER BY created_at DESC';
 
       const result = await pool.query(query, values);
-      return result.rows;
+      
+      // Converter o resultado para o formato esperado pelo frontend
+      return result.rows.map(row => ({
+        id: row.id,
+        entityType: row.entity_type,
+        entityId: row.entity_id,
+        category: row.category,
+        fileName: row.file_name,
+        originalName: row.original_name,
+        mimeType: row.mime_type,
+        fileSize: row.file_size,
+        url: row.url,
+        description: row.description,
+        uploadedBy: row.uploaded_by,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      }));
     } catch (error) {
       console.error('Error fetching photos:', error);
       return [];

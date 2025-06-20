@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -48,7 +47,7 @@ const compressImage = (file: File, maxWidth: number = 480, quality: number = 0.7
     img.onload = () => {
       // Calculate new dimensions
       let { width, height } = img;
-      
+
       if (width > height) {
         if (width > maxWidth) {
           height = (height * maxWidth) / width;
@@ -66,7 +65,7 @@ const compressImage = (file: File, maxWidth: number = 480, quality: number = 0.7
 
       // Draw and compress
       ctx.drawImage(img, 0, 0, width, height);
-      
+
       canvas.toBlob(
         (blob) => {
           const compressedFile = new File([blob!], file.name, {
@@ -241,45 +240,45 @@ export default function PhotoUpload({
       ) : (
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
           {photos.map((photo) => (
-            <div key={photo.id} className="group relative">
-              <Card className="overflow-hidden hover:shadow-md transition-shadow">
-                <CardContent className="p-0">
-                  <div className="relative aspect-square">
-                    <img
-                      src={photo.url}
-                      alt={photo.description || 'Foto'}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                      <div className="flex space-x-1">
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => handleEditPhoto(photo)}
-                          className="text-white bg-blue-600 hover:bg-blue-700 h-8 w-8 p-0"
-                        >
-                          <Edit3 className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDeletePhoto(photo.id)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
+                    <div key={photo.id} className="relative group">
+                      <Card className="overflow-hidden hover:shadow-md transition-shadow">
+                        <CardContent className="p-0">
+                          <div className="relative aspect-square">
+                            <img
+                              src={photo.url}
+                              alt={photo.description || 'Foto'}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                              <div className="flex space-x-1">
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  onClick={() => handleEditPhoto(photo)}
+                                  className="text-white bg-blue-600 hover:bg-blue-700 h-8 w-8 p-0"
+                                >
+                                  <Edit3 className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleDeletePhoto(photo.id)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="p-2">
+                            <Badge className={`${categoryColors[photo.category as keyof typeof categoryColors] || categoryColors.other} text-xs`}>
+                              {categoryLabels[photo.category as keyof typeof categoryLabels] || 'Outro'}
+                            </Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
                     </div>
-                  </div>
-                  <div className="p-2">
-                    <Badge className={`${categoryColors[photo.category as keyof typeof categoryColors] || categoryColors.other} text-xs`}>
-                      {categoryLabels[photo.category as keyof typeof categoryLabels] || 'Outro'}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          ))}
+                  ))}
         </div>
       )}
 

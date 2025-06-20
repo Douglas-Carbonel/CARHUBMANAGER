@@ -236,7 +236,7 @@ export default function PhotoGallery({
                       {categoryLabels[photo.category as keyof typeof categoryLabels] || 'Outro'}
                     </Badge>
                     <span className="text-xs text-gray-500">
-                      {new Date(photo.createdAt).toLocaleDateString()}
+                      {photo.createdAt ? new Date(photo.createdAt).toLocaleDateString('pt-BR') : ''}
                     </span>
                   </div>
                   {photo.description && (

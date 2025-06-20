@@ -822,6 +822,17 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     }
   });
 
+  app.get("/api/customers/:customerId/photos", requireAuth, async (req, res) => {
+    try {
+      const customerId = parseInt(req.params.customerId);
+      const photos = await photosStorage.getPhotos({ customerId });
+      res.json(photos);
+    } catch (error) {
+      console.error("Error getting customer photos:", error);
+      res.status(500).json({ message: "Failed to get customer photos" });
+    }
+  });
+
   app.get("/api/photos/:id", requireAuth, async (req, res) => {
     try {
       const photoId = parseInt(req.params.id);
