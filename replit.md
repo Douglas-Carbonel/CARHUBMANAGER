@@ -134,6 +134,8 @@ This is a comprehensive automotive service management system built as a full-sta
 
 ```
 Changelog:
+- June 19, 2025. Added photo category selection during capture and upload (Vehicle, Damage, Before, After, Other)
+- June 19, 2025. Enhanced temporary photos display with category labels for new vehicle creation
 - June 19, 2025. Implemented automatic image compression for all photo uploads (camera and file upload)
 - June 19, 2025. Optimized image storage: photos now compressed to max 800px width, JPEG quality 80%
 - June 19, 2025. Fixed vehicle photo capture during creation - photos now save correctly when creating new vehicles

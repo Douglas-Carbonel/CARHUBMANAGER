@@ -90,7 +90,7 @@ const compressImage = (file: File | string, maxWidth: number = 800, quality: num
 interface CameraCaptureProps {
   isOpen: boolean;
   onClose: () => void;
-  onPhotoTaken: (photo: string, vehicleId?: number) => void;
+  onPhotoTaken: (photo: string, category: string, vehicleId?: number) => void;
   vehicleId?: number;
 }
 
@@ -98,8 +98,17 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ isOpen, onClose, onPhotoT
   const [hasPhoto, setHasPhoto] = useState(false);
   const [photo, setPhoto] = useState<string | null>(null);
   const [isCameraReady, setIsCameraReady] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>("vehicle");
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
+
+  const categoryOptions = [
+    { value: "vehicle", label: "Veículo" },
+    { value: "damage", label: "Dano" },
+    { value: "before", label: "Antes" },
+    { value: "after", label: "Depois" },
+    { value: "other", label: "Outro" }
+  ];
 
   useEffect(() => {
     let stream: MediaStream | null = null;
@@ -162,8 +171,11 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ isOpen, onClose, onPhotoT
 
   const savePhoto = () => {
     if (photo) {
-      onPhotoTaken(photo, vehicleId);
+      onPhotoTaken(photo, selectedCategory, vehicleId);
       onClose();
+      setPhoto(null);
+      setHasPhoto(false);
+      setSelectedCategory("vehicle"); // Reset to default
     }
   };
 
@@ -190,6 +202,24 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ isOpen, onClose, onPhotoT
         ) : (
           <>
             {photo && <img src={photo} alt="Captured" className="w-full rounded-md" />}
+            
+            {/* Category Selection */}
+            <div className="mt-4 space-y-2">
+              <label className="text-sm font-medium text-gray-700">Categoria da Foto:</label>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {categoryOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="flex justify-around mt-4">
               <Button type="button" variant="secondary" onClick={retakePhoto}>
                 Retirar
@@ -223,7 +253,8 @@ export default function VehiclesPage() {
   const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
   const [currentVehiclePhotos, setCurrentVehiclePhotos] = useState<Photo[]>([]);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const [temporaryPhotos, setTemporaryPhotos] = useState<string[]>([]);
+  const [temporaryPhotos, setTemporaryPhotos] = useState<{photo: string, category: string}[]>([]);
+  const [uploadCategory, setUploadCategory] = useState<string>("vehicle");
 
   // Check URL parameters for customer filtering
   useEffect(() => {
@@ -308,7 +339,7 @@ export default function VehiclesPage() {
     onSuccess: async (vehicleData) => {
       // Se há fotos temporárias, salvá-las agora com o ID do veículo criado
       if (temporaryPhotos.length > 0) {
-        for (const photo of temporaryPhotos) {
+        for (const tempPhoto of temporaryPhotos) {
           try {
             await fetch(`/api/vehicles/${vehicleData.id}/photos`, {
               method: 'POST',
@@ -316,8 +347,8 @@ export default function VehiclesPage() {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({ 
-                photo, 
-                category: 'vehicle',
+                photo: tempPhoto.photo, 
+                category: tempPhoto.category,
                 description: 'Foto capturada pela câmera'
               }),
               credentials: 'include',
@@ -483,10 +514,10 @@ export default function VehiclesPage() {
     return matchesSearch && matchesCustomer;
   });
 
-  const handlePhotoTaken = async (photo: string, vehicleId?: number) => {
+  const handlePhotoTaken = async (photo: string, category: string, vehicleId?: number) => {
     // Se não há ID do veículo (novo veículo), armazenar como foto temporária
     if (!vehicleId) {
-      setTemporaryPhotos(prev => [...prev, photo]);
+      setTemporaryPhotos(prev => [...prev, { photo, category }]);
       toast({
         title: "Foto capturada!",
         description: "A foto será salva quando o veículo for cadastrado.",
@@ -503,7 +534,7 @@ export default function VehiclesPage() {
         },
         body: JSON.stringify({ 
           photo, 
-          category: 'vehicle',
+          category,
           description: 'Foto capturada pela câmera'
         }),
         credentials: 'include',
@@ -922,7 +953,7 @@ export default function VehiclesPage() {
                                         },
                                         body: JSON.stringify({ 
                                           photo: compressedPhoto, 
-                                          category: 'vehicle',
+                                          category: uploadCategory,
                                           description: 'Foto enviada pelo usuário'
                                         }),
                                         credentials: 'include',
@@ -961,13 +992,21 @@ export default function VehiclesPage() {
                             <div className="mt-4 space-y-2">
                               <h5 className="text-sm font-medium text-gray-600">Fotos capturadas (serão salvas após cadastrar o veículo):</h5>
                               <div className="grid grid-cols-3 gap-2">
-                                {temporaryPhotos.map((photo, index) => (
+                                {temporaryPhotos.map((tempPhoto, index) => (
                                   <div key={index} className="relative group">
                                     <img 
-                                      src={photo} 
+                                      src={tempPhoto.photo} 
                                       alt={`Foto temporária ${index + 1}`}
                                       className="w-full h-20 object-cover rounded-lg border border-gray-200"
                                     />
+                                    <div className="absolute bottom-1 left-1 right-1">
+                                      <span className="text-xs bg-black bg-opacity-70 text-white px-1 py-0.5 rounded text-center block">
+                                        {tempPhoto.category === 'vehicle' ? 'Veículo' : 
+                                         tempPhoto.category === 'damage' ? 'Dano' :
+                                         tempPhoto.category === 'before' ? 'Antes' :
+                                         tempPhoto.category === 'after' ? 'Depois' : 'Outro'}
+                                      </span>
+                                    </div>
                                     <button
                                       type="button"
                                       onClick={() => {
