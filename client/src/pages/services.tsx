@@ -57,6 +57,7 @@ export default function Services() {
 
   const [searchTerm, setSearchTerm] = useState(customerFilter);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterPayment, setFilterPayment] = useState<string>("all");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -348,22 +349,36 @@ export default function Services() {
     }
   };
 
+  const getPaymentCategory = (valorPago: string, totalValue: string) => {
+    const pago = Number(valorPago);
+    const total = Number(totalValue);
+
+    if (pago === 0) return "pendentes";
+    if (pago < total) return "parcial";
+    return "pagos";
+  };
+
   const filteredServices = services.filter((service) => {
     const searchLower = searchTerm.toLowerCase();
+
+    // Payment filtering
+    const totalValue = service.estimatedValue || "0";
+    const paymentCategory = getPaymentCategory(service.valorPago || "0", totalValue);
+    const matchesPayment = filterPayment === "all" || paymentCategory === filterPayment;
 
     // If we have a customerId filter from URL, only show that customer's services
     if (customerIdFilter) {
       const customerId = parseInt(customerIdFilter);
       const matchesCustomer = service.customerId === customerId;
       const matchesStatus = filterStatus === "all" || service.status === filterStatus;
-      return matchesCustomer && matchesStatus;
+      return matchesCustomer && matchesStatus && matchesPayment;
     }
 
     // If we have a customer name filter from URL and searchTerm matches it, only show that customer's services
     if (customerFilter && searchTerm === customerFilter) {
       const matchesCustomer = (service.customer?.name || "").toLowerCase() === searchLower;
       const matchesStatus = filterStatus === "all" || service.status === filterStatus;
-      return matchesCustomer && matchesStatus;
+      return matchesCustomer && matchesStatus && matchesPayment;
     }
 
     // Vehicle Filtering by ID
@@ -371,7 +386,7 @@ export default function Services() {
       const vehicleId = parseInt(vehicleIdFilter);
       const matchesVehicle = service.vehicleId === vehicleId;
       const matchesStatus = filterStatus === "all" || service.status === filterStatus;
-      return matchesVehicle && matchesStatus;
+      return matchesVehicle && matchesStatus && matchesPayment;
     }
 
     // Otherwise, use the regular search logic
@@ -384,7 +399,7 @@ export default function Services() {
 
     const matchesStatus = filterStatus === "all" || service.status === filterStatus;
 
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesPayment;
   });
 
   // Pre-fill search with customer name or vehicle plate if provided
@@ -1310,6 +1325,18 @@ export default function Services() {
                 <SelectItem value="in_progress">Em Andamento</SelectItem>
                 <SelectItem value="completed">Concluído</SelectItem>
                 <SelectItem value="cancelled">Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select value={filterPayment} onValueChange={setFilterPayment}>
+              <SelectTrigger className="w-48 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm">
+                <SelectValue placeholder="Filtrar por pagamento" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os pagamentos</SelectItem>
+                <SelectItem value="pagos">Pagos</SelectItem>
+                <SelectItem value="pendentes">Pendentes</SelectItem>
+                <SelectItem value="parcial">Parcial</SelectItem>
               </SelectContent>
             </Select>
 
