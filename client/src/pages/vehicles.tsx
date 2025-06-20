@@ -185,6 +185,24 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ isOpen, onClose, onPhotoT
         <DialogHeader>
           <DialogTitle>Capturar Foto</DialogTitle>
         </DialogHeader>
+        
+        {/* Category Selection - Always visible */}
+        <div className="mb-4 space-y-2">
+          <label className="text-sm font-medium text-gray-700">Categoria da Foto:</label>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {categoryOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
         {!hasPhoto ? (
           <>
             <video ref={videoRef} autoPlay className="w-full aspect-video rounded-md" style={{ display: isCameraReady ? 'block' : 'none' }} />
@@ -202,23 +220,6 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ isOpen, onClose, onPhotoT
         ) : (
           <>
             {photo && <img src={photo} alt="Captured" className="w-full rounded-md" />}
-            
-            {/* Category Selection */}
-            <div className="mt-4 space-y-2">
-              <label className="text-sm font-medium text-gray-700">Categoria da Foto:</label>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {categoryOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
 
             <div className="flex justify-around mt-4">
               <Button type="button" variant="secondary" onClick={retakePhoto}>
@@ -937,32 +938,15 @@ export default function VehiclesPage() {
                             </div>
                           </div>
                           
-                          {/* Categoria para upload - aparece sempre */}
-                          <div className="flex items-center gap-2">
-                            <label className="text-xs text-gray-600 whitespace-nowrap">Categoria das fotos:</label>
-                            <Select value={uploadCategory} onValueChange={setUploadCategory}>
-                              <SelectTrigger className="h-8 text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="vehicle">Veículo</SelectItem>
-                                <SelectItem value="damage">Dano</SelectItem>
-                                <SelectItem value="before">Antes</SelectItem>
-                                <SelectItem value="after">Depois</SelectItem>
-                                <SelectItem value="other">Outro</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="file"
-                                multiple
-                                accept="image/*"
-                                className="hidden"
-                                id="vehicle-photo-upload"
-                                onChange={async (e) => {
-                                  if (!editingVehicle?.id || !e.target.files) return;
+                          <div className="space-y-4">
+                            <input
+                              type="file"
+                              multiple
+                              accept="image/*"
+                              className="hidden"
+                              id="vehicle-photo-upload"
+                              onChange={async (e) => {
+                                if (!editingVehicle?.id || !e.target.files) return;
                                   
                                   const files = Array.from(e.target.files);
                                   for (const file of files) {
@@ -1005,53 +989,53 @@ export default function VehiclesPage() {
                                   e.target.value = '';
                                 }}
                               />
-                            </div>
-                          </div>
-                          <PhotoUpload
-                            photos={currentVehiclePhotos}
-                            onPhotoUploaded={() => fetchVehiclePhotos(editingVehicle?.id)}
-                            vehicleId={editingVehicle?.id}
-                            maxPhotos={7}
-                          />
-                          
-                          {/* Mostrar fotos temporárias para novos veículos */}
-                          {!editingVehicle && temporaryPhotos.length > 0 && (
-                            <div className="mt-4 space-y-2">
-                              <h5 className="text-sm font-medium text-gray-600">Fotos capturadas (serão salvas após cadastrar o veículo):</h5>
-                              <div className="grid grid-cols-3 gap-2">
-                                {temporaryPhotos.map((tempPhoto, index) => (
-                                  <div key={index} className="relative group">
-                                    <img 
-                                      src={tempPhoto.photo} 
-                                      alt={`Foto temporária ${index + 1}`}
-                                      className="w-full h-20 object-cover rounded-lg border border-gray-200"
-                                    />
-                                    <div className="absolute bottom-1 left-1 right-1">
-                                      <span className="text-xs bg-black bg-opacity-70 text-white px-1 py-0.5 rounded text-center block">
-                                        {tempPhoto.category === 'vehicle' ? 'Veículo' : 
-                                         tempPhoto.category === 'damage' ? 'Dano' :
-                                         tempPhoto.category === 'before' ? 'Antes' :
-                                         tempPhoto.category === 'after' ? 'Depois' : 'Outro'}
-                                      </span>
+                            
+                            <PhotoUpload
+                              photos={currentVehiclePhotos}
+                              onPhotoUploaded={() => fetchVehiclePhotos(editingVehicle?.id)}
+                              vehicleId={editingVehicle?.id}
+                              maxPhotos={7}
+                            />
+                            
+                            {/* Mostrar fotos temporárias para novos veículos */}
+                            {!editingVehicle && temporaryPhotos.length > 0 && (
+                              <div className="mt-4 space-y-2">
+                                <h5 className="text-sm font-medium text-gray-600">Fotos capturadas (serão salvas após cadastrar o veículo):</h5>
+                                <div className="grid grid-cols-3 gap-2">
+                                  {temporaryPhotos.map((tempPhoto, index) => (
+                                    <div key={index} className="relative group">
+                                      <img 
+                                        src={tempPhoto.photo} 
+                                        alt={`Foto temporária ${index + 1}`}
+                                        className="w-full h-20 object-cover rounded-lg border border-gray-200"
+                                      />
+                                      <div className="absolute bottom-1 left-1 right-1">
+                                        <span className="text-xs bg-black bg-opacity-70 text-white px-1 py-0.5 rounded text-center block">
+                                          {tempPhoto.category === 'vehicle' ? 'Veículo' : 
+                                           tempPhoto.category === 'damage' ? 'Dano' :
+                                           tempPhoto.category === 'before' ? 'Antes' :
+                                           tempPhoto.category === 'after' ? 'Depois' : 'Outro'}
+                                        </span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setTemporaryPhotos(prev => prev.filter((_, i) => i !== index));
+                                          toast({
+                                            title: "Foto removida",
+                                            description: "A foto temporária foi removida.",
+                                          });
+                                        }}
+                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                                      >
+                                        ×
+                                      </button>
                                     </div>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setTemporaryPhotos(prev => prev.filter((_, i) => i !== index));
-                                        toast({
-                                          title: "Foto removida",
-                                          description: "A foto temporária foi removida.",
-                                        });
-                                      }}
-                                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                                    >
-                                      ×
-                                    </button>
-                                  </div>
-                                ))}
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -1062,7 +1046,7 @@ export default function VehiclesPage() {
                           onClick={() => {
                             setIsModalOpen(false);
                             setCurrentVehiclePhotos([]);
-                            setTemporaryPhotos([]); // Limpar fotos temporárias ao cancelar
+                            setTemporaryPhotos([]);
                             setEditingVehicle(null);
                             form.reset();
                           }}
@@ -1081,27 +1065,26 @@ export default function VehiclesPage() {
                 </DialogContent>
               </Dialog>
 
-            {/* Camera Capture Modal */}
-            <CameraCapture
-              isOpen={isCameraOpen}
-              onClose={() => setIsCameraOpen(false)}
-              onPhotoTaken={handlePhotoTaken}
-              vehicleId={editingVehicle?.id}
-            />
-            </div>
+              {/* Camera Capture Modal */}
+              <CameraCapture
+                isOpen={isCameraOpen}
+                onClose={() => setIsCameraOpen(false)}
+                onPhotoTaken={handlePhotoTaken}
+                vehicleId={editingVehicle?.id}
+              />
 
-            {/* Analytics Modal */}
-            <Dialog open={isAnalyticsModalOpen} onOpenChange={setIsAnalyticsModalOpen}>
-              <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center">
-                    <BarChart3 className="h-5 w-5 mr-2" />
-                    Relatório de Veículos
-                  </DialogTitle>
-                </DialogHeader>
-                <VehicleAnalytics />
-              </DialogContent>
-            </Dialog>
+              {/* Analytics Modal */}
+              <Dialog open={isAnalyticsModalOpen} onOpenChange={setIsAnalyticsModalOpen}>
+                <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center">
+                      <BarChart3 className="h-5 w-5 mr-2" />
+                      Relatório de Veículos
+                    </DialogTitle>
+                  </DialogHeader>
+                  <VehicleAnalytics />
+                </DialogContent>
+              </Dialog>
 
             {vehiclesLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
