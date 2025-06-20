@@ -1263,3 +1263,5 @@ export default function VehiclesPage() {
     </div>
   );
 }
+
+export default VehiclesPage;

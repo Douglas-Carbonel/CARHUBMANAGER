@@ -146,7 +146,9 @@ Changelog:
 - June 19, 2025. Implemented comprehensive payment methods modal (PIX, Cash, Check, Card)
 - June 19, 2025. Enhanced service resume modal with complete service overview
 - June 19, 2025. Improved service values section with detailed base service and extras display
-- June 18, 2025. Successfully migrated from Replit Agent to standard Replit environment
+- January 2025. Successfully completed migration from Replit Agent to standard Replit environment
+- January 2025. Fixed JSX syntax errors in vehicles.tsx component
+- January 2025. Installed missing tsx dependency for TypeScript execution
 - June 18, 2025. Fixed photos database schema and constraints - camera functionality now working
 - June 18, 2025. Implemented custom photos storage layer to handle database structure mismatch
 - June 15, 2025. Dashboard migrado para Replit com dados reais do Supabase
