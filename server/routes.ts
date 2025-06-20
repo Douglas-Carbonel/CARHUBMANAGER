@@ -519,7 +519,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Dashboard stats API - User:", user.role, user.id);
       const technicianId = user.role === 'admin' ? null : user.id;
       console.log("Dashboard stats API - Using technicianId:", technicianId);
-      const stats = await getFixedDashboardStats(technicianId);
+      const stats = await storage.getDashboardStats(technicianId);
       console.log("Dashboard stats API - Result:", stats);
       res.json(stats);
     } catch (error) {
@@ -648,7 +648,9 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
   // Schedule analytics
   app.get("/api/dashboard/schedule-stats", requireAuth, async (req, res) => {
     try {
-      const stats = await storage.getScheduleStats();
+      const user = req.user!;
+      const technicianId = user.role === 'admin' ? null : user.id;
+      const stats = await storage.getScheduleStats(technicianId);
       res.json(stats);
     } catch (error) {
       console.error('Error getting schedule stats:', error);

@@ -83,6 +83,7 @@ export interface IStorage {
     completedRevenue: number;
     predictedRevenue: number;
     dailyServices: number;
+    weeklyServices: number;
     appointments: number;
     activeCustomers: number;
   }>;
@@ -529,6 +530,7 @@ export class DatabaseStorage implements IStorage {
     completedRevenue: number;
     predictedRevenue: number;
     dailyServices: number;
+    weeklyServices: number;
     appointments: number;
     activeCustomers: number;
   }> {
@@ -570,8 +572,13 @@ export class DatabaseStorage implements IStorage {
       let completedRevenue = 0;
       let predictedRevenue = 0;
       let dailyServices = 0;
+      let weeklyServices = 0;
       let appointments = 0;
       const uniqueCustomers = new Set();
+
+      // Calculate week start (7 days ago)
+      const oneWeekAgo = new Date(brazilTime.getTime() - (7 * 24 * 60 * 60 * 1000));
+      const weekAgoStr = oneWeekAgo.toISOString().split('T')[0];
 
       allServicesResult.rows.forEach((service: any) => {
         const estimatedValue = parseValue(service.estimated_value);
@@ -589,6 +596,11 @@ export class DatabaseStorage implements IStorage {
           dailyRevenue += estimatedValue;
           dailyServices++;
           console.log(`Daily service found: ID ${service.id}, Date: ${serviceDate}, Value: ${estimatedValue}, Status: ${status}`);
+        }
+
+        // Calculate weekly services (this week's services)
+        if (serviceDate >= weekAgoStr && serviceDate <= todayStr && status !== 'cancelled') {
+          weeklyServices++;
         }
 
         // Calculate completed revenue
@@ -614,6 +626,7 @@ export class DatabaseStorage implements IStorage {
         completedRevenue: Math.round(completedRevenue * 100) / 100,
         predictedRevenue: Math.round(predictedRevenue * 100) / 100,
         dailyServices,
+        weeklyServices,
         appointments,
         activeCustomers: uniqueCustomers.size
       };
@@ -628,6 +641,7 @@ export class DatabaseStorage implements IStorage {
         completedRevenue: 0,
         predictedRevenue: 0,
         dailyServices: 0,
+        weeklyServices: 0,
         appointments: 0,
         activeCustomers: 0
       };
@@ -1567,7 +1581,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Schedule-specific analytics
-  async getScheduleStats() {
+  async getScheduleStats(technicianId?: number | null) {
     try {
       // Use current date in Brazilian timezone (UTC-3)
       const now = new Date();
@@ -1579,51 +1593,49 @@ export class DatabaseStorage implements IStorage {
       console.log('Schedule stats - Today date:', today);
       console.log('Schedule stats - Week ago date:', weekAgoStr);
 
+      const technicianCondition = technicianId ? sql`AND technician_id = ${technicianId}` : sql``;
+
       // Today's appointments
-      const todayCount = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(services)
-        .where(eq(services.scheduledDate, today));
+      const todayResult = await db.execute(sql`
+        SELECT COUNT(*) as count
+        FROM services 
+        WHERE scheduled_date = ${today}
+        ${technicianCondition}
+      `);
 
       // This week's appointments
-      const thisWeekCount = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(services)
-        .where(
-          and(
-            gte(services.scheduledDate, weekAgoStr),
-            lte(services.scheduledDate, today)
-          )
-        );
+      const thisWeekResult = await db.execute(sql`
+        SELECT COUNT(*) as count
+        FROM services 
+        WHERE scheduled_date >= ${weekAgoStr}
+        AND scheduled_date <= ${today}
+        ${technicianCondition}
+      `);
 
       // Completed this week
-      const completedCount = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(services)
-        .where(
-          and(
-            gte(services.scheduledDate, weekAgoStr),
-            lte(services.scheduledDate, today),
-            eq(services.status, 'completed')
-          )
-        );
+      const completedResult = await db.execute(sql`
+        SELECT COUNT(*) as count
+        FROM services 
+        WHERE scheduled_date >= ${weekAgoStr}
+        AND scheduled_date <= ${today}
+        AND status = 'completed'
+        ${technicianCondition}
+      `);
 
       // Overdue (scheduled in the past but not completed)
-      const overdueCount = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(services)
-        .where(
-          and(
-            lt(services.scheduledDate, today),
-            eq(services.status, 'scheduled')
-          )
-        );
+      const overdueResult = await db.execute(sql`
+        SELECT COUNT(*) as count
+        FROM services 
+        WHERE scheduled_date < ${today}
+        AND status = 'scheduled'
+        ${technicianCondition}
+      `);
 
       const result = {
-        today: Number(todayCount[0]?.count) || 0,
-        thisWeek: Number(thisWeekCount[0]?.count) || 0,
-        completed: Number(completedCount[0]?.count) || 0,
-        overdue: Number(overdueCount[0]?.count) || 0
+        today: Number(todayResult.rows[0]?.count) || 0,
+        thisWeek: Number(thisWeekResult.rows[0]?.count) || 0,
+        completed: Number(completedResult.rows[0]?.count) || 0,
+        overdue: Number(overdueResult.rows[0]?.count) || 0
       };
 
       console.log('Schedule stats result:', result);
