@@ -273,10 +273,18 @@ export default function VehiclesPage() {
 
   const { data: vehicles = [], isLoading: vehiclesLoading } = useQuery({
     queryKey: ["/api/vehicles"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/vehicles");
+      return await res.json();
+    },
   });
 
   const { data: customers = [] } = useQuery({
     queryKey: ["/api/customers"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/customers");
+      return await res.json();
+    },
   });
 
   const createMutation = useMutation({
