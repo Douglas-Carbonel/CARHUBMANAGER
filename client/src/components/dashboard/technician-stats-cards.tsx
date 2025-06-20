@@ -12,26 +12,30 @@ interface DashboardStats {
 }
 
 export default function TechnicianStatsCards() {
-  const { data: stats, isLoading, error } = useQuery<DashboardStats>({
+  const { data: stats, isLoading, error } = useQuery({
     queryKey: ["/api/dashboard/stats"],
-    staleTime: 30000,
-    refetchOnWindowFocus: true,
-    retry: 3,
-    retryDelay: 1000,
     queryFn: async () => {
       console.log("TechnicianStatsCards: Fetching dashboard stats...");
-      const response = await fetch("/api/dashboard/stats", {
+      const res = await fetch("/api/dashboard/stats", {
         credentials: "include",
       });
+      if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
+      const data = await res.json();
+      console.log("TechnicianStatsCards: Data received:", data);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log("TechnicianStatsCards: API Error:", response.status, response.statusText, errorText);
-        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      // Debug endpoint call
+      try {
+        const debugRes = await fetch("/api/debug/today-services", {
+          credentials: "include",
+        });
+        if (debugRes.ok) {
+          const debugData = await debugRes.json();
+          console.log("Debug - Today's services:", debugData);
+        }
+      } catch (debugError) {
+        console.log("Debug endpoint failed:", debugError);
       }
 
-      const data = await response.json();
-      console.log("TechnicianStatsCards: Data received:", data);
       return data;
     },
   });

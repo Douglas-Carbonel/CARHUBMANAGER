@@ -40,6 +40,8 @@ const upload = multer({
 });
 import { setupAuth, createInitialAdmin, hashPassword } from "./auth";
 import { getFixedDashboardStats } from "./storage-dashboard-fix";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 
 // Function to create initial service types
 async function createInitialServiceTypes() {
@@ -382,11 +384,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Creating service with data:', JSON.stringify(serviceData, null, 2));
       const service = await storage.createService(serviceData);
       console.log('Service created successfully:', service);
-      
+
       // Process service extras if they exist
       if (req.body.serviceExtras && Array.isArray(req.body.serviceExtras) && req.body.serviceExtras.length > 0) {
         console.log('Processing service extras:', req.body.serviceExtras);
-        
+
         for (const extra of req.body.serviceExtras) {
           const extraItem = {
             serviceId: service.id,
@@ -394,14 +396,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             valor: extra.valor || "0.00",
             observacao: extra.observacao || "",
           };
-          
+
           console.log('Creating service extra item:', extraItem);
           await storage.createServiceExtraItem(extraItem);
         }
-        
+
         console.log('All service extras processed successfully');
       }
-      
+
       res.status(201).json(service);
     } catch (error: any) {
       console.error('Error creating service:', error);
@@ -418,15 +420,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const serviceId = parseInt(req.params.id);
       const serviceData = insertServiceSchema.partial().parse(req.body);
       const service = await storage.updateService(serviceId, serviceData);
-      
+
       // Process service extras if they exist
       if (req.body.serviceExtras && Array.isArray(req.body.serviceExtras)) {
         console.log('Updating service extras for service ID:', serviceId);
         console.log('Service extras data:', req.body.serviceExtras);
-        
+
         // First, remove existing service extras for this service
         await storage.deleteServiceExtraItemsByServiceId(serviceId);
-        
+
         // Then add the new ones
         for (const extra of req.body.serviceExtras) {
           const extraItem = {
@@ -435,14 +437,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             valor: extra.valor || "0.00",
             observacao: extra.observacao || "",
           };
-          
+
           console.log('Creating updated service extra item:', extraItem);
           await storage.createServiceExtraItem(extraItem);
         }
-        
+
         console.log('Service extras updated successfully');
       }
-      
+
       res.json(service);
     } catch (error: any) {
       console.error('Error updating service:', error);
@@ -643,14 +645,52 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     }
   });
 
-  // Schedule-specific dashboard routes
+  // Schedule analytics
   app.get("/api/dashboard/schedule-stats", requireAuth, async (req, res) => {
     try {
       const stats = await storage.getScheduleStats();
       res.json(stats);
     } catch (error) {
-      console.error("Error getting schedule stats:", error);
-      res.status(500).json({ message: "Failed to get schedule stats" });
+      console.error('Error getting schedule stats:', error);
+      res.status(500).json({ error: 'Failed to get schedule stats' });
+    }
+  });
+
+  // Debug endpoint for today's services
+  app.get("/api/debug/today-services", requireAuth, async (req, res) => {
+    try {
+      // Get current date in Brazilian timezone (UTC-3)
+      const today = new Date();
+      const brazilTime = new Date(today.getTime() - (3 * 60 * 60 * 1000));
+      const todayStr = brazilTime.toISOString().split('T')[0];
+
+      console.log("Debug: Brazilian date for today:", todayStr);
+
+      const result = await db.execute(sql`
+        SELECT 
+          s.id,
+          s.scheduled_date,
+          s.status,
+          s.estimated_value,
+          c.name as customer_name,
+          st.name as service_type_name
+        FROM services s
+        JOIN customers c ON s.customer_id = c.id
+        JOIN service_types st ON s.service_type_id = st.id
+        WHERE s.scheduled_date = ${todayStr}
+        ORDER BY s.id
+      `);
+
+      console.log("Debug: Services found for today:", result.rows);
+
+      res.json({
+        todayDate: todayStr,
+        servicesCount: result.rows.length,
+        services: result.rows
+      });
+    } catch (error) {
+      console.error('Error in debug endpoint:', error);
+      res.status(500).json({ error: 'Debug failed' });
     }
   });
 

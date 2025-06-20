@@ -588,6 +588,7 @@ export class DatabaseStorage implements IStorage {
         if (serviceDate === todayStr && status !== 'cancelled') {
           dailyRevenue += estimatedValue;
           dailyServices++;
+          console.log(`Daily service found: ID ${service.id}, Date: ${serviceDate}, Value: ${estimatedValue}, Status: ${status}`);
         }
 
         // Calculate completed revenue
@@ -1668,7 +1669,7 @@ export class DatabaseStorage implements IStorage {
         JOIN service_types st ON s.service_type_id = st.id
         WHERE s.scheduled_date = ${brazilianDate}
         ${technicianCondition}
-        ORDER BY s.scheduled_time ASC
+        ORDER BY COALESCE(s.scheduled_time, '00:00:00') ASC
       `);
 
       console.log("Storage: Total today's appointments:", result.rows.length);
