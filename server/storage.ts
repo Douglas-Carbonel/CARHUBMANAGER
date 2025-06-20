@@ -534,8 +534,11 @@ export class DatabaseStorage implements IStorage {
   }> {
     console.log("Getting dashboard stats...", technicianId ? `for technician ${technicianId}` : "for admin");
 
-    const today = new Date().toISOString().split('T')[0];
-    console.log("Today date:", today);
+    // Use Brazilian timezone (UTC-3)
+    const today = new Date();
+    const brazilTime = new Date(today.getTime() - (3 * 60 * 60 * 1000));
+    const todayStr = brazilTime.toISOString().split('T')[0];
+    console.log("Today date (Brazilian timezone):", todayStr);
 
     try {
       // Get all services and process in JavaScript to avoid SQL conversion errors
@@ -582,7 +585,7 @@ export class DatabaseStorage implements IStorage {
         }
 
         // Calculate daily revenue (today's services)
-        if (serviceDate === today && status !== 'cancelled') {
+        if (serviceDate === todayStr && status !== 'cancelled') {
           dailyRevenue += estimatedValue;
           dailyServices++;
         }
@@ -598,7 +601,7 @@ export class DatabaseStorage implements IStorage {
         }
 
         // Count future appointments
-        if (serviceDate > today && status === 'scheduled') {
+        if (serviceDate > todayStr && status === 'scheduled') {
           appointments++;
         }
       });
@@ -682,9 +685,10 @@ export class DatabaseStorage implements IStorage {
   async getUpcomingAppointments(limit: number = 5, technicianId?: number | null): Promise<any[]> {
     console.log("Storage: Getting upcoming appointments...", technicianId ? `for technician ${technicianId}` : "for admin");
 
-    // Get current date in Brazilian timezone
+    // Get current date in Brazilian timezone (UTC-3)
     const today = new Date();
-    const brazilianDate = today.toLocaleDateString('en-CA'); // YYYY-MM-DD format
+    const brazilTime = new Date(today.getTime() - (3 * 60 * 60 * 1000));
+    const brazilianDate = brazilTime.toISOString().split('T')[0];
     console.log("Storage: Today date for appointments (Brazilian timezone):", brazilianDate);
 
     try {
@@ -1638,9 +1642,10 @@ export class DatabaseStorage implements IStorage {
   async getTodayAppointments(technicianId?: number | null): Promise<any[]> {
     console.log("Storage: Getting today's appointments...", technicianId ? `for technician ${technicianId}` : "for admin");
 
-    // Get current date in Brazilian timezone
+    // Get current date in Brazilian timezone (UTC-3)
     const today = new Date();
-    const brazilianDate = today.toLocaleDateString('en-CA'); // YYYY-MM-DD format
+    const brazilTime = new Date(today.getTime() - (3 * 60 * 60 * 1000));
+    const brazilianDate = brazilTime.toISOString().split('T')[0];
     console.log("Storage: Today date for appointments (Brazilian timezone):", brazilianDate);
 
     try {
