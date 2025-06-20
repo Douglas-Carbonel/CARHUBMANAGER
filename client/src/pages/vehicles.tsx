@@ -51,25 +51,17 @@ const compressImage = (file: File | string, maxWidth: number = 800, quality: num
     const img = new Image();
 
     img.onload = () => {
-      // Calculate new dimensions maintaining aspect ratio
-      let { width, height } = img;
-      if (width > height) {
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
-        }
-      } else {
-        if (height > maxWidth) {
-          width = (width * maxWidth) / height;
-          height = maxWidth;
-        }
-      }
+      // Calculate new dimensions
+      const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+      const newWidth = img.width * ratio;
+      const newHeight = img.height * ratio;
 
-      canvas.width = width;
-      canvas.height = height;
+      // Set canvas dimensions
+      canvas.width = newWidth;
+      canvas.height = newHeight;
 
       // Draw and compress
-      ctx?.drawImage(img, 0, 0, width, height);
+      ctx?.drawImage(img, 0, 0, newWidth, newHeight);
       const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
       resolve(compressedDataUrl);
     };
@@ -86,7 +78,6 @@ const compressImage = (file: File | string, maxWidth: number = 800, quality: num
   });
 };
 
-// CameraCapture Component
 interface CameraCaptureProps {
   isOpen: boolean;
   onClose: () => void;
@@ -186,7 +177,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ isOpen, onClose, onPhotoT
           <DialogTitle>Capturar Foto</DialogTitle>
         </DialogHeader>
         
-        {/* Category Selection - Always visible */}
+        {/* Category Selection - Always visible at the top */}
         <div className="mb-4 space-y-2">
           <label className="text-sm font-medium text-gray-700">Categoria da Foto:</label>
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
@@ -249,13 +240,11 @@ export default function VehiclesPage() {
   const [openModelSelect, setOpenModelSelect] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [customModel, setCustomModel] = useState("");
-  const [showCustomModel, setShowCustomModel] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
   const [currentVehiclePhotos, setCurrentVehiclePhotos] = useState<Photo[]>([]);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [temporaryPhotos, setTemporaryPhotos] = useState<{photo: string, category: string}[]>([]);
-  const [uploadCategory, setUploadCategory] = useState<string>("vehicle");
 
   // Check URL parameters for customer filtering
   useEffect(() => {
@@ -266,83 +255,43 @@ export default function VehiclesPage() {
     }
   }, []);
 
-  // Função para formatar placa do veículo
-  const formatLicensePlate = (value: string): string => {
-    // Remove tudo que não for letra ou número
-    const cleaned = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-
-    // Aplica formatação baseada no padrão brasileiro
-    if (cleaned.length <= 3) {
-      return cleaned;
-    } else if (cleaned.length <= 7) {
-      // Formato antigo: ABC-1234
-      return cleaned.replace(/^([A-Z]{1,3})([0-9]{0,4})$/, '$1-$2');
-    } else {
-      // Formato Mercosul: ABC1D23
-      return cleaned.replace(/^([A-Z]{3})([0-9]{1})([A-Z]{1})([0-9]{2})$/, '$1$2$3$4');
-    }
-  };
-
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleFormSchema),
     defaultValues: {
+      customerId: 0,
       licensePlate: "",
       brand: "",
       model: "",
-      year: 2024,
+      year: new Date().getFullYear(),
       color: "",
+      chassis: "",
+      engine: "",
       fuelType: "gasoline",
-      customerId: 1,
+      notes: "",
     },
   });
 
-  const { data: vehicles = [], isLoading: vehiclesLoading } = useQuery<Vehicle[]>({
+  const { data: vehicles = [], isLoading: vehiclesLoading } = useQuery({
     queryKey: ["/api/vehicles"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/vehicles");
-      return await res.json();
-    },
   });
 
-  const { data: customers = [] } = useQuery<Customer[]>({
+  const { data: customers = [] } = useQuery({
     queryKey: ["/api/customers"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/customers");
-      return await res.json();
-    },
   });
-
-    const fetchVehiclePhotos = async (vehicleId: number | undefined) => {
-    if (!vehicleId) {
-      setCurrentVehiclePhotos([]);
-      return;
-    }
-
-    try {
-      const res = await apiRequest("GET", `/api/vehicles/${vehicleId}/photos`);
-      const photos = await res.json() as Photo[];
-      setCurrentVehiclePhotos(photos);
-    } catch (error: any) {
-      toast({
-        title: "Erro ao carregar fotos do veículo",
-        description: error.message,
-        variant: "destructive",
-      });
-      setCurrentVehiclePhotos([]);
-    }
-  };
 
   const createMutation = useMutation({
     mutationFn: async (data: VehicleFormData) => {
-      const res = await apiRequest("POST", "/api/vehicles", data);
-      return await res.json();
+      const response = await apiRequest("POST", "/api/vehicles", data);
+      return response.json();
     },
-    onSuccess: async (vehicleData) => {
-      // Se há fotos temporárias, salvá-las agora com o ID do veículo criado
+    onSuccess: async (newVehicle) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
+      
+      // Save temporary photos if any
       if (temporaryPhotos.length > 0) {
         for (const tempPhoto of temporaryPhotos) {
           try {
-            await fetch(`/api/vehicles/${vehicleData.id}/photos`, {
+            await fetch(`/api/vehicles/${newVehicle.id}/photos`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -350,7 +299,10 @@ export default function VehiclesPage() {
               body: JSON.stringify({ 
                 photo: tempPhoto.photo, 
                 category: tempPhoto.category,
-                description: 'Foto capturada pela câmera'
+                description: tempPhoto.category === 'vehicle' ? 'Veículo' : 
+                            tempPhoto.category === 'damage' ? 'Dano' :
+                            tempPhoto.category === 'before' ? 'Antes' :
+                            tempPhoto.category === 'after' ? 'Depois' : 'Outro'
               }),
               credentials: 'include',
             });
@@ -358,24 +310,21 @@ export default function VehiclesPage() {
             console.error('Error saving temporary photo:', error);
           }
         }
+        setTemporaryPhotos([]); // Clear temporary photos after saving
       }
-
-      queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
-      setIsModalOpen(false);
-      setEditingVehicle(null);
-      form.reset();
-      setShowCustomModel(false);
-      setCustomModel("");
-      setTemporaryPhotos([]); // Limpar fotos temporárias
-
+      
       toast({
         title: "Veículo cadastrado!",
-        description: "Veículo foi adicionado com sucesso à frota!",
+        description: "O veículo foi cadastrado com sucesso.",
       });
+      setIsModalOpen(false);
+      form.reset();
+      setSelectedBrand("");
+      setCustomModel("");
     },
     onError: (error: Error) => {
       toast({
-        title: "Erro",
+        title: "Erro ao cadastrar veículo",
         description: error.message,
         variant: "destructive",
       });
@@ -384,24 +333,24 @@ export default function VehiclesPage() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: VehicleFormData }) => {
-      const res = await apiRequest("PUT", `/api/vehicles/${id}`, data);
-      return await res.json();
+      const response = await apiRequest("PUT", `/api/vehicles/${id}`, data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
+      toast({
+        title: "Veículo atualizado!",
+        description: "O veículo foi atualizado com sucesso.",
+      });
       setIsModalOpen(false);
       setEditingVehicle(null);
       form.reset();
-      setShowCustomModel(false);
+      setSelectedBrand("");
       setCustomModel("");
-      toast({
-        title: "Veículo atualizado",
-        description: "Veículo foi atualizado com sucesso.",
-      });
     },
     onError: (error: Error) => {
       toast({
-        title: "Erro",
+        title: "Erro ao atualizar veículo",
         description: error.message,
         variant: "destructive",
       });
@@ -410,21 +359,13 @@ export default function VehiclesPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest("DELETE", `/api/vehicles/${id}`);
-
-      // Se a resposta não for ok, lançar erro com a mensagem do servidor
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Erro ao remover veículo");
-      }
-
-      return response;
+      await apiRequest("DELETE", `/api/vehicles/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
       toast({
-        title: "Veículo removido",
-        description: "Veículo foi removido com sucesso.",
+        title: "Veículo removido!",
+        description: "O veículo foi removido com sucesso.",
       });
     },
     onError: (error: Error) => {
@@ -436,78 +377,27 @@ export default function VehiclesPage() {
     },
   });
 
-  const onSubmit = (data: VehicleFormData) => {
-    const finalData = {
-      ...data,
-      model: showCustomModel ? customModel : data.model,
-    };
-
-    if (editingVehicle) {
-      updateMutation.mutate({ id: editingVehicle.id, data: finalData });
-    } else {
-      createMutation.mutate(finalData);
-    }
-  };
-
-  const handleEdit = (vehicle: Vehicle) => {
-    setEditingVehicle(vehicle);
-    setSelectedBrand(vehicle.brand);
-
-    // Verificar se o modelo existe na lista ou é customizado
-    const modelsForBrand = vehicleModels[vehicle.brand] || [];
-    const isCustomModel = !modelsForBrand.includes(vehicle.model);
-
-    if (isCustomModel) {
-      setShowCustomModel(true);
-      setCustomModel(vehicle.model);
-    } else {
-      setShowCustomModel(false);
-      setCustomModel("");
-    }
-
-    form.reset({
-      licensePlate: vehicle.licensePlate,
-      brand: vehicle.brand,
-      model: isCustomModel ? "" : vehicle.model,
-      year: vehicle.year,
-      color: vehicle.color,
-      fuelType: vehicle.fuelType as "gasoline" | "ethanol" | "flex" | "diesel",
-      customerId: vehicle.customerId,
-    });
-    fetchVehiclePhotos(vehicle.id);
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = (id: number) => {
-    const confirmed = confirm(
-      "Tem certeza que deseja remover este veículo?\n\n" +
-      "ATENÇÃO: O veículo não poderá ser removido se houver serviços em aberto " +
-      "(agendados ou em andamento). Finalize ou cancele todos os serviços antes de excluir."
-    );
-
-    if (confirmed) {
-      deleteMutation.mutate(id);
-    }
-  };
-
-  const handleModelSelect = (model: string) => {
-    if (model === "custom") {
-      setShowCustomModel(true);
-      form.setValue("model", "");
-      setOpenModelSelect(false);
-    } else {
-      setShowCustomModel(false);
-      setCustomModel("");
-      form.setValue("model", model);
-      setOpenModelSelect(false);
+  const fetchVehiclePhotos = async (vehicleId?: number) => {
+    if (!vehicleId) return;
+    try {
+      const response = await fetch(`/api/vehicles/${vehicleId}/photos`, {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const photos = await response.json();
+        setCurrentVehiclePhotos(photos);
+      }
+    } catch (error) {
+      console.error('Error fetching vehicle photos:', error);
     }
   };
 
   const filteredVehicles = vehicles.filter((vehicle: Vehicle) => {
+    const searchTerm_lower = searchTerm.toLowerCase();
     const matchesSearch = 
-      vehicle.licensePlate.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehicle.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehicle.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehicle.brand.toLowerCase().includes(searchTerm_lower) ||
+      vehicle.model.toLowerCase().includes(searchTerm_lower) ||
+      vehicle.licensePlate.toLowerCase().includes(searchTerm_lower) ||
       (vehicle.color || "").toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesCustomer = customerFilter ? vehicle.customerId === customerFilter : true;
@@ -549,18 +439,40 @@ export default function VehiclesPage() {
           title: "Foto salva!",
           description: "A foto foi salva com sucesso.",
         });
-        fetchVehiclePhotos(vehicleId); // Refresh vehicle photos
-      } else {
-        const errorText = await res.text();
-        throw new Error(`Failed to save photo: ${errorText}`);
+        fetchVehiclePhotos(vehicleId);
       }
-    } catch (error: any) {
-      console.error("Error saving photo:", error);
+    } catch (error) {
+      console.error('Error saving photo:', error);
       toast({
         title: "Erro ao salvar foto",
-        description: error.message,
+        description: "Erro ao salvar a foto.",
         variant: "destructive",
       });
+    }
+  };
+
+  const onSubmit = (data: VehicleFormData) => {
+    if (editingVehicle) {
+      updateMutation.mutate({ id: editingVehicle.id, data });
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
+  const handleEdit = (vehicle: Vehicle) => {
+    setEditingVehicle(vehicle);
+    setSelectedBrand(vehicle.brand);
+    form.reset({
+      ...vehicle,
+      customerId: vehicle.customerId,
+    });
+    fetchVehiclePhotos(vehicle.id);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm("Tem certeza que deseja remover este veículo?")) {
+      deleteMutation.mutate(id);
     }
   };
 
@@ -569,9 +481,8 @@ export default function VehiclesPage() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen bg-gradient-to-br from-slate-100 via-white to-blue-50/30">
       <Sidebar />
-
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
           title="Veículos"
@@ -588,213 +499,249 @@ export default function VehiclesPage() {
                     placeholder="Buscar veículos..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 w-80 h-12 border-2 border-gray-200 focus:border-blue-400 rounded-xl shadow-sm bg-white/80"
+                    className="pl-12 h-12 bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
                   />
                 </div>
-                {customerFilter && (
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-200">
-                      Cliente: {customers.find(c => c.id === customerFilter)?.name || 'Desconhecido'}
-                    </Badge>
+                
+                {/* Customer Filter */}
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-gray-500" />
+                  <Select 
+                    value={customerFilter?.toString() || ""} 
+                    onValueChange={(value) => setCustomerFilter(value ? parseInt(value) : null)}
+                  >
+                    <SelectTrigger className="h-10 bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-lg">
+                      <SelectValue placeholder="Filtrar por cliente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Todos os clientes</SelectItem>
+                      {customers.map((customer: Customer) => (
+                        <SelectItem key={customer.id} value={customer.id.toString()}>
+                          {customer.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {customerFilter && (
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
-                      onClick={() => {
-                        setCustomerFilter(null);
-                        window.history.replaceState({}, '', '/vehicles');
-                      }}
-                      className="h-6 w-6 p-0 hover:bg-red-100"
+                      onClick={() => setCustomerFilter(null)}
+                      className="px-2 h-10"
                     >
                       ×
                     </Button>
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsAnalyticsModalOpen(true)}
-                  className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                >
-                  📊 Ver Relatórios
-                </Button>
-                <div className="bg-gradient-to-r from-teal-500 to-emerald-600 text-white px-4 py-2 rounded-lg shadow-md">
-                  <span className="font-semibold">{filteredVehicles.length}</span>
-                  <span className="ml-1 text-sm">veículos</span>
+                  )}
                 </div>
               </div>
-              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogTrigger asChild>
-                  <Button 
-                    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-                    onClick={() => {
-                      setEditingVehicle(null);
-                      setShowCustomModel(false);
-                      setCustomModel("");
-                      setSelectedBrand("");
-                      form.reset();
-                      setCurrentVehiclePhotos([]);
-                    }}
-                  >
-                    <Plus className="h-5 w-5 mr-2" />
-                    Novo Veículo
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl bg-gradient-to-br from-slate-50 to-blue-50/30">
-                  <DialogHeader className="pb-6">
-                    <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent">
-                      {editingVehicle ? "Editar Veículo" : "Novo Veículo"}
-                    </DialogTitle>
-                  </DialogHeader>
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="customerId"
-                          render={({ field }) => (
-                            <FormItem className="space-y-2">
-                              <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
-                                <User className="h-4 w-4 mr-2 text-teal-600" />
-                                Cliente
-                              </FormLabel>
-                              <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
-                                <FormControl>
-                                  <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
-                                    <SelectValue placeholder="Selecione o cliente" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {customers.map((customer: Customer) => (
-                                    <SelectItem key={customer.id} value={customer.id.toString()}>
-                                      {customer.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="licensePlate"
-                          render={({ field }) => (
-                            <FormItem className="space-y-2">
-                              <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
-                                <Car className="h-4 w-4 mr-2 text-teal-600" />
-                                Placa
-                              </FormLabel>
-                              <FormControl>
-                                <Input 
-                                  placeholder="ABC-1234 ou ABC1D23" 
-                                  {...field}
-                                  onChange={(e) => {
-                                    const formatted = formatLicensePlate(e.target.value);
-                                    field.onChange(formatted);
-                                  }}
-                                  maxLength={8}
-                                  className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="brand"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-col">
-                              <FormLabel>Marca</FormLabel>
-                              <Popover open={openBrandSelect} onOpenChange={setOpenBrandSelect}>
-                                <PopoverTrigger asChild>
+
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={() => setIsAnalyticsModalOpen(true)}
+                  variant="outline"
+                  size="sm"
+                  className="bg-white/90 backdrop-blur-sm border-emerald-200 text-emerald-700 hover:bg-emerald-50 shadow-sm rounded-xl transition-all duration-200"
+                >
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Relatórios
+                </Button>
+                
+                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl px-6"
+                      onClick={() => {
+                        setEditingVehicle(null);
+                        form.reset();
+                        setTemporaryPhotos([]);
+                        setCurrentVehiclePhotos([]);
+                        setSelectedBrand("");
+                        setCustomModel("");
+                      }}
+                    >
+                      <Plus className="h-5 w-5 mr-2" />
+                      Novo Veículo
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl bg-gradient-to-br from-slate-50 to-blue-50/30">
+                    <DialogHeader className="pb-6">
+                      <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent">
+                        {editingVehicle ? "Editar Veículo" : "Novo Veículo"}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <Form {...form}>
+                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <FormField
+                            control={form.control}
+                            name="customerId"
+                            render={({ field }) => (
+                              <FormItem className="space-y-2">
+                                <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                  <User className="h-4 w-4 mr-2 text-teal-600" />
+                                  Cliente
+                                </FormLabel>
+                                <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
                                   <FormControl>
-                                    <Button
-                                      variant="outline"
-                                      role="combobox"
-                                      className={cn(
-                                        "w-full justify-between",
-                                        !field.value && "text-muted-foreground"
-                                      )}
-                                    >
-                                      {field.value || "Selecione a marca"}
-                                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
+                                    <SelectTrigger className="h-11 bg-white/80 border-slate-200 rounded-lg">
+                                      <SelectValue placeholder="Selecione o cliente" />
+                                    </SelectTrigger>
                                   </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-full p-0">
-                                  <Command>
-                                    <CommandInput placeholder="Buscar marca..." />
-                                    <CommandList>
+                                  <SelectContent>
+                                    {customers.map((customer: Customer) => (
+                                      <SelectItem key={customer.id} value={customer.id.toString()}>
+                                        {customer.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="licensePlate"
+                            render={({ field }) => (
+                              <FormItem className="space-y-2">
+                                <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                  <Car className="h-4 w-4 mr-2 text-teal-600" />
+                                  Placa
+                                </FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="ABC-1234" 
+                                    className="h-11 bg-white/80 border-slate-200 rounded-lg"
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <FormField
+                            control={form.control}
+                            name="brand"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-col space-y-2">
+                                <FormLabel className="text-sm font-semibold text-slate-700">Marca</FormLabel>
+                                <Popover open={openBrandSelect} onOpenChange={setOpenBrandSelect}>
+                                  <PopoverTrigger asChild>
+                                    <FormControl>
+                                      <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        className={cn(
+                                          "h-11 bg-white/80 border-slate-200 rounded-lg justify-between",
+                                          !field.value && "text-muted-foreground"
+                                        )}
+                                      >
+                                        {field.value || "Selecione a marca"}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                      </Button>
+                                    </FormControl>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-[200px] p-0">
+                                    <Command>
+                                      <CommandInput placeholder="Buscar marca..." />
                                       <CommandEmpty>Nenhuma marca encontrada.</CommandEmpty>
                                       <CommandGroup>
-                                        {vehicleBrands.map((brand) => (
-                                          <CommandItem
-                                            value={brand}
-                                            key={brand}
-                                            onSelect={() => {
-                                              form.setValue("brand", brand);
-                                              setSelectedBrand(brand);
-                                              if (form.getValues("model") && !vehicleModels[brand]?.includes(form.getValues("model"))) {
+                                        <CommandList>
+                                          {vehicleBrands.map((brand) => (
+                                            <CommandItem
+                                              value={brand}
+                                              key={brand}
+                                              onSelect={(currentValue) => {
+                                                field.onChange(currentValue);
+                                                setSelectedBrand(currentValue);
+                                                setOpenBrandSelect(false);
+                                                // Reset model when brand changes
                                                 form.setValue("model", "");
-                                              }
-                                              setOpenBrandSelect(false);
-                                            }}
-                                          >
-                                            <Check
-                                              className={cn(
-                                                "mr-2 h-4 w-4",
-                                                brand === field.value ? "opacity-100" : "opacity-0"
-                                              )}
-                                            />
-                                            {brand}
-                                          </CommandItem>
-                                        ))}
+                                                setCustomModel("");
+                                              }}
+                                            >
+                                              <Check
+                                                className={cn(
+                                                  "mr-2 h-4 w-4",
+                                                  brand === field.value ? "opacity-100" : "opacity-0"
+                                                )}
+                                              />
+                                              {brand}
+                                            </CommandItem>
+                                          ))}
+                                        </CommandList>
                                       </CommandGroup>
-                                    </CommandList>
-                                  </Command>
-                                </PopoverContent>
-                              </Popover>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="model"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-col">
-                              <FormLabel>Modelo</FormLabel>
-                              {!showCustomModel ? (
+                                    </Command>
+                                  </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="model"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-col space-y-2">
+                                <FormLabel className="text-sm font-semibold text-slate-700">Modelo</FormLabel>
                                 <Popover open={openModelSelect} onOpenChange={setOpenModelSelect}>
                                   <PopoverTrigger asChild>
                                     <FormControl>
                                       <Button
                                         variant="outline"
                                         role="combobox"
-                                        disabled={!selectedBrand && !form.getValues("brand")}
+                                        disabled={!selectedBrand}
                                         className={cn(
-                                          "w-full justify-between",
+                                          "h-11 bg-white/80 border-slate-200 rounded-lg justify-between",
                                           !field.value && "text-muted-foreground"
                                         )}
                                       >
-                                        {field.value || "Selecione o modelo"}
+                                        {field.value || customModel || "Selecione o modelo"}
                                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                       </Button>
                                     </FormControl>
                                   </PopoverTrigger>
-                                  <PopoverContent className="w-full p-0">
+                                  <PopoverContent className="w-[200px] p-0">
                                     <Command>
-                                      <CommandInput placeholder="Buscar modelo..." />
-                                      <CommandList>
-                                        <CommandEmpty>Nenhum modelo encontrado.</CommandEmpty>
-                                        <CommandGroup>
-                                          {vehicleModels[selectedBrand || form.getValues("brand")]?.map((model) => (
+                                      <CommandInput 
+                                        placeholder="Buscar modelo..." 
+                                        value={customModel}
+                                        onValueChange={(value) => {
+                                          setCustomModel(value);
+                                          field.onChange(value);
+                                        }}
+                                      />
+                                      <CommandEmpty>
+                                        <div className="p-2">
+                                          {customModel ? (
+                                            <div 
+                                              className="cursor-pointer hover:bg-gray-100 p-2 rounded"
+                                              onClick={() => {
+                                                field.onChange(customModel);
+                                                setOpenModelSelect(false);
+                                              }}
+                                            >
+                                              Usar "{customModel}"
+                                            </div>
+                                          ) : (
+                                            "Nenhum modelo encontrado."
+                                          )}
+                                        </div>
+                                      </CommandEmpty>
+                                      <CommandGroup>
+                                        <CommandList>
+                                          {selectedBrand && vehicleModels[selectedBrand as keyof typeof vehicleModels]?.map((model) => (
                                             <CommandItem
                                               value={model}
                                               key={model}
-                                              onSelect={() => handleModelSelect(model)}
+                                              onSelect={(currentValue) => {
+                                                field.onChange(currentValue);
+                                                setCustomModel("");
+                                                setOpenModelSelect(false);
+                                              }}
                                             >
                                               <Check
                                                 className={cn(
@@ -805,84 +752,64 @@ export default function VehiclesPage() {
                                               {model}
                                             </CommandItem>
                                           ))}
-                                          <CommandItem
-                                            value="custom"
-                                            onSelect={() => handleModelSelect("custom")}
-                                            className="border-t border-gray-200 text-blue-600 font-medium"
-                                          >
-                                            <Plus className="mr-2 h-4 w-4" />
-                                            Digite um modelo customizado
-                                          </CommandItem>
-                                        </CommandGroup>
-                                      </CommandList>
+                                        </CommandList>
+                                      </CommandGroup>
                                     </Command>
                                   </PopoverContent>
                                 </Popover>
-                              ) : (
-                                <div className="space-y-2">
-                                  <FormControl>
-                                    <Input 
-                                      placeholder="Digite o modelo customizado"
-                                      value={customModel}
-                                      onChange={(e) => setCustomModel(e.target.value)}
-                                    />
-                                  </FormControl>
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setShowCustomModel(false);
-                                      setCustomModel("");
-                                      form.setValue("model", "");
-                                    }}
-                                  >
-                                    Voltar para lista
-                                  </Button>
-                                </div>
-                              )}
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="year"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Ano</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  type="number" 
-                                  placeholder="2024" 
-                                  {...field}
-                                  onChange={(e) => field.onChange(parseInt(e.target.value))}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="color"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Cor</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Branco" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <FormField
+                            control={form.control}
+                            name="year"
+                            render={({ field }) => (
+                              <FormItem className="space-y-2">
+                                <FormLabel className="text-sm font-semibold text-slate-700">Ano</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    placeholder="2024" 
+                                    className="h-11 bg-white/80 border-slate-200 rounded-lg"
+                                    {...field}
+                                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="color"
+                            render={({ field }) => (
+                              <FormItem className="space-y-2">
+                                <FormLabel className="text-sm font-semibold text-slate-700">Cor</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="Preto" 
+                                    className="h-11 bg-white/80 border-slate-200 rounded-lg"
+                                    {...field} 
+                                    value={field.value || ""}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
                         <FormField
                           control={form.control}
                           name="fuelType"
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Combustível</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Selecione o combustível" />
@@ -900,95 +827,25 @@ export default function VehiclesPage() {
                             </FormItem>
                           )}
                         />
-                      </div>
 
-                      {/* Photos Section */}
-                      <div className="col-span-2 border-t pt-4">
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <h4 className="text-sm font-medium text-gray-700">Fotos</h4>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setIsCameraOpen(true)}
-                                className="flex items-center gap-2"
-                              >
-                                <Camera className="h-4 w-4" />
-                                Tirar Foto
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  const fileInput = document.getElementById('vehicle-photo-upload') as HTMLInputElement;
-                                  if (fileInput) {
-                                    fileInput.click();
-                                  }
-                                }}
-                                className="flex items-center gap-2"
-                              >
-                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                </svg>
-                                Adicionar Fotos
-                              </Button>
-                            </div>
-                          </div>
-                          
+                        {/* Photos Section */}
+                        <div className="col-span-2 border-t pt-4">
                           <div className="space-y-4">
-                            <input
-                              type="file"
-                              multiple
-                              accept="image/*"
-                              className="hidden"
-                              id="vehicle-photo-upload"
-                              onChange={async (e) => {
-                                if (!editingVehicle?.id || !e.target.files) return;
-                                  
-                                  const files = Array.from(e.target.files);
-                                  for (const file of files) {
-                                    try {
-                                      // Comprimir a imagem antes de enviar
-                                      const compressedPhoto = await compressImage(file, 800, 0.8);
-                                      
-                                      const res = await fetch(`/api/vehicles/${editingVehicle.id}/photos`, {
-                                        method: 'POST',
-                                        headers: {
-                                          'Content-Type': 'application/json',
-                                        },
-                                        body: JSON.stringify({ 
-                                          photo: compressedPhoto, 
-                                          category: uploadCategory,
-                                          description: uploadCategory === 'vehicle' ? 'Veículo' : 
-                                                      uploadCategory === 'damage' ? 'Dano' :
-                                                      uploadCategory === 'before' ? 'Antes' :
-                                                      uploadCategory === 'after' ? 'Depois' : 'Outro'
-                                        }),
-                                        credentials: 'include',
-                                      });
-                                      
-                                      if (res.ok) {
-                                        fetchVehiclePhotos(editingVehicle.id);
-                                        toast({
-                                          title: "Foto adicionada",
-                                          description: "A foto foi adicionada com sucesso.",
-                                        });
-                                      }
-                                    } catch (error) {
-                                      console.error('Error uploading photo:', error);
-                                      toast({
-                                        title: "Erro ao enviar foto",
-                                        description: "Erro ao processar a imagem.",
-                                        variant: "destructive",
-                                      });
-                                    }
-                                  }
-                                  e.target.value = '';
-                                }}
-                              />
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-sm font-medium text-gray-700">Fotos</h4>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setIsCameraOpen(true)}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Camera className="h-4 w-4" />
+                                  Tirar Foto
+                                </Button>
+                              </div>
+                            </div>
                             
                             <PhotoUpload
                               photos={currentVehiclePhotos}
@@ -1037,54 +894,55 @@ export default function VehiclesPage() {
                             )}
                           </div>
                         </div>
-                      </div>
 
-                      <div className="flex justify-end gap-4 pt-4">
-                        <Button 
-                          type="button" 
-                          variant="outline"
-                          onClick={() => {
-                            setIsModalOpen(false);
-                            setCurrentVehiclePhotos([]);
-                            setTemporaryPhotos([]);
-                            setEditingVehicle(null);
-                            form.reset();
-                          }}
-                        >
-                          Cancelar
-                        </Button>
-                        <Button 
-                          type="submit" 
-                          disabled={createMutation.isPending || updateMutation.isPending}
-                        >
-                          {editingVehicle ? "Atualizar" : "Cadastrar"}
-                        </Button>
-                      </div>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
+                        <div className="flex justify-end gap-4 pt-4">
+                          <Button 
+                            type="button" 
+                            variant="outline"
+                            onClick={() => {
+                              setIsModalOpen(false);
+                              setCurrentVehiclePhotos([]);
+                              setTemporaryPhotos([]);
+                              setEditingVehicle(null);
+                              form.reset();
+                            }}
+                          >
+                            Cancelar
+                          </Button>
+                          <Button 
+                            type="submit" 
+                            disabled={createMutation.isPending || updateMutation.isPending}
+                          >
+                            {editingVehicle ? "Atualizar" : "Cadastrar"}
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
 
-              {/* Camera Capture Modal */}
-              <CameraCapture
-                isOpen={isCameraOpen}
-                onClose={() => setIsCameraOpen(false)}
-                onPhotoTaken={handlePhotoTaken}
-                vehicleId={editingVehicle?.id}
-              />
+            {/* Camera Capture Modal */}
+            <CameraCapture
+              isOpen={isCameraOpen}
+              onClose={() => setIsCameraOpen(false)}
+              onPhotoTaken={handlePhotoTaken}
+              vehicleId={editingVehicle?.id}
+            />
 
-              {/* Analytics Modal */}
-              <Dialog open={isAnalyticsModalOpen} onOpenChange={setIsAnalyticsModalOpen}>
-                <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center">
-                      <BarChart3 className="h-5 w-5 mr-2" />
-                      Relatório de Veículos
-                    </DialogTitle>
-                  </DialogHeader>
-                  <VehicleAnalytics />
-                </DialogContent>
-              </Dialog>
+            {/* Analytics Modal */}
+            <Dialog open={isAnalyticsModalOpen} onOpenChange={setIsAnalyticsModalOpen}>
+              <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center">
+                    <BarChart3 className="h-5 w-5 mr-2" />
+                    Relatório de Veículos
+                  </DialogTitle>
+                </DialogHeader>
+                <VehicleAnalytics />
+              </DialogContent>
+            </Dialog>
 
             {vehiclesLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1263,5 +1121,3 @@ export default function VehiclesPage() {
     </div>
   );
 }
-
-export default VehiclesPage;
