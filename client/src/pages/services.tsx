@@ -465,6 +465,18 @@ export default function Services() {
                     form.reset();
                     setCurrentServicePhotos([]);
                     setServiceExtras([]);
+                    
+                    // Check URL params to pre-select customer if coming from customer page
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const customerIdFromUrl = urlParams.get('customerId');
+                    
+                    if (customerIdFromUrl) {
+                      const customerId = parseInt(customerIdFromUrl);
+                      console.log('Services: Pre-selecting customer from URL:', customerId);
+                      form.setValue('customerId', customerId);
+                      // Reset vehicle when customer is pre-selected
+                      form.setValue('vehicleId', 0);
+                    }
                   }}
                 >
                   <Plus className="h-5 w-5 mr-2" />
@@ -1351,6 +1363,19 @@ export default function Services() {
                       onClick={() => {
                         setEditingService(null);
                         form.reset();
+                        
+                        // Check URL params to pre-select customer if coming from customer page
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const customerIdFromUrl = urlParams.get('customerId');
+                        
+                        if (customerIdFromUrl) {
+                          const customerId = parseInt(customerIdFromUrl);
+                          console.log('Services: Pre-selecting customer from URL (first service):', customerId);
+                          form.setValue('customerId', customerId);
+                          // Reset vehicle when customer is pre-selected
+                          form.setValue('vehicleId', 0);
+                        }
+                        
                         setIsDialogOpen(true);
                       }}
                     >

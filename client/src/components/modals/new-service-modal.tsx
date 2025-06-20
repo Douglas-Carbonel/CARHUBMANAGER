@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -43,6 +43,22 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
       notes: "",
     },
   });
+
+  // Check URL params to pre-select customer if coming from customer page
+  useEffect(() => {
+    if (isOpen) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const customerIdFromUrl = urlParams.get('customerId');
+      
+      if (customerIdFromUrl) {
+        const customerId = parseInt(customerIdFromUrl);
+        console.log('NewServiceModal: Pre-selecting customer from URL:', customerId);
+        form.setValue('customerId', customerId);
+        // Reset vehicle when customer is pre-selected
+        form.setValue('vehicleId', 0);
+      }
+    }
+  }, [isOpen, form]);
 
   const { data: customers, isLoading: loadingCustomers } = useQuery({
     queryKey: ["/api/customers"],
