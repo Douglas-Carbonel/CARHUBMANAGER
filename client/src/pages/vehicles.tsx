@@ -177,6 +177,7 @@ export default function VehiclesPage() {
   const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
   const [currentVehiclePhotos, setCurrentVehiclePhotos] = useState<Photo[]>([]);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [temporaryPhotos, setTemporaryPhotos] = useState<string[]>([]);
 
   // Check URL parameters for customer filtering
   useEffect(() => {
@@ -258,13 +259,36 @@ export default function VehiclesPage() {
       const res = await apiRequest("POST", "/api/vehicles", data);
       return await res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: async (vehicleData) => {
+      // Se há fotos temporárias, salvá-las agora com o ID do veículo criado
+      if (temporaryPhotos.length > 0) {
+        for (const photo of temporaryPhotos) {
+          try {
+            await fetch(`/api/vehicles/${vehicleData.id}/photos`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ 
+                photo, 
+                category: 'vehicle',
+                description: 'Foto capturada pela câmera'
+              }),
+              credentials: 'include',
+            });
+          } catch (error) {
+            console.error('Error saving temporary photo:', error);
+          }
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
       setIsModalOpen(false);
       setEditingVehicle(null);
       form.reset();
       setShowCustomModel(false);
       setCustomModel("");
+      setTemporaryPhotos([]); // Limpar fotos temporárias
 
       toast({
         title: "Veículo cadastrado!",
@@ -414,16 +438,17 @@ export default function VehiclesPage() {
   });
 
   const handlePhotoTaken = async (photo: string, vehicleId?: number) => {
+    // Se não há ID do veículo (novo veículo), armazenar como foto temporária
     if (!vehicleId) {
-      console.error("Vehicle ID is required to save the photo.");
+      setTemporaryPhotos(prev => [...prev, photo]);
       toast({
-        title: "Erro",
-        description: "ID do veículo é obrigatório para salvar a foto.",
-        variant: "destructive",
+        title: "Foto capturada!",
+        description: "A foto será salva quando o veículo for cadastrado.",
       });
       return;
     }
 
+    // Se há ID do veículo (editando veículo existente), salvar imediatamente
     try {
       const res = await fetch(`/api/vehicles/${vehicleId}/photos`, {
         method: 'POST',
@@ -873,6 +898,37 @@ export default function VehiclesPage() {
                             vehicleId={editingVehicle?.id}
                             maxPhotos={7}
                           />
+                          
+                          {/* Mostrar fotos temporárias para novos veículos */}
+                          {!editingVehicle && temporaryPhotos.length > 0 && (
+                            <div className="mt-4 space-y-2">
+                              <h5 className="text-sm font-medium text-gray-600">Fotos capturadas (serão salvas após cadastrar o veículo):</h5>
+                              <div className="grid grid-cols-3 gap-2">
+                                {temporaryPhotos.map((photo, index) => (
+                                  <div key={index} className="relative group">
+                                    <img 
+                                      src={photo} 
+                                      alt={`Foto temporária ${index + 1}`}
+                                      className="w-full h-20 object-cover rounded-lg border border-gray-200"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setTemporaryPhotos(prev => prev.filter((_, i) => i !== index));
+                                        toast({
+                                          title: "Foto removida",
+                                          description: "A foto temporária foi removida.",
+                                        });
+                                      }}
+                                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -883,6 +939,9 @@ export default function VehiclesPage() {
                           onClick={() => {
                             setIsModalOpen(false);
                             setCurrentVehiclePhotos([]);
+                            setTemporaryPhotos([]); // Limpar fotos temporárias ao cancelar
+                            setEditingVehicle(null);
+                            form.reset();
                           }}
                         >
                           Cancelar
