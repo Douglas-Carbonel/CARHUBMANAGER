@@ -350,6 +350,7 @@ export default function VehiclesPage() {
         title: "Veículo atualizado!",
         description: "O veículo foi atualizado com sucesso.",
       });
+      // Only close modal on actual form submission, not photo operations
       setIsModalOpen(false);
       setEditingVehicle(null);
       form.reset();
@@ -448,10 +449,10 @@ export default function VehiclesPage() {
           description: "A foto foi salva com sucesso.",
         });
         fetchVehiclePhotos(vehicleId);
-        // Refresh the main vehicles list to update photo counts in cards
-        queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
-        // Refresh the main vehicles list to update photo counts in cards
-        queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
+        // Refresh the main vehicles list in background to update photo counts
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
+        }, 500);
       }
     } catch (error) {
       console.error('Error saving photo:', error);
@@ -850,7 +851,11 @@ export default function VehiclesPage() {
                                   type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => setIsCameraOpen(true)}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setIsCameraOpen(true);
+                                  }}
                                   className="flex items-center gap-2"
                                 >
                                   <Camera className="h-4 w-4" />
@@ -862,9 +867,8 @@ export default function VehiclesPage() {
                             <PhotoUpload
                               photos={currentVehiclePhotos}
                               onPhotoUploaded={() => {
+                                // Only refresh photos, don't invalidate vehicles query while editing
                                 fetchVehiclePhotos(editingVehicle?.id);
-                                // Invalidate vehicles query to refresh the main list without closing modal
-                                queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
                               }}
                               vehicleId={editingVehicle?.id}
                               maxPhotos={7}

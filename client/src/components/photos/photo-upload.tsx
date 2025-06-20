@@ -260,17 +260,27 @@ export default function PhotoUpload({
                             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
                               <div className="flex space-x-1">
                                 <Button
+                                  type="button"
                                   size="sm"
                                   variant="secondary"
-                                  onClick={() => handleEditPhoto(photo)}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleEditPhoto(photo);
+                                  }}
                                   className="text-white bg-blue-600 hover:bg-blue-700 h-8 w-8 p-0"
                                 >
                                   <Edit3 className="h-3 w-3" />
                                 </Button>
                                 <Button
+                                  type="button"
                                   size="sm"
                                   variant="destructive"
-                                  onClick={() => handleDeletePhoto(photo.id)}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleDeletePhoto(photo.id);
+                                  }}
                                   className="h-8 w-8 p-0"
                                 >
                                   <X className="h-3 w-3" />
