@@ -134,6 +134,8 @@ This is a comprehensive automotive service management system built as a full-sta
 
 ```
 Changelog:
+- June 19, 2025. Implemented automatic image compression for all photo uploads (camera and file upload)
+- June 19, 2025. Optimized image storage: photos now compressed to max 800px width, JPEG quality 80%
 - June 19, 2025. Fixed vehicle photo capture during creation - photos now save correctly when creating new vehicles
 - June 19, 2025. Increased Express payload limit to 50MB to support base64 image uploads
 - June 19, 2025. Fixed critical bug: service extras now save correctly and load in edit mode

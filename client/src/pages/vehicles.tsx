@@ -43,6 +43,49 @@ async function apiRequest(method: string, url: string, data?: any): Promise<Resp
 const vehicleFormSchema = insertVehicleSchema;
 type VehicleFormData = z.infer<typeof vehicleFormSchema>;
 
+// Image compression utility
+const compressImage = (file: File | string, maxWidth: number = 800, quality: number = 0.7): Promise<string> => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+
+    img.onload = () => {
+      // Calculate new dimensions maintaining aspect ratio
+      let { width, height } = img;
+      if (width > height) {
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxWidth) {
+          width = (width * maxWidth) / height;
+          height = maxWidth;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      // Draw and compress
+      ctx?.drawImage(img, 0, 0, width, height);
+      const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+      resolve(compressedDataUrl);
+    };
+
+    if (typeof file === 'string') {
+      img.src = file;
+    } else {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+};
+
 // CameraCapture Component
 interface CameraCaptureProps {
   isOpen: boolean;
@@ -93,7 +136,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ isOpen, onClose, onPhotoT
     };
   }, [isOpen, onClose]);
 
-  const takePhoto = () => {
+  const takePhoto = async () => {
     if (videoRef.current && canvasRef.current && isCameraReady) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -104,7 +147,10 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ isOpen, onClose, onPhotoT
       context?.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
 
       const dataUrl = canvas.toDataURL('image/png');
-      setPhoto(dataUrl);
+      
+      // Comprimir a imagem antes de armazenar
+      const compressedPhoto = await compressImage(dataUrl, 800, 0.8);
+      setPhoto(compressedPhoto);
       setHasPhoto(true);
     }
   };
@@ -865,14 +911,20 @@ export default function VehiclesPage() {
                                   
                                   const files = Array.from(e.target.files);
                                   for (const file of files) {
-                                    const formData = new FormData();
-                                    formData.append('photo', file);
-                                    formData.append('category', 'vehicle');
-                                    
                                     try {
+                                      // Comprimir a imagem antes de enviar
+                                      const compressedPhoto = await compressImage(file, 800, 0.8);
+                                      
                                       const res = await fetch(`/api/vehicles/${editingVehicle.id}/photos`, {
                                         method: 'POST',
-                                        body: formData,
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({ 
+                                          photo: compressedPhoto, 
+                                          category: 'vehicle',
+                                          description: 'Foto enviada pelo usuário'
+                                        }),
                                         credentials: 'include',
                                       });
                                       
@@ -885,6 +937,11 @@ export default function VehiclesPage() {
                                       }
                                     } catch (error) {
                                       console.error('Error uploading photo:', error);
+                                      toast({
+                                        title: "Erro ao enviar foto",
+                                        description: "Erro ao processar a imagem.",
+                                        variant: "destructive",
+                                      });
                                     }
                                   }
                                   e.target.value = '';
