@@ -251,14 +251,14 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
         {extras.map((extra, index) => (
           <Card key={index} className="border border-gray-200">
             <CardContent className="p-4">
-              <div className="grid grid-cols-12 gap-3 items-end">
-                <div className="col-span-4">
-                  <Label className="text-xs text-gray-600">Adicional</Label>
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                <div className="md:col-span-4">
+                  <Label className="text-sm text-gray-600 font-medium">Adicional</Label>
                   <Select
                     value={extra.serviceExtraId.toString()}
                     onValueChange={(value) => updateExtra(index, 'serviceExtraId', parseInt(value))}
                   >
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger className="h-12 text-base">
                       <SelectValue placeholder="Selecione um adicional" />
                     </SelectTrigger>
                     <SelectContent>
@@ -271,8 +271,8 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
                   </Select>
                 </div>
 
-                <div className="col-span-2">
-                  <Label className="text-xs text-gray-600">Valor</Label>
+                <div className="md:col-span-3">
+                  <Label className="text-sm text-gray-600 font-medium">Valor (R$)</Label>
                   <Input
                     type="text"
                     placeholder="0,00"
@@ -281,29 +281,29 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
                       const rawValue = parseCurrency(e.target.value);
                       updateExtra(index, 'valor', rawValue);
                     }}
-                    className="h-9"
+                    className="h-14 text-lg font-bold text-center bg-green-50 border-2 border-green-200 focus:border-green-400 rounded-lg"
                   />
                 </div>
 
-                <div className="col-span-5">
-                  <Label className="text-xs text-gray-600">Observação</Label>
+                <div className="md:col-span-4">
+                  <Label className="text-sm text-gray-600 font-medium">Observação</Label>
                   <Textarea
                     placeholder="Observações sobre este adicional..."
                     value={extra.observacao}
                     onChange={(e) => updateExtra(index, 'observacao', e.target.value)}
-                    className="h-9 min-h-[36px] resize-none"
+                    className="h-12 min-h-[48px] resize-none text-base"
                     rows={1}
                   />
                 </div>
 
-                <div className="col-span-1 flex gap-1 justify-end">
+                <div className="md:col-span-1 flex gap-2 justify-center md:justify-end mt-2 md:mt-0">
                   {!extra.id && serviceId && extra.serviceExtraId > 0 && (
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => saveExtra(index)}
-                      className="h-9 px-2"
+                      className="h-12 px-4 text-base font-medium"
                       disabled={createExtraItemMutation.isPending}
                     >
                       ✓
@@ -314,9 +314,9 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
                     variant="outline"
                     size="sm"
                     onClick={() => removeExtra(index)}
-                    className="h-9 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="h-12 px-4 text-red-600 hover:text-red-700 hover:bg-red-50"
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>

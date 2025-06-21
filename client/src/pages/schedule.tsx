@@ -589,10 +589,15 @@ export default function SchedulePage() {
 
                         {/* Service Extras Section */}
                         <div className="border-t pt-4">
-                          <ServiceExtras
-                            serviceId={editingService?.id}
-                            onChange={setServiceExtras}
-                          />
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <Label className={cn("font-medium text-gray-700", isMobile ? "text-sm" : "text-sm")}>Adicionais do Serviço</Label>
+                            </div>
+                            <ServiceExtras
+                              serviceId={editingService?.id}
+                              onChange={setServiceExtras}
+                            />
+                          </div>
                         </div>
 
                         {/* Service Budget Section */}
