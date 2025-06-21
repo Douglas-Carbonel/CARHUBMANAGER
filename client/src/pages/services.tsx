@@ -408,6 +408,13 @@ export default function Services() {
     fetchServiceExtras(service.id);
 
     // Load existing payment methods from specific fields
+    console.log('Loading service payment data:', {
+      pixPago: service.pixPago,
+      dinheiroPago: service.dinheiroPago, 
+      chequePago: service.chequePago,
+      cartaoPago: service.cartaoPago
+    });
+
     setPaymentMethods({
       pix: service.pixPago || "0.00",
       dinheiro: service.dinheiroPago || "0.00",

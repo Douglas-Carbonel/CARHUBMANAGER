@@ -76,26 +76,28 @@ export default function PaymentManager({
 
   // Initialize payments from individual values
   useEffect(() => {
+    console.log('PaymentManager - Initializing with values:', { pixPago, dinheiroPago, chequePago, cartaoPago });
+    
     setPayments([
       { 
         type: 'pix', 
-        value: pixPago.toString(),
-        formattedValue: formatCurrency((pixPago * 100).toString())
+        value: (pixPago || 0).toString(),
+        formattedValue: formatCurrency(((pixPago || 0) * 100).toString())
       },
       { 
         type: 'dinheiro', 
-        value: dinheiroPago.toString(),
-        formattedValue: formatCurrency((dinheiroPago * 100).toString())
+        value: (dinheiroPago || 0).toString(),
+        formattedValue: formatCurrency(((dinheiroPago || 0) * 100).toString())
       },
       { 
         type: 'cheque', 
-        value: chequePago.toString(),
-        formattedValue: formatCurrency((chequePago * 100).toString())
+        value: (chequePago || 0).toString(),
+        formattedValue: formatCurrency(((chequePago || 0) * 100).toString())
       },
       { 
         type: 'cartao', 
-        value: cartaoPago.toString(),
-        formattedValue: formatCurrency((cartaoPago * 100).toString())
+        value: (cartaoPago || 0).toString(),
+        formattedValue: formatCurrency(((cartaoPago || 0) * 100).toString())
       }
     ]);
   }, [pixPago, dinheiroPago, chequePago, cartaoPago]);

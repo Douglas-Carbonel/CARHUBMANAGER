@@ -758,9 +758,7 @@ export class DatabaseStorage implements IStorage {
     console.log("Storage: Getting top services...", technicianId ? `for technician ${technicianId}` : "for admin");
 
     try {
-      const technicianCondition = technicianId ? sql`AND s.technician_id = ${technicianId}` : sql``;
-
-      const result = await db.execute(sql`
+      let query = sql`
         SELECT 
           st.name,
           COUNT(s.id) as count,
@@ -780,12 +778,22 @@ export class DatabaseStorage implements IStorage {
             ELSE 0 
           END), 0) as revenue
         FROM service_types st
-        LEFT JOIN services s ON st.id = s.service_type_id AND s.status != 'cancelled' ${technicianCondition}
+        LEFT JOIN services s ON st.id = s.service_type_id 
+        WHERE (s.id IS NULL OR s.status != 'cancelled')
+      `;
+
+      if (technicianId) {
+        query = sql`${query} AND s.technician_id = ${technicianId}`;
+      }
+
+      query = sql`${query}
         GROUP BY st.id, st.name
         HAVING COUNT(s.id) > 0
         ORDER BY count DESC, revenue DESC
         LIMIT 5
-      `);
+      `;
+
+      const result = await db.execute(query);
 
       console.log("Storage: Found", result.rows.length, "top services");
       const topServices = result.rows.map(row => ({
