@@ -319,27 +319,16 @@ export default function AdminPage() {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-              <Link href="/dashboard">
-                <Button
-                  variant="outline"
-                  className="w-full sm:w-auto flex items-center gap-2 text-teal-600 hover:text-teal-700 hover:bg-teal-50 border-teal-300 hover:border-teal-400"
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  onClick={resetForm}
+                  className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-medium px-6 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
                 >
-                  <Home className="h-4 w-4" />
-                  Dashboard
+                  <Plus className="h-4 w-4 mr-2" />
+                  Novo Usuário
                 </Button>
-              </Link>
-              
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button 
-                    onClick={resetForm}
-                    className="w-full sm:w-auto bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-medium px-6 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Novo Usuário
-                  </Button>
-                </DialogTrigger>
+              </DialogTrigger>
                 
                 <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
