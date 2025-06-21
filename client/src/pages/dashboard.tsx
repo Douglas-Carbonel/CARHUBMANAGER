@@ -11,6 +11,9 @@ import TopServices from "@/components/dashboard/top-services";
 import RecentServices from "../components/dashboard/recent-services";
 import UpcomingAppointments from "../components/dashboard/upcoming-appointments";
 import PaymentStatusOverview from "@/components/dashboard/payment-status-overview";
+import ServiceStatusChart from "@/components/dashboard/service-status-chart";
+import FinancialEvolutionChart from "@/components/dashboard/financial-evolution-chart";
+import PaymentMethodsChart from "@/components/dashboard/payment-methods-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -143,123 +146,138 @@ export default function Dashboard() {
               <TechnicianStatsCards />
             </div>
 
-            {/* Main Content Grid - Reorganizado por categorias funcionais */}
-            <div className="grid grid-cols-12 gap-6">
+            {/* Main Content Grid - Reorganizado com novos gráficos */}
+            <div className="space-y-6">
               
-              {/* Left Column - Métricas Financeiras */}
-              <div className="col-span-4 space-y-6">
-                
-                {/* Status de Pagamentos */}
-                {user?.role === "admin" && (
-                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div className="p-6 border-b border-gray-100">
-                      <h3 className="text-lg font-semibold text-gray-900">Status de Pagamentos</h3>
-                    </div>
-                    <div className="p-6">
-                      <PaymentStatusOverview />
-                    </div>
-                  </div>
-                )}
-
-                
+              {/* First Row - Analytics Charts */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ServiceStatusChart />
+                <PaymentMethodsChart />
               </div>
 
-              {/* Center Column - Análises Financeiras Comparativas */}
-              <div className="col-span-5 space-y-6">
-                
-                {/* Receita Estimada vs Realizada */}
-                {user?.role === "admin" && (
-                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div className="p-6 border-b border-gray-100">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-gray-900">Receita Estimada vs Realizada</h3>
-                        <div className="flex space-x-2">
-                          <button className="px-3 py-1 bg-teal-600 text-white text-xs rounded-md">
-                            Últimos 7 dias
-                          </button>
-                          <button className="px-3 py-1 text-gray-600 text-xs rounded-md hover:bg-gray-100">
-                            30 dias
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-6">
-                      <RevenueChart />
-                    </div>
-                  </div>
-                )}
-
-                {/* Receita Realizada - Movido para ficar ao lado da estimada */}
-                {user?.role === "admin" && (
-                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div className="p-6 border-b border-gray-100">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-gray-900">Receita Realizada (R$)</h3>
-                        <div className="flex space-x-2">
-                          <button className="px-3 py-1 bg-teal-600 text-white text-xs rounded-md">
-                            Semanal
-                          </button>
-                          <button className="px-3 py-1 text-gray-600 text-xs rounded-md hover:bg-gray-100">
-                            Mensal
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-6">
-                      <RealizedRevenueChart />
-                    </div>
-                  </div>
-                )}
+              {/* Second Row - Financial Evolution */}
+              <div className="grid grid-cols-1 gap-6">
+                <FinancialEvolutionChart />
               </div>
 
-              {/* Right Column - Operações e Serviços */}
-              <div className="col-span-3 space-y-6">
+              {/* Third Row - Existing Charts */}
+              <div className="grid grid-cols-12 gap-6">
                 
-                {/* Serviços Populares - Movido para a direita */}
-                {user?.role === "admin" && (
-                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div className="p-6 border-b border-gray-100">
-                      <h3 className="text-lg font-semibold text-gray-900">Serviços Populares</h3>
+                {/* Left Column - Métricas Financeiras */}
+                <div className="col-span-4 space-y-6">
+                  
+                  {/* Status de Pagamentos */}
+                  {user?.role === "admin" && (
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                      <div className="p-6 border-b border-gray-100">
+                        <h3 className="text-lg font-semibold text-gray-900">Status de Pagamentos</h3>
+                      </div>
+                      <div className="p-6">
+                        <PaymentStatusOverview />
+                      </div>
                     </div>
-                    <div className="p-6">
-                      <TopServices />
-                    </div>
-                  </div>
-                )}
-                
-                {/* Próximos Agendamentos */}
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                  <div className="p-6 border-b border-gray-100">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-900">Próximos Agendamentos</h3>
-                      <button 
-                        onClick={() => setLocation("/schedule")}
-                        className="text-sm text-teal-600 hover:text-teal-700 font-medium"
-                      >
-                        Ver Todos
-                      </button>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <UpcomingAppointments />
-                  </div>
+                  )}
+
+                  
                 </div>
-                
-                {/* Atividade Recente de Serviços */}
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                  <div className="p-6 border-b border-gray-100">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-900">Atividade Recente</h3>
-                      <button 
-                        onClick={() => setLocation("/services")}
-                        className="text-sm text-teal-600 hover:text-teal-700 font-medium"
-                      >
-                        Ver Todos
-                      </button>
+
+                {/* Center Column - Análises Financeiras Comparativas */}
+                <div className="col-span-5 space-y-6">
+                  
+                  {/* Receita Estimada vs Realizada */}
+                  {user?.role === "admin" && (
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                      <div className="p-6 border-b border-gray-100">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-semibold text-gray-900">Receita Estimada vs Realizada</h3>
+                          <div className="flex space-x-2">
+                            <button className="px-3 py-1 bg-teal-600 text-white text-xs rounded-md">
+                              Últimos 7 dias
+                            </button>
+                            <button className="px-3 py-1 text-gray-600 text-xs rounded-md hover:bg-gray-100">
+                              30 dias
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-6">
+                        <RevenueChart />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Receita Realizada - Movido para ficar ao lado da estimada */}
+                  {user?.role === "admin" && (
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                      <div className="p-6 border-b border-gray-100">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-semibold text-gray-900">Receita Realizada (R$)</h3>
+                          <div className="flex space-x-2">
+                            <button className="px-3 py-1 bg-teal-600 text-white text-xs rounded-md">
+                              Semanal
+                            </button>
+                            <button className="px-3 py-1 text-gray-600 text-xs rounded-md hover:bg-gray-100">
+                              Mensal
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-6">
+                        <RealizedRevenueChart />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Column - Operações e Serviços */}
+                <div className="col-span-3 space-y-6">
+                  
+                  {/* Serviços Populares - Movido para a direita */}
+                  {user?.role === "admin" && (
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                      <div className="p-6 border-b border-gray-100">
+                        <h3 className="text-lg font-semibold text-gray-900">Serviços Populares</h3>
+                      </div>
+                      <div className="p-6">
+                        <TopServices />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Próximos Agendamentos */}
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="p-6 border-b border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-gray-900">Próximos Agendamentos</h3>
+                        <button 
+                          onClick={() => setLocation("/schedule")}
+                          className="text-sm text-teal-600 hover:text-teal-700 font-medium"
+                        >
+                          Ver Todos
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <UpcomingAppointments />
                     </div>
                   </div>
-                  <div className="p-6">
-                    <RecentServices />
+                  
+                  {/* Atividade Recente de Serviços */}
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="p-6 border-b border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-gray-900">Atividade Recente</h3>
+                        <button 
+                          onClick={() => setLocation("/services")}
+                          className="text-sm text-teal-600 hover:text-teal-700 font-medium"
+                        >
+                          Ver Todos
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <RecentServices />
+                    </div>
                   </div>
                 </div>
               </div>

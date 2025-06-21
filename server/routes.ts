@@ -320,7 +320,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/services", requireAuth, async (req, res) => {
     try {
       const user = req.user!;
-      const services = await storage.getServices(user.role === 'admin' ? undefined : user.id);
+      const { status } = req.query;
+      let services = await storage.getServices(user.role === 'admin' ? undefined : user.id);
+      
+      // Filter by status if provided
+      if (status && typeof status === 'string') {
+        services = services.filter(service => service.status === status);
+      }
+      
       res.json(services);
     } catch (error) {
       console.error("Error fetching services:", error);

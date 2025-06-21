@@ -826,7 +826,7 @@ export default function Services() {
                           <div className="space-y-3">
                             {/* Services Summary */}
                             <div className="bg-white border border-slate-200 rounded-lg p-3">
-                              <div className="text-sm font-bold text-slate-800 mb-3">Serviços:</div>
+                              <div className="text-sm fontbold text-slate-800 mb-3">Serviços:</div>
                               <div className="space-y-2">
                                 {/* Serviço Base */}
                                 <div className="text-sm text-slate-700">
@@ -836,7 +836,7 @@ export default function Services() {
                                     return selectedServiceType?.description || "Nenhum serviço selecionado";
                                   })()}
                                 </div>
-                                
+
                                 {/* Adicionais - listados separadamente */}
                                 {serviceExtras.length > 0 && serviceExtras.map((extra, index) => (
                                   <div key={index} className="text-sm text-slate-700">
@@ -845,7 +845,7 @@ export default function Services() {
                                 ))}
                               </div>
                             </div>
-                            
+
                             <div className="border-t border-slate-300 pt-2 mt-2">
                               <div className="flex justify-between items-center">
                                 <span className="text-lg font-bold text-slate-800">Total do Serviço:</span>
