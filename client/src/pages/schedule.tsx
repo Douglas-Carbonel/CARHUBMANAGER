@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { Plus, Search, Edit, Trash2, Calendar, Clock, User, Car, Wrench, Calculator } from "lucide-react";
 import ServiceExtras from "@/components/service/service-extras";
 import { cn } from "@/lib/utils";
