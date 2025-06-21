@@ -172,10 +172,28 @@ export default function Services() {
     }
   };
 
-  const handlePhotoTaken = () => {
-    if (editingService) {
+  const handlePhotoTaken = async () => {
+    // For new services (no ID yet), fetch all photos without serviceId filter
+    if (!editingService?.id) {
+      try {
+        const res = await fetch('/api/photos', {
+          credentials: 'include',
+        });
+        if (res.ok) {
+          const allPhotos = await res.json();
+          // Filter photos that don't have a service ID (temporary photos)
+          const tempPhotos = allPhotos.filter((photo: any) => 
+            photo.entity_type === 'service' && (!photo.entity_id || photo.entity_id === 0)
+          );
+          setCurrentServicePhotos(tempPhotos);
+        }
+      } catch (error) {
+        console.error('Error fetching temp photos:', error);
+      }
+    } else {
       fetchServicePhotos(editingService.id);
     }
+    
     queryClient.invalidateQueries({ queryKey: ['/api/photos'] });
     toast({
       title: "Foto capturada",
@@ -567,9 +585,24 @@ export default function Services() {
                       "bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold rounded-lg",
                       isMobile ? "px-4 py-2 text-sm transform-none" : "transform hover:scale-105 px-6 py-3"
                     )}
-                    onClick={() => {
+                    onClick={async () => {
                       setEditingService(null);
                       form.reset();
+                      
+                      // Load temporary photos for new services
+                      try {
+                        const res = await fetch('/api/photos', { credentials: 'include' });
+                        if (res.ok) {
+                          const allPhotos = await res.json();
+                          const tempPhotos = allPhotos.filter((photo: any) => 
+                            photo.entity_type === 'service' && (!photo.entity_id || photo.entity_id === 0)
+                          );
+                          setCurrentServicePhotos(tempPhotos);
+                        }
+                      } catch (error) {
+                        console.error('Error fetching temp photos:', error);
+                        setCurrentServicePhotos([]);
+                      }
                       setCurrentServicePhotos([]);
                       setServiceExtras([]);
 
@@ -1042,7 +1075,25 @@ export default function Services() {
                         </div>
                         <PhotoUpload
                           photos={currentServicePhotos}
-                          onPhotoUploaded={() => fetchServicePhotos(editingService?.id)}
+                          onPhotoUploaded={async () => {
+                            if (!editingService?.id) {
+                              // For new services, fetch temporary photos
+                              try {
+                                const res = await fetch('/api/photos', { credentials: 'include' });
+                                if (res.ok) {
+                                  const allPhotos = await res.json();
+                                  const tempPhotos = allPhotos.filter((photo: any) => 
+                                    photo.entity_type === 'service' && (!photo.entity_id || photo.entity_id === 0)
+                                  );
+                                  setCurrentServicePhotos(tempPhotos);
+                                }
+                              } catch (error) {
+                                console.error('Error fetching temp photos:', error);
+                              }
+                            } else {
+                              fetchServicePhotos(editingService.id);
+                            }
+                          }}
                           serviceId={editingService?.id}
                           maxPhotos={7}
                         />
