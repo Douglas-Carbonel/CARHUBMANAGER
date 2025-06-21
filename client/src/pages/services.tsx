@@ -25,7 +25,7 @@ import PhotoUpload from "@/components/photos/photo-upload";
 import CameraCapture from "@/components/camera/camera-capture";
 import ServiceExtras from "@/components/service/service-extras";
 import PaymentManager from "@/components/service/payment-manager";
-import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 // Utility functions for currency formatting
