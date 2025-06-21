@@ -970,18 +970,22 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
       let entityType = 'service';
       let entityId = 0;
 
-      if (customerId) {
+      if (serviceId) {
+        entityType = 'service';
+        entityId = parseInt(serviceId);
+        console.log('Photo upload - associating with service ID:', entityId);
+      } else if (customerId) {
         entityType = 'customer';
         entityId = parseInt(customerId);
       } else if (vehicleId) {
         entityType = 'vehicle';
         entityId = parseInt(vehicleId);
-      } else if (serviceId) {
-        entityType = 'service';
-        entityId = parseInt(serviceId);
       }
-      // For new services without ID, we'll use service type with ID 0
-      // This will be updated when the service is actually created
+      
+      if (entityId === 0) {
+        console.error('Photo upload - No valid entity ID provided');
+        return res.status(400).json({ message: "Entity ID is required" });
+      }
 
       const photoData = {
         category: category || 'other',

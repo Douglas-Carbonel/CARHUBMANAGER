@@ -133,13 +133,16 @@ export default function Services() {
     }
 
     try {
+      console.log('Fetching photos for service ID:', serviceId);
       const res = await fetch(`/api/photos?serviceId=${serviceId}`, {
         credentials: 'include',
       });
       if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
       const photos = await res.json();
+      console.log('Photos found for service:', photos.length);
       setCurrentServicePhotos(photos);
     } catch (error: any) {
+      console.error('Error fetching service photos:', error);
       toast({
         title: "Erro ao carregar fotos do serviço",
         description: error.message,
@@ -413,14 +416,21 @@ export default function Services() {
           for (const tempPhoto of temporaryPhotos) {
             try {
               // Convert base64 to blob for upload
-              const response = await fetch(tempPhoto.photo);
-              const blob = await response.blob();
+              const base64Data = tempPhoto.photo.split(',')[1];
+              const byteCharacters = atob(base64Data);
+              const byteNumbers = new Array(byteCharacters.length);
+              for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+              }
+              const byteArray = new Uint8Array(byteNumbers);
+              const blob = new Blob([byteArray], { type: 'image/jpeg' });
               
               const formData = new FormData();
-              formData.append('photo', blob, 'service_photo.jpg');
+              formData.append('photo', blob, `service_${result.id}_photo_${Date.now()}.jpg`);
               formData.append('category', tempPhoto.category);
               formData.append('serviceId', result.id.toString());
 
+              console.log('Uploading photo for service ID:', result.id);
               const uploadResponse = await fetch('/api/photos/upload', {
                 method: 'POST',
                 body: formData,
@@ -428,7 +438,11 @@ export default function Services() {
               });
 
               if (!uploadResponse.ok) {
-                console.error('Failed to upload temporary photo:', uploadResponse.statusText);
+                const errorText = await uploadResponse.text();
+                console.error('Failed to upload temporary photo:', uploadResponse.statusText, errorText);
+              } else {
+                const uploadResult = await uploadResponse.json();
+                console.log('Photo uploaded successfully:', uploadResult);
               }
             } catch (photoError) {
               console.error('Error uploading temporary photo:', photoError);

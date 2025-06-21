@@ -1272,16 +1272,23 @@ export class DatabaseStorage implements IStorage {
           conditions.push(and(eq(photos.entityType, 'vehicle'), eq(photos.entityId, filters.vehicleId)));
         }
         if (filters.serviceId) {
+          console.log('Storage: Looking for photos with service ID:', filters.serviceId);
           conditions.push(and(eq(photos.entityType, 'service'), eq(photos.entityId, filters.serviceId)));
         }
         if (filters.category) conditions.push(eq(photos.category, filters.category));
 
         if (conditions.length > 0) {
-          query = query.where(or(...conditions));
+          if (conditions.length === 1) {
+            query = query.where(conditions[0]);
+          } else {
+            query = query.where(or(...conditions));
+          }
         }
       }
 
-      return await query.orderBy(desc(photos.createdAt));
+      const result = await query.orderBy(desc(photos.createdAt));
+      console.log('Storage: Found photos:', result.length);
+      return result;
     } catch (error) {
       console.error('Error fetching photos:', error);
       throw error;
