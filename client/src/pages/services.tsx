@@ -124,6 +124,7 @@ export default function Services() {
     cheque: "",
     cartao: ""
   });
+  const [temporaryPhotos, setTemporaryPhotos] = useState<Array<{ photo: string; category: string }>>([]);
 
   const fetchServicePhotos = async (serviceId: number | undefined) => {
     if (!serviceId) {
