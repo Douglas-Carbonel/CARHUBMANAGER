@@ -17,7 +17,7 @@ interface CameraCaptureProps {
     serviceId?: number;
     category: string;
     description?: string;
-  }) => void;
+  } | string, category?: string) => void;
   customerId?: number;
   vehicleId?: number;
   serviceId?: number;
@@ -148,13 +148,18 @@ export default function CameraCapture({
 
       const photo = await uploadResponse.json();
       
-      onPhotoTaken({
-        customerId,
-        vehicleId,
-        serviceId,
-        category,
-        description,
-      });
+      // For new services without ID, call with photo URL and category
+      if (!serviceId && !vehicleId && !customerId) {
+        onPhotoTaken(capturedImage, category);
+      } else {
+        onPhotoTaken({
+          customerId,
+          vehicleId,
+          serviceId,
+          category,
+          description,
+        });
+      }
 
       toast({
         title: "Foto salva",

@@ -172,28 +172,22 @@ export default function Services() {
     }
   };
 
-  const handlePhotoTaken = async () => {
-    // For new services (no ID yet), fetch all photos without serviceId filter
+  const handlePhotoTaken = async (photoUrl?: string, category?: string) => {
+    // For new services (no ID yet), store as temporary photo
     if (!editingService?.id) {
-      try {
-        const res = await fetch('/api/photos', {
-          credentials: 'include',
+      if (photoUrl && category) {
+        setTemporaryPhotos(prev => [...prev, { photo: photoUrl, category }]);
+        toast({
+          title: "Foto capturada!",
+          description: "A foto será salva quando o serviço for cadastrado.",
         });
-        if (res.ok) {
-          const allPhotos = await res.json();
-          // Filter photos that don't have a service ID (temporary photos)
-          const tempPhotos = allPhotos.filter((photo: any) => 
-            photo.entity_type === 'service' && (!photo.entity_id || photo.entity_id === 0)
-          );
-          setCurrentServicePhotos(tempPhotos);
-        }
-      } catch (error) {
-        console.error('Error fetching temp photos:', error);
       }
-    } else {
-      fetchServicePhotos(editingService.id);
+      setIsCameraOpen(false);
+      return;
     }
-    
+
+    // For existing services, fetch updated photos
+    fetchServicePhotos(editingService.id);
     queryClient.invalidateQueries({ queryKey: ['/api/photos'] });
     toast({
       title: "Foto capturada",
@@ -589,20 +583,8 @@ export default function Services() {
                       setEditingService(null);
                       form.reset();
                       
-                      // Load temporary photos for new services
-                      try {
-                        const res = await fetch('/api/photos', { credentials: 'include' });
-                        if (res.ok) {
-                          const allPhotos = await res.json();
-                          const tempPhotos = allPhotos.filter((photo: any) => 
-                            photo.entity_type === 'service' && (!photo.entity_id || photo.entity_id === 0)
-                          );
-                          setCurrentServicePhotos(tempPhotos);
-                        }
-                      } catch (error) {
-                        console.error('Error fetching temp photos:', error);
-                        setCurrentServicePhotos([]);
-                      }
+                      // Reset temporary photos for new services
+                      setTemporaryPhotos([]);
                       setCurrentServicePhotos([]);
                       setServiceExtras([]);
 
@@ -1074,29 +1056,40 @@ export default function Services() {
                           </div>
                         </div>
                         <PhotoUpload
-                          photos={currentServicePhotos}
+                          photos={editingService?.id ? currentServicePhotos : []}
                           onPhotoUploaded={async () => {
-                            if (!editingService?.id) {
-                              // For new services, fetch temporary photos
-                              try {
-                                const res = await fetch('/api/photos', { credentials: 'include' });
-                                if (res.ok) {
-                                  const allPhotos = await res.json();
-                                  const tempPhotos = allPhotos.filter((photo: any) => 
-                                    photo.entity_type === 'service' && (!photo.entity_id || photo.entity_id === 0)
-                                  );
-                                  setCurrentServicePhotos(tempPhotos);
-                                }
-                              } catch (error) {
-                                console.error('Error fetching temp photos:', error);
-                              }
-                            } else {
+                            if (editingService?.id) {
                               fetchServicePhotos(editingService.id);
                             }
                           }}
                           serviceId={editingService?.id}
                           maxPhotos={7}
                         />
+                        
+                        {/* Show temporary photos for new services */}
+                        {!editingService?.id && temporaryPhotos.length > 0 && (
+                          <div className="mt-4">
+                            <h5 className="text-sm font-medium text-gray-700 mb-2">Fotos adicionadas:</h5>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                              {temporaryPhotos.map((tempPhoto, index) => (
+                                <div key={index} className="relative group">
+                                  <img 
+                                    src={tempPhoto.photo} 
+                                    alt={`Foto ${index + 1}`}
+                                    className="w-full h-20 object-cover rounded-lg border"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => setTemporaryPhotos(prev => prev.filter((_, i) => i !== index))}
+                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
