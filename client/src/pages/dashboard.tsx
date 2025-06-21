@@ -105,21 +105,21 @@ export default function Dashboard() {
         />
 
         <main className="flex-1 overflow-y-auto bg-gray-50/50">
-          <div className="max-w-full mx-auto px-8 py-6 space-y-6">
+          <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
             {/* Header Section */}
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+            <div className="flex flex-col gap-4 lg:gap-6">
               <div className="flex items-center text-sm text-gray-500">
                 <span>{new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
               </div>
               
               {/* Search and Actions */}
-              <div className="flex items-center gap-3">
-                <div className="relative">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="relative flex-1 sm:flex-none">
                   <input 
                     type="text" 
                     placeholder="Buscar..." 
-                    className="w-80 pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                    className="w-full sm:w-80 pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                   />
                   <div className="absolute left-3 top-2.5">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,17 +127,20 @@ export default function Dashboard() {
                     </svg>
                   </div>
                 </div>
-                {quickActions.map((action, index) => (
-                  <Button
-                    key={index}
-                    onClick={() => setLocation(action.route)}
-                    className="bg-teal-600 hover:bg-teal-700 text-white border-0 shadow-sm hover:shadow-md transition-all duration-200 h-9 px-4"
-                    size="sm"
-                  >
-                    <action.icon className="h-4 w-4 mr-2" />
-                    {action.title}
-                  </Button>
-                ))}
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                  {quickActions.map((action, index) => (
+                    <Button
+                      key={index}
+                      onClick={() => setLocation(action.route)}
+                      className="bg-teal-600 hover:bg-teal-700 text-white border-0 shadow-sm hover:shadow-md transition-all duration-200 h-9 px-4 justify-center"
+                      size="sm"
+                    >
+                      <action.icon className="h-4 w-4 mr-2" />
+                      <span className="hidden sm:inline">{action.title}</span>
+                      <span className="sm:hidden">{action.title.split(' ')[0]}</span>
+                    </Button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -161,15 +164,15 @@ export default function Dashboard() {
               </div>
 
               {/* Third Row - Existing Charts */}
-              <div className="grid grid-cols-12 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
                 {/* Left Column - Métricas Financeiras */}
-                <div className="col-span-4 space-y-6">
+                <div className="lg:col-span-4 space-y-6">
                   
                 </div>
 
                 {/* Center Column - Análises Financeiras Comparativas */}
-                <div className="col-span-5 space-y-6">
+                <div className="lg:col-span-5 space-y-6">
                   
                   {/* Receita Estimada vs Realizada */}
                   {user?.role === "admin" && (
@@ -217,7 +220,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Right Column - Operações e Serviços */}
-                <div className="col-span-3 space-y-6">
+                <div className="lg:col-span-3 space-y-6">
                   
                   {/* Serviços Populares - Movido para a direita */}
                   {user?.role === "admin" && (

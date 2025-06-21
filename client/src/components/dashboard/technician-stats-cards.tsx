@@ -155,12 +155,12 @@ export default function TechnicianStatsCards() {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
       {cards.map((card, index) => (
-        <div key={index} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-sm transition-shadow">
+        <div key={index} className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 hover:shadow-sm transition-shadow">
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-gray-600">{card.title}</h3>
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600">{card.title}</h3>
             <div className={`w-10 h-10 ${card.iconBg} rounded-lg flex items-center justify-center`}>
               <card.icon className={`w-5 h-5 ${card.iconColor}`} />
             </div>
@@ -172,19 +172,19 @@ export default function TechnicianStatsCards() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-green-600">Pagos</span>
-                  <span className="text-lg font-semibold text-green-700">{paymentStatus.paid}</span>
+                  <span className="text-base sm:text-lg font-semibold text-green-700">{paymentStatus.paid}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-orange-600">Pendentes</span>
-                  <span className="text-lg font-semibold text-orange-700">{paymentStatus.pending}</span>
+                  <span className="text-base sm:text-lg font-semibold text-orange-700">{paymentStatus.pending}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-yellow-600">Parciais</span>
-                  <span className="text-lg font-semibold text-yellow-700">{paymentStatus.partial}</span>
+                  <span className="text-base sm:text-lg font-semibold text-yellow-700">{paymentStatus.partial}</span>
                 </div>
               </div>
             ) : (
-              <span className="text-2xl font-semibold text-gray-900">
+              <span className="text-xl sm:text-2xl font-semibold text-gray-900">
                 {card.value}
               </span>
             )}
@@ -193,7 +193,7 @@ export default function TechnicianStatsCards() {
           {/* Subtitle */}
           {!card.isPaymentStatus && (
             <div className="flex items-center">
-              <span className="text-sm text-gray-500">
+              <span className="text-xs sm:text-sm text-gray-500">
                 {card.subtitle}
               </span>
               {card.change >= 0 ? (

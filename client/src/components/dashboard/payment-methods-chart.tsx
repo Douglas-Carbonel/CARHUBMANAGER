@@ -122,6 +122,9 @@ export default function PaymentMethodsChart() {
   const totalAmount = Object.values(paymentMethods).reduce((sum, method) => sum + method.amount, 0);
   const totalCount = Object.values(paymentMethods).reduce((sum, method) => sum + method.count, 0);
 
+  console.log("Payment methods calculation:", paymentMethods);
+  console.log("Total amount:", totalAmount, "Total count:", totalCount);
+
   const chartData: PaymentMethodData[] = Object.entries(paymentMethods)
     .filter(([_, data]) => data.amount > 0 || data.count > 0)
     .map(([method, data]) => ({
@@ -133,6 +136,8 @@ export default function PaymentMethodsChart() {
         ? Math.round((data.amount / totalAmount) * 100)
         : Math.round((data.count / totalCount) * 100),
     }));
+
+  console.log("Chart data:", chartData);
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -278,18 +283,18 @@ export default function PaymentMethodsChart() {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-          {Object.entries(paymentMethods).map(([method, data]) => {
-            const Icon = PAYMENT_ICONS[method as keyof typeof PAYMENT_ICONS];
-            const label = PAYMENT_LABELS[method as keyof typeof PAYMENT_LABELS];
-            const color = PAYMENT_COLORS[method as keyof typeof PAYMENT_COLORS];
+          {chartData.map((data) => {
+            const methodKey = Object.keys(PAYMENT_LABELS).find(key => 
+              PAYMENT_LABELS[key as keyof typeof PAYMENT_LABELS] === data.method
+            ) as keyof typeof PAYMENT_ICONS;
             
-            if (data.amount === 0 && data.count === 0) return null;
+            const Icon = PAYMENT_ICONS[methodKey];
             
             return (
-              <div key={method} className="bg-gray-50 rounded-lg p-3">
+              <div key={data.method} className="bg-gray-50 rounded-lg p-3">
                 <div className="flex items-center mb-2">
-                  <Icon className="h-4 w-4 mr-2" style={{ color }} />
-                  <span className="text-sm font-medium">{label}</span>
+                  <Icon className="h-4 w-4 mr-2" style={{ color: data.color }} />
+                  <span className="text-sm font-medium">{data.method}</span>
                 </div>
                 <div className="text-lg font-bold">
                   R$ {data.amount.toFixed(2)}
