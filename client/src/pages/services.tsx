@@ -381,6 +381,16 @@ export default function Services() {
     fetchServicePhotos(service.id);
     // Load existing service extras
     fetchServiceExtras(service.id);
+
+    // Load existing payment methods - use valorPago as PIX by default
+    const valorPagoAtual = service.valorPago || "0";
+    setPaymentMethods({
+      pix: valorPagoAtual,
+      dinheiro: "",
+      cheque: "",
+      cartao: ""
+    });
+
     setIsDialogOpen(true);
   };
 
@@ -522,8 +532,17 @@ export default function Services() {
                     setCurrentServicePhotos([]);
                     setServiceExtras([]);
 
+                    // Reset payment methods when creating new service
+                    setPaymentMethods({
+                      pix: "",
+                      dinheiro: "",
+                      cheque: "",
+                      cartao: ""
+                    });
+
                     // Check URL params to pre-select customer if coming from customer page
                     const urlParams = new URLSearchParams(window.location.search);
+
                     const customerIdFromUrl = urlParams.get('customerId');
 
                     if (customerIdFromUrl) {
