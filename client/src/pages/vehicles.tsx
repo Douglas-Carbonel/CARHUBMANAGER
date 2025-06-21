@@ -909,17 +909,18 @@ export default function VehiclesPage() {
                                     input.type = 'file';
                                     input.accept = 'image/*';
                                     input.multiple = true;
-                                    input.onchange = (event) => {
+                                    input.onchange = async (event) => {
                                       const files = (event.target as HTMLInputElement).files;
                                       if (files) {
-                                        Array.from(files).forEach((file) => {
+                                        for (const file of Array.from(files)) {
                                           const reader = new FileReader();
                                           reader.onload = (e) => {
                                             const photo = e.target?.result as string;
-                                            handlePhotoTaken(photo, 'vehicle');
+                                            // Use vehicleId if editing, undefined if creating new
+                                            handlePhotoTaken(photo, 'vehicle', editingVehicle?.id);
                                           };
                                           reader.readAsDataURL(file);
-                                        });
+                                        }
                                       }
                                     };
                                     input.click();
@@ -932,16 +933,61 @@ export default function VehiclesPage() {
                               </div>
                             </div>
 
-                            <PhotoUpload
-                              photos={editingVehicle ? currentVehiclePhotos : []}
-                              onPhotoUploaded={() => {
-                                if (editingVehicle) {
-                                  fetchVehiclePhotos(editingVehicle.id);
-                                }
-                              }}
-                              vehicleId={editingVehicle?.id}
-                              maxPhotos={7}
-                            />
+                            {/* Exibir fotos existentes do veículo em edição */}
+                            {editingVehicle && currentVehiclePhotos.length > 0 && (
+                              <div className="mt-4 space-y-2">
+                                <h5 className="text-sm font-medium text-gray-600">Fotos do veículo:</h5>
+                                <div className="grid grid-cols-3 gap-2">
+                                  {currentVehiclePhotos.map((photo) => (
+                                    <div key={photo.id} className="relative group">
+                                      <img 
+                                        src={photo.url} 
+                                        alt={photo.description || 'Foto do veículo'}
+                                        className="w-full h-20 object-cover rounded-lg border border-gray-200"
+                                      />
+                                      <div className="absolute bottom-1 left-1 right-1">
+                                        <span className="text-xs bg-black bg-opacity-70 text-white px-1 py-0.5 rounded text-center block">
+                                          {photo.category === 'vehicle' ? 'Veículo' : 
+                                           photo.category === 'damage' ? 'Dano' :
+                                           photo.category === 'before' ? 'Antes' :
+                                           photo.category === 'after' ? 'Depois' : 'Outro'}
+                                        </span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={async () => {
+                                          if (!confirm('Tem certeza que deseja remover esta foto?')) return;
+                                          
+                                          try {
+                                            const res = await fetch(`/api/photos/${photo.id}`, {
+                                              method: 'DELETE',
+                                              credentials: 'include',
+                                            });
+
+                                            if (res.ok) {
+                                              toast({
+                                                title: "Foto removida",
+                                                description: "A foto foi removida com sucesso.",
+                                              });
+                                              fetchVehiclePhotos(editingVehicle.id);
+                                            }
+                                          } catch (error) {
+                                            toast({
+                                              title: "Erro",
+                                              description: "Erro ao remover a foto.",
+                                              variant: "destructive",
+                                            });
+                                          }
+                                        }}
+                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                                      >
+                                        ×
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
 
                             {/* Mostrar fotos temporárias para novos veículos */}
                             {!editingVehicle && temporaryPhotos.length > 0 && (
