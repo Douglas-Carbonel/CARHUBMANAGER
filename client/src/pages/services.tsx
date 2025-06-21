@@ -408,11 +408,12 @@ export default function Services() {
       // For new services, we need to handle temporary photos after creation
       try {
         const result = await createMutation.mutateAsync(serviceData);
-        
+
         // Save temporary photos to the created service
         if (result && temporaryPhotos.length > 0) {
           console.log('Saving temporary photos to service:', result.id);
-          
+
+          let photosSaved = 0;
           for (const tempPhoto of temporaryPhotos) {
             try {
               // Convert base64 to blob for upload
@@ -424,38 +425,43 @@ export default function Services() {
               }
               const byteArray = new Uint8Array(byteNumbers);
               const blob = new Blob([byteArray], { type: 'image/jpeg' });
-              
+
               const formData = new FormData();
               formData.append('photo', blob, `service_${result.id}_photo_${Date.now()}.jpg`);
               formData.append('category', tempPhoto.category);
               formData.append('serviceId', result.id.toString());
 
-              console.log('Uploading photo for service ID:', result.id);
-              const uploadResponse = await fetch('/api/photos/upload', {
+              const photoResponse = await fetch('/api/photos/upload', {
                 method: 'POST',
                 body: formData,
                 credentials: 'include',
               });
 
-              if (!uploadResponse.ok) {
-                const errorText = await uploadResponse.text();
-                console.error('Failed to upload temporary photo:', uploadResponse.statusText, errorText);
-              } else {
-                const uploadResult = await uploadResponse.json();
-                console.log('Photo uploaded successfully:', uploadResult);
+              if (!photoResponse.ok) {
+                const errorText = await photoResponse.text();
+                console.error('Photo upload failed:', errorText);
+                throw new Error(`Failed to upload photo: ${photoResponse.status}`);
               }
-            } catch (photoError) {
-              console.error('Error uploading temporary photo:', photoError);
+
+              const photoResult = await photoResponse.json();
+              console.log('Photo saved successfully:', photoResult);
+              photosSaved++;
+            } catch (error) {
+              console.error('Error saving temporary photo:', error);
             }
           }
-          
-          // Clear temporary photos after successful upload
+
+          // Clear temporary photos
           setTemporaryPhotos([]);
-          
-          toast({
-            title: "Serviço criado com sucesso!",
-            description: `Serviço criado e ${temporaryPhotos.length} foto(s) salva(s).`,
-          });
+          console.log(`${photosSaved} of ${temporaryPhotos.length} temporary photos processed`);
+
+          // Show success message with photo count
+          if (photosSaved > 0) {
+            toast({
+              title: "Serviço criado com sucesso!",
+              description: `${photosSaved} foto(s) salva(s) junto com o serviço.`,
+            });
+          }
         } else {
           toast({
             title: "Serviço criado com sucesso!",
@@ -649,7 +655,7 @@ export default function Services() {
                     onClick={async () => {
                       setEditingService(null);
                       form.reset();
-                      
+
                       // Reset temporary photos for new services
                       setTemporaryPhotos([]);
                       setCurrentServicePhotos([]);
@@ -1133,7 +1139,7 @@ export default function Services() {
                                     };
                                     reader.readAsDataURL(file);
                                   });
-                                  
+
                                   toast({
                                     title: "Fotos adicionadas!",
                                     description: "As fotos serão salvas quando o serviço for cadastrado.",
@@ -1199,7 +1205,7 @@ export default function Services() {
                           serviceId={editingService?.id}
                           maxPhotos={7}
                         />
-                        
+
                         {/* Show temporary photos for new services */}
                         {!editingService?.id && temporaryPhotos.length > 0 && (
                           <div className="mt-4">

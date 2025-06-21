@@ -324,12 +324,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = req.user!;
       const { status } = req.query;
       let services = await storage.getServices(user.role === 'admin' ? undefined : user.id);
-      
+
       // Filter by status if provided
       if (status && typeof status === 'string') {
         services = services.filter(service => service.status === status);
       }
-      
+
       res.json(services);
     } catch (error) {
       console.error("Error fetching services:", error);
@@ -526,47 +526,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = req.user!;
       const technicianId = user.role === 'admin' ? null : user.id;
-      
+
       // Buscar todos os serviços
       const allServices = await storage.getServices();
-      
+
       let receitaRealizada = 0;  // Serviços com valorPago > 0
       let receitaPendente = 0;   // Serviços com valorPago = 0
       let servicosConcluidos = 0; // Status = 'completed'
       let pagamentosPendentes = 0; // valorPago = 0
       let servicosComPagamentoParcial = 0; // 0 < valorPago < estimatedValue
-      
+
       allServices.forEach((service: any) => {
         const estimatedValue = parseFloat(service.estimatedValue || 0);
         const valorPago = parseFloat(service.valorPago || 0);
         const status = service.status;
-        
+
         // Receita realizada (serviços que receberam algum pagamento)
         if (valorPago > 0) {
           receitaRealizada += valorPago;
         }
-        
+
         // Receita pendente (valor estimado menos o que foi pago)
         if (valorPago < estimatedValue) {
           receitaPendente += (estimatedValue - valorPago);
         }
-        
+
         // Serviços concluídos
         if (status === 'completed') {
           servicosConcluidos++;
         }
-        
+
         // Pagamentos pendentes (serviços sem nenhum pagamento)
         if (valorPago === 0) {
           pagamentosPendentes++;
         }
-        
+
         // Pagamentos parciais
         if (valorPago > 0 && valorPago < estimatedValue) {
           servicosComPagamentoParcial++;
         }
       });
-      
+
       const stats = {
         receitaRealizada: Math.round(receitaRealizada * 100) / 100,
         receitaPendente: Math.round(receitaPendente * 100) / 100,
@@ -580,7 +580,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         activeCustomers: pagamentosPendentes,
         weeklyServices: servicosConcluidos
       };
-      
+
       console.log("Dashboard stats (nova lógica):", stats);
       res.json(stats);
     } catch (error) {
@@ -619,14 +619,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const days = parseInt(req.query.days as string) || 7;
       console.log(`API: Getting realized revenue data for ${days} days (paid services only)`);
-      
+
       // Buscar todos os serviços dos últimos X dias
       const allServices = await storage.getServices();
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days + 1);
-      
+
       const revenueByDate: Record<string, number> = {};
-      
+
       // Inicializar todos os dias com 0
       for (let i = 0; i < days; i++) {
         const date = new Date(startDate);
@@ -634,29 +634,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const dateStr = date.toISOString().split('T')[0];
         revenueByDate[dateStr] = 0;
       }
-      
+
       // Calcular receita apenas de serviços com pagamento
       allServices.forEach((service: any) => {
         const serviceDate = service.scheduledDate;
         const valorPago = parseFloat(service.valorPago || 0);
-        
+
         if (valorPago > 0 && serviceDate in revenueByDate) {
           revenueByDate[serviceDate] += valorPago;
         }
       });
-      
+
       // Converter para formato esperado pelo gráfico
       const chartData = Object.entries(revenueByDate).map(([date, revenue]) => {
         const dateObj = new Date(date);
         const dayName = dateObj.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
-        
+
         return {
           date: dayName,
           fullDate: date,
           revenue: Math.round((revenue as number) * 100) / 100
         };
       });
-      
+
       console.log('Realized revenue data (paid services):', chartData);
       res.json(chartData);
     } catch (error) {
@@ -670,23 +670,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("API: Getting top services...");
       const user = req.user!;
-      
+
       // Buscar todos os serviços e calcular popularidade
       const allServices = await storage.getServices();
       const serviceTypeCount: Record<string, { count: number; revenue: number; name: string }> = {};
-      
+
       allServices.forEach((service: any) => {
         const serviceTypeName = service.serviceType?.name || 'Sem categoria';
         const valorPago = parseFloat(service.valorPago || 0);
-        
+
         if (!serviceTypeCount[serviceTypeName]) {
           serviceTypeCount[serviceTypeName] = { count: 0, revenue: 0, name: serviceTypeName };
         }
-        
+
         serviceTypeCount[serviceTypeName].count += 1;
         serviceTypeCount[serviceTypeName].revenue += valorPago;
       });
-      
+
       // Converter para array e ordenar
       const topServices = Object.values(serviceTypeCount)
         .sort((a, b) => b.count - a.count || b.revenue - a.revenue)
@@ -696,7 +696,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           count: item.count,
           revenue: Math.round(item.revenue * 100) / 100
         }));
-      
+
       console.log("API: Top services result:", topServices);
       res.json(topServices);
     } catch (error: any) {
@@ -937,13 +937,36 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     }
   });
 
-  app.post("/api/photos/upload", requireAuth, upload.single('photo'), async (req, res) => {
+  // Photo upload endpoint
+  app.post('/api/photos/upload', upload.single('photo'), async (req, res) => {
     try {
+      console.log('Photo upload request received');
+      console.log('File:', req.file);
+      console.log('Body:', req.body);
+
       if (!req.file) {
-        return res.status(400).json({ message: "No photo file provided" });
+        console.log('No file provided in request');
+        return res.status(400).json({ error: 'No photo file provided' });
       }
 
-      const { customerId, vehicleId, serviceId, category, description } = req.body;
+      const { customerId, vehicleId, serviceId, category = 'other', description } = req.body;
+      console.log('Parsed parameters:', { customerId, vehicleId, serviceId, category, description });
+
+      // Validate that at least one entity ID is provided
+      if (!customerId && !vehicleId && !serviceId) {
+        console.log('No entity ID provided');
+        return res.status(400).json({ error: 'Entity ID is required (customerId, vehicleId, or serviceId)' });
+      }
+
+      let entityType = 'service';
+      let entityId = serviceId ? serviceId : customerId ? customerId : vehicleId;
+      if(serviceId){
+        entityType = 'service';
+      } else if(customerId){
+        entityType = 'customer';
+      } else if(vehicleId){
+        entityType = 'vehicle';
+      }
 
       // Compress and resize image
       const compressedFilename = `compressed_${req.file.filename}`;
@@ -966,27 +989,6 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
       // Get compressed file stats
       const compressedStats = fs.statSync(compressedPath);
 
-      // Determine entity type and ID based on what's provided
-      let entityType = 'service';
-      let entityId = 0;
-
-      if (serviceId) {
-        entityType = 'service';
-        entityId = parseInt(serviceId);
-        console.log('Photo upload - associating with service ID:', entityId);
-      } else if (customerId) {
-        entityType = 'customer';
-        entityId = parseInt(customerId);
-      } else if (vehicleId) {
-        entityType = 'vehicle';
-        entityId = parseInt(vehicleId);
-      }
-      
-      if (entityId === 0) {
-        console.error('Photo upload - No valid entity ID provided');
-        return res.status(400).json({ message: "Entity ID is required" });
-      }
-
       const photoData = {
         category: category || 'other',
         fileName: compressedFilename,
@@ -998,8 +1000,11 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
         uploadedBy: req.user?.id || undefined,
       };
 
-      const photo = await photosStorage.createPhoto(entityType, entityId, photoData);
-      res.status(201).json(photo);
+       // Create photo record in database
+       const photo = await photosStorage.createPhoto(entityType, parseInt(entityId), photoData);
+
+      console.log('Photo created in database:', photo);
+      res.json(photo);
     } catch (error) {
       console.error("Error uploading photo:", error);
       res.status(500).json({ message: "Failed to upload photo" });
@@ -1139,7 +1144,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
   app.post("/api/vehicles/:vehicleId/photos", requireAuth, async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
-      
+
       // Check if it's a file upload or base64 data
       if (req.headers['content-type']?.includes('multipart/form-data')) {
         // Handle file upload using multer middleware
