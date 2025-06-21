@@ -18,10 +18,13 @@ export default function Header({ title, subtitle }: HeaderProps) {
   return (
     <header className={cn(
       "bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 text-white shadow-xl border-b border-teal-500/30",
-      isMobile ? "px-3 py-2.5" : "px-8 py-6"
+      isMobile ? "px-3 py-3" : "px-8 py-6"
     )}>
       <div className="flex items-center justify-between">
-        <div className={cn(isMobile ? "space-y-0" : "space-y-2")}>
+        <div className={cn(
+          "flex-1",
+          isMobile ? "ml-12" : "space-y-2"
+        )}>
           <h1 className={cn(
             "font-bold text-white leading-tight",
             isMobile ? "text-lg" : "text-3xl"
