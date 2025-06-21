@@ -218,9 +218,9 @@ export default function AdminPage() {
       const validatedData = userSchema.parse(formData);
 
       if (editingUser) {
-        const updateData = { ...validatedData };
+        const updateData: Partial<UserFormData> = { ...validatedData };
         if (!updateData.password) {
-          delete updateData.password;
+          delete (updateData as any).password;
         }
         updateUserMutation.mutate({ id: editingUser.id, data: updateData });
       } else {
@@ -313,7 +313,7 @@ export default function AdminPage() {
                   Novo Usuário
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
+              <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="text-xl font-semibold text-gray-900">
                     {editingUser ? "Editar Usuário" : "Novo Usuário"}
@@ -324,7 +324,7 @@ export default function AdminPage() {
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="firstName">Nome</Label>
                       <Input
@@ -439,18 +439,19 @@ export default function AdminPage() {
                     <Label htmlFor="isActive">Usuário ativo</Label>
                   </div>
 
-                  <div className="flex justify-end space-x-2 pt-4">
+                  <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
                     <Button 
                       type="button" 
                       variant="outline" 
                       onClick={() => setIsDialogOpen(false)}
+                      className="w-full sm:w-auto"
                     >
                       Cancelar
                     </Button>
                     <Button 
                       type="submit"
                       disabled={createUserMutation.isPending || updateUserMutation.isPending}
-                      className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700"
+                      className="w-full sm:w-auto bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700"
                     >
                       {editingUser ? "Atualizar" : "Criar"}
                     </Button>
@@ -505,7 +506,7 @@ export default function AdminPage() {
           </CardContent>
         </Card>
 
-        {/* Users Table */}
+        {/* Users Display */}
         <Card className="border-0 shadow-lg">
           <CardHeader>
             <CardTitle className="text-lg text-gray-800">
@@ -519,58 +520,148 @@ export default function AdminPage() {
                 <p className="mt-2 text-gray-500">Carregando usuários...</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Usuário</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Função</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-medium">
-                          {user.firstName} {user.lastName}
-                        </TableCell>
-                        <TableCell>{user.username}</TableCell>
-                        <TableCell>{user.email || "—"}</TableCell>
-                        <TableCell>
-                          {getRoleBadge(user.role || "technician")}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={user.isActive ? "default" : "secondary"}>
-                            {user.isActive ? "Ativo" : "Inativo"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
+              <>
+                {/* Desktop Table View */}
+                <div className="hidden lg:block overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nome</TableHead>
+                        <TableHead>Usuário</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Função</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredUsers.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">
+                            {user.firstName} {user.lastName}
+                          </TableCell>
+                          <TableCell>{user.username}</TableCell>
+                          <TableCell>{user.email || "—"}</TableCell>
+                          <TableCell>
+                            {getRoleBadge(user.role || "technician")}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={user.isActive ? "default" : "secondary"}>
+                              {user.isActive ? "Ativo" : "Inativo"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEdit(user)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDelete(user.id)}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile/Tablet Card View */}
+                <div className="lg:hidden space-y-4">
+                  {filteredUsers.map((user) => (
+                    <Card key={user.id} className="border border-gray-200 hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex flex-col space-y-3">
+                          {/* Header with name and status */}
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-semibold text-gray-900 text-lg">
+                                {user.firstName} {user.lastName}
+                              </h3>
+                              <p className="text-sm text-gray-600">@{user.username}</p>
+                            </div>
+                            <Badge variant={user.isActive ? "default" : "secondary"} className="shrink-0">
+                              {user.isActive ? "Ativo" : "Inativo"}
+                            </Badge>
+                          </div>
+
+                          {/* Email */}
+                          {user.email && (
+                            <div className="flex items-center text-sm text-gray-600">
+                              <span className="font-medium mr-2">Email:</span>
+                              <span>{user.email}</span>
+                            </div>
+                          )}
+
+                          {/* Role */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <span className="text-sm font-medium text-gray-600 mr-2">Função:</span>
+                              {getRoleBadge(user.role || "technician")}
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex space-x-2 pt-2 border-t border-gray-100">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleEdit(user)}
+                              className="flex-1"
                             >
-                              <Edit className="h-4 w-4" />
+                              <Edit className="h-4 w-4 mr-2" />
+                              Editar
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleDelete(user.id)}
-                              className="text-red-600 hover:text-red-700"
+                              className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Excluir
                             </Button>
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Empty state */}
+                {filteredUsers.length === 0 && (
+                  <div className="text-center py-12">
+                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum usuário encontrado</h3>
+                    <p className="text-gray-500 mb-4">
+                      {searchTerm || roleFilter !== "all" || statusFilter !== "all"
+                        ? "Tente ajustar os filtros para encontrar usuários."
+                        : "Comece criando seu primeiro usuário."}
+                    </p>
+                    {(!searchTerm && roleFilter === "all" && statusFilter === "all") && (
+                      <Button
+                        onClick={() => {
+                          resetForm();
+                          setIsDialogOpen(true);
+                        }}
+                        className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Criar Primeiro Usuário
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
