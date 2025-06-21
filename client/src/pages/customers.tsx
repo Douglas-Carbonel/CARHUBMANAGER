@@ -634,22 +634,16 @@ export default function CustomersPage() {
                         isMobile ? "col-span-1" : "col-span-2"
                       )}>
                         <div className="space-y-4">
-                          <div className={cn(
-                            "flex items-center justify-between",
-                            isMobile ? "flex-col gap-2" : ""
-                          )}>
+                          <div className="flex items-center justify-between">
                             <h4 className={cn(
                               "font-medium text-gray-700",
                               isMobile ? "text-xs" : "text-sm"
                             )}>Fotos</h4>
-                            <div className={cn(
-                              "flex items-center gap-2",
-                              isMobile ? "w-full justify-center" : ""
-                            )}>
+                            <div className="flex items-center gap-2">
                               <Button
                                 type="button"
                                 variant="outline"
-                                size={isMobile ? "sm" : "sm"}
+                                size="sm"
                                 onClick={() => setIsCameraOpen(true)}
                                 className={cn(
                                   "flex items-center gap-2",
@@ -662,7 +656,7 @@ export default function CustomersPage() {
                               <Button
                                 type="button"
                                 variant="outline"
-                                size={isMobile ? "sm" : "sm"}
+                                size="sm"
                                 onClick={() => document.getElementById('customer-photo-upload')?.click()}
                                 className={cn(
                                   "flex items-center gap-2",
