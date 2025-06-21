@@ -115,9 +115,9 @@ export default function TechnicianStatsCards() {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="flex space-x-0">
       {cards.map((card, index) => (
-        <div key={index} className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-sm transition-shadow">
+        <div key={index} className={`bg-white border border-gray-200 p-4 hover:shadow-sm transition-shadow flex-1 ${index === 0 ? 'rounded-l-lg' : ''} ${index === cards.length - 1 ? 'rounded-r-lg' : ''} ${index > 0 ? 'border-l-0' : ''}`}>
           {/* Header */}
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-xs font-medium text-gray-600">{card.title}</h3>

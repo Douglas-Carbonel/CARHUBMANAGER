@@ -140,13 +140,15 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Stats Cards - Compact */}
-            <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-4">
-              <TechnicianStatsCards />
+            {/* Stats Cards - No Gap Layout */}
+            <div className="flex flex-wrap">
+              <div className="flex-1 min-w-0">
+                <TechnicianStatsCards />
+              </div>
               
               {/* Status de Pagamentos Card */}
               {user?.role === "admin" && (
-                <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+                <div className="bg-white rounded-lg border border-gray-200 shadow-sm w-80 ml-4">
                   <div className="p-4 border-b border-gray-100">
                     <h3 className="text-base font-semibold text-gray-900">Status de Pagamentos</h3>
                   </div>
