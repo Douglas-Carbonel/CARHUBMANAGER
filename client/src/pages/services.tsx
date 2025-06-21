@@ -824,52 +824,35 @@ export default function Services() {
                             Valores do Serviço
                           </h3>
                           <div className="space-y-3">
-                            {/* Service Type Details */}
+                            {/* Services Summary */}
                             <div className="bg-white border border-slate-200 rounded-lg p-3">
-                              <div className="mb-2">
-                                <div className="text-sm font-bold text-slate-800">Serviço Base</div>
-                              </div>
                               <div className="flex justify-between items-start">
-                               <div className="flex-1">
-                                  <div className="text-sm font-medium text-slate-700">
+                                <div className="flex-1">
+                                  <div className="text-sm font-bold text-slate-800 mb-2">Serviços:</div>
+                                  <div className="text-sm text-slate-700">
                                     {(() => {
                                       const selectedServiceTypeId = form.watch("serviceTypeId");
                                       const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
-                                      return selectedServiceType?.name || "Nenhum serviço selecionado";
-                                    })()}
-                                  </div>
-                                  <div className="text-xs text-slate-500 mt-1">
-                                    {(() => {
-                                      const selectedServiceTypeId = form.watch("serviceTypeId");
-                                      const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
-                                      return selectedServiceType?.description || "";
+                                      let description = selectedServiceType?.description || "Nenhum serviço selecionado";
+                                      
+                                      // Adicionar descrições dos extras
+                                      if (serviceExtras.length > 0) {
+                                        const extrasDescriptions = serviceExtras
+                                          .map(extra => extra.serviceExtra?.descricao)
+                                          .filter(Boolean)
+                                          .join(", ");
+                                        if (extrasDescriptions) {
+                                          description += ` + ${extrasDescriptions}`;
+                                        }
+                                      }
+                                      
+                                      return description;
                                     })()}
                                   </div>
                                 </div>
-                                <span className="text-sm font-medium text-slate-700">R$ {getServiceTypePrice()}</span>
                               </div>
                             </div>
-
-                            {/* Service Extras Details */}
-                            {serviceExtras.length > 0 && (
-                              <div className="bg-white border border-slate-200 rounded-lg p-3">
-                                <div className="text-sm font-bold text-slate-800 mb-2">Adicionais Inclusos</div>
-                                <div className="space-y-2">
-                                  {serviceExtras.map((extra, index) => (
-                                    <div key={index} className="flex justify-between items-center text-sm">
-                                      <span className="text-slate-600">{extra.serviceExtra?.descricao || `Adicional ${index + 1}`}</span>
-                                      <span className="font-medium text-slate-700">R$ {Number(extra.valor || 0).toFixed(2)}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                                <div className="border-t border-slate-200 pt-2 mt-2">
-                                  <div className="flex justify-between text-sm">
-                                    <span className="text-slate-600 font-medium">Subtotal Extras:</span>
-                                    <span className="font-medium text-slate-700">R$ {calculateExtrasTotal()}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
+                            
                             <div className="border-t border-slate-300 pt-2 mt-2">
                               <div className="flex justify-between items-center">
                                 <span className="text-lg font-bold text-slate-800">Total do Serviço:</span>
