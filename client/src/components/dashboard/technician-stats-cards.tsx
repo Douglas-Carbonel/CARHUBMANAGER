@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { TrendingUp, TrendingDown, DollarSign, Calendar, Users, Activity } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Calendar, Users, Activity, CreditCard } from "lucide-react";
 
 interface DashboardStats {
   receitaRealizada: number;
@@ -44,12 +44,27 @@ export default function TechnicianStatsCards() {
     },
   });
 
+  const { data: services, isLoading: servicesLoading } = useQuery({
+    queryKey: ["/api/services"],
+    queryFn: async () => {
+      const response = await fetch("/api/services", {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    },
+    staleTime: 30000,
+    retry: 3,
+  });
+
   console.log('TechnicianStatsCards - isLoading:', isLoading, 'error:', error, 'stats:', stats);
 
-  if (isLoading) {
+  if (isLoading || servicesLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {[...Array(2)].map((_, i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[...Array(3)].map((_, i) => (
           <div key={i} className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
             <div className="flex items-center justify-between mb-4">
               <div className="h-4 bg-gray-200 rounded w-20"></div>
@@ -65,7 +80,7 @@ export default function TechnicianStatsCards() {
 
   if (error) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="bg-red-50 border border-red-200 rounded-xl p-6">
           <p className="text-red-600 text-sm">Erro ao carregar dados</p>
         </div>
@@ -85,11 +100,33 @@ export default function TechnicianStatsCards() {
     return ((current - previous) / previous * 100);
   };
 
+  // Calculate payment status from services data
+  const paymentStatus = services ? services.reduce((acc: any, service: any) => {
+    const estimatedValue = parseFloat(service.estimatedValue || 0);
+    const paidValue = parseFloat(service.valorPago || 0);
+    
+    if (paidValue === 0) {
+      acc.pending++;
+    } else if (paidValue >= estimatedValue) {
+      acc.paid++;
+    } else {
+      acc.partial++;
+    }
+    
+    return acc;
+  }, { paid: 0, pending: 0, partial: 0 }) : { paid: 0, pending: 0, partial: 0 };
+
   // Mock previous values for percentage calculation (in real scenario, fetch from API)
   const previousStats = {
     receitaRealizada: stats?.receitaRealizada * 0.85 || 0,
     receitaPendente: stats?.receitaPendente * 1.15 || 0,
+    paymentsPending: (paymentStatus.pending || 0) + 2,
   };
+
+  const totalServices = paymentStatus.paid + paymentStatus.pending + paymentStatus.partial;
+  const paymentStatusSummary = totalServices > 0 ? 
+    `${paymentStatus.paid} pagos, ${paymentStatus.pending} pendentes` : 
+    "Sem dados";
 
   const cards = [
     {
@@ -109,6 +146,15 @@ export default function TechnicianStatsCards() {
       icon: TrendingUp,
       iconBg: "bg-orange-50",
       iconColor: "text-orange-600",
+    },
+    {
+      title: "Status de Pagamento",
+      value: totalServices || 0,
+      change: calculatePercentage(paymentStatus.pending || 0, previousStats.paymentsPending),
+      subtitle: paymentStatusSummary,
+      icon: CreditCard,
+      iconBg: "bg-blue-50",
+      iconColor: "text-blue-600",
     },
   ];
 
