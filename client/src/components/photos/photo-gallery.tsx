@@ -68,6 +68,9 @@ export default function PhotoGallery({
       if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
       return res.json();
     },
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0,
   });
 
   const deleteMutation = useMutation({
@@ -80,6 +83,8 @@ export default function PhotoGallery({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/photos'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/vehicles'] });
+      refetch();
       toast({
         title: "Foto removida",
         description: "A foto foi removida com sucesso.",

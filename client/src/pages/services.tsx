@@ -176,10 +176,12 @@ export default function Services() {
     if (editingService) {
       fetchServicePhotos(editingService.id);
     }
+    queryClient.invalidateQueries({ queryKey: ['/api/photos'] });
     toast({
       title: "Foto capturada",
       description: "Foto foi adicionada com sucesso.",
     });
+    setIsCameraOpen(false);
   };
 
   const queryClient = useQueryClient();
