@@ -112,24 +112,6 @@ export default function TechnicianStatsCards() {
       iconBg: "bg-orange-50",
       iconColor: "text-orange-600",
     },
-    {
-      title: "Serviços Concluídos",
-      value: stats?.servicosConcluidos || 0,
-      change: calculatePercentage(stats?.servicosConcluidos || 0, previousStats.servicosConcluidos),
-      subtitle: "Finalizados",
-      icon: Calendar,
-      iconBg: "bg-blue-50", 
-      iconColor: "text-blue-600",
-    },
-    {
-      title: "Pagamentos Pendentes",
-      value: stats?.pagamentosPendentes || 0,
-      change: calculatePercentage(stats?.pagamentosPendentes || 0, previousStats.pagamentosPendentes),
-      subtitle: "Sem pagamento",
-      icon: Users,
-      iconBg: "bg-red-50",
-      iconColor: "text-red-600",
-    },
   ];
 
   return (
