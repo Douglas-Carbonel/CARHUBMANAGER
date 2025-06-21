@@ -78,26 +78,32 @@ export default function PaymentManager({
   useEffect(() => {
     console.log('PaymentManager - Initializing with values:', { pixPago, dinheiroPago, chequePago, cartaoPago });
     
+    // Convert to formatted currency values
+    const pixValue = pixPago || 0;
+    const dinheiroValue = dinheiroPago || 0;
+    const chequeValue = chequePago || 0;
+    const cartaoValue = cartaoPago || 0;
+    
     setPayments([
       { 
         type: 'pix', 
-        value: (pixPago || 0).toString(),
-        formattedValue: formatCurrency(((pixPago || 0) * 100).toString())
+        value: pixValue.toString(),
+        formattedValue: pixValue.toFixed(2).replace('.', ',')
       },
       { 
         type: 'dinheiro', 
-        value: (dinheiroPago || 0).toString(),
-        formattedValue: formatCurrency(((dinheiroPago || 0) * 100).toString())
+        value: dinheiroValue.toString(),
+        formattedValue: dinheiroValue.toFixed(2).replace('.', ',')
       },
       { 
         type: 'cheque', 
-        value: (chequePago || 0).toString(),
-        formattedValue: formatCurrency(((chequePago || 0) * 100).toString())
+        value: chequeValue.toString(),
+        formattedValue: chequeValue.toFixed(2).replace('.', ',')
       },
       { 
         type: 'cartao', 
-        value: (cartaoPago || 0).toString(),
-        formattedValue: formatCurrency(((cartaoPago || 0) * 100).toString())
+        value: cartaoValue.toString(),
+        formattedValue: cartaoValue.toFixed(2).replace('.', ',')
       }
     ]);
   }, [pixPago, dinheiroPago, chequePago, cartaoPago]);
@@ -157,26 +163,31 @@ export default function PaymentManager({
 
   const handleCancel = () => {
     // Reset payments to original values
+    const pixValue = pixPago || 0;
+    const dinheiroValue = dinheiroPago || 0;
+    const chequeValue = chequePago || 0;
+    const cartaoValue = cartaoPago || 0;
+    
     setPayments([
       { 
         type: 'pix', 
-        value: pixPago.toString(),
-        formattedValue: formatCurrency((pixPago * 100).toString())
+        value: pixValue.toString(),
+        formattedValue: pixValue.toFixed(2).replace('.', ',')
       },
       { 
         type: 'dinheiro', 
-        value: dinheiroPago.toString(),
-        formattedValue: formatCurrency((dinheiroPago * 100).toString())
+        value: dinheiroValue.toString(),
+        formattedValue: dinheiroValue.toFixed(2).replace('.', ',')
       },
       { 
         type: 'cheque', 
-        value: chequePago.toString(),
-        formattedValue: formatCurrency((chequePago * 100).toString())
+        value: chequeValue.toString(),
+        formattedValue: chequeValue.toFixed(2).replace('.', ',')
       },
       { 
         type: 'cartao', 
-        value: cartaoPago.toString(),
-        formattedValue: formatCurrency((cartaoPago * 100).toString())
+        value: cartaoValue.toString(),
+        formattedValue: cartaoValue.toFixed(2).replace('.', ',')
       }
     ]);
     setIsModalOpen(false);
