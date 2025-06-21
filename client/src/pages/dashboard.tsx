@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useLocation } from "wouter";
@@ -112,7 +111,7 @@ export default function Dashboard() {
               <div className="flex items-center text-sm text-gray-500">
                 <span>{new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
               </div>
-              
+
               {/* Search and Actions */}
               <div className="flex items-center gap-3">
                 <div className="relative">
@@ -148,7 +147,7 @@ export default function Dashboard() {
 
             {/* Main Content Grid - Reorganizado com novos gráficos */}
             <div className="space-y-6">
-              
+
               {/* First Row - Analytics Charts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <ServiceStatusChart />
@@ -162,11 +161,11 @@ export default function Dashboard() {
 
               {/* Third Row - Existing Charts */}
               <div className="grid grid-cols-12 gap-6">
-                
-                {/* Left Column - Métricas Financeiras */}
+
+                {/* Left Column - Status de Pagamentos */}
                 <div className="col-span-4 space-y-6">
-                  
-                  {/* Status de Pagamentos */}
+
+                  {/* Status de Pagamentos - Movido para posição principal */}
                   {user?.role === "admin" && (
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                       <div className="p-6 border-b border-gray-100">
@@ -178,12 +177,11 @@ export default function Dashboard() {
                     </div>
                   )}
 
-                  
                 </div>
 
                 {/* Center Column - Análises Financeiras Comparativas */}
                 <div className="col-span-5 space-y-6">
-                  
+
                   {/* Receita Estimada vs Realizada */}
                   {user?.role === "admin" && (
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
@@ -231,7 +229,7 @@ export default function Dashboard() {
 
                 {/* Right Column - Operações e Serviços */}
                 <div className="col-span-3 space-y-6">
-                  
+
                   {/* Serviços Populares - Movido para a direita */}
                   {user?.role === "admin" && (
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
@@ -243,7 +241,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Próximos Agendamentos */}
                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                     <div className="p-6 border-b border-gray-100">
@@ -261,7 +259,7 @@ export default function Dashboard() {
                       <UpcomingAppointments />
                     </div>
                   </div>
-                  
+
                   {/* Atividade Recente de Serviços */}
                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                     <div className="p-6 border-b border-gray-100">
