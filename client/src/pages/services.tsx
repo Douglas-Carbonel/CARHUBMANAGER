@@ -1222,6 +1222,7 @@ export default function Services() {
                           }}
                           serviceId={editingService?.id}
                           maxPhotos={7}
+                          hideUploadButton={true}
                         />
 
                         {/* Show temporary photos for new services */}

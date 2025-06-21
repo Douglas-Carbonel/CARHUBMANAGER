@@ -17,6 +17,7 @@ interface PhotoUploadProps {
   vehicleId?: number;
   serviceId?: number;
   maxPhotos?: number;
+  hideUploadButton?: boolean;
 }
 
 const categoryLabels = {
@@ -89,7 +90,8 @@ export default function PhotoUpload({
   customerId,
   vehicleId,
   serviceId,
-  maxPhotos = 7
+  maxPhotos = 7,
+  hideUploadButton = false
 }: PhotoUploadProps) {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
@@ -249,8 +251,8 @@ export default function PhotoUpload({
 
   return (
     <div className="space-y-4">
-      {/* Upload Button - only show if we have a vehicleId or if explicitly allowed */}
-      {(vehicleId || customerId || serviceId) && (
+      {/* Upload Button - only show if we have a vehicleId or if explicitly allowed and not hidden */}
+      {!hideUploadButton && (vehicleId || customerId || serviceId) && (
         <div className="flex justify-end">
           <Button
             type="button"
