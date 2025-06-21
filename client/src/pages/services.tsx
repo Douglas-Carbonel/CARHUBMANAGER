@@ -293,7 +293,7 @@ export default function Services() {
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
       setIsDialogOpen(false);
       form.reset();
-      toast({ title: "Serviço criado com sucesso!" });
+      setTemporaryPhotos([]);
     },
     onError: (error: any) => {
       console.error("Error creating service:", error);
@@ -373,7 +373,7 @@ export default function Services() {
     return total.toFixed(2);
   };
 
-  const onSubmit = (data: z.infer<typeof serviceFormSchema>) => {
+  const onSubmit = async (data: z.infer<typeof serviceFormSchema>) => {
     // Calculate and add total value
     const totalValue = calculateTotalValue();
 
@@ -402,7 +402,59 @@ export default function Services() {
     if (editingService) {
       updateMutation.mutate({ id: editingService.id, data: serviceData });
     } else {
-      createMutation.mutate(serviceData);
+      // For new services, we need to handle temporary photos after creation
+      try {
+        const result = await createMutation.mutateAsync(serviceData);
+        
+        // Save temporary photos to the created service
+        if (result && temporaryPhotos.length > 0) {
+          console.log('Saving temporary photos to service:', result.id);
+          
+          for (const tempPhoto of temporaryPhotos) {
+            try {
+              // Convert base64 to blob for upload
+              const response = await fetch(tempPhoto.photo);
+              const blob = await response.blob();
+              
+              const formData = new FormData();
+              formData.append('photo', blob, 'service_photo.jpg');
+              formData.append('category', tempPhoto.category);
+              formData.append('serviceId', result.id.toString());
+
+              const uploadResponse = await fetch('/api/photos/upload', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include',
+              });
+
+              if (!uploadResponse.ok) {
+                console.error('Failed to upload temporary photo:', uploadResponse.statusText);
+              }
+            } catch (photoError) {
+              console.error('Error uploading temporary photo:', photoError);
+            }
+          }
+          
+          // Clear temporary photos after successful upload
+          setTemporaryPhotos([]);
+          
+          toast({
+            title: "Serviço criado com sucesso!",
+            description: `Serviço criado e ${temporaryPhotos.length} foto(s) salva(s).`,
+          });
+        } else {
+          toast({
+            title: "Serviço criado com sucesso!",
+          });
+        }
+      } catch (error) {
+        console.error('Error creating service:', error);
+        toast({
+          title: "Erro ao criar serviço",
+          description: "Ocorreu um erro ao criar o serviço.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
