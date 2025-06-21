@@ -77,6 +77,10 @@ const serviceFormSchema = insertServiceSchema.extend({
   status: z.enum(["scheduled", "in_progress", "completed", "cancelled"]).optional(),
   notes: z.string().optional(),
   valorPago: z.string().optional(), // Campo de valor pago
+  pixPago: z.string().optional(),
+  dinheiroPago: z.string().optional(),
+  chequePago: z.string().optional(),
+  cartaoPago: z.string().optional(),
 });
 
 export default function Services() {
@@ -187,6 +191,10 @@ export default function Services() {
       status: "scheduled",
       notes: "",
       valorPago: "0", // Valor pago inicializado como string "0"
+      pixPago: "0.00",
+      dinheiroPago: "0.00",
+      chequePago: "0.00",
+      cartaoPago: "0.00",
     },
   });
 
@@ -348,7 +356,7 @@ export default function Services() {
   const onSubmit = (data: z.infer<typeof serviceFormSchema>) => {
     // Calculate and add total value
     const totalValue = calculateTotalValue();
-    
+
     // Calculate total from payment methods
     const totalFromPaymentMethods = (
       Number(paymentMethods.pix || 0) +
@@ -390,6 +398,10 @@ export default function Services() {
       status: service.status || "scheduled",
       notes: service.notes || "",
       valorPago: service.valorPago || "0",
+      pixPago: service.pixPago || "0.00",
+      dinheiroPago: service.dinheiroPago || "0.00",
+      chequePago: service.chequePago || "0.00",
+      cartaoPago: service.cartaoPago || "0.00",
     });
     fetchServicePhotos(service.id);
     // Load existing service extras
@@ -811,7 +823,7 @@ export default function Services() {
                                 <div className="text-sm font-bold text-slate-800">Serviço Base</div>
                               </div>
                               <div className="flex justify-between items-start">
-                                <div className="flex-1">
+                               <div className="flex-1">
                                   <div className="text-sm font-medium text-slate-700">
                                     {(() => {
                                       const selectedServiceTypeId = form.watch("serviceTypeId");
@@ -924,7 +936,23 @@ export default function Services() {
                               </span>
                             </div>
                           </div>
+                          <PaymentManager
+                            totalValue={Number(calculateTotalValue())}
+                            currentPaidValue={Number(form.watch("valorPago") || 0)}
+                            pixPago={Number(form.watch("pixPago") || 0)}
+                            dinheiroPago={Number(form.watch("dinheiroPago") || 0)}
+                            chequePago={Number(form.watch("chequePago") || 0)}
+                            cartaoPago={Number(form.watch("cartaoPago") || 0)}
+                            onPaymentChange={(pixPago, dinheiroPago, chequePago, cartaoPago) => {
+                              form.setValue("pixPago", pixPago.toFixed(2));
+                              form.setValue("dinheiroPago", dinheiroPago.toFixed(2));
+                              form.setValue("chequePago", chequePago.toFixed(2));
+                              form.setValue("cartaoPago", cartaoPago.toFixed(2));
 
+                              const totalPago = pixPago + dinheiroPago + chequePago + cartaoPago;
+                              form.setValue("valorPago", totalPago.toFixed(2));
+                            }}
+                          />
                           {/* Payment Input */}
                           <FormField
                             control={form.control}

@@ -50,10 +50,22 @@ interface PaymentMethod {
 interface PaymentManagerProps {
   totalValue: number;
   currentPaidValue: number;
-  onPaymentChange: (newPaidValue: number) => void;
+  pixPago?: number;
+  dinheiroPago?: number;
+  chequePago?: number;
+  cartaoPago?: number;
+  onPaymentChange: (pixPago: number, dinheiroPago: number, chequePago: number, cartaoPago: number) => void;
 }
 
-export default function PaymentManager({ totalValue, currentPaidValue, onPaymentChange }: PaymentManagerProps) {
+export default function PaymentManager({ 
+  totalValue, 
+  currentPaidValue, 
+  pixPago = 0,
+  dinheiroPago = 0, 
+  chequePago = 0,
+  cartaoPago = 0,
+  onPaymentChange 
+}: PaymentManagerProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [payments, setPayments] = useState<PaymentMethod[]>([
     { type: 'pix', value: '', formattedValue: '' },
@@ -62,19 +74,31 @@ export default function PaymentManager({ totalValue, currentPaidValue, onPayment
     { type: 'cartao', value: '', formattedValue: '' }
   ]);
 
-  // Initialize payments from current paid value
+  // Initialize payments from individual values
   useEffect(() => {
-    if (currentPaidValue > 0 && payments.every(p => p.value === '')) {
-      const formattedValue = formatCurrency((currentPaidValue * 100).toString());
-      setPayments(prev => prev.map((p, index) => 
-        index === 0 ? { 
-          ...p, 
-          value: currentPaidValue.toString(),
-          formattedValue: formattedValue
-        } : p
-      ));
-    }
-  }, [currentPaidValue]);
+    setPayments([
+      { 
+        type: 'pix', 
+        value: pixPago.toString(),
+        formattedValue: formatCurrency((pixPago * 100).toString())
+      },
+      { 
+        type: 'dinheiro', 
+        value: dinheiroPago.toString(),
+        formattedValue: formatCurrency((dinheiroPago * 100).toString())
+      },
+      { 
+        type: 'cheque', 
+        value: chequePago.toString(),
+        formattedValue: formatCurrency((chequePago * 100).toString())
+      },
+      { 
+        type: 'cartao', 
+        value: cartaoPago.toString(),
+        formattedValue: formatCurrency((cartaoPago * 100).toString())
+      }
+    ]);
+  }, [pixPago, dinheiroPago, chequePago, cartaoPago]);
 
   const getPaymentStatus = () => {
     const paidValue = currentPaidValue;
@@ -120,30 +144,39 @@ export default function PaymentManager({ totalValue, currentPaidValue, onPayment
   };
 
   const handleSave = () => {
-    const newTotal = calculateTotal();
-    onPaymentChange(newTotal);
+    const pixValue = parseFloat(payments[0].value) || 0;
+    const dinheiroValue = parseFloat(payments[1].value) || 0;
+    const chequeValue = parseFloat(payments[2].value) || 0;
+    const cartaoValue = parseFloat(payments[3].value) || 0;
+    
+    onPaymentChange(pixValue, dinheiroValue, chequeValue, cartaoValue);
     setIsModalOpen(false);
   };
 
   const handleCancel = () => {
-    // Reset payments to current state
-    const currentTotal = currentPaidValue;
-    if (currentTotal > 0) {
-      const formattedValue = formatCurrency((currentTotal * 100).toString());
-      setPayments([
-        { type: 'pix', value: currentTotal.toString(), formattedValue: formattedValue },
-        { type: 'dinheiro', value: '', formattedValue: '' },
-        { type: 'cheque', value: '', formattedValue: '' },
-        { type: 'cartao', value: '', formattedValue: '' }
-      ]);
-    } else {
-      setPayments([
-        { type: 'pix', value: '', formattedValue: '' },
-        { type: 'dinheiro', value: '', formattedValue: '' },
-        { type: 'cheque', value: '', formattedValue: '' },
-        { type: 'cartao', value: '', formattedValue: '' }
-      ]);
-    }
+    // Reset payments to original values
+    setPayments([
+      { 
+        type: 'pix', 
+        value: pixPago.toString(),
+        formattedValue: formatCurrency((pixPago * 100).toString())
+      },
+      { 
+        type: 'dinheiro', 
+        value: dinheiroPago.toString(),
+        formattedValue: formatCurrency((dinheiroPago * 100).toString())
+      },
+      { 
+        type: 'cheque', 
+        value: chequePago.toString(),
+        formattedValue: formatCurrency((chequePago * 100).toString())
+      },
+      { 
+        type: 'cartao', 
+        value: cartaoPago.toString(),
+        formattedValue: formatCurrency((cartaoPago * 100).toString())
+      }
+    ]);
     setIsModalOpen(false);
   };
 

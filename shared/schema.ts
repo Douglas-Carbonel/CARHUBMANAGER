@@ -320,6 +320,18 @@ export const insertServiceExtraItemSchema = createInsertSchema(serviceExtrasItem
 
 // Loyalty tracking schema temporarily removed
 
+export const updateServiceSchema = insertServiceSchema.partial().extend({
+  serviceExtras: z.array(z.object({
+    serviceExtraId: z.number(),
+    valor: z.string(),
+    observacao: z.string().optional(),
+  })).optional(),
+  pixPago: z.string().optional(),
+  dinheiroPago: z.string().optional(),
+  chequePago: z.string().optional(),
+  cartaoPago: z.string().optional(),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
