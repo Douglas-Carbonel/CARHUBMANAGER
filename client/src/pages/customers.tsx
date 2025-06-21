@@ -702,6 +702,57 @@ export default function CustomersPage() {
                             customerId={editingCustomer?.id}
                             maxPhotos={7}
                           />
+
+                          {/* Mostrar fotos temporárias para novos clientes */}
+                          {!editingCustomer && temporaryPhotos.length > 0 && (
+                            <div className="mt-4 space-y-2">
+                              <h5 className={cn(
+                                "font-medium text-gray-600",
+                                isMobile ? "text-xs" : "text-sm"
+                              )}>Fotos capturadas (serão salvas após cadastrar o cliente):</h5>
+                              <div className={cn(
+                                "grid gap-2",
+                                isMobile ? "grid-cols-2" : "grid-cols-3"
+                              )}>
+                                {temporaryPhotos.map((tempPhoto, index) => (
+                                  <div key={index} className="relative group">
+                                    <img 
+                                      src={tempPhoto.photo} 
+                                      alt={`Foto temporária ${index + 1}`}
+                                      className={cn(
+                                        "w-full object-cover rounded-lg border border-gray-200",
+                                        isMobile ? "h-16" : "h-20"
+                                      )}
+                                    />
+                                    <div className="absolute bottom-1 left-1 right-1">
+                                      <span className={cn(
+                                        "bg-black bg-opacity-70 text-white px-1 py-0.5 rounded text-center block",
+                                        isMobile ? "text-xs" : "text-xs"
+                                      )}>
+                                        {tempPhoto.category === 'customer' ? 'Cliente' : 'Documento'}
+                                      </span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setTemporaryPhotos(prev => prev.filter((_, i) => i !== index));
+                                        toast({
+                                          title: "Foto removida",
+                                          description: "A foto temporária foi removida.",
+                                        });
+                                      }}
+                                      className={cn(
+                                        "absolute bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity",
+                                        isMobile ? "-top-1 -right-1 w-5 h-5" : "-top-2 -right-2 w-6 h-6"
+                                      )}
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
 
