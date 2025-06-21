@@ -166,19 +166,6 @@ export default function Dashboard() {
                 {/* Left Column - Métricas Financeiras */}
                 <div className="col-span-4 space-y-6">
                   
-                  {/* Status de Pagamentos */}
-                  {user?.role === "admin" && (
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                      <div className="p-6 border-b border-gray-100">
-                        <h3 className="text-lg font-semibold text-gray-900">Status de Pagamentos</h3>
-                      </div>
-                      <div className="p-6">
-                        <PaymentStatusOverview />
-                      </div>
-                    </div>
-                  )}
-
-                  
                 </div>
 
                 {/* Center Column - Análises Financeiras Comparativas */}
