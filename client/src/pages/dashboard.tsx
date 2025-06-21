@@ -143,13 +143,13 @@ export default function Dashboard() {
               <TechnicianStatsCards />
             </div>
 
-            {/* Main Content Grid - Reorganizado por categorias */}
+            {/* Main Content Grid - Reorganizado por categorias funcionais */}
             <div className="grid grid-cols-12 gap-6">
               
-              {/* Left Column - Dashboards Financeiros */}
+              {/* Left Column - Métricas Financeiras */}
               <div className="col-span-4 space-y-6">
                 
-                {/* Payment Status Overview */}
+                {/* Status de Pagamentos */}
                 {user?.role === "admin" && (
                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                     <div className="p-6 border-b border-gray-100">
@@ -161,7 +161,7 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                {/* Receita Realizada - Movido para agrupar com financeiros */}
+                {/* Receita Realizada */}
                 {user?.role === "admin" && (
                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                     <div className="p-6 border-b border-gray-100">
@@ -184,8 +184,10 @@ export default function Dashboard() {
                 )}
               </div>
 
-              {/* Center Column - Dashboards de Receita e Estimativas */}
+              {/* Center Column - Análise de Performance e Receitas */}
               <div className="col-span-5 space-y-6">
+                
+                {/* Receita Estimada vs Realizada */}
                 {user?.role === "admin" && (
                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                     <div className="p-6 border-b border-gray-100">
@@ -207,7 +209,23 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                {/* Próximos Agendamentos - Movido para o centro */}
+                {/* Serviços Populares */}
+                {user?.role === "admin" && (
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="p-6 border-b border-gray-100">
+                      <h3 className="text-lg font-semibold text-gray-900">Serviços Populares</h3>
+                    </div>
+                    <div className="p-6">
+                      <TopServices />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column - Atividades Operacionais */}
+              <div className="col-span-3 space-y-6">
+                
+                {/* Próximos Agendamentos */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                   <div className="p-6 border-b border-gray-100">
                     <div className="flex items-center justify-between">
@@ -224,22 +242,6 @@ export default function Dashboard() {
                     <UpcomingAppointments />
                   </div>
                 </div>
-              </div>
-
-              {/* Right Column - Dashboards de Serviços */}
-              <div className="col-span-3 space-y-6">
-                
-                {/* Serviços Populares */}
-                {user?.role === "admin" && (
-                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div className="p-6 border-b border-gray-100">
-                      <h3 className="text-lg font-semibold text-gray-900">Serviços Populares</h3>
-                    </div>
-                    <div className="p-6">
-                      <TopServices />
-                    </div>
-                  </div>
-                )}
                 
                 {/* Atividade Recente de Serviços */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
