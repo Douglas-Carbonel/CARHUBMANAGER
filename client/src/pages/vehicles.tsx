@@ -497,7 +497,7 @@ export default function VehiclesPage() {
 
   return (
     <div className={cn("flex bg-gradient-to-br from-slate-100 via-white to-blue-50/30", isMobile ? "h-screen flex-col" : "h-screen")}>
-      {!isMobile && <Sidebar />}
+      <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
           title="Veículos"
