@@ -374,28 +374,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Se não foi informada data de agendamento, usar a data atual no timezone brasileiro
       if (!serviceData.scheduledDate || serviceData.scheduledDate === "") {
         const now = new Date();
-        // Converter para timezone brasileiro (UTC-3)
-        const brazilianTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-        const year = brazilianTime.getFullYear();
-        const month = String(brazilianTime.getMonth() + 1).padStart(2, '0');
-        const day = String(brazilianTime.getDate()).padStart(2, '0');
+        // Converter para timezone brasileiro usando Intl.DateTimeFormat
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'America/Sao_Paulo',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        
+        const parts = formatter.formatToParts(now);
+        const year = parts.find(p => p.type === 'year')?.value;
+        const month = parts.find(p => p.type === 'month')?.value;
+        const day = parts.find(p => p.type === 'day')?.value;
+        const hour = parts.find(p => p.type === 'hour')?.value;
+        const minute = parts.find(p => p.type === 'minute')?.value;
+        const second = parts.find(p => p.type === 'second')?.value;
+        
         serviceData.scheduledDate = `${year}-${month}-${day}`;
         
         // Se não foi informada hora de agendamento, usar a hora atual no timezone brasileiro
         if (!serviceData.scheduledTime || serviceData.scheduledTime === "") {
-          const hours = String(brazilianTime.getHours()).padStart(2, '0');
-          const minutes = String(brazilianTime.getMinutes()).padStart(2, '0');
-          const seconds = String(brazilianTime.getSeconds()).padStart(2, '0');
-          serviceData.scheduledTime = `${hours}:${minutes}:${seconds}`;
+          serviceData.scheduledTime = `${hour}:${minute}:${second}`;
         }
       } else if (!serviceData.scheduledTime || serviceData.scheduledTime === "") {
         // Se só a hora não foi informada, usar a hora atual no timezone brasileiro
         const now = new Date();
-        const brazilianTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-        const hours = String(brazilianTime.getHours()).padStart(2, '0');
-        const minutes = String(brazilianTime.getMinutes()).padStart(2, '0');
-        const seconds = String(brazilianTime.getSeconds()).padStart(2, '0');
-        serviceData.scheduledTime = `${hours}:${minutes}:${seconds}`;
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'America/Sao_Paulo',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        
+        const parts = formatter.formatToParts(now);
+        const hour = parts.find(p => p.type === 'hour')?.value;
+        const minute = parts.find(p => p.type === 'minute')?.value;
+        const second = parts.find(p => p.type === 'second')?.value;
+        
+        serviceData.scheduledTime = `${hour}:${minute}:${second}`;
       }
 
       console.log('Creating service with data:', JSON.stringify(serviceData, null, 2));
