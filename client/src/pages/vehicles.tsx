@@ -932,10 +932,11 @@ export default function VehiclesPage() {
                             </div>
 
                             <PhotoUpload
-                              photos={currentVehiclePhotos}
+                              photos={editingVehicle ? currentVehiclePhotos : []}
                               onPhotoUploaded={() => {
-                                // Only refresh photos, don't invalidate all queries
-                                fetchVehiclePhotos(editingVehicle?.id);
+                                if (editingVehicle) {
+                                  fetchVehiclePhotos(editingVehicle.id);
+                                }
                               }}
                               vehicleId={editingVehicle?.id}
                               maxPhotos={7}

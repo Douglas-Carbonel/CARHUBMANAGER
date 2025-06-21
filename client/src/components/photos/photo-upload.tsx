@@ -110,6 +110,16 @@ export default function PhotoUpload({
       return;
     }
 
+    // Se não temos vehicleId (criando novo veículo), mostrar aviso
+    if (!vehicleId && !customerId && !serviceId) {
+      toast({
+        title: "Salve o veículo primeiro",
+        description: "É necessário salvar o veículo antes de adicionar fotos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setUploading(true);
 
     try {
@@ -239,11 +249,40 @@ export default function PhotoUpload({
 
   return (
     <div className="space-y-4">
+      {/* Upload Button - only show if we have a vehicleId or if explicitly allowed */}
+      {(vehicleId || customerId || serviceId) && (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => document.getElementById('photo-upload-input')?.click()}
+            disabled={uploading || photos.length >= maxPhotos}
+            className="flex items-center gap-2"
+          >
+            <Upload className="h-4 w-4" />
+            {uploading ? 'Enviando...' : 'Adicionar Fotos'}
+          </Button>
+          <input
+            id="photo-upload-input"
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+        </div>
+      )}
 
       {photos.length === 0 ? (
         <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center">
           <Camera className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-sm text-gray-500">Nenhuma foto adicionada</p>
+          <p className="text-sm text-gray-500">
+            {vehicleId || customerId || serviceId 
+              ? "Nenhuma foto adicionada" 
+              : "Salve o item primeiro para adicionar fotos"
+            }
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
