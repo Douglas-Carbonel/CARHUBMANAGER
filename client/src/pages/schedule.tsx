@@ -13,10 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2, Calendar, Clock, User, Car, Wrench, Calculator, Camera } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Calendar, Clock, User, Car, Wrench, Calculator } from "lucide-react";
 import ServiceExtras from "@/components/service/service-extras";
-import PhotoUpload from "@/components/photos/photo-upload";
-import CameraCapture from "@/components/camera/camera-capture";
 import { cn } from "@/lib/utils";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -73,8 +71,6 @@ export default function SchedulePage() {
   const [periodFilter, setPeriodFilter] = useState<string>("day");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
-  const [currentServicePhotos, setCurrentServicePhotos] = useState<any[]>([]);
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [serviceExtras, setServiceExtras] = useState<any[]>([]);
 
   const form = useForm<ServiceFormData>({
@@ -207,7 +203,6 @@ export default function SchedulePage() {
       finalValue: service.finalValue || undefined,
       notes: service.notes || "",
     });
-    fetchServicePhotos(service.id);
     setIsModalOpen(true);
   };
 
@@ -217,40 +212,7 @@ export default function SchedulePage() {
     }
   };
 
-  const fetchServicePhotos = async (serviceId: number | undefined) => {
-    if (!serviceId) {
-      setCurrentServicePhotos([]);
-      return;
-    }
-
-    try {
-      const res = await fetch(`/api/photos?serviceId=${serviceId}`, {
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
-      const photos = await res.json();
-      setCurrentServicePhotos(photos);
-    } catch (error: any) {
-      toast({
-        title: "Erro ao carregar fotos do serviço",
-        description: error.message,
-        variant: "destructive",
-      });
-      setCurrentServicePhotos([]);
-    }
-  };
-
-  const handlePhotoTaken = () => {
-    if (editingService) {
-      fetchServicePhotos(editingService.id);
-    }
-    queryClient.invalidateQueries({ queryKey: ['/api/photos'] });
-    toast({
-      title: "Foto capturada",
-      description: "Foto foi adicionada com sucesso.",
-    });
-    setIsCameraOpen(false);
-  };
+  
 
   // Filter services for schedule view
   const getDateRange = (period: string) => {
@@ -687,33 +649,6 @@ export default function SchedulePage() {
                           </div>
                         </div>
 
-                        {/* Photos Section */}
-                        <div className="border-t pt-4">
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <h4 className="text-sm font-medium text-gray-700">Fotos</h4>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setIsCameraOpen(true)}
-                                  className="flex items-center gap-2"
-                                >
-                                  <Camera className="h-4 w-4" />
-                                  Tirar Foto
-                                </Button>
-                              </div>
-                            </div>
-                            <PhotoUpload
-                              photos={currentServicePhotos}
-                              onPhotoUploaded={() => fetchServicePhotos(editingService?.id)}
-                              serviceId={editingService?.id}
-                              maxPhotos={7}
-                            />
-                          </div>
-                        </div>
-
                         <div className={cn("flex gap-3 border-t border-slate-200", isMobile ? "flex-col pt-4" : "justify-end pt-6")}>
                           <Button 
                             type="button" 
@@ -825,13 +760,7 @@ export default function SchedulePage() {
           </div>
         </main>
 
-        {/* Camera Capture Modal */}
-        <CameraCapture
-          isOpen={isCameraOpen}
-          onClose={() => setIsCameraOpen(false)}
-          onPhotoTaken={handlePhotoTaken}
-          serviceId={editingService?.id}
-        />
+        
       </div>
     </div>
   );
