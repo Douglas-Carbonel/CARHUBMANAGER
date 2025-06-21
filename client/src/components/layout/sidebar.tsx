@@ -47,12 +47,17 @@ const getNavigation = (userRole: string | null) => {
     },
   ];
 
-  // Only administrators can access reports
+  // Only administrators can access reports and admin panel
   if (userRole === "admin") {
     baseNavigation.push({
       name: "Relatórios",
       href: "/reports",
       icon: BarChart3,
+    });
+    baseNavigation.push({
+      name: "Administração",
+      href: "/admin",
+      icon: Settings,
     });
   }
 
