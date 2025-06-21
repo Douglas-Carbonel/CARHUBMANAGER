@@ -10,6 +10,7 @@ import RealizedRevenueChart from "@/components/dashboard/realized-revenue-chart"
 import TopServices from "@/components/dashboard/top-services";
 import RecentServices from "../components/dashboard/recent-services";
 import UpcomingAppointments from "../components/dashboard/upcoming-appointments";
+import PaymentStatusOverview from "@/components/dashboard/payment-status-overview";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -39,21 +40,21 @@ export default function Dashboard() {
       title: "Novo Agendamento",
       description: "Agendar um novo serviço",
       icon: Calendar,
-      color: "bg-blue-600 hover:bg-blue-700",
+      color: "bg-gray-800 hover:bg-gray-900",
       route: "/schedule"
     },
     {
       title: "Novo Cliente",
       description: "Cadastrar cliente",
       icon: Users,
-      color: "bg-emerald-600 hover:bg-emerald-700",
+      color: "bg-gray-800 hover:bg-gray-900",
       route: "/customers"
     },
     {
       title: "Serviços",
       description: "Gerenciar serviços",
       icon: Wrench,
-      color: "bg-purple-600 hover:bg-purple-700",
+      color: "bg-gray-800 hover:bg-gray-900",
       route: "/services"
     }
   ];
@@ -104,7 +105,7 @@ export default function Dashboard() {
         />
 
         <main className="flex-1 overflow-y-auto bg-gray-50/50">
-          <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+          <div className="max-w-full mx-auto px-8 py-6 space-y-6">
 
             {/* Header Section */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
@@ -113,7 +114,7 @@ export default function Dashboard() {
                   Dashboard
                 </h1>
                 <div className="flex items-center text-sm text-gray-500">
-                  <span>Monday, July 7</span>
+                  <span>{new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
                   <span className="mx-2">•</span>
                   <span>Bem-vindo, {user?.firstName || user?.username}</span>
                 </div>
@@ -124,8 +125,8 @@ export default function Dashboard() {
                 <div className="relative">
                   <input 
                     type="text" 
-                    placeholder="Search" 
-                    className="w-80 pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Buscar..." 
+                    className="w-80 pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                   />
                   <div className="absolute left-3 top-2.5">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,7 +138,7 @@ export default function Dashboard() {
                   <Button
                     key={index}
                     onClick={() => setLocation(action.route)}
-                    className="bg-gray-900 hover:bg-gray-800 text-white border-0 shadow-sm hover:shadow-md transition-all duration-200 h-9 px-4"
+                    className={`${action.color} text-white border-0 shadow-sm hover:shadow-md transition-all duration-200 h-9 px-4`}
                     size="sm"
                   >
                     <action.icon className="h-4 w-4 mr-2" />
@@ -148,21 +149,26 @@ export default function Dashboard() {
             </div>
 
             {/* Stats Cards */}
-            <div className="space-y-4">
+            <div className="space-y-6">
               <TechnicianStatsCards />
             </div>
 
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            {/* Main Content Grid - Maximized Layout */}
+            <div className="grid grid-cols-12 gap-6">
               
-              {/* Left Column - Current Reservations */}
-              <div className="space-y-6">
+              {/* Left Column - Appointments & Service Status */}
+              <div className="col-span-4 space-y-6">
+                
+                {/* Current Appointments */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                   <div className="p-6 border-b border-gray-100">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-900">Reservas Atuais</h3>
-                      <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                        Ver Todas
+                      <h3 className="text-lg font-semibold text-gray-900">Agendamentos Atuais</h3>
+                      <button 
+                        onClick={() => setLocation("/schedule")}
+                        className="text-sm text-gray-600 hover:text-gray-700 font-medium"
+                      >
+                        Ver Todos
                       </button>
                     </div>
                   </div>
@@ -171,18 +177,32 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* Reservations Per Day Chart */}
+                {/* Payment Status Overview */}
+                {user?.role === "admin" && (
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="p-6 border-b border-gray-100">
+                      <h3 className="text-lg font-semibold text-gray-900">Status de Pagamentos</h3>
+                    </div>
+                    <div className="p-6">
+                      <PaymentStatusOverview />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Center Column - Revenue Chart */}
+              <div className="col-span-5 space-y-6">
                 {user?.role === "admin" && (
                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                     <div className="p-6 border-b border-gray-100">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-gray-900">Reservas Por Dia</h3>
+                        <h3 className="text-lg font-semibold text-gray-900">Receita Estimada vs Realizada</h3>
                         <div className="flex space-x-2">
-                          <button className="px-3 py-1 bg-gray-900 text-white text-xs rounded-md">
-                            Semanal
+                          <button className="px-3 py-1 bg-gray-800 text-white text-xs rounded-md">
+                            Últimos 7 dias
                           </button>
                           <button className="px-3 py-1 text-gray-600 text-xs rounded-md hover:bg-gray-100">
-                            Mensal
+                            30 dias
                           </button>
                         </div>
                       </div>
@@ -192,55 +212,61 @@ export default function Dashboard() {
                     </div>
                   </div>
                 )}
+
+                {user?.role === "admin" && (
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="p-6 border-b border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-gray-900">Receita Realizada (R$)</h3>
+                        <div className="flex space-x-2">
+                          <button className="px-3 py-1 bg-gray-800 text-white text-xs rounded-md">
+                            Semanal
+                          </button>
+                          <button className="px-3 py-1 text-gray-600 text-xs rounded-md hover:bg-gray-100">
+                            Mensal
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <RealizedRevenueChart />
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Right Column - Average Check Size */}
-              <div className="xl:col-span-2 space-y-6">
+              {/* Right Column - Recent Services & Popular Services */}
+              <div className="col-span-3 space-y-6">
+                
+                {/* Recent Services */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                   <div className="p-6 border-b border-gray-100">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-900">Ticket Médio (USD)</h3>
-                      <div className="flex space-x-2">
-                        <button className="px-3 py-1 bg-gray-900 text-white text-xs rounded-md">
-                          Semanal
-                        </button>
-                        <button className="px-3 py-1 text-gray-600 text-xs rounded-md hover:bg-gray-100">
-                          Mensal
-                        </button>
-                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900">Serviços Recentes</h3>
+                      <button 
+                        onClick={() => setLocation("/services")}
+                        className="text-sm text-gray-600 hover:text-gray-700 font-medium"
+                      >
+                        Ver Todos
+                      </button>
                     </div>
                   </div>
                   <div className="p-6">
-                    <RealizedRevenueChart />
+                    <RecentServices />
                   </div>
                 </div>
-
-                {/* Most Popular Services */}
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                  <div className="p-6 border-b border-gray-100">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-900">Serviços Mais Populares</h3>
-                      <div className="flex space-x-2">
-                        <button className="px-3 py-1 bg-gray-900 text-white text-xs rounded-md">
-                          Semanal
-                        </button>
-                        <button className="px-3 py-1 text-gray-600 text-xs rounded-md hover:bg-gray-100">
-                          Mensal
-                        </button>
-                      </div>
+                
+                {/* Most Popular Services - Admin Only */}
+                {user?.role === "admin" && (
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="p-6 border-b border-gray-100">
+                      <h3 className="text-lg font-semibold text-gray-900">Serviços Populares</h3>
+                    </div>
+                    <div className="p-6">
+                      <TopServices />
                     </div>
                   </div>
-                  <div className="p-6">
-                    <div className="space-y-4">
-                      <RecentServices />
-                      {user?.role === "admin" && (
-                        <div className="mt-6 pt-6 border-t border-gray-100">
-                          <TopServices />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 

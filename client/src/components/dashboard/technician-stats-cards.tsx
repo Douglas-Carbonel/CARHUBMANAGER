@@ -94,33 +94,37 @@ export default function TechnicianStatsCards() {
       title: "Receita Realizada",
       value: formatCurrency(stats?.completedRevenue || 0),
       change: calculatePercentage(stats?.completedRevenue || 0, previousStats.completedRevenue),
+      subtitle: "Pagamentos recebidos",
       icon: DollarSign,
-      iconBg: "bg-blue-50",
-      iconColor: "text-blue-600",
-    },
-    {
-      title: "Receita Estimada", 
-      value: formatCurrency(stats?.predictedRevenue || 0),
-      change: calculatePercentage(stats?.predictedRevenue || 0, previousStats.predictedRevenue),
-      icon: TrendingUp,
       iconBg: "bg-green-50",
       iconColor: "text-green-600",
     },
     {
-      title: "Serviços da Semana",
-      value: stats?.weeklyServices || 0,
-      change: calculatePercentage(stats?.weeklyServices || 0, previousStats.weeklyServices),
-      icon: Calendar,
-      iconBg: "bg-orange-50", 
+      title: "Receita Pendente", 
+      value: formatCurrency((stats?.predictedRevenue || 0) - (stats?.completedRevenue || 0)),
+      change: calculatePercentage((stats?.predictedRevenue || 0) - (stats?.completedRevenue || 0), previousStats.predictedRevenue - previousStats.completedRevenue),
+      subtitle: "Aguardando pagamento",
+      icon: TrendingUp,
+      iconBg: "bg-orange-50",
       iconColor: "text-orange-600",
     },
     {
-      title: "Clientes Ativos",
+      title: "Serviços Concluídos",
+      value: stats?.weeklyServices || 0,
+      change: calculatePercentage(stats?.weeklyServices || 0, previousStats.weeklyServices),
+      subtitle: "Esta semana",
+      icon: Calendar,
+      iconBg: "bg-blue-50", 
+      iconColor: "text-blue-600",
+    },
+    {
+      title: "Pagamentos Pendentes",
       value: stats?.activeCustomers || 0,
       change: calculatePercentage(stats?.activeCustomers || 0, previousStats.activeCustomers),
+      subtitle: "Clientes com pendências",
       icon: Users,
-      iconBg: "bg-purple-50",
-      iconColor: "text-purple-600",
+      iconBg: "bg-red-50",
+      iconColor: "text-red-600",
     },
   ];
 
@@ -143,14 +147,17 @@ export default function TechnicianStatsCards() {
             </span>
           </div>
           
-          {/* Change percentage */}
+          {/* Subtitle */}
           <div className="flex items-center">
+            <span className="text-sm text-gray-500">
+              {card.subtitle}
+            </span>
             {card.change >= 0 ? (
-              <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
+              <TrendingUp className="w-4 h-4 text-green-500 ml-2" />
             ) : (
-              <TrendingDown className="w-4 h-4 text-red-500 mr-1" />
+              <TrendingDown className="w-4 h-4 text-red-500 ml-2" />
             )}
-            <span className={`text-sm font-medium ${card.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <span className={`text-xs font-medium ml-1 ${card.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {card.change >= 0 ? '+' : ''}{card.change.toFixed(1)}%
             </span>
           </div>
