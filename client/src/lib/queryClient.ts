@@ -15,35 +15,28 @@ async function throwIfResNotOk(res: Response) {
 }
 
 export async function apiRequest(method: string, url: string, data?: any) {
-  const config: RequestInit = {
+  const options: RequestInit = {
     method,
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
-    credentials: "include",
+    credentials: 'include',
   };
 
   if (data) {
-    config.body = JSON.stringify(data);
+    options.body = JSON.stringify(data);
   }
 
-  const response = await fetch(url, config);
+  const response = await fetch(url, options);
 
   if (!response.ok) {
-    if (response.status === 401) {
-      throw new UnauthorizedError("Authentication required");
-    }
-
-    // Try to get error message from response body
-    try {
-      const errorData = await response.json();
-      throw new Error(errorData.message || `Request failed: ${response.statusText}`);
-    } catch (parseError) {
-      throw new Error(`Request failed: ${response.statusText}`);
-    }
+    const error = await response.text();
+    throw new Error(error);
   }
 
-  return response;
+  const result = await response.json();
+  console.log('apiRequest result for', method, url, ':', result);
+  return result;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

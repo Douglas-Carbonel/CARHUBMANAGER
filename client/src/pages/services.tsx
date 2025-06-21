@@ -290,8 +290,10 @@ export default function Services() {
   const isLoading = false; // Since we're using individual queries with default values, we don't need loading state
 
   const createMutation = useMutation({
-    mutationFn: (data: any) =>
-      apiRequest("POST", "/api/services", data),
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", "/api/services", data);
+      return response;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
       setIsDialogOpen(false);
@@ -410,7 +412,7 @@ export default function Services() {
         const result = await createMutation.mutateAsync(serviceData);
 
         // Save temporary photos to the created service
-        if (result && temporaryPhotos.length > 0) {
+        if (result && result.id && temporaryPhotos.length > 0) {
           console.log('Saving temporary photos to service:', result.id);
 
           let photosSaved = 0;
