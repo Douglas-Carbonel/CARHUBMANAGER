@@ -142,12 +142,14 @@ export default function Dashboard() {
 
             {/* Stats Cards */}
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <TechnicianStatsCards />
+              <div className="flex flex-wrap gap-6">
+                <div className="flex-1 min-w-0">
+                  <TechnicianStatsCards />
+                </div>
                 
                 {/* Status de Pagamentos Card */}
                 {user?.role === "admin" && (
-                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm w-80">
                     <div className="p-6 border-b border-gray-100">
                       <h3 className="text-lg font-semibold text-gray-900">Status de Pagamentos</h3>
                     </div>
