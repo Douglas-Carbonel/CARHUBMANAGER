@@ -289,46 +289,71 @@ export default function CustomersPage() {
 
         <main className="flex-1 overflow-y-auto bg-gradient-to-br from-white/80 via-blue-50/50 to-indigo-50/30 backdrop-blur-sm">
           <div className="p-4 sm:p-6 md:p-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6 mb-6 sm:mb-8">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <Input
-                  placeholder="Buscar clientes..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-12 w-full sm:w-80 h-12 border-2 border-gray-200 focus:border-blue-400 rounded-xl shadow-sm bg-white/80"
-                />
+            <div className={cn(
+              "flex justify-between items-center gap-2 mb-4",
+              isMobile ? "flex-col space-y-3" : "flex-col sm:flex-row gap-6 mb-8"
+            )}>
+              <div className={cn(isMobile ? "w-full space-y-2" : "flex-1 max-w-md space-y-3")}>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Buscar clientes..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className={cn(
+                      "pl-10 bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-xl shadow-sm focus:shadow-md transition-all duration-200",
+                      isMobile ? "h-10 text-sm" : "pl-12 h-12"
+                    )}
+                  />
+                </div>
               </div>
-              <div className="flex items-center gap-4">
+              
+              <div className={cn("flex items-center gap-2", isMobile ? "w-full justify-between" : "gap-4")}>
                 <Button
                   variant="outline"
                   onClick={() => setIsAnalyticsModalOpen(true)}
-                  className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                  className={cn(
+                    "border-emerald-200 text-emerald-700 hover:bg-emerald-50",
+                    isMobile ? "text-xs px-2 h-8" : ""
+                  )}
                 >
-                  📊 Ver Relatórios
+                  📊 {isMobile ? "Relatórios" : "Ver Relatórios"}
                 </Button>
-                <div className="bg-gradient-to-r from-teal-500 to-emerald-600 text-white px-4 py-2 rounded-lg shadow-md">
-                  <span className="font-semibold">{filteredCustomers.length}</span>
-                  <span className="ml-1 text-sm">clientes</span>
+                <div className={cn(
+                  "bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-lg shadow-md",
+                  isMobile ? "px-2 py-1" : "px-4 py-2"
+                )}>
+                  <span className={cn("font-semibold", isMobile ? "text-sm" : "")}>{filteredCustomers.length}</span>
+                  <span className={cn("ml-1", isMobile ? "text-xs" : "text-sm")}>clientes</span>
                 </div>
               </div>
+              
               <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogTrigger asChild>
                   <Button 
-                    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                    className={cn(
+                      "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200",
+                      isMobile ? "w-full h-10 text-sm" : ""
+                    )}
                     onClick={() => {
                       setEditingCustomer(null);
                       form.reset();
                       setCurrentCustomerPhotos([]);
                     }}
                   >
-                    <Plus className="h-5 w-5 mr-2" />
-                    Novo Cliente
+                    <Plus className={cn(isMobile ? "h-4 w-4 mr-1" : "h-5 w-5 mr-2")} />
+                    {isMobile ? "Novo Cliente" : "Novo Cliente"}
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl bg-gradient-to-br from-slate-50 to-blue-50/30">
-                  <DialogHeader className="pb-6">
-                    <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
+                <DialogContent className={cn(
+                  "bg-gradient-to-br from-slate-50 to-blue-50/30",
+                  isMobile ? "max-w-[95vw] max-h-[95vh] overflow-y-auto" : "max-w-2xl"
+                )}>
+                  <DialogHeader className={cn(isMobile ? "pb-3" : "pb-6")}>
+                    <DialogTitle className={cn(
+                      "bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent font-bold",
+                      isMobile ? "text-lg" : "text-2xl"
+                    )}>
                       {editingCustomer ? "Editar Cliente" : "Novo Cliente"}
                     </DialogTitle>
                   </DialogHeader>
@@ -340,15 +365,21 @@ export default function CustomersPage() {
                         description: "Por favor, verifique os campos obrigatórios",
                         variant: "destructive",
                       });
-                    })} className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    })} className={cn(isMobile ? "space-y-4" : "space-y-6")}>
+                      <div className={cn(
+                        "grid gap-4",
+                        isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 gap-6"
+                      )}>
                         <FormField
                           control={form.control}
                           name="name"
                           render={({ field }) => (
-                            <FormItem className="space-y-2">
-                              <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
-                                <User className="h-4 w-4 mr-2 text-emerald-600" />
+                            <FormItem className={cn(isMobile ? "space-y-1" : "space-y-2")}>
+                              <FormLabel className={cn(
+                                "font-semibold text-slate-700 flex items-center",
+                                isMobile ? "text-xs" : "text-sm"
+                              )}>
+                                <User className={cn(isMobile ? "h-3 w-3 mr-1" : "h-4 w-4 mr-2")} />
                                 Nome <span className="text-red-500 ml-1">*</span>
                               </FormLabel>
                               <FormControl>
@@ -356,7 +387,10 @@ export default function CustomersPage() {
                                   placeholder="Nome completo" 
                                   {...field} 
                                   required 
-                                  className="h-11 border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md"
+                                  className={cn(
+                                    "border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md",
+                                    isMobile ? "h-9 text-sm" : "h-11"
+                                  )}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -367,9 +401,12 @@ export default function CustomersPage() {
                           control={form.control}
                           name="email"
                           render={({ field }) => (
-                            <FormItem className="space-y-2">
-                              <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
-                                <Mail className="h-4 w-4 mr-2 text-emerald-600" />
+                            <FormItem className={cn(isMobile ? "space-y-1" : "space-y-2")}>
+                              <FormLabel className={cn(
+                                "font-semibold text-slate-700 flex items-center",
+                                isMobile ? "text-xs" : "text-sm"
+                              )}>
+                                <Mail className={cn(isMobile ? "h-3 w-3 mr-1" : "h-4 w-4 mr-2")} />
                                 Email
                               </FormLabel>
                               <FormControl>
@@ -378,7 +415,10 @@ export default function CustomersPage() {
                                   type="email" 
                                   {...field}
                                   value={field.value || ""}
-                                  className="h-11 border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md"
+                                  className={cn(
+                                    "border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md",
+                                    isMobile ? "h-9 text-sm" : "h-11"
+                                  )}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -389,9 +429,12 @@ export default function CustomersPage() {
                           control={form.control}
                           name="phone"
                           render={({ field }) => (
-                            <FormItem className="space-y-2">
-                              <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
-                                <Phone className="h-4 w-4 mr-2 text-emerald-600" />
+                            <FormItem className={cn(isMobile ? "space-y-1" : "space-y-2")}>
+                              <FormLabel className={cn(
+                                "font-semibold text-slate-700 flex items-center",
+                                isMobile ? "text-xs" : "text-sm"
+                              )}>
+                                <Phone className={cn(isMobile ? "h-3 w-3 mr-1" : "h-4 w-4 mr-2")} />
                                 Telefone
                               </FormLabel>
                               <FormControl>
@@ -402,7 +445,10 @@ export default function CustomersPage() {
                                   onChange={(e) => {
                                     field.onChange(applyPhoneMask(e.target.value));
                                   }}
-                                  className="h-11 border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md"
+                                  className={cn(
+                                    "border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md",
+                                    isMobile ? "h-9 text-sm" : "h-11"
+                                  )}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -413,11 +459,17 @@ export default function CustomersPage() {
                           control={form.control}
                           name="documentType"
                           render={({ field }) => (
-                            <FormItem className="space-y-2">
-                              <FormLabel className="text-sm font-semibold text-slate-700">Tipo de Documento</FormLabel>
+                            <FormItem className={cn(isMobile ? "space-y-1" : "space-y-2")}>
+                              <FormLabel className={cn(
+                                "font-semibold text-slate-700",
+                                isMobile ? "text-xs" : "text-sm"
+                              )}>Tipo de Documento</FormLabel>
                               <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
-                                  <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
+                                  <SelectTrigger className={cn(
+                                    "border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md",
+                                    isMobile ? "h-9 text-sm" : "h-11"
+                                  )}>
                                     <SelectValue placeholder="Selecione o tipo" />
                                   </SelectTrigger>
                                 </FormControl>
@@ -434,8 +486,11 @@ export default function CustomersPage() {
                           control={form.control}
                           name="document"
                           render={({ field }) => (
-                            <FormItem className="space-y-2">
-                              <FormLabel className="text-sm font-semibold text-slate-700">Documento</FormLabel>
+                            <FormItem className={cn(isMobile ? "space-y-1" : "space-y-2")}>
+                              <FormLabel className={cn(
+                                "font-semibold text-slate-700",
+                                isMobile ? "text-xs" : "text-sm"
+                              )}>Documento</FormLabel>
                               <FormControl>
                                 <Input 
                                   placeholder={form.watch("documentType") === "cpf" ? "000.000.000-00" : "00.000.000/0000-00"}
@@ -449,7 +504,10 @@ export default function CustomersPage() {
                                       field.onChange(applyCNPJMask(value));
                                     }
                                   }}
-                                  className="h-11 border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md"
+                                  className={cn(
+                                    "border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md",
+                                    isMobile ? "h-9 text-sm" : "h-11"
+                                  )}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -460,14 +518,22 @@ export default function CustomersPage() {
                           control={form.control}
                           name="address"
                           render={({ field }) => (
-                            <FormItem className="col-span-2 space-y-2">
-                              <FormLabel className="text-sm font-semibold text-slate-700">Endereço</FormLabel>
+                            <FormItem className={cn(
+                              isMobile ? "space-y-1" : "col-span-2 space-y-2"
+                            )}>
+                              <FormLabel className={cn(
+                                "font-semibold text-slate-700",
+                                isMobile ? "text-xs" : "text-sm"
+                              )}>Endereço</FormLabel>
                               <FormControl>
                                 <Input 
                                   placeholder="Endereço completo" 
                                   {...field} 
                                   value={field.value || ""}
-                                  className="h-11 border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md"
+                                  className={cn(
+                                    "border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md",
+                                    isMobile ? "h-9 text-sm" : "h-11"
+                                  )}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -478,15 +544,23 @@ export default function CustomersPage() {
                           control={form.control}
                           name="observations"
                           render={({ field }) => (
-                            <FormItem className="col-span-2 space-y-2">
-                              <FormLabel className="text-sm font-semibold text-slate-700">Observações</FormLabel>
+                            <FormItem className={cn(
+                              isMobile ? "space-y-1" : "col-span-2 space-y-2"
+                            )}>
+                              <FormLabel className={cn(
+                                "font-semibold text-slate-700",
+                                isMobile ? "text-xs" : "text-sm"
+                              )}>Observações</FormLabel>
                               <FormControl>
                                 <Textarea 
                                   placeholder="Observações adicionais sobre o cliente..." 
                                   {...field} 
                                   value={field.value || ""}
-                                  className="min-h-[80px] border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md resize-none"
-                                  rows={3}
+                                  className={cn(
+                                    "border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md resize-none",
+                                    isMobile ? "min-h-[60px] text-sm" : "min-h-[80px]"
+                                  )}
+                                  rows={isMobile ? 2 : 3}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -496,65 +570,76 @@ export default function CustomersPage() {
                       </div>
 
                       {/* Photos Section */}
-                      <div className="col-span-2 border-t pt-4">
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <h4 className="text-sm font-medium text-gray-700">Fotos</h4>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setIsCameraOpen(true)}
-                                className="flex items-center gap-2"
-                              >
-                                <Camera className="h-4 w-4" />
-                                Tirar Foto
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => document.getElementById('customer-photo-upload')?.click()}
-                                className="flex items-center gap-2"
-                              >
-                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                </svg>
-                                Adicionar Fotos
-                              </Button>
-                              <input
-                                type="file"
-                                multiple
-                                accept="image/*"
-                                className="hidden"
-                                id="customer-photo-upload"
-                              />
+                      {!isMobile && (
+                        <div className="col-span-2 border-t pt-4">
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-sm font-medium text-gray-700">Fotos</h4>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setIsCameraOpen(true)}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Camera className="h-4 w-4" />
+                                  Tirar Foto
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => document.getElementById('customer-photo-upload')?.click()}
+                                  className="flex items-center gap-2"
+                                >
+                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                  </svg>
+                                  Adicionar Fotos
+                                </Button>
+                                <input
+                                  type="file"
+                                  multiple
+                                  accept="image/*"
+                                  className="hidden"
+                                  id="customer-photo-upload"
+                                />
+                              </div>
                             </div>
+                            <PhotoUpload
+                              photos={currentCustomerPhotos}
+                              onPhotoUploaded={() => fetchCustomerPhotos(editingCustomer?.id)}
+                              customerId={editingCustomer?.id}
+                              maxPhotos={7}
+                            />
                           </div>
-                          <PhotoUpload
-                            photos={currentCustomerPhotos}
-                            onPhotoUploaded={() => fetchCustomerPhotos(editingCustomer?.id)}
-                            customerId={editingCustomer?.id}
-                            maxPhotos={7}
-                          />
                         </div>
-                      </div>
+                      )}
 
-                      <div className="flex justify-end gap-4 pt-6 border-t border-slate-200 mt-6">
+                      <div className={cn(
+                        "flex gap-2 border-t border-slate-200",
+                        isMobile ? "flex-col pt-3 mt-3" : "justify-end gap-4 pt-6 mt-6"
+                      )}>
                         <Button 
                           type="button" 
                           variant="outline" 
                           onClick={() => setIsModalOpen(false)}
                           disabled={createMutation.isPending || updateMutation.isPending}
-                          className="h-11 px-6 border-2 border-slate-300 hover:border-slate-400 rounded-lg font-semibold transition-all duration-200"
+                          className={cn(
+                            "border-2 border-slate-300 hover:border-slate-400 rounded-lg font-semibold transition-all duration-200",
+                            isMobile ? "h-9 text-sm" : "h-11 px-6"
+                          )}
                         >
                           Cancelar
                         </Button>
                         <Button 
                           type="submit" 
                           disabled={createMutation.isPending || updateMutation.isPending}
-                          className="h-11 px-6 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg hover:shadow-xl rounded-lg font-semibold transition-all duration-200"
+                          className={cn(
+                            "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg hover:shadow-xl rounded-lg font-semibold transition-all duration-200",
+                            isMobile ? "h-9 text-sm" : "h-11 px-6"
+                          )}
                         >
                           {createMutation.isPending || updateMutation.isPending 
                             ? "Processando..." 
