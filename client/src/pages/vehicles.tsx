@@ -299,9 +299,10 @@ export default function VehiclesPage() {
 
       // Save temporary photos if any
       if (temporaryPhotos.length > 0) {
+        let photosSaved = 0;
         for (const tempPhoto of temporaryPhotos) {
           try {
-            await fetch(`/api/vehicles/${newVehicle.id}/photos`, {
+            const res = await fetch(`/api/vehicles/${newVehicle.id}/photos`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -316,10 +317,16 @@ export default function VehiclesPage() {
               }),
               credentials: 'include',
             });
+
+            if (res.ok) {
+              photosSaved++;
+              console.log('Temporary photo saved successfully');
+            }
           } catch (error) {
             console.error('Error saving temporary photo:', error);
           }
         }
+        console.log(`${photosSaved} of ${temporaryPhotos.length} temporary photos processed`);
         setTemporaryPhotos([]); // Clear temporary photos after saving
       }
 
