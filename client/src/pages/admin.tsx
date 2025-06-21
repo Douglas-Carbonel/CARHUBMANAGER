@@ -47,8 +47,11 @@ import {
   Search,
   Filter,
   Plus,
+  ArrowLeft,
+  Home,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Link } from "wouter";
 
 interface User {
   id: number;
@@ -294,171 +297,197 @@ export default function AdminPage() {
         {/* Header */}
         <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Administração de Usuários
-              </h1>
-              <p className="text-gray-600">
-                Gerencie usuários e suas permissões no sistema
-              </p>
+            <div className="flex items-start gap-4">
+              <Link href="/dashboard">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 text-gray-600 hover:text-teal-600 hover:bg-teal-50 border-gray-300 hover:border-teal-300"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  <span className="hidden sm:inline">Voltar ao Dashboard</span>
+                  <span className="sm:hidden">Voltar</span>
+                </Button>
+              </Link>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                  Administração de Usuários
+                </h1>
+                <p className="text-gray-600">
+                  Gerencie usuários e suas permissões no sistema
+                </p>
+              </div>
             </div>
 
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  onClick={resetForm}
-                  className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-medium px-6 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <Link href="/dashboard">
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto flex items-center gap-2 text-teal-600 hover:text-teal-700 hover:bg-teal-50 border-teal-300 hover:border-teal-400"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo Usuário
+                  <Home className="h-4 w-4" />
+                  Dashboard
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle className="text-xl font-semibold text-gray-900">
-                    {editingUser ? "Editar Usuário" : "Novo Usuário"}
-                  </DialogTitle>
-                  <DialogDescription className="text-gray-600">
-                    {editingUser ? "Edite as informações do usuário" : "Crie um novo usuário no sistema"}
-                  </DialogDescription>
-                </DialogHeader>
+              </Link>
+              
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    onClick={resetForm}
+                    className="w-full sm:w-auto bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-medium px-6 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Novo Usuário
+                  </Button>
+                </DialogTrigger>
+                
+                <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="text-xl font-semibold text-gray-900">
+                      {editingUser ? "Editar Usuário" : "Novo Usuário"}
+                    </DialogTitle>
+                    <DialogDescription className="text-gray-600">
+                      {editingUser ? "Edite as informações do usuário" : "Crie um novo usuário no sistema"}
+                    </DialogDescription>
+                  </DialogHeader>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="firstName">Nome</Label>
-                      <Input
-                        id="firstName"
-                        value={formData.firstName}
-                        onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-                        className={errors.firstName ? "border-red-500" : ""}
-                      />
-                      {errors.firstName && (
-                        <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label htmlFor="lastName">Sobrenome</Label>
-                      <Input
-                        id="lastName"
-                        value={formData.lastName}
-                        onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-                        className={errors.lastName ? "border-red-500" : ""}
-                      />
-                      {errors.lastName && (
-                        <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="username">Nome de usuário</Label>
-                    <Input
-                      id="username"
-                      value={formData.username}
-                      onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-                      className={errors.username ? "border-red-500" : ""}
-                    />
-                    {errors.username && (
-                      <p className="text-red-500 text-xs mt-1">{errors.username}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="email">Email (opcional)</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                      className={errors.email ? "border-red-500" : ""}
-                    />
-                    {errors.email && (
-                      <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="password">
-                      {editingUser ? "Nova Senha (deixe vazio para manter)" : "Senha"}
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        value={formData.password}
-                        onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                        className={errors.password ? "border-red-500" : ""}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="firstName">Nome</Label>
+                        <Input
+                          id="firstName"
+                          value={formData.firstName}
+                          onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                          className={errors.firstName ? "border-red-500" : ""}
+                        />
+                        {errors.firstName && (
+                          <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
                         )}
+                      </div>
+
+                      <div>
+                        <Label htmlFor="lastName">Sobrenome</Label>
+                        <Input
+                          id="lastName"
+                          value={formData.lastName}
+                          onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+                          className={errors.lastName ? "border-red-500" : ""}
+                        />
+                        {errors.lastName && (
+                          <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="username">Nome de usuário</Label>
+                      <Input
+                        id="username"
+                        value={formData.username}
+                        onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                        className={errors.username ? "border-red-500" : ""}
+                      />
+                      {errors.username && (
+                        <p className="text-red-500 text-xs mt-1">{errors.username}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="email">Email (opcional)</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                        className={errors.email ? "border-red-500" : ""}
+                      />
+                      {errors.email && (
+                        <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="password">
+                        {editingUser ? "Nova Senha (deixe vazio para manter)" : "Senha"}
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          value={formData.password}
+                          onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                          className={errors.password ? "border-red-500" : ""}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                      {errors.password && (
+                        <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="role">Função</Label>
+                      <Select
+                        value={formData.role}
+                        onValueChange={(value: "admin" | "technician") =>
+                          setFormData(prev => ({ ...prev, role: value }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="admin">Administrador</SelectItem>
+                          <SelectItem value="technician">Colaborador</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="isActive"
+                        checked={formData.isActive}
+                        onCheckedChange={(checked) =>
+                          setFormData(prev => ({ ...prev, isActive: checked }))
+                        }
+                      />
+                      <Label htmlFor="isActive">Usuário ativo</Label>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setIsDialogOpen(false)}
+                        className="w-full sm:w-auto"
+                      >
+                        Cancelar
+                      </Button>
+                      <Button 
+                        type="submit"
+                        disabled={createUserMutation.isPending || updateUserMutation.isPending}
+                        className="w-full sm:w-auto bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700"
+                      >
+                        {editingUser ? "Atualizar" : "Criar"}
                       </Button>
                     </div>
-                    {errors.password && (
-                      <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="role">Função</Label>
-                    <Select
-                      value={formData.role}
-                      onValueChange={(value: "admin" | "technician") =>
-                        setFormData(prev => ({ ...prev, role: value }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">Administrador</SelectItem>
-                        <SelectItem value="technician">Colaborador</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="isActive"
-                      checked={formData.isActive}
-                      onCheckedChange={(checked) =>
-                        setFormData(prev => ({ ...prev, isActive: checked }))
-                      }
-                    />
-                    <Label htmlFor="isActive">Usuário ativo</Label>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => setIsDialogOpen(false)}
-                      className="w-full sm:w-auto"
-                    >
-                      Cancelar
-                    </Button>
-                    <Button 
-                      type="submit"
-                      disabled={createUserMutation.isPending || updateUserMutation.isPending}
-                      className="w-full sm:w-auto bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700"
-                    >
-                      {editingUser ? "Atualizar" : "Criar"}
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </div>
 
