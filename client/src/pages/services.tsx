@@ -826,30 +826,23 @@ export default function Services() {
                           <div className="space-y-3">
                             {/* Services Summary */}
                             <div className="bg-white border border-slate-200 rounded-lg p-3">
-                              <div className="flex justify-between items-start">
-                                <div className="flex-1">
-                                  <div className="text-sm font-bold text-slate-800 mb-2">Serviços:</div>
-                                  <div className="text-sm text-slate-700">
-                                    {(() => {
-                                      const selectedServiceTypeId = form.watch("serviceTypeId");
-                                      const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
-                                      let description = selectedServiceType?.description || "Nenhum serviço selecionado";
-                                      
-                                      // Adicionar descrições dos extras
-                                      if (serviceExtras.length > 0) {
-                                        const extrasDescriptions = serviceExtras
-                                          .map(extra => extra.serviceExtra?.descricao)
-                                          .filter(Boolean)
-                                          .join(", ");
-                                        if (extrasDescriptions) {
-                                          description += ` + ${extrasDescriptions}`;
-                                        }
-                                      }
-                                      
-                                      return description;
-                                    })()}
-                                  </div>
+                              <div className="text-sm font-bold text-slate-800 mb-3">Serviços:</div>
+                              <div className="space-y-2">
+                                {/* Serviço Base */}
+                                <div className="text-sm text-slate-700">
+                                  {(() => {
+                                    const selectedServiceTypeId = form.watch("serviceTypeId");
+                                    const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
+                                    return selectedServiceType?.description || "Nenhum serviço selecionado";
+                                  })()}
                                 </div>
+                                
+                                {/* Adicionais - listados separadamente */}
+                                {serviceExtras.length > 0 && serviceExtras.map((extra, index) => (
+                                  <div key={index} className="text-sm text-slate-700">
+                                    {extra.serviceExtra?.descricao}
+                                  </div>
+                                ))}
                               </div>
                             </div>
                             
