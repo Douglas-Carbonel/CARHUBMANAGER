@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, DollarSign, MoreHorizontal, Plus, Search, Edit, Trash2, Clock, User, Car, Wrench, CheckCircle, XCircle, Timer, BarChart3, FileText, Camera, Coins, Calculator } from "lucide-react";
+import { Calendar, DollarSign, MoreHorizontal, Plus, Search, Edit, Trash2, Clock, User, Car, Wrench, CheckCircle, XCircle, Timer, BarChart3, FileText, Camera, Coins, Calculator, Smartphone, Banknote, FileText, CreditCard, Receipt } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertServiceSchema, type Service, type Customer, type Vehicle, type ServiceType, type Photo } from "@shared/schema";
@@ -25,6 +25,47 @@ import PhotoUpload from "@/components/photos/photo-upload";
 import CameraCapture from "@/components/camera/camera-capture";
 import ServiceExtras from "@/components/service/service-extras";
 import PaymentManager from "@/components/service/payment-manager";
+
+// Utility functions for currency formatting
+const formatCurrency = (value: string): string => {
+  if (!value) return '';
+
+  // Remove tudo que não for número
+  let numericValue = value.replace(/[^\d]/g, '');
+
+  // Se for vazio, retorna vazio
+  if (!numericValue) return '';
+
+  // Converte para número e divide por 100 para ter centavos
+  const numberValue = parseInt(numericValue) / 100;
+
+  // Formata para moeda brasileira
+  return numberValue.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};
+
+const parseCurrency = (formattedValue: string): string => {
+  if (!formattedValue) return '0.00';
+
+  // Remove tudo que não for número
+  const numericValue = formattedValue.replace(/[^\d]/g, '');
+
+  if (!numericValue) return '0.00';
+
+  // Converte para formato decimal americano
+  const numberValue = parseInt(numericValue) / 100;
+
+  return numberValue.toFixed(2);
+};
+
+interface PaymentMethods {
+  pix: string;
+  dinheiro: string;
+  cheque: string;
+  cartao: string;
+}
 
 const serviceFormSchema = insertServiceSchema.extend({
   customerId: z.number().min(1, "Cliente é obrigatório"),
@@ -106,7 +147,7 @@ export default function Services() {
       if (response.ok) {
         const existingExtras = await response.json();
         console.log('Loaded existing service extras:', existingExtras);
-        
+
         // Convert existing extras to the format expected by serviceExtras state
         const mappedExtras = existingExtras.map((item: any) => ({
           serviceExtraId: item.serviceExtraId,
@@ -114,7 +155,7 @@ export default function Services() {
           observacao: item.observacao || "",
           serviceExtra: item.serviceExtra,
         }));
-        
+
         setServiceExtras(mappedExtras);
       }
     } catch (error) {
@@ -480,11 +521,11 @@ export default function Services() {
                     form.reset();
                     setCurrentServicePhotos([]);
                     setServiceExtras([]);
-                    
+
                     // Check URL params to pre-select customer if coming from customer page
                     const urlParams = new URLSearchParams(window.location.search);
                     const customerIdFromUrl = urlParams.get('customerId');
-                    
+
                     if (customerIdFromUrl) {
                       const customerId = parseInt(customerIdFromUrl);
                       console.log('Services: Pre-selecting customer from URL:', customerId);
@@ -796,7 +837,7 @@ export default function Services() {
                             <DollarSign className="h-5 w-5 mr-2 text-emerald-600" />
                             Pagamentos
                           </h3>
-                          
+
                           <div className="grid grid-cols-3 gap-4 mb-4">
                             <div className="text-center">
                               <div className="text-xs text-slate-600 mb-1">Valor Total</div>
@@ -868,11 +909,14 @@ export default function Services() {
                                       <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-600" />
                                       <Input
                                         {...field}
-                                        type="number"
-                                        step="0.01"
+                                        type="text"
                                         placeholder="0.00"
                                         className="pl-10 h-11 border-2 border-emerald-200 focus:border-emerald-400 rounded-lg bg-white"
-                                        value={field.value || ""}
+                                        value={formatCurrency(field.value || "0.00")}
+                                        onChange={(e) => {
+                                          const formattedValue = formatCurrency(e.target.value);
+                                          field.onChange(parseCurrency(formattedValue));
+                                        }}
                                       />
                                     </div>
                                     <Button
@@ -891,7 +935,7 @@ export default function Services() {
                             )}
                           />
                         </div>
-                        
+
                         <div className="flex justify-center">
                           <Button
                             type="button"
@@ -1199,11 +1243,13 @@ export default function Services() {
                       <div className="relative">
                         <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-600" />
                         <Input
-                          type="number"
-                          step="0.01"
+                          type="text"
                           placeholder="0.00"
-                          value={paymentMethods.pix}
-                          onChange={(e) => setPaymentMethods(prev => ({ ...prev, pix: e.target.value }))}
+                          value={formatCurrency(paymentMethods.pix)}
+                          onChange={(e) => {
+                            const formattedValue = formatCurrency(e.target.value);
+                            setPaymentMethods(prev => ({ ...prev, pix: parseCurrency(formattedValue) }));
+                          }}
                           className="pl-10 h-11 border-2 border-emerald-200 focus:border-emerald-400 rounded-lg bg-white"
                         />
                       </div>
@@ -1215,11 +1261,13 @@ export default function Services() {
                       <div className="relative">
                         <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-600" />
                         <Input
-                          type="number"
-                          step="0.01"
+                          type="text"
                           placeholder="0.00"
-                          value={paymentMethods.dinheiro}
-                          onChange={(e) => setPaymentMethods(prev => ({ ...prev, dinheiro: e.target.value }))}
+                          value={formatCurrency(paymentMethods.dinheiro)}
+                          onChange={(e) => {
+                            const formattedValue = formatCurrency(e.target.value);
+                            setPaymentMethods(prev => ({ ...prev, dinheiro: parseCurrency(formattedValue) }));
+                          }}
                           className="pl-10 h-11 border-2 border-emerald-200 focus:border-emerald-400 rounded-lg bg-white"
                         />
                       </div>
@@ -1231,11 +1279,13 @@ export default function Services() {
                       <div className="relative">
                         <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-600" />
                         <Input
-                          type="number"
-                          step="0.01"
+                          type="text"
                           placeholder="0.00"
-                          value={paymentMethods.cheque}
-                          onChange={(e) => setPaymentMethods(prev => ({ ...prev, cheque: e.target.value }))}
+                          value={formatCurrency(paymentMethods.cheque)}
+                          onChange={(e) => {
+                            const formattedValue = formatCurrency(e.target.value);
+                            setPaymentMethods(prev => ({ ...prev, cheque: parseCurrency(formattedValue) }));
+                          }}
                           className="pl-10 h-11 border-2 border-emerald-200 focus:border-emerald-400 rounded-lg bg-white"
                         />
                       </div>
@@ -1247,11 +1297,13 @@ export default function Services() {
                       <div className="relative">
                         <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-600" />
                         <Input
-                          type="number"
-                          step="0.01"
+                          type="text"
                           placeholder="0.00"
-                          value={paymentMethods.cartao}
-                          onChange={(e) => setPaymentMethods(prev => ({ ...prev, cartao: e.target.value }))}
+                          value={formatCurrency(paymentMethods.cartao)}
+                          onChange={(e) => {
+                            const formattedValue = formatCurrency(e.target.value);
+                            setPaymentMethods(prev => ({ ...prev, cartao: parseCurrency(formattedValue) }));
+                          }}
                           className="pl-10 h-11 border-2 border-emerald-200 focus:border-emerald-400 rounded-lg bg-white"
                         />
                       </div>
@@ -1327,7 +1379,7 @@ export default function Services() {
                 <SelectItem value="cancelled">Cancelado</SelectItem>
               </SelectContent>
             </Select>
-            
+
             <Select value={filterPayment} onValueChange={setFilterPayment}>
               <SelectTrigger className="w-48 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm">
                 <SelectValue placeholder="Filtrar por pagamento" />
@@ -1390,11 +1442,11 @@ export default function Services() {
                       onClick={() => {
                         setEditingService(null);
                         form.reset();
-                        
+
                         // Check URL params to pre-select customer if coming from customer page
                         const urlParams = new URLSearchParams(window.location.search);
                         const customerIdFromUrl = urlParams.get('customerId');
-                        
+
                         if (customerIdFromUrl) {
                           const customerId = parseInt(customerIdFromUrl);
                           console.log('Services: Pre-selecting customer from URL (first service):', customerId);
@@ -1402,7 +1454,7 @@ export default function Services() {
                           // Reset vehicle when customer is pre-selected
                           form.setValue('vehicleId', 0);
                         }
-                        
+
                         setIsDialogOpen(true);
                       }}
                     >
