@@ -509,7 +509,7 @@ export default function VehiclesPage() {
             <div className={cn(
               "flex justify-between items-center gap-2 mb-4",
               isMobile ? "flex-col space-y-3" : "flex-col sm:flex-row gap-6 mb-8"
-            )}></div>
+            )}>
               <div className={cn(isMobile ? "w-full space-y-2" : "flex-1 max-w-md space-y-3")}>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
