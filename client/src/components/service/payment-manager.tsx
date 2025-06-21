@@ -7,9 +7,44 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { DollarSign, CreditCard, Banknote, FileText, Smartphone } from "lucide-react";
 
+// Utility functions for currency formatting (same as service-extras)
+const formatCurrency = (value: string): string => {
+  if (!value) return '';
+  
+  // Remove tudo que não for número
+  let numericValue = value.replace(/[^\d]/g, '');
+  
+  // Se for vazio, retorna vazio
+  if (!numericValue) return '';
+  
+  // Converte para número e divide por 100 para ter centavos
+  const numberValue = parseInt(numericValue) / 100;
+  
+  // Formata para moeda brasileira
+  return numberValue.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};
+
+const parseCurrency = (formattedValue: string): string => {
+  if (!formattedValue) return '0.00';
+  
+  // Remove tudo que não for número
+  const numericValue = formattedValue.replace(/[^\d]/g, '');
+  
+  if (!numericValue) return '0.00';
+  
+  // Converte para formato decimal americano
+  const numberValue = parseInt(numericValue) / 100;
+  
+  return numberValue.toFixed(2);
+};
+
 interface PaymentMethod {
   type: 'pix' | 'dinheiro' | 'cheque' | 'cartao';
   value: string;
+  formattedValue: string;
 }
 
 interface PaymentManagerProps {
@@ -21,17 +56,22 @@ interface PaymentManagerProps {
 export default function PaymentManager({ totalValue, currentPaidValue, onPaymentChange }: PaymentManagerProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [payments, setPayments] = useState<PaymentMethod[]>([
-    { type: 'pix', value: '' },
-    { type: 'dinheiro', value: '' },
-    { type: 'cheque', value: '' },
-    { type: 'cartao', value: '' }
+    { type: 'pix', value: '', formattedValue: '' },
+    { type: 'dinheiro', value: '', formattedValue: '' },
+    { type: 'cheque', value: '', formattedValue: '' },
+    { type: 'cartao', value: '', formattedValue: '' }
   ]);
 
   // Initialize payments from current paid value
   useEffect(() => {
     if (currentPaidValue > 0 && payments.every(p => p.value === '')) {
+      const formattedValue = formatCurrency((currentPaidValue * 100).toString());
       setPayments(prev => prev.map((p, index) => 
-        index === 0 ? { ...p, value: currentPaidValue.toString() } : p
+        index === 0 ? { 
+          ...p, 
+          value: currentPaidValue.toString(),
+          formattedValue: formattedValue
+        } : p
       ));
     }
   }, [currentPaidValue]);
@@ -69,9 +109,13 @@ export default function PaymentManager({ totalValue, currentPaidValue, onPayment
     }, 0);
   };
 
-  const handlePaymentChange = (index: number, value: string) => {
+  const handlePaymentChange = (index: number, formattedValue: string) => {
     const newPayments = [...payments];
-    newPayments[index].value = value;
+    const formatted = formatCurrency(formattedValue);
+    const parsedValue = parseCurrency(formatted);
+    
+    newPayments[index].formattedValue = formatted;
+    newPayments[index].value = parsedValue;
     setPayments(newPayments);
   };
 
@@ -85,18 +129,19 @@ export default function PaymentManager({ totalValue, currentPaidValue, onPayment
     // Reset payments to current state
     const currentTotal = currentPaidValue;
     if (currentTotal > 0) {
+      const formattedValue = formatCurrency((currentTotal * 100).toString());
       setPayments([
-        { type: 'pix', value: currentTotal.toString() },
-        { type: 'dinheiro', value: '' },
-        { type: 'cheque', value: '' },
-        { type: 'cartao', value: '' }
+        { type: 'pix', value: currentTotal.toString(), formattedValue: formattedValue },
+        { type: 'dinheiro', value: '', formattedValue: '' },
+        { type: 'cheque', value: '', formattedValue: '' },
+        { type: 'cartao', value: '', formattedValue: '' }
       ]);
     } else {
       setPayments([
-        { type: 'pix', value: '' },
-        { type: 'dinheiro', value: '' },
-        { type: 'cheque', value: '' },
-        { type: 'cartao', value: '' }
+        { type: 'pix', value: '', formattedValue: '' },
+        { type: 'dinheiro', value: '', formattedValue: '' },
+        { type: 'cheque', value: '', formattedValue: '' },
+        { type: 'cartao', value: '', formattedValue: '' }
       ]);
     }
     setIsModalOpen(false);
@@ -185,19 +230,17 @@ export default function PaymentManager({ totalValue, currentPaidValue, onPayment
                         </Label>
                       </div>
                       
-                      <div className="relative w-24">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={payment.value}
-                          onChange={(e) => handlePaymentChange(index, e.target.value)}
-                          className="text-right pr-8"
-                          placeholder="0,00"
-                        />
-                        <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs text-slate-500">
+                      <div className="relative w-32">
+                        <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-xs text-slate-500">
                           R$
                         </span>
+                        <Input
+                          type="text"
+                          value={payment.formattedValue}
+                          onChange={(e) => handlePaymentChange(index, e.target.value)}
+                          className="text-right pl-8"
+                          placeholder="0,00"
+                        />
                       </div>
                     </div>
                   </CardContent>
