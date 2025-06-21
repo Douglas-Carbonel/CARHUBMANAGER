@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MoreHorizontal, Plus, Search, Edit, Trash2, User, Phone, Mail, FileText, MapPin, BarChart3, Car, Wrench, Camera } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type Customer } from "@shared/schema";
+import { type Customer, type Photo } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import { validateCPF, validateCNPJ, formatCPF, formatCNPJ, applyCPFMask, applyCNPJMask, applyPhoneMask } from "@/lib/cpf-cnpj";
 import CustomerAnalytics from "@/components/dashboard/customer-analytics";
@@ -75,10 +75,10 @@ export default function CustomersPage() {
   const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
   const [selectedCustomerForPhotos, setSelectedCustomerForPhotos] = useState<Customer | null>(null);
   const [isPhotosModalOpen, setIsPhotosModalOpen] = useState(false);
-  const [currentCustomerPhotos, setCurrentCustomerPhotos] = useState<string[]>([]);
+  const [currentCustomerPhotos, setCurrentCustomerPhotos] = useState<any[]>([]);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const isMobile = useIsMobile();
-  const [temporaryPhotos, setTemporaryPhotos] = useState<string[]>([]);
+  const [temporaryPhotos, setTemporaryPhotos] = useState<{photo: string, category: string}[]>([]);
 
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerFormSchema),
@@ -259,14 +259,69 @@ export default function CustomersPage() {
     }
   };
 
-  const handlePhotoTaken = () => {
-    if (editingCustomer) {
-      fetchCustomerPhotos(editingCustomer.id);
+  const handlePhotoTaken = async (photoData: any, category?: string) => {
+    let photo: string;
+    let photoCategory: string;
+    let customerId: number | undefined;
+
+    // Handle different input formats from CameraCapture
+    if (typeof photoData === 'string') {
+      photo = photoData;
+      photoCategory = category || 'customer';
+      customerId = editingCustomer?.id;
+    } else {
+      // photoData is an object with customerId, category, etc.
+      photo = photoData.photo || photoData;
+      photoCategory = photoData.category || category || 'customer';
+      customerId = photoData.customerId || editingCustomer?.id;
     }
-    toast({
-      title: "Foto capturada",
-      description: "Foto foi adicionada com sucesso.",
-    });
+
+    // If no customer ID (new customer), store as temporary photo
+    if (!customerId) {
+      setTemporaryPhotos(prev => [...prev, { photo, category: photoCategory }]);
+      toast({
+        title: "Foto capturada!",
+        description: "A foto será salva quando o cliente for cadastrado.",
+      });
+      setIsCameraOpen(false);
+      return;
+    }
+
+    // If customer ID exists (editing existing customer), save immediately
+    try {
+      const res = await fetch(`/api/customers/${customerId}/photos`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          photo, 
+          category: photoCategory,
+          description: photoCategory === 'customer' ? 'Cliente' : 'Documento'
+        }),
+        credentials: 'include',
+      });
+
+      if (res.ok) {
+        toast({
+          title: "Foto salva!",
+          description: "A foto foi salva com sucesso.",
+        });
+        fetchCustomerPhotos(customerId);
+        // Refresh the main customers list in background
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Error saving photo:', error);
+      toast({
+        title: "Erro ao salvar foto",
+        description: "Erro ao salvar a foto.",
+        variant: "destructive",
+      });
+    }
+    setIsCameraOpen(false);
   };
 
   const filteredCustomers = customers.filter((customer: Customer) =>
@@ -468,7 +523,7 @@ export default function CustomersPage() {
                                 "font-semibold text-slate-700",
                                 isMobile ? "text-xs" : "text-sm"
                               )}>Tipo de Documento</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <Select onValueChange={field.onChange} defaultValue={field.value as string || "cpf"}>
                                 <FormControl>
                                   <SelectTrigger className={cn(
                                     "border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md",
@@ -573,53 +628,88 @@ export default function CustomersPage() {
                         />
                       </div>
 
-                      {/* Photos Section */}
-                      {!isMobile && (
-                        <div className="col-span-2 border-t pt-4">
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <h4 className="text-sm font-medium text-gray-700">Fotos</h4>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setIsCameraOpen(true)}
-                                  className="flex items-center gap-2"
-                                >
-                                  <Camera className="h-4 w-4" />
-                                  Tirar Foto
-                                </Button>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => document.getElementById('customer-photo-upload')?.click()}
-                                  className="flex items-center gap-2"
-                                >
-                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                  </svg>
-                                  Adicionar Fotos
-                                </Button>
-                                <input
-                                  type="file"
-                                  multiple
-                                  accept="image/*"
-                                  className="hidden"
-                                  id="customer-photo-upload"
-                                />
-                              </div>
+                      {/* Photos Section - Responsive */}
+                      <div className={cn(
+                        "border-t pt-4",
+                        isMobile ? "col-span-1" : "col-span-2"
+                      )}>
+                        <div className="space-y-4">
+                          <div className={cn(
+                            "flex items-center justify-between",
+                            isMobile ? "flex-col gap-2" : ""
+                          )}>
+                            <h4 className={cn(
+                              "font-medium text-gray-700",
+                              isMobile ? "text-xs" : "text-sm"
+                            )}>Fotos</h4>
+                            <div className={cn(
+                              "flex items-center gap-2",
+                              isMobile ? "w-full justify-center" : ""
+                            )}>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size={isMobile ? "sm" : "sm"}
+                                onClick={() => setIsCameraOpen(true)}
+                                className={cn(
+                                  "flex items-center gap-2",
+                                  isMobile ? "h-8 px-3 text-xs" : ""
+                                )}
+                              >
+                                <Camera className={cn(isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                                {isMobile ? "Foto" : "Tirar Foto"}
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size={isMobile ? "sm" : "sm"}
+                                onClick={() => document.getElementById('customer-photo-upload')?.click()}
+                                className={cn(
+                                  "flex items-center gap-2",
+                                  isMobile ? "h-8 px-3 text-xs" : ""
+                                )}
+                              >
+                                <svg className={cn(isMobile ? "h-3 w-3" : "h-4 w-4")} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                {isMobile ? "Upload" : "Adicionar Fotos"}
+                              </Button>
+                              <input
+                                type="file"
+                                multiple
+                                accept="image/*"
+                                className="hidden"
+                                id="customer-photo-upload"
+                                onChange={async (e) => {
+                                  const files = e.target.files;
+                                  if (!files) return;
+
+                                  for (const file of Array.from(files)) {
+                                    if (!file.type.startsWith('image/')) continue;
+                                    
+                                    // Convert to base64 for preview
+                                    const reader = new FileReader();
+                                    reader.onload = (event) => {
+                                      const photoData = event.target?.result as string;
+                                      handlePhotoTaken(photoData, 'customer');
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                  
+                                  // Clear the input
+                                  e.target.value = '';
+                                }}
+                              />
                             </div>
-                            <PhotoUpload
-                              photos={currentCustomerPhotos}
-                              onPhotoUploaded={() => fetchCustomerPhotos(editingCustomer?.id)}
-                              customerId={editingCustomer?.id}
-                              maxPhotos={7}
-                            />
                           </div>
+                          <PhotoUpload
+                            photos={currentCustomerPhotos}
+                            onPhotoUploaded={() => fetchCustomerPhotos(editingCustomer?.id)}
+                            customerId={editingCustomer?.id}
+                            maxPhotos={7}
+                          />
                         </div>
-                      )}
+                      </div>
 
                       <div className={cn(
                         "flex gap-2 border-t border-slate-200",
@@ -789,7 +879,7 @@ export default function CustomersPage() {
                               <User className="h-3 w-3 text-gray-500" />
                             </div>
                             <span className="text-gray-900 text-xs font-mono">
-                              {customer.documentType === 'cpf' ? formatCPF(customer.document) : formatCNPJ(customer.document)}
+                              {customer.document ? (customer.documentType === 'cpf' ? formatCPF(customer.document) : formatCNPJ(customer.document)) : 'N/A'}
                             </span>
                           </div>
 
