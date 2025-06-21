@@ -21,7 +21,9 @@ import {
   BarChart3,
   TrendingUp,
   Eye,
-  Zap
+  Zap,
+  Plus,
+  Activity
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -37,21 +39,21 @@ export default function Dashboard() {
       title: "Novo Agendamento",
       description: "Agendar um novo serviço",
       icon: Calendar,
-      color: "bg-blue-500 hover:bg-blue-600",
+      color: "bg-blue-600 hover:bg-blue-700",
       route: "/schedule"
     },
     {
       title: "Novo Cliente",
       description: "Cadastrar cliente",
       icon: Users,
-      color: "bg-green-500 hover:bg-green-600",
+      color: "bg-emerald-600 hover:bg-emerald-700",
       route: "/customers"
     },
     {
       title: "Serviços",
       description: "Gerenciar serviços",
       icon: Wrench,
-      color: "bg-purple-500 hover:bg-purple-600",
+      color: "bg-purple-600 hover:bg-purple-700",
       route: "/services"
     }
   ];
@@ -101,30 +103,30 @@ export default function Dashboard() {
           subtitle={`Bem-vindo, ${user?.firstName || user?.username}!`}
         />
 
-        <main className="flex-1 overflow-y-auto">
-          <div className="max-w-7xl mx-auto p-6 space-y-8">
+        <main className="flex-1 overflow-y-auto bg-gray-50">
+          <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
 
-            {/* Header Section com Ações Rápidas */}
+            {/* Header Section */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  {user?.role === "admin" ? "Visão Geral do Negócio" : "Seus Agendamentos"}
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                  {user?.role === "admin" ? "Dashboard Executivo" : "Meus Agendamentos"}
                 </h1>
-                <p className="text-gray-600 mt-2">
+                <p className="text-gray-600">
                   {user?.role === "admin" 
-                    ? "Acompanhe o desempenho e métricas importantes" 
-                    : "Veja suas atividades e próximos compromissos"
+                    ? "Monitore o desempenho do negócio em tempo real" 
+                    : "Acompanhe suas atividades e próximos compromissos"
                   }
                 </p>
               </div>
               
-              {/* Ações Rápidas */}
-              <div className="flex gap-3">
+              {/* Quick Actions */}
+              <div className="flex flex-wrap gap-3">
                 {quickActions.map((action, index) => (
                   <Button
                     key={index}
                     onClick={() => setLocation(action.route)}
-                    className={`${action.color} text-white border-0 shadow-md hover:shadow-lg transition-all duration-200`}
+                    className={`${action.color} text-white border-0 shadow-sm hover:shadow-md transition-all duration-200 h-11 px-6`}
                     size="sm"
                   >
                     <action.icon className="h-4 w-4 mr-2" />
@@ -134,110 +136,169 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Cards de Estatísticas Principais */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Estatísticas de Hoje</h2>
-                <div className="flex items-center text-sm text-gray-500">
-                  <Zap className="h-4 w-4 mr-1" />
+            {/* Stats Cards */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">Métricas de Hoje</h2>
+                <div className="flex items-center text-sm text-gray-500 bg-white px-3 py-1.5 rounded-full border">
+                  <Activity className="h-4 w-4 mr-1.5" />
                   Atualizado em tempo real
                 </div>
               </div>
-              <TechnicianStatsCards />
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                <TechnicianStatsCards />
+              </div>
             </div>
 
-            {/* Seções Principais - Layout Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
               
-              {/* Coluna Principal - Gráficos */}
-              <div className="lg:col-span-2 space-y-6">
+              {/* Charts Section */}
+              <div className="xl:col-span-2 space-y-8">
                 
-                {/* Gráficos de Revenue */}
+                {/* Revenue Charts */}
                 {user?.role === "admin" && (
-                  <div className="space-y-6">
-                    <RevenueChart />
-                    <RealizedRevenueChart />
+                  <div className="space-y-8">
+                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                      <div className="p-6 border-b border-gray-100">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-semibold text-gray-900">Receita Estimada</h3>
+                          <div className="flex items-center text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                            <TrendingUp className="h-4 w-4 mr-1" />
+                            Últimos 7 dias
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-6">
+                        <RevenueChart />
+                      </div>
+                    </div>
+
+                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                      <div className="p-6 border-b border-gray-100">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-semibold text-gray-900">Receita Realizada</h3>
+                          <div className="flex items-center text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                            <BarChart3 className="h-4 w-4 mr-1" />
+                            Pagamentos confirmados
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-6">
+                        <RealizedRevenueChart />
+                      </div>
+                    </div>
                   </div>
                 )}
 
-                {/* Serviços Recentes */}
-                <RecentServices />
+                {/* Recent Services */}
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="p-6 border-b border-gray-100">
+                    <h3 className="text-lg font-semibold text-gray-900">Serviços Recentes</h3>
+                  </div>
+                  <div className="p-6">
+                    <RecentServices />
+                  </div>
+                </div>
               </div>
 
-              {/* Sidebar Direita */}
-              <div className="space-y-6">
+              {/* Sidebar */}
+              <div className="space-y-8">
                 
-                {/* Próximos Agendamentos */}
-                <UpcomingAppointments />
+                {/* Upcoming Appointments */}
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="p-6 border-b border-gray-100">
+                    <h3 className="text-lg font-semibold text-gray-900">Próximos Agendamentos</h3>
+                  </div>
+                  <div className="p-6">
+                    <UpcomingAppointments />
+                  </div>
+                </div>
                 
-                {/* Top Serviços - Apenas para Admin */}
-                {user?.role === "admin" && <TopServices />}
-                
-                {/* Links Rápidos para Dashboards - Apenas para Admin */}
+                {/* Top Services - Admin Only */}
                 {user?.role === "admin" && (
-                  <Card className="border border-gray-200 shadow-sm">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg font-semibold flex items-center">
+                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="p-6 border-b border-gray-100">
+                      <h3 className="text-lg font-semibold text-gray-900">Serviços Populares</h3>
+                    </div>
+                    <div className="p-6">
+                      <TopServices />
+                    </div>
+                  </div>
+                )}
+                
+                {/* Quick Analytics Links - Admin Only */}
+                {user?.role === "admin" && (
+                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="p-6 border-b border-gray-100">
+                      <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                         <BarChart3 className="h-5 w-5 mr-2 text-blue-600" />
                         Análises Detalhadas
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
+                      </h3>
+                    </div>
+                    <div className="p-6 space-y-3">
                       {dashboardSections.map((section, index) => (
                         <div
                           key={index}
                           onClick={() => setLocation(section.route)}
-                          className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors duration-200 group"
+                          className="group flex items-center justify-between p-4 rounded-xl bg-gray-50 hover:bg-gray-100 cursor-pointer transition-all duration-200 border border-gray-100 hover:border-gray-200"
                         >
                           <div className="flex items-center space-x-3">
-                            <div className={`w-8 h-8 bg-gradient-to-r ${section.gradient} rounded-lg flex items-center justify-center`}>
-                              <section.icon className="h-4 w-4 text-white" />
+                            <div className={`w-10 h-10 bg-gradient-to-r ${section.gradient} rounded-xl flex items-center justify-center shadow-sm`}>
+                              <section.icon className="h-5 w-5 text-white" />
                             </div>
                             <div>
                               <p className="font-medium text-gray-900 text-sm">{section.title}</p>
                               <p className="text-xs text-gray-500">{section.description}</p>
                             </div>
                           </div>
-                          <div className="flex items-center text-xs text-gray-400">
-                            <Eye className="h-3 w-3 mr-1" />
-                            <span className="group-hover:text-gray-600 transition-colors">Ver</span>
+                          <div className="flex items-center text-xs text-gray-400 group-hover:text-gray-600 transition-colors">
+                            <ArrowRight className="h-4 w-4" />
                           </div>
                         </div>
                       ))}
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
 
-            {/* Footer de Estatísticas - Apenas para Admin */}
+            {/* Premium Footer - Admin Only */}
             {user?.role === "admin" && (
-              <Card className="bg-gradient-to-r from-gray-900 to-gray-800 text-white border-0 shadow-lg">
-                <CardContent className="p-8">
-                  <div className="flex flex-col md:flex-row items-center justify-between">
-                    <div className="text-center md:text-left mb-4 md:mb-0">
-                      <h3 className="text-2xl font-bold mb-2">Sistema de Gestão Completo</h3>
-                      <p className="text-gray-300">
-                        Controle total do seu negócio com relatórios avançados e insights inteligentes
+              <div className="bg-gradient-to-r from-slate-900 via-gray-900 to-slate-900 rounded-2xl border border-gray-800 shadow-xl overflow-hidden">
+                <div className="p-8">
+                  <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+                    <div className="text-center lg:text-left">
+                      <h3 className="text-2xl font-bold text-white mb-3">
+                        Sistema de Gestão Profissional
+                      </h3>
+                      <p className="text-gray-300 text-lg">
+                        Controle completo com relatórios avançados e insights em tempo real
                       </p>
                     </div>
-                    <div className="flex items-center space-x-6">
+                    <div className="flex items-center space-x-8">
                       <div className="text-center">
-                        <TrendingUp className="h-8 w-8 text-green-400 mx-auto mb-2" />
-                        <p className="text-sm text-gray-300">Performance</p>
+                        <div className="w-14 h-14 bg-green-600 rounded-2xl flex items-center justify-center mb-3 mx-auto">
+                          <TrendingUp className="h-7 w-7 text-white" />
+                        </div>
+                        <p className="text-sm text-gray-300 font-medium">Performance</p>
                       </div>
                       <div className="text-center">
-                        <BarChart3 className="h-8 w-8 text-blue-400 mx-auto mb-2" />
-                        <p className="text-sm text-gray-300">Relatórios</p>
+                        <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center mb-3 mx-auto">
+                          <BarChart3 className="h-7 w-7 text-white" />
+                        </div>
+                        <p className="text-sm text-gray-300 font-medium">Relatórios</p>
                       </div>
                       <div className="text-center">
-                        <Zap className="h-8 w-8 text-yellow-400 mx-auto mb-2" />
-                        <p className="text-sm text-gray-300">Automação</p>
+                        <div className="w-14 h-14 bg-yellow-600 rounded-2xl flex items-center justify-center mb-3 mx-auto">
+                          <Zap className="h-7 w-7 text-white" />
+                        </div>
+                        <p className="text-sm text-gray-300 font-medium">Automação</p>
                       </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )}
 
           </div>
