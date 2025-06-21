@@ -112,36 +112,54 @@ export default function TechnicianStatsCards() {
       iconBg: "bg-orange-50",
       iconColor: "text-orange-600",
     },
+    {
+      title: "Serviços Concluídos",
+      value: stats?.servicosConcluidos || 0,
+      change: calculatePercentage(stats?.servicosConcluidos || 0, previousStats.servicosConcluidos),
+      subtitle: "Finalizados",
+      icon: Calendar,
+      iconBg: "bg-blue-50", 
+      iconColor: "text-blue-600",
+    },
+    {
+      title: "Pagamentos Pendentes",
+      value: stats?.pagamentosPendentes || 0,
+      change: calculatePercentage(stats?.pagamentosPendentes || 0, previousStats.pagamentosPendentes),
+      subtitle: "Sem pagamento",
+      icon: Users,
+      iconBg: "bg-red-50",
+      iconColor: "text-red-600",
+    },
   ];
 
   return (
-    <div className="flex space-x-0">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {cards.map((card, index) => (
-        <div key={index} className={`bg-white border border-gray-200 p-4 hover:shadow-sm transition-shadow flex-1 ${index === 0 ? 'rounded-l-lg' : ''} ${index === cards.length - 1 ? 'rounded-r-lg' : ''} ${index > 0 ? 'border-l-0' : ''}`}>
+        <div key={index} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-sm transition-shadow">
           {/* Header */}
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xs font-medium text-gray-600">{card.title}</h3>
-            <div className={`w-8 h-8 ${card.iconBg} rounded-lg flex items-center justify-center`}>
-              <card.icon className={`w-4 h-4 ${card.iconColor}`} />
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-medium text-gray-600">{card.title}</h3>
+            <div className={`w-10 h-10 ${card.iconBg} rounded-lg flex items-center justify-center`}>
+              <card.icon className={`w-5 h-5 ${card.iconColor}`} />
             </div>
           </div>
           
           {/* Value */}
           <div className="mb-2">
-            <span className="text-xl font-semibold text-gray-900">
+            <span className="text-2xl font-semibold text-gray-900">
               {card.value}
             </span>
           </div>
           
           {/* Subtitle */}
           <div className="flex items-center">
-            <span className="text-xs text-gray-500">
+            <span className="text-sm text-gray-500">
               {card.subtitle}
             </span>
             {card.change >= 0 ? (
-              <TrendingUp className="w-3 h-3 text-green-500 ml-1" />
+              <TrendingUp className="w-4 h-4 text-green-500 ml-2" />
             ) : (
-              <TrendingDown className="w-3 h-3 text-red-500 ml-1" />
+              <TrendingDown className="w-4 h-4 text-red-500 ml-2" />
             )}
             <span className={`text-xs font-medium ml-1 ${card.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {card.change >= 0 ? '+' : ''}{card.change.toFixed(1)}%
