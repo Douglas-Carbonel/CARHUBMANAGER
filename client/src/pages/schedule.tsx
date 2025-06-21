@@ -314,31 +314,31 @@ export default function SchedulePage() {
   return (
     <div className={cn("flex bg-gradient-to-br from-slate-100 via-white to-blue-50/30", isMobile ? "h-screen flex-col" : "h-screen")}>
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
-          title="Agenda" 
-          subtitle="Gerenciar agendamentos"
+          title={isMobile ? "Agenda" : "Agenda"} 
+          subtitle={isMobile ? "Agendamentos" : "Gerenciar agendamentos"}
         />
 
         <main className="flex-1 overflow-y-auto">
-          <div className={cn(isMobile ? "p-2" : "p-8")}>
+          <div className={cn(isMobile ? "p-3" : "p-8")}>
             {/* Filters */}
-            <div className={cn("flex gap-4 mb-8", isMobile ? "flex-col" : "flex-col lg:flex-row")}>
-              <div className="flex-1 max-w-md">
+            <div className={cn("flex gap-4 mb-6", isMobile ? "flex-col space-y-3" : "flex-col lg:flex-row lg:items-center mb-8")}>
+              <div className={cn("flex-1", isMobile ? "w-full" : "max-w-md")}>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Search className={cn("absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400", isMobile ? "h-4 w-4" : "h-4 w-4")} />
                   <Input
-                    placeholder="Buscar por cliente, veículo ou observações..."
+                    placeholder={isMobile ? "Buscar agendamentos..." : "Buscar por cliente, veículo ou observações..."}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className={cn("pl-10 bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-xl shadow-sm focus:shadow-md transition-all duration-200", isMobile ? "h-10 text-sm" : "")}
+                    className={cn("pl-10 bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-xl shadow-sm focus:shadow-md transition-all duration-200", isMobile ? "h-11 text-base" : "")}
                   />
                 </div>
               </div>
               
-              <div className={cn("flex gap-4", isMobile ? "flex-col" : "min-w-max")}>
+              <div className={cn("flex gap-3", isMobile ? "flex-col" : "flex-row min-w-max")}>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className={cn("bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-xl shadow-sm focus:shadow-md transition-all duration-200", isMobile ? "w-full h-10" : "w-48")}>
+                  <SelectTrigger className={cn("bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-xl shadow-sm focus:shadow-md transition-all duration-200", isMobile ? "w-full h-11" : "w-48")}>
                     <SelectValue placeholder="Filtrar por status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -351,7 +351,7 @@ export default function SchedulePage() {
                 </Select>
 
                 <Select value={periodFilter} onValueChange={setPeriodFilter}>
-                  <SelectTrigger className={cn("bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-xl shadow-sm focus:shadow-md transition-all duration-200", isMobile ? "w-full h-10" : "w-48")}>
+                  <SelectTrigger className={cn("bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-xl shadow-sm focus:shadow-md transition-all duration-200", isMobile ? "w-full h-11" : "w-48")}>
                     <SelectValue placeholder="Filtrar por período" />
                   </SelectTrigger>
                   <SelectContent>
@@ -365,7 +365,7 @@ export default function SchedulePage() {
                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                   <DialogTrigger asChild>
                     <Button 
-                      className={cn("bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-xl", isMobile ? "w-full h-10 px-4 py-2 text-sm" : "px-6 py-2")}
+                      className={cn("bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-xl font-medium", isMobile ? "w-full h-11 px-4 text-sm justify-center" : "px-6 py-2")}
                       onClick={() => {
                         setEditingService(null);
                         form.reset({
@@ -385,26 +385,26 @@ export default function SchedulePage() {
                         });
                       }}
                     >
-                      <Plus className={cn("mr-2", isMobile ? "h-4 w-4" : "h-4 w-4 sm:h-5 sm:w-5")} />
-                      Novo Agendamento
+                      <Plus className={cn("mr-2", isMobile ? "h-4 w-4" : "h-4 w-4")} />
+                      {isMobile ? "Novo" : "Novo Agendamento"}
                     </Button>
                   </DialogTrigger>
 
-                  <DialogContent className={cn("max-h-[90vh] overflow-y-auto bg-gradient-to-br from-slate-50 to-blue-50/30", isMobile ? "max-w-[95vw] m-2" : "max-w-4xl")}>
-                    <DialogHeader className="pb-6">
-                      <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent">
-                        {editingService ? "Editar Agendamento" : "Novo Agendamento"}
+                  <DialogContent className={cn("max-h-[90vh] overflow-y-auto bg-gradient-to-br from-slate-50 to-blue-50/30", isMobile ? "max-w-[95vw] w-[95vw] h-[90vh] m-2 p-4" : "max-w-4xl")}>
+                    <DialogHeader className={cn(isMobile ? "pb-4" : "pb-6")}>
+                      <DialogTitle className={cn("font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent", isMobile ? "text-lg" : "text-2xl")}>
+                        {editingService ? (isMobile ? "Editar" : "Editar Agendamento") : (isMobile ? "Novo" : "Novo Agendamento")}
                       </DialogTitle>
                     </DialogHeader>
                     <Form {...form}>
-                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                        <div className={cn("grid gap-6", isMobile ? "grid-cols-1" : "grid-cols-2")}>
+                      <form onSubmit={form.handleSubmit(onSubmit)} className={cn("space-y-4", isMobile ? "space-y-4" : "space-y-6")}>
+                        <div className="grid gap-4 grid-cols-1">
                           <FormField
                             control={form.control}
                             name="customerId"
                             render={({ field }) => (
                               <FormItem className="space-y-2">
-                                <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                <FormLabel className={cn("font-semibold text-slate-700 flex items-center", isMobile ? "text-sm" : "text-sm")}>
                                   <User className="h-4 w-4 mr-2 text-teal-600" />
                                   Cliente
                                 </FormLabel>
@@ -416,7 +416,7 @@ export default function SchedulePage() {
                                   value={field.value > 0 ? field.value.toString() : ""}
                                 >
                                   <FormControl>
-                                    <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
+                                    <SelectTrigger className={cn("border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md", isMobile ? "h-12 text-base" : "h-11")}>
                                       <SelectValue placeholder="Selecione um cliente" />
                                     </SelectTrigger>
                                   </FormControl>
@@ -438,7 +438,7 @@ export default function SchedulePage() {
                             name="vehicleId"
                             render={({ field }) => (
                               <FormItem className="space-y-2">
-                                <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                <FormLabel className={cn("font-semibold text-slate-700 flex items-center", isMobile ? "text-sm" : "text-sm")}>
                                   <Car className="h-4 w-4 mr-2 text-teal-600" />
                                   Veículo
                                 </FormLabel>
@@ -448,7 +448,7 @@ export default function SchedulePage() {
                                   disabled={!selectedCustomerId}
                                 >
                                   <FormControl>
-                                    <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md disabled:opacity-50">
+                                    <SelectTrigger className={cn("border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md disabled:opacity-50", isMobile ? "h-12 text-base" : "h-11")}>
                                       <SelectValue placeholder={selectedCustomerId ? "Selecione um veículo" : "Primeiro selecione um cliente"} />
                                     </SelectTrigger>
                                   </FormControl>
@@ -466,13 +466,13 @@ export default function SchedulePage() {
                           />
                         </div>
 
-                        <div className={cn("grid gap-6", isMobile ? "grid-cols-1" : "grid-cols-2")}>
+                        <div className="grid gap-4 grid-cols-1">
                           <FormField
                             control={form.control}
                             name="serviceTypeId"
                             render={({ field }) => (
                               <FormItem className="space-y-2">
-                                <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                <FormLabel className={cn("font-semibold text-slate-700 flex items-center", isMobile ? "text-sm" : "text-sm")}>
                                   <Wrench className="h-4 w-4 mr-2 text-teal-600" />
                                   Tipo de Serviço
                                 </FormLabel>
@@ -481,7 +481,7 @@ export default function SchedulePage() {
                                   value={field.value > 0 ? field.value.toString() : ""}
                                 >
                                   <FormControl>
-                                    <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
+                                    <SelectTrigger className={cn("border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md", isMobile ? "h-12 text-base" : "h-11")}>
                                       <SelectValue placeholder="Selecione um tipo" />
                                     </SelectTrigger>
                                   </FormControl>
@@ -503,7 +503,7 @@ export default function SchedulePage() {
                             name="technicianId"
                             render={({ field }) => (
                               <FormItem className="space-y-2">
-                                <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                <FormLabel className={cn("font-semibold text-slate-700 flex items-center", isMobile ? "text-sm" : "text-sm")}>
                                   <User className="h-4 w-4 mr-2 text-teal-600" />
                                   Técnico Responsável
                                 </FormLabel>
@@ -512,7 +512,7 @@ export default function SchedulePage() {
                                   value={field.value > 0 ? field.value.toString() : ""}
                                 >
                                   <FormControl>
-                                    <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
+                                    <SelectTrigger className={cn("border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md", isMobile ? "h-12 text-base" : "h-11")}>
                                       <SelectValue placeholder="Selecione o técnico" />
                                     </SelectTrigger>
                                   </FormControl>
@@ -535,10 +535,10 @@ export default function SchedulePage() {
                           name="status"
                           render={({ field }) => (
                             <FormItem className="space-y-2">
-                              <FormLabel className="text-sm font-semibold text-slate-700">Status</FormLabel>
+                              <FormLabel className={cn("font-semibold text-slate-700", isMobile ? "text-sm" : "text-sm")}>Status</FormLabel>
                               <Select onValueChange={field.onChange} value={field.value || ""}>
                                 <FormControl>
-                                  <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
+                                  <SelectTrigger className={cn("border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md", isMobile ? "h-12 text-base" : "h-11")}>
                                     <SelectValue placeholder="Selecione o status" />
                                   </SelectTrigger>
                                 </FormControl>
@@ -554,13 +554,13 @@ export default function SchedulePage() {
                           )}
                         />
 
-                        <div className={cn("grid gap-4", isMobile ? "grid-cols-1" : "grid-cols-3")}>
+                        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                           <FormField
                             control={form.control}
                             name="scheduledDate"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                <FormLabel className={cn("font-semibold text-slate-700 flex items-center", isMobile ? "text-sm" : "text-sm")}>
                                   <Calendar className="h-4 w-4 mr-2 text-teal-600" />
                                   Data
                                 </FormLabel>
@@ -570,8 +570,8 @@ export default function SchedulePage() {
                                     type="date" 
                                     value={field.value || ""} 
                                     className={cn(
-                                      "h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md",
-                                      isMobile && "text-base" // Prevent zoom on iOS
+                                      "border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md",
+                                      isMobile ? "h-12 text-base" : "h-11"
                                     )}
                                   />
                                 </FormControl>
@@ -585,7 +585,7 @@ export default function SchedulePage() {
                             name="scheduledTime"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                <FormLabel className={cn("font-semibold text-slate-700 flex items-center", isMobile ? "text-sm" : "text-sm")}>
                                   <Clock className="h-4 w-4 mr-2 text-teal-600" />
                                   Hora
                                 </FormLabel>
@@ -595,8 +595,8 @@ export default function SchedulePage() {
                                     type="time" 
                                     value={field.value || ""} 
                                     className={cn(
-                                      "h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md",
-                                      isMobile && "text-base" // Prevent zoom on iOS
+                                      "border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md",
+                                      isMobile ? "h-12 text-base" : "h-11"
                                     )}
                                   />
                                 </FormControl>
@@ -611,13 +611,13 @@ export default function SchedulePage() {
                           name="notes"
                           render={({ field }) => (
                             <FormItem className="space-y-2">
-                              <FormLabel className="text-sm font-semibold text-slate-700">Observações</FormLabel>
+                              <FormLabel className={cn("font-semibold text-slate-700", isMobile ? "text-sm" : "text-sm")}>Observações</FormLabel>
                               <FormControl>
                                 <Textarea 
                                   placeholder="Observações adicionais..." 
                                   {...field} 
                                   value={field.value || ""} 
-                                  className="border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md resize-none"
+                                  className={cn("border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md resize-none", isMobile ? "min-h-[100px] text-base" : "")}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -634,18 +634,18 @@ export default function SchedulePage() {
                         </div>
 
                         {/* Service Budget Section */}
-                        <div className="border-t pt-6">
+                        <div className={cn("border-t", isMobile ? "pt-4" : "pt-6")}>
                           <div className="space-y-4">
                             <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                              <h3 className="text-lg font-semibold text-slate-700 mb-3 flex items-center">
-                                <Calculator className="h-5 w-5 mr-2 text-slate-600" />
-                                Valor Estimado do Serviço
+                              <h3 className={cn("font-semibold text-slate-700 mb-3 flex items-center", isMobile ? "text-base" : "text-lg")}>
+                                <Calculator className={cn("mr-2 text-slate-600", isMobile ? "h-4 w-4" : "h-5 w-5")} />
+                                {isMobile ? "Orçamento" : "Valor Estimado do Serviço"}
                               </h3>
                               <div className="space-y-3">
                                 <div className="bg-white border border-slate-200 rounded-lg p-3">
-                                  <div className="text-sm font-bold text-slate-800 mb-3">Serviços:</div>
+                                  <div className={cn("font-bold text-slate-800 mb-3", isMobile ? "text-sm" : "text-sm")}>Serviços:</div>
                                   <div className="space-y-2">
-                                    <div className="text-sm text-slate-700">
+                                    <div className={cn("text-slate-700", isMobile ? "text-sm" : "text-sm")}>
                                       {(() => {
                                         const selectedServiceTypeId = form.watch("serviceTypeId");
                                         const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
@@ -653,16 +653,16 @@ export default function SchedulePage() {
                                       })()}
                                     </div>
                                     {serviceExtras.length > 0 && serviceExtras.map((extra, index) => (
-                                      <div key={index} className="text-sm text-slate-700">
+                                      <div key={index} className={cn("text-slate-700", isMobile ? "text-sm" : "text-sm")}>
                                         {extra.serviceExtra?.descricao}
                                       </div>
                                     ))}
                                   </div>
                                 </div>
                                 <div className="border-t border-slate-300 pt-2 mt-2">
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-lg font-bold text-slate-800">Total Estimado:</span>
-                                    <span className="text-xl font-bold text-slate-700">
+                                  <div className={cn("flex justify-between items-center", isMobile ? "flex-col gap-2" : "")}>
+                                    <span className={cn("font-bold text-slate-800", isMobile ? "text-base" : "text-lg")}>Total Estimado:</span>
+                                    <span className={cn("font-bold text-slate-700", isMobile ? "text-lg" : "text-xl")}>
                                       R$ {(() => {
                                         let total = 0;
                                         const selectedServiceTypeId = form.watch("serviceTypeId");
@@ -714,19 +714,19 @@ export default function SchedulePage() {
                           </div>
                         </div>
 
-                        <div className="flex justify-end gap-4 pt-6 border-t border-slate-200">
+                        <div className={cn("flex gap-3 border-t border-slate-200", isMobile ? "flex-col pt-4" : "justify-end pt-6")}>
                           <Button 
                             type="button" 
                             variant="outline" 
                             onClick={() => setIsModalOpen(false)}
-                            className="px-6 py-2 border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all duration-200"
+                            className={cn("border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all duration-200", isMobile ? "w-full h-12 text-base" : "px-6 py-2")}
                           >
                             Cancelar
                           </Button>
                           <Button 
                             type="submit" 
                             disabled={createMutation.isPending || updateMutation.isPending}
-                            className="px-6 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                            className={cn("bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105", isMobile ? "w-full h-12 text-base" : "px-6 py-2")}
                           >
                             {editingService ? "Atualizar" : "Agendar"}
                           </Button>
@@ -740,14 +740,14 @@ export default function SchedulePage() {
 
             {/* Main Content */}
             {isLoading ? (
-              <div className={cn("grid gap-4", isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 sm:gap-6")}>
+              <div className={cn("grid gap-4", isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3")}>
                 {[...Array(6)].map((_, i) => (
                   <Card key={i} className="animate-pulse bg-white/80 backdrop-blur-sm border border-teal-200">
-                    <CardHeader>
+                    <CardHeader className={cn(isMobile ? "p-4" : "")}>
                       <div className="h-5 bg-teal-200 rounded w-3/4"></div>
                       <div className="h-4 bg-teal-200 rounded w-1/2"></div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className={cn(isMobile ? "p-4 pt-0" : "")}>
                       <div className="space-y-3">
                         <div className="h-4 bg-teal-200 rounded"></div>
                         <div className="h-4 bg-teal-200 rounded w-2/3"></div>
@@ -757,62 +757,62 @@ export default function SchedulePage() {
                 ))}
               </div>
             ) : (
-              <div className={cn("grid gap-4", isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 sm:gap-6")}>
+              <div className={cn("grid gap-4", isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3")}>
                 {filteredServices.map((service) => (
-                  <Card key={service.id} className={cn("group transition-all duration-300 bg-white/95 backdrop-blur-sm border border-teal-200/50 shadow-lg", isMobile ? "hover:shadow-lg" : "hover:shadow-2xl hover:-translate-y-1 sm:hover:-translate-y-2 hover:scale-105")}>
-                    <CardHeader className={cn(isMobile ? "pb-2 px-3 pt-3" : "pb-4")}>
+                  <Card key={service.id} className={cn("group transition-all duration-300 bg-white/95 backdrop-blur-sm border border-teal-200/50 shadow-lg", isMobile ? "hover:shadow-lg" : "hover:shadow-2xl hover:-translate-y-1 hover:scale-105")}>
+                    <CardHeader className={cn(isMobile ? "p-4 pb-2" : "pb-4")}>
                       <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className={cn("bg-gradient-to-br from-teal-600 via-emerald-600 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg", isMobile ? "w-10 h-10" : "w-12 h-12")}>
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                          <div className={cn("bg-gradient-to-br from-teal-600 via-emerald-600 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0", isMobile ? "w-12 h-12" : "w-12 h-12")}>
                             <Calendar className={cn("text-white", isMobile ? "h-5 w-5" : "h-6 w-6")} />
                           </div>
-                          <div className="flex-1">
-                            <CardTitle className={cn("font-bold text-teal-800 group-hover:text-emerald-600 transition-colors line-clamp-2", isMobile ? "text-xs" : "text-sm")}>
+                          <div className="flex-1 min-w-0">
+                            <CardTitle className={cn("font-bold text-teal-800 group-hover:text-emerald-600 transition-colors", isMobile ? "text-sm leading-tight" : "text-sm")}>
                               {service.serviceType?.name || "Serviço"}
                             </CardTitle>
-                            <Badge className={cn("font-medium rounded-lg px-2 py-1 mt-2", isMobile ? "text-xs" : "text-xs", statusColors[service.status as keyof typeof statusColors])}>
+                            <Badge className={cn("font-medium rounded-lg px-2 py-1 mt-2 inline-block", isMobile ? "text-xs" : "text-xs", statusColors[service.status as keyof typeof statusColors])}>
                               {statusLabels[service.status as keyof typeof statusLabels]}
                             </Badge>
                           </div>
                         </div>
-                        <div className={cn("flex space-x-1 transition-opacity", isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>
+                        <div className={cn("flex space-x-1 transition-opacity flex-shrink-0", isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => handleEdit(service)}
-                            className={cn("p-0 hover:bg-emerald-100 hover:text-emerald-600 rounded-lg", isMobile ? "h-6 w-6" : "h-8 w-8")}
+                            className={cn("p-0 hover:bg-emerald-100 hover:text-emerald-600 rounded-lg", isMobile ? "h-8 w-8" : "h-8 w-8")}
                           >
-                            <Edit className={cn(isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                            <Edit className={cn(isMobile ? "h-4 w-4" : "h-4 w-4")} />
                           </Button>
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => handleDelete(service.id)}
-                            className={cn("p-0 hover:bg-red-100 hover:text-red-600 rounded-lg", isMobile ? "h-6 w-6" : "h-8 w-8")}
+                            className={cn("p-0 hover:bg-red-100 hover:text-red-600 rounded-lg", isMobile ? "h-8 w-8" : "h-8 w-8")}
                           >
-                            <Trash2 className={cn(isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                            <Trash2 className={cn(isMobile ? "h-4 w-4" : "h-4 w-4")} />
                           </Button>
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className={cn(isMobile ? "pt-0 px-3 pb-3" : "pt-0")}>
+                    <CardContent className={cn(isMobile ? "p-4 pt-0" : "pt-0")}>
                       <div className="space-y-3">
-                        <div className={cn("flex items-center text-teal-700", isMobile ? "text-xs" : "text-sm")}>
-                          <User className={cn("mr-2 text-teal-500", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                        <div className={cn("flex items-center text-teal-700", isMobile ? "text-sm" : "text-sm")}>
+                          <User className={cn("mr-2 text-teal-500 flex-shrink-0", isMobile ? "h-4 w-4" : "h-4 w-4")} />
                           <span className="font-medium truncate">{service.customer?.name}</span>
                         </div>
-                        <div className={cn("flex items-center text-teal-700", isMobile ? "text-xs" : "text-sm")}>
-                          <Car className={cn("mr-2 text-teal-500", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                        <div className={cn("flex items-center text-teal-700", isMobile ? "text-sm" : "text-sm")}>
+                          <Car className={cn("mr-2 text-teal-500 flex-shrink-0", isMobile ? "h-4 w-4" : "h-4 w-4")} />
                           <span className="truncate">{service.vehicle?.brand} {service.vehicle?.model} - {service.vehicle?.licensePlate}</span>
                         </div>
                         {service.scheduledDate && (
-                          <div className={cn("flex items-center text-teal-700", isMobile ? "text-xs" : "text-sm")}>
-                            <Clock className={cn("mr-2 text-teal-500", isMobile ? "h-3 w-3" : "h-4 w-4")} />
-                            <span>{new Date(service.scheduledDate + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
+                          <div className={cn("flex items-center text-teal-700", isMobile ? "text-sm" : "text-sm")}>
+                            <Clock className={cn("mr-2 text-teal-500 flex-shrink-0", isMobile ? "h-4 w-4" : "h-4 w-4")} />
+                            <span className="truncate">{new Date(service.scheduledDate + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
                           </div>
                         )}
                         {service.estimatedValue && (
-                          <div className={cn("font-semibold text-emerald-600", isMobile ? "text-xs" : "text-sm")}>
+                          <div className={cn("font-semibold text-emerald-600", isMobile ? "text-sm" : "text-sm")}>
                             R$ {parseFloat(service.estimatedValue.toString()).toFixed(2)}
                           </div>
                         )}
