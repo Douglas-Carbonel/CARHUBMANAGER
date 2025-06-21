@@ -148,7 +148,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ isOpen, onClose, onPhotoT
       context?.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
 
       const dataUrl = canvas.toDataURL('image/png');
-      
+
       // Comprimir a imagem antes de armazenar
       const compressedPhoto = await compressImage(dataUrl, 800, 0.8);
       setPhoto(compressedPhoto);
@@ -177,7 +177,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ isOpen, onClose, onPhotoT
         <DialogHeader>
           <DialogTitle>Capturar Foto</DialogTitle>
         </DialogHeader>
-        
+
         {/* Category Selection - Always visible at the top */}
         <div className="mb-4 space-y-2">
           <label className="text-sm font-medium text-gray-700">Categoria da Foto:</label>
@@ -194,7 +194,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ isOpen, onClose, onPhotoT
             </SelectContent>
           </Select>
         </div>
-        
+
         {!hasPhoto ? (
           <>
             <video ref={videoRef} autoPlay className="w-full aspect-video rounded-md" style={{ display: isCameraReady ? 'block' : 'none' }} />
@@ -296,7 +296,7 @@ export default function VehiclesPage() {
     },
     onSuccess: async (newVehicle) => {
       queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
-      
+
       // Save temporary photos if any
       if (temporaryPhotos.length > 0) {
         for (const tempPhoto of temporaryPhotos) {
@@ -322,7 +322,7 @@ export default function VehiclesPage() {
         }
         setTemporaryPhotos([]); // Clear temporary photos after saving
       }
-      
+
       toast({
         title: "Veículo cadastrado!",
         description: "O veículo foi cadastrado com sucesso.",
@@ -523,7 +523,7 @@ export default function VehiclesPage() {
                     )}
                   />
                 </div>
-                
+
                 {/* Customer Filter */}
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-gray-500" />
@@ -571,7 +571,7 @@ export default function VehiclesPage() {
                     Relatórios
                   </Button>
                 )}
-                
+
                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                   <DialogTrigger asChild>
                     <Button 
@@ -632,167 +632,176 @@ export default function VehiclesPage() {
                             )}
                           />
                           <FormField
-                            control={form.control}
-                            name="licensePlate"
-                            render={({ field }) => (
-                              <FormItem className="space-y-2">
-                                <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
-                                  <Car className="h-4 w-4 mr-2 text-teal-600" />
-                                  Placa
-                                </FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="ABC-1234" 
-                                    className="h-11 bg-white/80 border-slate-200 rounded-lg"
-                                    {...field} 
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                        control={form.control}
+                        name="licensePlate"
+                        render={({ field }) => (
+                          <FormItem className="space-y-2">
+                            <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                              <Car className="h-4 w-4 mr-2 text-teal-600" />
+                              Placa
+                            </FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="ABC-1234" 
+                                className="h-11 bg-white/80 border-slate-200 rounded-lg uppercase"
+                                maxLength={8}
+                                {...field}
+                                onChange={(e) => {
+                                  let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                                  if (value.length > 3) {
+                                    value = value.slice(0, 3) + '-' + value.slice(3, 7);
+                                  }
+                                  field.onChange(value);
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                        control={form.control}
+                        name="brand"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col space-y-2">
+                            <FormLabel className="text-sm font-semibold text-slate-700">Marca</FormLabel>
+                            <Popover open={openBrandSelect} onOpenChange={setOpenBrandSelect}>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    className={cn(
+                                      "h-11 bg-white/80 border-slate-200 rounded-lg justify-between text-left font-normal",
+                                      !field.value && "text-muted-foreground"
+                                    )}
+                                  >
+                                    <span className="truncate">
+                                      {selectedBrand || "Selecione uma marca..."}
+                                    </span>
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" side={isMobile ? "bottom" : "bottom"} align="start">
+                                <Command>
+                                  <CommandInput placeholder="Buscar marca..." className="h-9" />
+                                  <CommandList>
+                                    <CommandEmpty>Nenhuma marca encontrada.</CommandEmpty>
+                                    <CommandGroup className="max-h-[200px] overflow-auto">
+                                      {vehicleBrands.map((brand) => (
+                                        <CommandItem
+                                          key={brand}
+                                          value={brand}
+                                          onSelect={(currentValue) => {
+                                            const newBrand = currentValue === selectedBrand ? "" : brand;
+                                            setSelectedBrand(newBrand);
+                                            field.onChange(newBrand);
+                                            setOpenBrandSelect(false);
+                                            if (newBrand) {
+                                              form.setValue("model", "");
+                                              setCustomModel("");
+                                            }
+                                          }}
+                                          className="text-sm"
+                                        >
+                                          <Check
+                                            className={cn(
+                                              "mr-2 h-4 w-4",
+                                              selectedBrand === brand ? "opacity-100" : "opacity-0"
+                                            )}
+                                          />
+                                          {brand}
+                                        </CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                           <FormField
-                            control={form.control}
-                            name="brand"
-                            render={({ field }) => (
-                              <FormItem className="flex flex-col space-y-2">
-                                <FormLabel className="text-sm font-semibold text-slate-700">Marca</FormLabel>
-                                <Popover open={openBrandSelect} onOpenChange={setOpenBrandSelect}>
-                                  <PopoverTrigger asChild>
-                                    <FormControl>
-                                      <Button
-                                        variant="outline"
-                                        role="combobox"
-                                        className={cn(
-                                          "h-11 bg-white/80 border-slate-200 rounded-lg justify-between",
-                                          !field.value && "text-muted-foreground"
-                                        )}
-                                      >
-                                        {field.value || "Selecione a marca"}
-                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                      </Button>
-                                    </FormControl>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-[200px] p-0">
-                                    <Command>
-                                      <CommandInput placeholder="Buscar marca..." />
-                                      <CommandEmpty>Nenhuma marca encontrada.</CommandEmpty>
-                                      <CommandGroup>
-                                        <CommandList>
-                                          {vehicleBrands.map((brand) => (
+                        control={form.control}
+                        name="model"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col space-y-2">
+                            <FormLabel className="text-sm font-semibold text-slate-700">Modelo</FormLabel>
+                            <Popover open={openModelSelect} onOpenChange={setOpenModelSelect}>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    className={cn(
+                                      "h-11 bg-white/80 border-slate-200 rounded-lg justify-between text-left font-normal",
+                                      !field.value && "text-muted-foreground"
+                                    )}
+                                    disabled={!selectedBrand}
+                                  >
+                                    <span className="truncate">
+                                      {field.value || customModel || "Selecione um modelo..."}
+                                    </span>
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" side={isMobile ? "bottom" : "bottom"} align="start">
+                                <Command>
+                                  <CommandInput 
+                                    placeholder="Buscar modelo ou digite um personalizado..." 
+                                    value={customModel}
+                                    onValueChange={(value) => {
+                                      setCustomModel(value);
+                                      field.onChange(value);
+                                    }}
+                                    className="h-9"
+                                  />
+                                  <CommandList>
+                                    {selectedBrand && vehicleModels[selectedBrand] && vehicleModels[selectedBrand].length > 0 ? (
+                                      <>
+                                        <CommandEmpty>Nenhum modelo encontrado.</CommandEmpty>
+                                        <CommandGroup className="max-h-[200px] overflow-auto">
+                                          {vehicleModels[selectedBrand]?.map((model) => (
                                             <CommandItem
-                                              value={brand}
-                                              key={brand}
-                                              onSelect={(currentValue) => {
-                                                field.onChange(currentValue);
-                                                setSelectedBrand(currentValue);
-                                                setOpenBrandSelect(false);
-                                                // Reset model when brand changes
-                                                form.setValue("model", "");
-                                                setCustomModel("");
-                                              }}
-                                            >
-                                              <Check
-                                                className={cn(
-                                                  "mr-2 h-4 w-4",
-                                                  brand === field.value ? "opacity-100" : "opacity-0"
-                                                )}
-                                              />
-                                              {brand}
-                                            </CommandItem>
-                                          ))}
-                                        </CommandList>
-                                      </CommandGroup>
-                                    </Command>
-                                  </PopoverContent>
-                                </Popover>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="model"
-                            render={({ field }) => (
-                              <FormItem className="flex flex-col space-y-2">
-                                <FormLabel className="text-sm font-semibold text-slate-700">Modelo</FormLabel>
-                                <Popover open={openModelSelect} onOpenChange={setOpenModelSelect}>
-                                  <PopoverTrigger asChild>
-                                    <FormControl>
-                                      <Button
-                                        variant="outline"
-                                        role="combobox"
-                                        disabled={!selectedBrand}
-                                        className={cn(
-                                          "h-11 bg-white/80 border-slate-200 rounded-lg justify-between",
-                                          !field.value && "text-muted-foreground"
-                                        )}
-                                      >
-                                        {field.value || customModel || "Selecione o modelo"}
-                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                      </Button>
-                                    </FormControl>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-[200px] p-0">
-                                    <Command>
-                                      <CommandInput 
-                                        placeholder="Buscar modelo..." 
-                                        value={customModel}
-                                        onValueChange={(value) => {
-                                          setCustomModel(value);
-                                          field.onChange(value);
-                                        }}
-                                      />
-                                      <CommandEmpty>
-                                        <div className="p-2">
-                                          {customModel ? (
-                                            <div 
-                                              className="cursor-pointer hover:bg-gray-100 p-2 rounded"
-                                              onClick={() => {
-                                                field.onChange(customModel);
-                                                setOpenModelSelect(false);
-                                              }}
-                                            >
-                                              Usar "{customModel}"
-                                            </div>
-                                          ) : (
-                                            "Nenhum modelo encontrado."
-                                          )}
-                                        </div>
-                                      </CommandEmpty>
-                                      <CommandGroup>
-                                        <CommandList>
-                                          {selectedBrand && vehicleModels[selectedBrand as keyof typeof vehicleModels]?.map((model) => (
-                                            <CommandItem
-                                              value={model}
                                               key={model}
+                                              value={model}
                                               onSelect={(currentValue) => {
                                                 field.onChange(currentValue);
                                                 setCustomModel("");
                                                 setOpenModelSelect(false);
                                               }}
+                                              className="text-sm"
                                             >
                                               <Check
                                                 className={cn(
                                                   "mr-2 h-4 w-4",
-                                                  model === field.value ? "opacity-100" : "opacity-0"
+                                                  field.value === model ? "opacity-100" : "opacity-0"
                                                 )}
                                               />
                                               {model}
                                             </CommandItem>
                                           ))}
-                                        </CommandList>
-                                      </CommandGroup>
-                                    </Command>
-                                  </PopoverContent>
-                                </Popover>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                                        </CommandGroup>
+                                      </>
+                                    ) : (
+                                      <div className="p-2 text-sm text-muted-foreground">
+                                        Digite o nome do modelo
+                                      </div>
+                                    )}
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -865,7 +874,7 @@ export default function VehiclesPage() {
                           <div className="space-y-4">
                             <div className="flex items-center justify-between">
                               <h4 className="text-sm font-medium text-gray-700">Fotos</h4>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <Button
                                   type="button"
                                   variant="outline"
@@ -875,24 +884,56 @@ export default function VehiclesPage() {
                                     e.stopPropagation();
                                     setIsCameraOpen(true);
                                   }}
-                                  className="flex items-center gap-2"
+                                  className="flex items-center gap-2 text-xs"
                                 >
                                   <Camera className="h-4 w-4" />
-                                  Tirar Foto
+                                  {isMobile ? "Foto" : "Tirar Foto"}
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    // Trigger file upload
+                                    const input = document.createElement('input');
+                                    input.type = 'file';
+                                    input.accept = 'image/*';
+                                    input.multiple = true;
+                                    input.onchange = (event) => {
+                                      const files = (event.target as HTMLInputElement).files;
+                                      if (files) {
+                                        Array.from(files).forEach((file) => {
+                                          const reader = new FileReader();
+                                          reader.onload = (e) => {
+                                            const photo = e.target?.result as string;
+                                            handlePhotoTaken(photo, 'vehicle');
+                                          };
+                                          reader.readAsDataURL(file);
+                                        });
+                                      }
+                                    };
+                                    input.click();
+                                  }}
+                                  className="flex items-center gap-2 text-xs"
+                                >
+                                  <Plus className="h-4 w-4" />
+                                  {isMobile ? "+" : "Adicionar Fotos"}
                                 </Button>
                               </div>
                             </div>
-                            
+
                             <PhotoUpload
                               photos={currentVehiclePhotos}
                               onPhotoUploaded={() => {
-                                // Only refresh photos, don't invalidate vehicles query while editing
+                                // Only refresh photos, don't invalidate all queries
                                 fetchVehiclePhotos(editingVehicle?.id);
                               }}
                               vehicleId={editingVehicle?.id}
                               maxPhotos={7}
                             />
-                            
+
                             {/* Mostrar fotos temporárias para novos veículos */}
                             {!editingVehicle && temporaryPhotos.length > 0 && (
                               <div className="mt-4 space-y-2">
@@ -951,6 +992,7 @@ export default function VehiclesPage() {
                           <Button 
                             type="submit" 
                             disabled={createMutation.isPending || updateMutation.isPending}
+                            className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl"
                           >
                             {editingVehicle ? "Atualizar" : "Cadastrar"}
                           </Button>
