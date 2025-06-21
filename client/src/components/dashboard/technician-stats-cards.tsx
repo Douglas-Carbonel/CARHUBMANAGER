@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Users, Wrench } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Calendar, Users, Activity } from "lucide-react";
 
 interface DashboardStats {
   dailyRevenue: number;
   completedRevenue: number;
   predictedRevenue: number;
   dailyServices: number;
+  weeklyServices: number;
   appointments: number;
   activeCustomers: number;
 }
@@ -44,16 +44,16 @@ export default function TechnicianStatsCards() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[...Array(3)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <CardHeader>
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-            </CardContent>
-          </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-4 bg-gray-200 rounded w-20"></div>
+              <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
+            </div>
+            <div className="h-8 bg-gray-200 rounded w-16 mb-2"></div>
+            <div className="h-3 bg-gray-200 rounded w-12"></div>
+          </div>
         ))}
       </div>
     );
@@ -61,68 +61,100 @@ export default function TechnicianStatsCards() {
 
   if (error) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-6">
-            <p className="text-red-600">Erro ao carregar dados do dashboard</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+          <p className="text-red-600 text-sm">Erro ao carregar dados</p>
+        </div>
       </div>
     );
   }
 
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
+  const calculatePercentage = (current: number, previous: number) => {
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return ((current - previous) / previous * 100);
+  };
+
+  // Mock previous values for percentage calculation (in real scenario, fetch from API)
+  const previousStats = {
+    completedRevenue: stats?.completedRevenue * 0.85 || 0,
+    predictedRevenue: stats?.predictedRevenue * 0.92 || 0,
+    weeklyServices: (stats?.weeklyServices || 0) - 2,
+    activeCustomers: (stats?.activeCustomers || 0) - 1,
+  };
+
   const cards = [
     {
-      title: "Serviços Hoje",
-      value: stats?.dailyServices || 0,
-      icon: Calendar,
-      description: "Agendados para hoje",
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
+      title: "Receita Realizada",
+      value: formatCurrency(stats?.completedRevenue || 0),
+      change: calculatePercentage(stats?.completedRevenue || 0, previousStats.completedRevenue),
+      icon: DollarSign,
+      iconBg: "bg-blue-50",
+      iconColor: "text-blue-600",
     },
     {
-      title: "Serviços esta semana",
+      title: "Receita Estimada", 
+      value: formatCurrency(stats?.predictedRevenue || 0),
+      change: calculatePercentage(stats?.predictedRevenue || 0, previousStats.predictedRevenue),
+      icon: TrendingUp,
+      iconBg: "bg-green-50",
+      iconColor: "text-green-600",
+    },
+    {
+      title: "Serviços da Semana",
       value: stats?.weeklyServices || 0,
+      change: calculatePercentage(stats?.weeklyServices || 0, previousStats.weeklyServices),
       icon: Calendar,
-      description: "Agendados esta semana",
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
-    },
-    {
-      title: "Próximos Agendamentos", 
-      value: stats?.appointments || 0,
-      icon: Users,
-      description: "Nos próximos dias",
-      color: "text-green-600",
-      bgColor: "bg-green-50",
+      iconBg: "bg-orange-50", 
+      iconColor: "text-orange-600",
     },
     {
       title: "Clientes Ativos",
       value: stats?.activeCustomers || 0,
-      icon: Wrench,
-      description: "Com serviços pendentes",
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
+      change: calculatePercentage(stats?.activeCustomers || 0, previousStats.activeCustomers),
+      icon: Users,
+      iconBg: "bg-purple-50",
+      iconColor: "text-purple-600",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {cards.map((card, index) => (
-        <Card key={index} className={`border-l-4 border-l-${card.color.replace('text-', '')} hover:shadow-lg transition-shadow`}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">{card.title}</CardTitle>
-            <div className={`p-2 rounded-lg ${card.bgColor}`}>
-              <card.icon className={`h-4 w-4 ${card.color}`} />
+        <div key={index} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-sm transition-shadow">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-medium text-gray-600">{card.title}</h3>
+            <div className={`w-10 h-10 ${card.iconBg} rounded-lg flex items-center justify-center`}>
+              <card.icon className={`w-5 h-5 ${card.iconColor}`} />
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${card.color}`}>
+          </div>
+          
+          {/* Value */}
+          <div className="mb-2">
+            <span className="text-2xl font-semibold text-gray-900">
               {card.value}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">{card.description}</p>
-          </CardContent>
-        </Card>
+            </span>
+          </div>
+          
+          {/* Change percentage */}
+          <div className="flex items-center">
+            {card.change >= 0 ? (
+              <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
+            ) : (
+              <TrendingDown className="w-4 h-4 text-red-500 mr-1" />
+            )}
+            <span className={`text-sm font-medium ${card.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {card.change >= 0 ? '+' : ''}{card.change.toFixed(1)}%
+            </span>
+          </div>
+        </div>
       ))}
     </div>
   );

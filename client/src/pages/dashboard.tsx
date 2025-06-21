@@ -103,30 +103,41 @@ export default function Dashboard() {
           subtitle={`Bem-vindo, ${user?.firstName || user?.username}!`}
         />
 
-        <main className="flex-1 overflow-y-auto bg-gray-50">
-          <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+        <main className="flex-1 overflow-y-auto bg-gray-50/50">
+          <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
 
             {/* Header Section */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                  {user?.role === "admin" ? "Dashboard Executivo" : "Meus Agendamentos"}
+                <h1 className="text-3xl font-semibold text-gray-900 mb-2">
+                  Dashboard
                 </h1>
-                <p className="text-gray-600">
-                  {user?.role === "admin" 
-                    ? "Monitore o desempenho do negócio em tempo real" 
-                    : "Acompanhe suas atividades e próximos compromissos"
-                  }
-                </p>
+                <div className="flex items-center text-sm text-gray-500">
+                  <span>Monday, July 7</span>
+                  <span className="mx-2">•</span>
+                  <span>Bem-vindo, {user?.firstName || user?.username}</span>
+                </div>
               </div>
               
-              {/* Quick Actions */}
-              <div className="flex flex-wrap gap-3">
+              {/* Search and Actions */}
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    placeholder="Search" 
+                    className="w-80 pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <div className="absolute left-3 top-2.5">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                </div>
                 {quickActions.map((action, index) => (
                   <Button
                     key={index}
                     onClick={() => setLocation(action.route)}
-                    className={`${action.color} text-white border-0 shadow-sm hover:shadow-md transition-all duration-200 h-11 px-6`}
+                    className="bg-gray-900 hover:bg-gray-800 text-white border-0 shadow-sm hover:shadow-md transition-all duration-200 h-9 px-4"
                     size="sm"
                   >
                     <action.icon className="h-4 w-4 mr-2" />
@@ -138,168 +149,102 @@ export default function Dashboard() {
 
             {/* Stats Cards */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">Métricas de Hoje</h2>
-                <div className="flex items-center text-sm text-gray-500 bg-white px-3 py-1.5 rounded-full border">
-                  <Activity className="h-4 w-4 mr-1.5" />
-                  Atualizado em tempo real
-                </div>
-              </div>
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-                <TechnicianStatsCards />
-              </div>
+              <TechnicianStatsCards />
             </div>
 
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               
-              {/* Charts Section */}
-              <div className="xl:col-span-2 space-y-8">
-                
-                {/* Revenue Charts */}
-                {user?.role === "admin" && (
-                  <div className="space-y-8">
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                      <div className="p-6 border-b border-gray-100">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-semibold text-gray-900">Receita Estimada</h3>
-                          <div className="flex items-center text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
-                            <TrendingUp className="h-4 w-4 mr-1" />
-                            Últimos 7 dias
-                          </div>
-                        </div>
-                      </div>
-                      <div className="p-6">
-                        <RevenueChart />
-                      </div>
-                    </div>
-
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                      <div className="p-6 border-b border-gray-100">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-semibold text-gray-900">Receita Realizada</h3>
-                          <div className="flex items-center text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                            <BarChart3 className="h-4 w-4 mr-1" />
-                            Pagamentos confirmados
-                          </div>
-                        </div>
-                      </div>
-                      <div className="p-6">
-                        <RealizedRevenueChart />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Recent Services */}
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+              {/* Left Column - Current Reservations */}
+              <div className="space-y-6">
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                   <div className="p-6 border-b border-gray-100">
-                    <h3 className="text-lg font-semibold text-gray-900">Serviços Recentes</h3>
-                  </div>
-                  <div className="p-6">
-                    <RecentServices />
-                  </div>
-                </div>
-              </div>
-
-              {/* Sidebar */}
-              <div className="space-y-8">
-                
-                {/* Upcoming Appointments */}
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                  <div className="p-6 border-b border-gray-100">
-                    <h3 className="text-lg font-semibold text-gray-900">Próximos Agendamentos</h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-900">Reservas Atuais</h3>
+                      <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                        Ver Todas
+                      </button>
+                    </div>
                   </div>
                   <div className="p-6">
                     <UpcomingAppointments />
                   </div>
                 </div>
-                
-                {/* Top Services - Admin Only */}
+
+                {/* Reservations Per Day Chart */}
                 {user?.role === "admin" && (
-                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                     <div className="p-6 border-b border-gray-100">
-                      <h3 className="text-lg font-semibold text-gray-900">Serviços Populares</h3>
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-gray-900">Reservas Por Dia</h3>
+                        <div className="flex space-x-2">
+                          <button className="px-3 py-1 bg-gray-900 text-white text-xs rounded-md">
+                            Semanal
+                          </button>
+                          <button className="px-3 py-1 text-gray-600 text-xs rounded-md hover:bg-gray-100">
+                            Mensal
+                          </button>
+                        </div>
+                      </div>
                     </div>
                     <div className="p-6">
-                      <TopServices />
-                    </div>
-                  </div>
-                )}
-                
-                {/* Quick Analytics Links - Admin Only */}
-                {user?.role === "admin" && (
-                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div className="p-6 border-b border-gray-100">
-                      <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                        <BarChart3 className="h-5 w-5 mr-2 text-blue-600" />
-                        Análises Detalhadas
-                      </h3>
-                    </div>
-                    <div className="p-6 space-y-3">
-                      {dashboardSections.map((section, index) => (
-                        <div
-                          key={index}
-                          onClick={() => setLocation(section.route)}
-                          className="group flex items-center justify-between p-4 rounded-xl bg-gray-50 hover:bg-gray-100 cursor-pointer transition-all duration-200 border border-gray-100 hover:border-gray-200"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <div className={`w-10 h-10 bg-gradient-to-r ${section.gradient} rounded-xl flex items-center justify-center shadow-sm`}>
-                              <section.icon className="h-5 w-5 text-white" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-900 text-sm">{section.title}</p>
-                              <p className="text-xs text-gray-500">{section.description}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center text-xs text-gray-400 group-hover:text-gray-600 transition-colors">
-                            <ArrowRight className="h-4 w-4" />
-                          </div>
-                        </div>
-                      ))}
+                      <RevenueChart />
                     </div>
                   </div>
                 )}
               </div>
-            </div>
 
-            {/* Premium Footer - Admin Only */}
-            {user?.role === "admin" && (
-              <div className="bg-gradient-to-r from-slate-900 via-gray-900 to-slate-900 rounded-2xl border border-gray-800 shadow-xl overflow-hidden">
-                <div className="p-8">
-                  <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
-                    <div className="text-center lg:text-left">
-                      <h3 className="text-2xl font-bold text-white mb-3">
-                        Sistema de Gestão Profissional
-                      </h3>
-                      <p className="text-gray-300 text-lg">
-                        Controle completo com relatórios avançados e insights em tempo real
-                      </p>
+              {/* Right Column - Average Check Size */}
+              <div className="xl:col-span-2 space-y-6">
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="p-6 border-b border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-900">Ticket Médio (USD)</h3>
+                      <div className="flex space-x-2">
+                        <button className="px-3 py-1 bg-gray-900 text-white text-xs rounded-md">
+                          Semanal
+                        </button>
+                        <button className="px-3 py-1 text-gray-600 text-xs rounded-md hover:bg-gray-100">
+                          Mensal
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-8">
-                      <div className="text-center">
-                        <div className="w-14 h-14 bg-green-600 rounded-2xl flex items-center justify-center mb-3 mx-auto">
-                          <TrendingUp className="h-7 w-7 text-white" />
-                        </div>
-                        <p className="text-sm text-gray-300 font-medium">Performance</p>
+                  </div>
+                  <div className="p-6">
+                    <RealizedRevenueChart />
+                  </div>
+                </div>
+
+                {/* Most Popular Services */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="p-6 border-b border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-900">Serviços Mais Populares</h3>
+                      <div className="flex space-x-2">
+                        <button className="px-3 py-1 bg-gray-900 text-white text-xs rounded-md">
+                          Semanal
+                        </button>
+                        <button className="px-3 py-1 text-gray-600 text-xs rounded-md hover:bg-gray-100">
+                          Mensal
+                        </button>
                       </div>
-                      <div className="text-center">
-                        <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center mb-3 mx-auto">
-                          <BarChart3 className="h-7 w-7 text-white" />
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <div className="space-y-4">
+                      <RecentServices />
+                      {user?.role === "admin" && (
+                        <div className="mt-6 pt-6 border-t border-gray-100">
+                          <TopServices />
                         </div>
-                        <p className="text-sm text-gray-300 font-medium">Relatórios</p>
-                      </div>
-                      <div className="text-center">
-                        <div className="w-14 h-14 bg-yellow-600 rounded-2xl flex items-center justify-center mb-3 mx-auto">
-                          <Zap className="h-7 w-7 text-white" />
-                        </div>
-                        <p className="text-sm text-gray-300 font-medium">Automação</p>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+
+
 
           </div>
         </main>

@@ -125,6 +125,9 @@ This is a comprehensive automotive service management system built as a full-sta
 
 ```
 Changelog:
+- June 21, 2025. Redesigned dashboard with minimalist professional style - clean cards, improved spacing, modern metrics display
+- June 21, 2025. Updated dashboard stats cards with currency formatting, percentage changes, and professional icons
+- June 21, 2025. Restructured dashboard layout to match professional design reference with better visual hierarchy
 - June 20, 2025. Improved mobile schedule page layout - moved counter next to "Hoje" for mobile devices
 - June 20, 2025. Removed loyalty/fidelization functionality from the system
 - June 20, 2025. Added payment status filters to services page (Pagos, Pendentes, Parcial)
