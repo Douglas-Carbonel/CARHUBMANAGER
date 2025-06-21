@@ -115,13 +115,18 @@ export default function CameraCapture({
     if (!capturedImage) return;
 
     try {
-      // Convert data URL to blob
-      const response = await fetch(capturedImage);
-      const blob = await response.blob();
+      // Convert data URL to blob with proper MIME type
+      const byteCharacters = atob(capturedImage.split(',')[1]);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'image/jpeg' });
 
       // Create form data
       const formData = new FormData();
-      formData.append('photo', blob, `photo_${Date.now()}.jpg`);
+      formData.append('photo', blob, `camera_photo_${Date.now()}.jpg`);
       if (customerId) formData.append('customerId', customerId.toString());
       if (vehicleId) formData.append('vehicleId', vehicleId.toString());
       if (serviceId) formData.append('serviceId', serviceId.toString());
@@ -136,7 +141,9 @@ export default function CameraCapture({
       });
 
       if (!uploadResponse.ok) {
-        throw new Error('Failed to upload photo');
+        const errorText = await uploadResponse.text();
+        console.error('Upload failed:', errorText);
+        throw new Error(`Failed to upload photo: ${uploadResponse.status}`);
       }
 
       const photo = await uploadResponse.json();
