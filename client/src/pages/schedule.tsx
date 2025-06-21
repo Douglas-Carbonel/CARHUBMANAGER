@@ -560,9 +560,20 @@ export default function SchedulePage() {
                             name="scheduledDate"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Data</FormLabel>
+                                <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                  <Calendar className="h-4 w-4 mr-2 text-teal-600" />
+                                  Data
+                                </FormLabel>
                                 <FormControl>
-                                  <Input {...field} type="date" value={field.value || ""} />
+                                  <Input 
+                                    {...field} 
+                                    type="date" 
+                                    value={field.value || ""} 
+                                    className={cn(
+                                      "h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md",
+                                      isMobile && "text-base" // Prevent zoom on iOS
+                                    )}
+                                  />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -574,9 +585,20 @@ export default function SchedulePage() {
                             name="scheduledTime"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Hora</FormLabel>
+                                <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                  <Clock className="h-4 w-4 mr-2 text-teal-600" />
+                                  Hora
+                                </FormLabel>
                                 <FormControl>
-                                  <Input {...field} type="time" value={field.value || ""} />
+                                  <Input 
+                                    {...field} 
+                                    type="time" 
+                                    value={field.value || ""} 
+                                    className={cn(
+                                      "h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md",
+                                      isMobile && "text-base" // Prevent zoom on iOS
+                                    )}
+                                  />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>

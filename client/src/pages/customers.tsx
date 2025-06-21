@@ -901,14 +901,7 @@ export default function CustomersPage() {
                             )}>
                               {customer.name}
                             </h3>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <span className={cn(
-                                "text-teal-100 bg-white/20 px-2 py-0.5 rounded-full",
-                                isMobile ? "text-xs" : "text-xs"
-                              )}>
-                                #{customer.code}
-                              </span>
-                            </div>
+
                           </div>
                         </div>
 

@@ -862,7 +862,7 @@ export default function Services() {
                       )}
                     />
 
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className={cn("grid gap-4", isMobile ? "grid-cols-1" : "grid-cols-3")}>
                       <FormField
                         control={form.control}
                         name="scheduledDate"
@@ -870,7 +870,15 @@ export default function Services() {
                           <FormItem>
                             <FormLabel>Data</FormLabel>
                             <FormControl>
-                              <Input {...field} type="date" value={field.value || ""} />
+                              <Input 
+                                {...field} 
+                                type="date" 
+                                value={field.value || ""} 
+                                className={cn(
+                                  "h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg bg-white transition-all duration-200",
+                                  isMobile && "text-base" // Prevent zoom on iOS
+                                )}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -884,7 +892,15 @@ export default function Services() {
                           <FormItem>
                             <FormLabel>Hora</FormLabel>
                             <FormControl>
-                              <Input {...field} type="time" value={field.value || ""} />
+                              <Input 
+                                {...field} 
+                                type="time" 
+                                value={field.value || ""} 
+                                className={cn(
+                                  "h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg bg-white transition-all duration-200",
+                                  isMobile && "text-base" // Prevent zoom on iOS
+                                )}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

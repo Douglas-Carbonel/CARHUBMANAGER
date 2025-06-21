@@ -360,7 +360,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                           {...field} 
                           type="date" 
                           value={field.value || ""}
-                          className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md"
+                          className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md text-base"
                         />
                       </FormControl>
                       <FormMessage />
@@ -382,7 +382,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                           {...field} 
                           type="time" 
                           value={field.value || ""}
-                          className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md"
+                          className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md text-base"
                         />
                       </FormControl>
                       <FormMessage />
