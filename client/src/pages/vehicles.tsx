@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { useIsMobile } from "@/hooks/use-mobile";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
@@ -232,6 +233,7 @@ export default function VehiclesPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
   const [customerFilter, setCustomerFilter] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -494,25 +496,31 @@ export default function VehiclesPage() {
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-100 via-white to-blue-50/30">
-      <Sidebar />
+    <div className={cn("flex bg-gradient-to-br from-slate-100 via-white to-blue-50/30", isMobile ? "h-screen flex-col" : "h-screen")}>
+      {!isMobile && <Sidebar />}
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
           title="Veículos"
-          subtitle="Gerencie a frota de veículos"
+          subtitle={isMobile ? "Veículos" : "Gerencie a frota de veículos"}
         />
 
         <main className="flex-1 overflow-y-auto bg-gradient-to-br from-white/80 via-blue-50/50 to-indigo-50/30 backdrop-blur-sm">
-          <div className="p-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
-              <div className="flex-1 max-w-md space-y-3">
+          <div className={cn(isMobile ? "p-2" : "p-8")}
+            <div className={cn(
+              "flex justify-between items-center gap-2 mb-4",
+              isMobile ? "flex-col space-y-3" : "flex-col sm:flex-row gap-6 mb-8"
+            )}>
+              <div className={cn(isMobile ? "w-full space-y-2" : "flex-1 max-w-md space-y-3")}>
                 <div className="relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <Input
                     placeholder="Buscar veículos..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 h-12 bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
+                    className={cn(
+                      "pl-10 bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-xl shadow-sm focus:shadow-md transition-all duration-200",
+                      isMobile ? "h-10 text-sm" : "pl-12 h-12"
+                    )}
                   />
                 </div>
                 
@@ -523,8 +531,11 @@ export default function VehiclesPage() {
                     value={customerFilter?.toString() || "all"} 
                     onValueChange={(value) => setCustomerFilter(value === "all" ? null : parseInt(value))}
                   >
-                    <SelectTrigger className="h-10 bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-lg">
-                      <SelectValue placeholder="Filtrar por cliente" />
+                    <SelectTrigger className={cn(
+                      "bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-lg",
+                      isMobile ? "h-8 text-sm" : "h-10"
+                    )}>
+                      <SelectValue placeholder={isMobile ? "Cliente" : "Filtrar por cliente"} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos os clientes</SelectItem>
@@ -540,7 +551,7 @@ export default function VehiclesPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => setCustomerFilter(null)}
-                      className="px-2 h-10"
+                      className={cn("px-2", isMobile ? "h-8 text-xs" : "h-10")}
                     >
                       ×
                     </Button>
@@ -548,21 +559,26 @@ export default function VehiclesPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <Button
-                  onClick={() => setIsAnalyticsModalOpen(true)}
-                  variant="outline"
-                  size="sm"
-                  className="bg-white/90 backdrop-blur-sm border-emerald-200 text-emerald-700 hover:bg-emerald-50 shadow-sm rounded-xl transition-all duration-200"
-                >
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Relatórios
-                </Button>
+              <div className={cn("flex items-center", isMobile ? "gap-2 w-full justify-between" : "gap-3")}>
+                {!isMobile && (
+                  <Button
+                    onClick={() => setIsAnalyticsModalOpen(true)}
+                    variant="outline"
+                    size="sm"
+                    className="bg-white/90 backdrop-blur-sm border-emerald-200 text-emerald-700 hover:bg-emerald-50 shadow-sm rounded-xl transition-all duration-200"
+                  >
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Relatórios
+                  </Button>
+                )}
                 
                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                   <DialogTrigger asChild>
                     <Button 
-                      className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl px-6"
+                      className={cn(
+                        "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl",
+                        isMobile ? "w-full h-10 text-sm px-4" : "px-6"
+                      )}
                       onClick={() => {
                         setEditingVehicle(null);
                         form.reset();
@@ -572,11 +588,14 @@ export default function VehiclesPage() {
                         setCustomModel("");
                       }}
                     >
-                      <Plus className="h-5 w-5 mr-2" />
-                      Novo Veículo
+                      <Plus className={cn(isMobile ? "h-4 w-4 mr-1" : "h-5 w-5 mr-2")} />
+                      {isMobile ? "Novo" : "Novo Veículo"}
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl bg-gradient-to-br from-slate-50 to-blue-50/30">
+                  <DialogContent className={cn(
+                    "bg-gradient-to-br from-slate-50 to-blue-50/30",
+                    isMobile ? "max-w-[95vw] max-h-[90vh] overflow-y-auto" : "max-w-2xl"
+                  )}>
                     <DialogHeader className="pb-6">
                       <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent">
                         {editingVehicle ? "Editar Veículo" : "Novo Veículo"}
@@ -1007,7 +1026,12 @@ export default function VehiclesPage() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className={cn(
+                "grid gap-4",
+                isMobile 
+                  ? "grid-cols-1" 
+                  : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              )}>
                 {filteredVehicles.map((vehicle: Vehicle) => {
                   const customer = customers.find((c: Customer) => c.id === vehicle.customerId);
                   return (

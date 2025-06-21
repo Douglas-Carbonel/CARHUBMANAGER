@@ -25,6 +25,8 @@ import PhotoUpload from "@/components/photos/photo-upload";
 import CameraCapture from "@/components/camera/camera-capture";
 import ServiceExtras from "@/components/service/service-extras";
 import PaymentManager from "@/components/service/payment-manager";
+import { useIsMobile } from "@/hooks/use-is-mobile";
+import { cn } from "@/lib/utils";
 
 // Utility functions for currency formatting
 const formatCurrency = (value: string): string => {
@@ -86,6 +88,7 @@ const serviceFormSchema = insertServiceSchema.extend({
 export default function Services() {
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
+  const isMobile = useIsMobile();
 
   // Get filters from URL params
   const urlParams = new URLSearchParams(window.location.search);
@@ -558,38 +561,41 @@ export default function Services() {
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button 
-                  className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 font-semibold px-6 py-3 rounded-lg"
-                  onClick={() => {
-                    setEditingService(null);
-                    form.reset();
-                    setCurrentServicePhotos([]);
-                    setServiceExtras([]);
+                    className={cn(
+                      "bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold rounded-lg",
+                      isMobile ? "px-4 py-2 text-sm transform-none" : "transform hover:scale-105 px-6 py-3"
+                    )}
+                    onClick={() => {
+                      setEditingService(null);
+                      form.reset();
+                      setCurrentServicePhotos([]);
+                      setServiceExtras([]);
 
-                    // Reset payment methods when creating new service
-                    setPaymentMethods({
-                      pix: "",
-                      dinheiro: "",
-                      cheque: "",
-                      cartao: ""
-                    });
+                      // Reset payment methods when creating new service
+                      setPaymentMethods({
+                        pix: "",
+                        dinheiro: "",
+                        cheque: "",
+                        cartao: ""
+                      });
 
-                    // Check URL params to pre-select customer if coming from customer page
-                    const urlParams = new URLSearchParams(window.location.search);
+                      // Check URL params to pre-select customer if coming from customer page
+                      const urlParams = new URLSearchParams(window.location.search);
 
-                    const customerIdFromUrl = urlParams.get('customerId');
+                      const customerIdFromUrl = urlParams.get('customerId');
 
-                    if (customerIdFromUrl) {
-                      const customerId = parseInt(customerIdFromUrl);
-                      console.log('Services: Pre-selecting customer from URL:', customerId);
-                      form.setValue('customerId', customerId);
-                      // Reset vehicle when customer is pre-selected
-                      form.setValue('vehicleId', 0);
-                    }
-                  }}
-                >
-                  <Plus className="h-5 w-5 mr-2" />
-                  Novo Serviço
-                </Button>
+                      if (customerIdFromUrl) {
+                        const customerId = parseInt(customerIdFromUrl);
+                        console.log('Services: Pre-selecting customer from URL:', customerId);
+                        form.setValue('customerId', customerId);
+                        // Reset vehicle when customer is pre-selected
+                        form.setValue('vehicleId', 0);
+                      }
+                    }}
+                  >
+                    <Plus className={cn(isMobile ? "h-4 w-4 mr-1" : "h-5 w-5 mr-2")} />
+                    {isMobile ? "Novo" : "Novo Serviço"}
+                  </Button>
               </DialogTrigger>
 
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-slate-50 to-blue-50/30">
@@ -1517,7 +1523,10 @@ export default function Services() {
               </Card>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className={cn(
+              "grid gap-4",
+              isMobile ? "grid-cols-1": "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            )}>
               {filteredServices.map((service) => {
                  const totalValue = service.estimatedValue || "0";
                  const paymentStatus = getPaymentStatus(service.valorPago || "0", totalValue);

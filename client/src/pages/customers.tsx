@@ -25,6 +25,7 @@ import { z } from "zod";
 import { insertCustomerSchema } from "@shared/schema";
 import PhotoUpload from "@/components/photos/photo-upload";
 import CameraCapture from "@/components/camera/camera-capture";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
   console.log(`API Request: ${method} ${url}`, data);
@@ -76,6 +77,7 @@ export default function CustomersPage() {
   const [isPhotosModalOpen, setIsPhotosModalOpen] = useState(false);
   const [currentCustomerPhotos, setCurrentCustomerPhotos] = useState<string[]>([]);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerFormSchema),
@@ -612,137 +614,167 @@ export default function CustomersPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredCustomers.map((customer: Customer) => (
-                  <div key={customer.id} className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-teal-200 overflow-hidden">
-                    {/* Background gradient sutil */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-teal-50/30 to-emerald-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div key={customer.id} className={cn(
+                      "group relative bg-white shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-teal-200 overflow-hidden",
+                      isMobile ? "rounded-lg" : "rounded-2xl"
+                    )}>
+                      {/* Background gradient sutil */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-teal-50/30 to-emerald-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                    {/* Header colorido */}
-                    <div className="relative h-20 bg-gradient-to-r from-teal-500 to-emerald-600 p-4 flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white font-bold text-lg border border-white/30">
-                          {customer.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <h3 className="text-white font-semibold truncate max-w-32">
-                            {customer.name}
-                          </h3>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <span className="text-xs text-teal-100 bg-white/20 px-2 py-0.5 rounded-full">
-                              #{customer.code}
-                            </span>
+                      {/* Header colorido */}
+                      <div className={cn(
+                        "relative bg-gradient-to-r from-teal-500 to-emerald-600 flex items-center justify-between",
+                        isMobile ? "h-16 p-3" : "h-20 p-4"
+                      )}>
+                        <div className={cn("flex items-center", isMobile ? "space-x-2" : "space-x-3")}>
+                          <div className={cn(
+                            "bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white font-bold border border-white/30",
+                            isMobile ? "w-10 h-10 text-sm" : "w-12 h-12 text-lg"
+                          )}>
+                            {customer.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <h3 className={cn(
+                              "text-white font-semibold truncate",
+                              isMobile ? "max-w-24 text-sm" : "max-w-32"
+                            )}>
+                              {customer.name}
+                            </h3>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <span className={cn(
+                                "text-teal-100 bg-white/20 px-2 py-0.5 rounded-full",
+                                isMobile ? "text-xs" : "text-xs"
+                              )}>
+                                #{customer.code}
+                              </span>
+                            </div>
                           </div>
                         </div>
+
+                        {/* Actions no header */}
+                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEdit(customer)}
+                            className="h-8 w-8 p-0 text-white hover:bg-white/20 border-0"
+                            title="Editar"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDelete(customer.id)}
+                            className="h-8 w-8 p-0 text-white hover:bg-red-500/20 border-0"
+                            title="Excluir"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
 
-                      {/* Actions no header */}
-                      <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEdit(customer)}
-                          className="h-8 w-8 p-0 text-white hover:bg-white/20 border-0"
-                          title="Editar"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDelete(customer.id)}
-                          className="h-8 w-8 p-0 text-white hover:bg-red-500/20 border-0"
-                          title="Excluir"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Conteúdo */}
-                    <div className="relative p-5">
-                      {/* Tipo de documento */}
-                      <div className="mb-4">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                          {customer.documentType?.toUpperCase()}
-                        </span>
-                      </div>
-
-                      {/* Informações essenciais */}
-                      <div className="space-y-3 mb-6">
-                        <div className="flex items-center text-sm">
-                          <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
-                            <User className="h-3 w-3 text-gray-500" />
-                          </div>
-                          <span className="text-gray-900 text-xs font-mono">
-                            {customer.documentType === 'cpf' ? formatCPF(customer.document) : formatCNPJ(customer.document)}
+                      {/* Conteúdo */}
+                      <div className={cn("relative", isMobile ? "p-3" : "p-5")}>
+                        {/* Tipo de documento */}
+                        <div className={cn(isMobile ? "mb-2" : "mb-4")}>
+                          <span className={cn(
+                            "inline-flex items-center rounded-full font-medium bg-emerald-100 text-emerald-800",
+                            isMobile ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-xs"
+                          )}>
+                            {customer.documentType?.toUpperCase()}
                           </span>
                         </div>
 
-                        {customer.email && (
+                        {/* Informações essenciais */}
+                        <div className={cn("space-y-2", isMobile ? "mb-3" : "space-y-3 mb-6")}>
                           <div className="flex items-center text-sm">
                             <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
-                              <span className="text-gray-500 text-xs">@</span>
+                              <User className="h-3 w-3 text-gray-500" />
                             </div>
-                            <span className="text-gray-700 text-xs truncate" title={customer.email}>
-                              {customer.email}
+                            <span className="text-gray-900 text-xs font-mono">
+                              {customer.documentType === 'cpf' ? formatCPF(customer.document) : formatCNPJ(customer.document)}
                             </span>
                           </div>
-                        )}
 
-                        {customer.phone && (
-                          <div className="flex items-center text-sm">
-                            <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
-                              <span className="text-gray-500 text-xs">📱</span>
+                          {customer.email && (
+                            <div className="flex items-center text-sm">
+                              <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
+                                <span className="text-gray-500 text-xs">@</span>
+                              </div>
+                              <span className="text-gray-700 text-xs truncate" title={customer.email}>
+                                {customer.email}
+                              </span>
                             </div>
-                            <span className="text-gray-700 text-xs font-mono">
-                              {customer.phone}
-                            </span>
+                          )}
+
+                          {customer.phone && (
+                            <div className="flex items-center text-sm">
+                              <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
+                                <span className="text-gray-500 text-xs">📱</span>
+                              </div>
+                              <span className="text-gray-700 text-xs font-mono">
+                                {customer.phone}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Ações */}
+                        <div className={cn(isMobile ? "space-y-2" : "space-y-2")}>
+                          <Button
+                            onClick={() => setLocation(`/vehicles?customerId=${customer.id}`)}
+                            className={cn(
+                              "w-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-sm rounded-xl",
+                              isMobile ? "h-8 text-xs" : "h-10"
+                            )}
+                            size="sm"
+                          >
+                            <Car className={cn(isMobile ? "h-3 w-3 mr-1" : "h-4 w-4 mr-2")} />
+                            Veículos
+                          </Button>
+
+                          <div className={cn("grid gap-1", isMobile ? "grid-cols-3 gap-1" : "grid-cols-3 gap-2")}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setLocation(`/services?customerId=${customer.id}`)}
+                              className={cn(
+                                "border-teal-200 text-teal-700 hover:bg-teal-50 rounded-xl",
+                                isMobile ? "h-7 px-1" : "h-9"
+                              )}
+                            >
+                              <Wrench className={cn(isMobile ? "h-2.5 w-2.5" : "h-3 w-3 mr-1")} />
+                              {!isMobile && <span className="text-xs">Serviços</span>}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                                                            onClick={() => handleViewPhotos(customer)}
+                              className={cn(
+                                "border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl",
+                                isMobile ? "h-7 px-1" : "h-9"
+                              )}
+                            >
+                              <Camera className={cn(isMobile ? "h-2.5 w-2.5" : "h-3 w-3 mr-1")} />
+                              {!isMobile && <span className="text-xs">Fotos</span>}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEdit(customer)}
+                              className={cn(
+                                "border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl",
+                                isMobile ? "h-7 px-1" : "h-9"
+                              )}
+                            >
+                              <Edit className={cn(isMobile ? "h-2.5 w-2.5" : "h-3 w-3 mr-1")} />
+                              {!isMobile && <span className="text-xs">Editar</span>}
+                            </Button>
                           </div>
-                        )}
-                      </div>
-
-                      {/* Ações - Layout vertical */}
-                      <div className="space-y-2">
-                        <Button
-                          onClick={() => setLocation(`/vehicles?customerId=${customer.id}`)}
-                          className="w-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-sm rounded-xl h-10"
-                          size="sm"
-                        >
-                          <Car className="h-4 w-4 mr-2" />
-                          Veículos
-                        </Button>
-
-                        <div className="grid grid-cols-3 gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setLocation(`/services?customerId=${customer.id}`)}
-                            className="border-teal-200 text-teal-700 hover:bg-teal-50 rounded-xl h-9"
-                          >
-                            <Wrench className="h-3 w-3 mr-1" />
-                            <span className="text-xs">Serviços</span>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleViewPhotos(customer)}
-                            className="border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl h-9"
-                          >
-                            <Camera className="h-3 w-3 mr-1" />
-                            <span className="text-xs">Fotos</span>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setLocation(`/reports?customerId=${customer.id}`)}
-                            className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl h-9"
-                          >
-                            <FileText className="h-3 w-3 mr-1" />
-                            <span className="text-xs">Relatórios</span>
-                          </Button>
                         </div>
                       </div>
                     </div>
-                  </div>
                 ))}
               </div>
             )}
