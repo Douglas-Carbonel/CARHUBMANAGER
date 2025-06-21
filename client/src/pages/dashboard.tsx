@@ -159,89 +159,79 @@ export default function Dashboard() {
                 <FinancialEvolutionChart />
               </div>
 
-              {/* Third Row - Existing Charts */}
-              <div className="grid grid-cols-12 gap-6">
-
-                {/* Left Column - Status de Pagamentos */}
-                <div className="col-span-4 space-y-6">
-
-                  {/* Status de Pagamentos - Movido para posição principal */}
-                  {user?.role === "admin" && (
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                      <div className="p-6 border-b border-gray-100">
-                        <h3 className="text-lg font-semibold text-gray-900">Status de Pagamentos</h3>
-                      </div>
-                      <div className="p-6">
-                        <PaymentStatusOverview />
-                      </div>
+              {/* Third Row - Status de Pagamentos em posição central */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {user?.role === "admin" && (
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="p-6 border-b border-gray-100">
+                      <h3 className="text-lg font-semibold text-gray-900">Status de Pagamentos</h3>
                     </div>
-                  )}
+                    <div className="p-6">
+                      <PaymentStatusOverview />
+                    </div>
+                  </div>
+                )}
 
-                </div>
-
-                {/* Center Column - Análises Financeiras Comparativas */}
-                <div className="col-span-5 space-y-6">
-
-                  {/* Receita Estimada vs Realizada */}
-                  {user?.role === "admin" && (
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                      <div className="p-6 border-b border-gray-100">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-semibold text-gray-900">Receita Estimada vs Realizada</h3>
-                          <div className="flex space-x-2">
-                            <button className="px-3 py-1 bg-teal-600 text-white text-xs rounded-md">
-                              Últimos 7 dias
-                            </button>
-                            <button className="px-3 py-1 text-gray-600 text-xs rounded-md hover:bg-gray-100">
-                              30 dias
-                            </button>
-                          </div>
+                {/* Receita Estimada vs Realizada */}
+                {user?.role === "admin" && (
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="p-6 border-b border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-gray-900">Receita Estimada vs Realizada</h3>
+                        <div className="flex space-x-2">
+                          <button className="px-3 py-1 bg-teal-600 text-white text-xs rounded-md">
+                            Últimos 7 dias
+                          </button>
+                          <button className="px-3 py-1 text-gray-600 text-xs rounded-md hover:bg-gray-100">
+                            30 dias
+                          </button>
                         </div>
                       </div>
-                      <div className="p-6">
-                        <RevenueChart />
-                      </div>
                     </div>
-                  )}
+                    <div className="p-6">
+                      <RevenueChart />
+                    </div>
+                  </div>
+                )}
 
-                  {/* Receita Realizada - Movido para ficar ao lado da estimada */}
-                  {user?.role === "admin" && (
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                      <div className="p-6 border-b border-gray-100">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-semibold text-gray-900">Receita Realizada (R$)</h3>
-                          <div className="flex space-x-2">
-                            <button className="px-3 py-1 bg-teal-600 text-white text-xs rounded-md">
-                              Semanal
-                            </button>
-                            <button className="px-3 py-1 text-gray-600 text-xs rounded-md hover:bg-gray-100">
-                              Mensal
-                            </button>
-                          </div>
+                {/* Serviços Populares */}
+                {user?.role === "admin" && (
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="p-6 border-b border-gray-100">
+                      <h3 className="text-lg font-semibold text-gray-900">Serviços Populares</h3>
+                    </div>
+                    <div className="p-6">
+                      <TopServices />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Fourth Row - Receita Realizada e Agendamentos */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Receita Realizada */}
+                {user?.role === "admin" && (
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="p-6 border-b border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-gray-900">Receita Realizada (R$)</h3>
+                        <div className="flex space-x-2">
+                          <button className="px-3 py-1 bg-teal-600 text-white text-xs rounded-md">
+                            Semanal
+                          </button>
+                          <button className="px-3 py-1 text-gray-600 text-xs rounded-md hover:bg-gray-100">
+                            Mensal
+                          </button>
                         </div>
                       </div>
-                      <div className="p-6">
-                        <RealizedRevenueChart />
-                      </div>
                     </div>
-                  )}
-                </div>
-
-                {/* Right Column - Operações e Serviços */}
-                <div className="col-span-3 space-y-6">
-
-                  {/* Serviços Populares - Movido para a direita */}
-                  {user?.role === "admin" && (
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                      <div className="p-6 border-b border-gray-100">
-                        <h3 className="text-lg font-semibold text-gray-900">Serviços Populares</h3>
-                      </div>
-                      <div className="p-6">
-                        <TopServices />
-                      </div>
+                    <div className="p-6">
+                      <RealizedRevenueChart />
                     </div>
-                  )}
+                  </div>
+                )}
 
+                <div className="space-y-6">
                   {/* Próximos Agendamentos */}
                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                     <div className="p-6 border-b border-gray-100">
