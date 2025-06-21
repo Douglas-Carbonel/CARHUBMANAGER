@@ -348,10 +348,23 @@ export default function Services() {
   const onSubmit = (data: z.infer<typeof serviceFormSchema>) => {
     // Calculate and add total value
     const totalValue = calculateTotalValue();
+    
+    // Calculate total from payment methods
+    const totalFromPaymentMethods = (
+      Number(paymentMethods.pix || 0) +
+      Number(paymentMethods.dinheiro || 0) +
+      Number(paymentMethods.cheque || 0) +
+      Number(paymentMethods.cartao || 0)
+    ).toFixed(2);
+
     const serviceData = {
       ...data,
       estimatedValue: String(totalValue), // Converte para string como esperado pelo schema
-      valorPago: data.valorPago ? data.valorPago : "0", // Garante que valorPago esteja presente
+      valorPago: totalFromPaymentMethods, // Usar total calculado das formas de pagamento
+      pixPago: paymentMethods.pix || "0.00",
+      dinheiroPago: paymentMethods.dinheiro || "0.00",
+      chequePago: paymentMethods.cheque || "0.00",
+      cartaoPago: paymentMethods.cartao || "0.00",
       serviceExtras: serviceExtras, // Inclui os adicionais selecionados
     };
 
@@ -382,13 +395,12 @@ export default function Services() {
     // Load existing service extras
     fetchServiceExtras(service.id);
 
-    // Load existing payment methods - use valorPago as PIX by default
-    const valorPagoAtual = service.valorPago || "0";
+    // Load existing payment methods from specific fields
     setPaymentMethods({
-      pix: valorPagoAtual,
-      dinheiro: "",
-      cheque: "",
-      cartao: ""
+      pix: service.pixPago || "0.00",
+      dinheiro: service.dinheiroPago || "0.00",
+      cheque: service.chequePago || "0.00",
+      cartao: service.cartaoPago || "0.00"
     });
 
     setIsDialogOpen(true);

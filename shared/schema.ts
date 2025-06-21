@@ -274,10 +274,16 @@ export const insertVehicleSchema = createInsertSchema(vehicles).omit({
   updatedAt: true,
 });
 
-export const insertServiceSchema = createInsertSchema(services).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
+export const insertServiceSchema = createInsertSchema(services).extend({
+  scheduledDate: z.string().optional(),
+  scheduledTime: z.string().optional(),
+  estimatedValue: z.string().optional(),
+  finalValue: z.string().optional(),
+  valorPago: z.string().optional(),
+  pixPago: z.string().optional(),
+  dinheiroPago: z.string().optional(),
+  chequePago: z.string().optional(),
+  cartaoPago: z.string().optional(),
 });
 
 export const insertServiceTypeSchema = createInsertSchema(serviceTypes).omit({
