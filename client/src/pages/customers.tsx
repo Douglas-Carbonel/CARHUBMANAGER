@@ -108,14 +108,44 @@ export default function CustomersPage() {
       const res = await apiRequest("POST", "/api/customers", data);
       return await res.json();
     },
-    onSuccess: () => {
+    onSuccess: async (newCustomer) => {
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/analytics/customers"] });
+      
+      // Save temporary photos if any
+      if (temporaryPhotos.length > 0) {
+        let photosSaved = 0;
+        for (const tempPhoto of temporaryPhotos) {
+          try {
+            const res = await fetch(`/api/customers/${newCustomer.id}/photos`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ 
+                photo: tempPhoto.photo, 
+                category: tempPhoto.category,
+                description: tempPhoto.category === 'customer' ? 'Cliente' : 'Documento'
+              }),
+              credentials: 'include',
+            });
+
+            if (res.ok) {
+              photosSaved++;
+              console.log('Temporary photo saved successfully');
+            }
+          } catch (error) {
+            console.error('Error saving temporary photo:', error);
+          }
+        }
+        console.log(`${photosSaved} of ${temporaryPhotos.length} temporary photos processed`);
+        setTemporaryPhotos([]); // Clear temporary photos after saving
+      }
+
       setIsModalOpen(false);
       setEditingCustomer(null);
       form.reset();
       setCurrentCustomerPhotos([]);
-      setTemporaryPhotos([]);
       toast({
         title: "Cliente criado",
         description: "Cliente foi criado com sucesso.",
