@@ -344,9 +344,30 @@ export default function SchedulePage() {
                         </span>
                       </div>
                     </SelectItem>
-                    <SelectItem value="week">Esta Semana</SelectItem>
-                    <SelectItem value="month">Este Mês</SelectItem>
-                    <SelectItem value="all">Todos os Períodos</SelectItem>
+                    <SelectItem value="week">
+                      <div className="flex items-center justify-between w-full sm:block">
+                        <span>Esta Semana</span>
+                        <span className="ml-2 px-2 py-1 bg-teal-100 text-teal-800 rounded-full text-xs font-bold sm:hidden">
+                          {periodFilter === "week" ? filteredServices.length : ""}
+                        </span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="month">
+                      <div className="flex items-center justify-between w-full sm:block">
+                        <span>Este Mês</span>
+                        <span className="ml-2 px-2 py-1 bg-teal-100 text-teal-800 rounded-full text-xs font-bold sm:hidden">
+                          {periodFilter === "month" ? filteredServices.length : ""}
+                        </span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="all">
+                      <div className="flex items-center justify-between w-full sm:block">
+                        <span>Todos os Períodos</span>
+                        <span className="ml-2 px-2 py-1 bg-teal-100 text-teal-800 rounded-full text-xs font-bold sm:hidden">
+                          {periodFilter === "all" ? filteredServices.length : ""}
+                        </span>
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
