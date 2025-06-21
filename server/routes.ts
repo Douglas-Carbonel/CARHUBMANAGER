@@ -512,15 +512,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Dashboard stats
+  // Dashboard stats com lógica correta
   app.get("/api/dashboard/stats", requireAuth, async (req, res) => {
     try {
       const user = req.user!;
-      console.log("Dashboard stats API - User:", user.role, user.id);
       const technicianId = user.role === 'admin' ? null : user.id;
-      console.log("Dashboard stats API - Using technicianId:", technicianId);
-      const stats = await storage.getDashboardStats(technicianId);
-      console.log("Dashboard stats API - Result:", stats);
+      
+      // Buscar todos os serviços
+      const allServices = await storage.getServices();
+      
+      let receitaRealizada = 0;  // Serviços com valorPago > 0
+      let receitaPendente = 0;   // Serviços com valorPago = 0
+      let servicosConcluidos = 0; // Status = 'completed'
+      let pagamentosPendentes = 0; // valorPago = 0
+      let servicosComPagamentoParcial = 0; // 0 < valorPago < estimatedValue
+      
+      allServices.forEach((service: any) => {
+        const estimatedValue = parseFloat(service.estimatedValue || 0);
+        const valorPago = parseFloat(service.valorPago || 0);
+        const status = service.status;
+        
+        // Receita realizada (serviços que receberam algum pagamento)
+        if (valorPago > 0) {
+          receitaRealizada += valorPago;
+        }
+        
+        // Receita pendente (valor estimado menos o que foi pago)
+        if (valorPago < estimatedValue) {
+          receitaPendente += (estimatedValue - valorPago);
+        }
+        
+        // Serviços concluídos
+        if (status === 'completed') {
+          servicosConcluidos++;
+        }
+        
+        // Pagamentos pendentes (serviços sem nenhum pagamento)
+        if (valorPago === 0) {
+          pagamentosPendentes++;
+        }
+        
+        // Pagamentos parciais
+        if (valorPago > 0 && valorPago < estimatedValue) {
+          servicosComPagamentoParcial++;
+        }
+      });
+      
+      const stats = {
+        receitaRealizada: Math.round(receitaRealizada * 100) / 100,
+        receitaPendente: Math.round(receitaPendente * 100) / 100,
+        servicosConcluidos,
+        pagamentosPendentes,
+        servicosComPagamentoParcial,
+        totalServicos: allServices.length,
+        // Manter compatibilidade com cards antigos
+        completedRevenue: Math.round(receitaRealizada * 100) / 100,
+        predictedRevenue: Math.round((receitaRealizada + receitaPendente) * 100) / 100,
+        activeCustomers: pagamentosPendentes,
+        weeklyServices: servicosConcluidos
+      };
+      
+      console.log("Dashboard stats (nova lógica):", stats);
       res.json(stats);
     } catch (error) {
       console.error("Error getting dashboard stats:", error);
@@ -553,29 +605,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Dashboard realized revenue data (completed services only)
+  // Dashboard realized revenue data (serviços com pagamento)
   app.get("/api/dashboard/realized-revenue", async (req, res) => {
     try {
       const days = parseInt(req.query.days as string) || 7;
-      console.log(`API: Getting realized revenue data for ${days} days`);
-      const realizedRevenueData = await storage.getRealizedRevenueByDays(days);
-      console.log('Realized revenue data retrieved:', realizedRevenueData);
-      res.json(realizedRevenueData);
+      console.log(`API: Getting realized revenue data for ${days} days (paid services only)`);
+      
+      // Buscar todos os serviços dos últimos X dias
+      const allServices = await storage.getServices();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days + 1);
+      
+      const revenueByDate: Record<string, number> = {};
+      
+      // Inicializar todos os dias com 0
+      for (let i = 0; i < days; i++) {
+        const date = new Date(startDate);
+        date.setDate(startDate.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
+        revenueByDate[dateStr] = 0;
+      }
+      
+      // Calcular receita apenas de serviços com pagamento
+      allServices.forEach((service: any) => {
+        const serviceDate = service.scheduledDate;
+        const valorPago = parseFloat(service.valorPago || 0);
+        
+        if (valorPago > 0 && serviceDate in revenueByDate) {
+          revenueByDate[serviceDate] += valorPago;
+        }
+      });
+      
+      // Converter para formato esperado pelo gráfico
+      const chartData = Object.entries(revenueByDate).map(([date, revenue]) => {
+        const dateObj = new Date(date);
+        const dayName = dateObj.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+        
+        return {
+          date: dayName,
+          fullDate: date,
+          revenue: Math.round((revenue as number) * 100) / 100
+        };
+      });
+      
+      console.log('Realized revenue data (paid services):', chartData);
+      res.json(chartData);
     } catch (error) {
       console.error('API Error getting realized revenue data:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   });
 
-  // Top services
+  // Top services - versão simplificada
   app.get("/api/dashboard/top-services", requireAuth, async (req, res) => {
     try {
       console.log("API: Getting top services...");
       const user = req.user!;
-      const topServices = await storage.getTopServices(user.role === 'admin' ? null : user.id);
+      
+      // Buscar todos os serviços e calcular popularidade
+      const allServices = await storage.getServices();
+      const serviceTypeCount: Record<string, { count: number; revenue: number; name: string }> = {};
+      
+      allServices.forEach((service: any) => {
+        const serviceTypeName = service.serviceType?.name || 'Sem categoria';
+        const valorPago = parseFloat(service.valorPago || 0);
+        
+        if (!serviceTypeCount[serviceTypeName]) {
+          serviceTypeCount[serviceTypeName] = { count: 0, revenue: 0, name: serviceTypeName };
+        }
+        
+        serviceTypeCount[serviceTypeName].count += 1;
+        serviceTypeCount[serviceTypeName].revenue += valorPago;
+      });
+      
+      // Converter para array e ordenar
+      const topServices = Object.values(serviceTypeCount)
+        .sort((a, b) => b.count - a.count || b.revenue - a.revenue)
+        .slice(0, 5)
+        .map(item => ({
+          name: item.name,
+          count: item.count,
+          revenue: Math.round(item.revenue * 100) / 100
+        }));
+      
       console.log("API: Top services result:", topServices);
       res.json(topServices);
-    } catch (error) {
+    } catch (error: any) {
       console.error("API Error getting top services:", error);
       res.status(500).json({ message: "Failed to get top services", error: error.message });
     }

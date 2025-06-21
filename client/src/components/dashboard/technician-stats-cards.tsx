@@ -2,13 +2,17 @@ import { useQuery } from "@tanstack/react-query";
 import { TrendingUp, TrendingDown, DollarSign, Calendar, Users, Activity } from "lucide-react";
 
 interface DashboardStats {
-  dailyRevenue: number;
+  receitaRealizada: number;
+  receitaPendente: number;
+  servicosConcluidos: number;
+  pagamentosPendentes: number;
+  servicosComPagamentoParcial: number;
+  totalServicos: number;
+  // Compatibilidade
   completedRevenue: number;
   predictedRevenue: number;
-  dailyServices: number;
-  weeklyServices: number;
-  appointments: number;
   activeCustomers: number;
+  weeklyServices: number;
 }
 
 export default function TechnicianStatsCards() {
@@ -83,17 +87,17 @@ export default function TechnicianStatsCards() {
 
   // Mock previous values for percentage calculation (in real scenario, fetch from API)
   const previousStats = {
-    completedRevenue: stats?.completedRevenue * 0.85 || 0,
-    predictedRevenue: stats?.predictedRevenue * 0.92 || 0,
-    weeklyServices: (stats?.weeklyServices || 0) - 2,
-    activeCustomers: (stats?.activeCustomers || 0) - 1,
+    receitaRealizada: stats?.receitaRealizada * 0.85 || 0,
+    receitaPendente: stats?.receitaPendente * 1.15 || 0,
+    servicosConcluidos: (stats?.servicosConcluidos || 0) - 2,
+    pagamentosPendentes: (stats?.pagamentosPendentes || 0) + 1,
   };
 
   const cards = [
     {
       title: "Receita Realizada",
-      value: formatCurrency(stats?.completedRevenue || 0),
-      change: calculatePercentage(stats?.completedRevenue || 0, previousStats.completedRevenue),
+      value: formatCurrency(stats?.receitaRealizada || 0),
+      change: calculatePercentage(stats?.receitaRealizada || 0, previousStats.receitaRealizada),
       subtitle: "Pagamentos recebidos",
       icon: DollarSign,
       iconBg: "bg-green-50",
@@ -101,8 +105,8 @@ export default function TechnicianStatsCards() {
     },
     {
       title: "Receita Pendente", 
-      value: formatCurrency((stats?.predictedRevenue || 0) - (stats?.completedRevenue || 0)),
-      change: calculatePercentage((stats?.predictedRevenue || 0) - (stats?.completedRevenue || 0), previousStats.predictedRevenue - previousStats.completedRevenue),
+      value: formatCurrency(stats?.receitaPendente || 0),
+      change: calculatePercentage(stats?.receitaPendente || 0, previousStats.receitaPendente),
       subtitle: "Aguardando pagamento",
       icon: TrendingUp,
       iconBg: "bg-orange-50",
@@ -110,18 +114,18 @@ export default function TechnicianStatsCards() {
     },
     {
       title: "Serviços Concluídos",
-      value: stats?.weeklyServices || 0,
-      change: calculatePercentage(stats?.weeklyServices || 0, previousStats.weeklyServices),
-      subtitle: "Esta semana",
+      value: stats?.servicosConcluidos || 0,
+      change: calculatePercentage(stats?.servicosConcluidos || 0, previousStats.servicosConcluidos),
+      subtitle: "Finalizados",
       icon: Calendar,
       iconBg: "bg-blue-50", 
       iconColor: "text-blue-600",
     },
     {
       title: "Pagamentos Pendentes",
-      value: stats?.activeCustomers || 0,
-      change: calculatePercentage(stats?.activeCustomers || 0, previousStats.activeCustomers),
-      subtitle: "Clientes com pendências",
+      value: stats?.pagamentosPendentes || 0,
+      change: calculatePercentage(stats?.pagamentosPendentes || 0, previousStats.pagamentosPendentes),
+      subtitle: "Sem pagamento",
       icon: Users,
       iconBg: "bg-red-50",
       iconColor: "text-red-600",

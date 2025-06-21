@@ -156,14 +156,26 @@ export default function Dashboard() {
             {/* Main Content Grid - Maximized Layout */}
             <div className="grid grid-cols-12 gap-6">
               
-              {/* Left Column - Appointments & Service Status */}
+              {/* Left Column - Payment Status & Appointments */}
               <div className="col-span-4 space-y-6">
                 
-                {/* Current Appointments */}
+                {/* Payment Status Overview - Primeiro card */}
+                {user?.role === "admin" && (
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="p-6 border-b border-gray-100">
+                      <h3 className="text-lg font-semibold text-gray-900">Status de Pagamentos</h3>
+                    </div>
+                    <div className="p-6">
+                      <PaymentStatusOverview />
+                    </div>
+                  </div>
+                )}
+
+                {/* Current Appointments - Melhorado */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                   <div className="p-6 border-b border-gray-100">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-900">Agendamentos Atuais</h3>
+                      <h3 className="text-lg font-semibold text-gray-900">Próximos Agendamentos</h3>
                       <button 
                         onClick={() => setLocation("/schedule")}
                         className="text-sm text-gray-600 hover:text-gray-700 font-medium"
@@ -176,18 +188,6 @@ export default function Dashboard() {
                     <UpcomingAppointments />
                   </div>
                 </div>
-
-                {/* Payment Status Overview */}
-                {user?.role === "admin" && (
-                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div className="p-6 border-b border-gray-100">
-                      <h3 className="text-lg font-semibold text-gray-900">Status de Pagamentos</h3>
-                    </div>
-                    <div className="p-6">
-                      <PaymentStatusOverview />
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Center Column - Revenue Chart */}
@@ -235,26 +235,8 @@ export default function Dashboard() {
                 )}
               </div>
 
-              {/* Right Column - Recent Services & Popular Services */}
+              {/* Right Column - Activity & Services */}
               <div className="col-span-3 space-y-6">
-                
-                {/* Recent Services */}
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                  <div className="p-6 border-b border-gray-100">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-900">Serviços Recentes</h3>
-                      <button 
-                        onClick={() => setLocation("/services")}
-                        className="text-sm text-gray-600 hover:text-gray-700 font-medium"
-                      >
-                        Ver Todos
-                      </button>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <RecentServices />
-                  </div>
-                </div>
                 
                 {/* Most Popular Services - Admin Only */}
                 {user?.role === "admin" && (
@@ -267,6 +249,24 @@ export default function Dashboard() {
                     </div>
                   </div>
                 )}
+                
+                {/* Recent Services */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="p-6 border-b border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-900">Atividade Recente</h3>
+                      <button 
+                        onClick={() => setLocation("/services")}
+                        className="text-sm text-gray-600 hover:text-gray-700 font-medium"
+                      >
+                        Ver Todos
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <RecentServices />
+                  </div>
+                </div>
               </div>
             </div>
 
