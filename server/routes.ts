@@ -967,7 +967,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
       const compressedStats = fs.statSync(compressedPath);
 
       // Determine entity type and ID based on what's provided
-      let entityType = 'other';
+      let entityType = 'service';
       let entityId = 0;
 
       if (customerId) {
@@ -980,6 +980,8 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
         entityType = 'service';
         entityId = parseInt(serviceId);
       }
+      // For new services without ID, we'll use service type with ID 0
+      // This will be updated when the service is actually created
 
       const photoData = {
         category: category || 'other',

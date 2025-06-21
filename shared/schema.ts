@@ -147,7 +147,7 @@ export const loyaltyTracking = pgTable("loyalty_tracking", {
 export const photos = pgTable("photos", {
   id: serial("id").primaryKey(),
   entityType: varchar("entity_type", { enum: ["customer", "vehicle", "service"] }),
-  entityId: integer("entity_id"),
+  entityId: integer("entity_id"), // Now nullable for temporary photos
   category: varchar("category", { 
     enum: ["vehicle", "service", "damage", "before", "after", "other"] 
   }).default("other"),

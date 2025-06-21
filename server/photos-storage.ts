@@ -97,7 +97,7 @@ export class PhotosStorage {
       
       const values = [
         entityType,
-        entityId,
+        entityId || null, // Allow null for temporary photos
         photoData.category,
         photoData.fileName,
         photoData.originalName,
