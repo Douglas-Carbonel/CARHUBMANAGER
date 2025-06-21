@@ -1162,9 +1162,6 @@ export default function Services() {
                                     title: "Fotos adicionadas!",
                                     description: "As fotos serão salvas quando o serviço for cadastrado.",
                                   });
-
-                                  // Reset file input
-                                  event.target.value = '';
                                   return;
                                 }
 
@@ -1216,18 +1213,40 @@ export default function Services() {
                             />
                           </div>
                         </div>
-                        {/* Only show PhotoUpload for new services */}
-                        {!editingService?.id && (
-                          <PhotoUpload
-                            photos={editingService?.id ? currentServicePhotos : []}
-                            onPhotoUploaded={async () => {
-                              if (editingService?.id) {
-                                fetchServicePhotos(editingService.id);
-                              }
-                            }}
-                            serviceId={editingService?.id}
-                            maxPhotos={7}
-                          />
+                        <PhotoUpload
+                          photos={editingService?.id ? currentServicePhotos : []}
+                          onPhotoUploaded={async () => {
+                            if (editingService?.id) {
+                              fetchServicePhotos(editingService.id);
+                            }
+                          }}
+                          serviceId={editingService?.id}
+                          maxPhotos={7}
+                        />
+
+                        {/* Show temporary photos for new services */}
+                        {!editingService?.id && temporaryPhotos.length > 0 && (
+                          <div className="mt-4">
+                            <h5 className="text-sm font-medium text-gray-700 mb-2">Fotos adicionadas:</h5>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                              {temporaryPhotos.map((tempPhoto, index) => (
+                                <div key={index} className="relative group">
+                                  <img 
+                                    src={tempPhoto.photo} 
+                                    alt={`Foto ${index + 1}`}
+                                    className="w-full h-20 object-cover rounded-lg border"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => setTemporaryPhotos(prev => prev.filter((_, i) => i !== index))}
+                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -1576,7 +1595,7 @@ export default function Services() {
                         const totalPayment = (
                           Number(paymentMethods.pix || 0) +
                           Number(paymentMethods.dinheiro || 0) +
-                          (Number(paymentMethods.cheque || 0) +
+                          Number(paymentMethods.cheque || 0) +
                           Number(paymentMethods.cartao || 0)
                         ).toFixed(2);
                         form.setValue("valorPago", totalPayment);
@@ -1825,4 +1844,3 @@ export default function Services() {
     </div>
   );
 }
-// Removing duplicate "Adicionar Fotos" button and applying necessary adjustments.
