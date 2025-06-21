@@ -124,8 +124,8 @@ export default function CustomersPage() {
               },
               body: JSON.stringify({ 
                 photo: tempPhoto.photo, 
-                category: tempPhoto.category,
-                description: tempPhoto.category === 'customer' ? 'Cliente' : 'Documento'
+                category: 'other',
+                description: tempPhoto.category === 'other' ? 'Cliente' : 'Documento'
               }),
               credentials: 'include',
             });
@@ -297,12 +297,12 @@ export default function CustomersPage() {
     // Handle different input formats from CameraCapture
     if (typeof photoData === 'string') {
       photo = photoData;
-      photoCategory = category || 'customer';
+      photoCategory = category || 'other';
       customerId = editingCustomer?.id;
     } else {
       // photoData is an object with customerId, category, etc.
       photo = photoData.photo || photoData;
-      photoCategory = photoData.category || category || 'customer';
+      photoCategory = photoData.category || category || 'other';
       customerId = photoData.customerId || editingCustomer?.id;
     }
 
@@ -326,8 +326,8 @@ export default function CustomersPage() {
         },
         body: JSON.stringify({ 
           photo, 
-          category: photoCategory,
-          description: photoCategory === 'customer' ? 'Cliente' : 'Documento'
+          category: 'other',
+          description: photoCategory === 'other' ? 'Cliente' : 'Documento'
         }),
         credentials: 'include',
       });
@@ -759,7 +759,7 @@ export default function CustomersPage() {
                                         "bg-black bg-opacity-70 text-white px-1 py-0.5 rounded text-center block",
                                         isMobile ? "text-xs" : "text-xs"
                                       )}>
-                                        {tempPhoto.category === 'customer' ? 'Cliente' : 'Documento'}
+                                        {tempPhoto.category === 'other' ? 'Cliente' : 'Documento'}
                                       </span>
                                     </div>
                                     <button

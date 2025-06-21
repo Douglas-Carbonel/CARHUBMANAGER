@@ -963,7 +963,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
             const compressedStats = fs.statSync(compressedPath);
 
             const photoData = {
-              category: category || 'customer',
+              category: category || 'other',
               fileName: compressedFilename,
               originalName: req.file.originalname,
               mimeType: 'image/jpeg',
@@ -1012,7 +1012,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
         const stats = fs.statSync(filepath);
 
         const photoData = {
-          category: category || 'customer',
+          category: category || 'other',
           fileName: filename,
           originalName: `camera_capture_${Date.now()}.jpg`,
           mimeType: 'image/jpeg',
