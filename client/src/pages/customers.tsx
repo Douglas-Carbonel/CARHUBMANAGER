@@ -78,6 +78,7 @@ export default function CustomersPage() {
   const [currentCustomerPhotos, setCurrentCustomerPhotos] = useState<string[]>([]);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const isMobile = useIsMobile();
+  const [temporaryPhotos, setTemporaryPhotos] = useState<string[]>([]);
 
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerFormSchema),
@@ -114,6 +115,7 @@ export default function CustomersPage() {
       setEditingCustomer(null);
       form.reset();
       setCurrentCustomerPhotos([]);
+      setTemporaryPhotos([]);
       toast({
         title: "Cliente criado",
         description: "Cliente foi criado com sucesso.",
@@ -142,6 +144,7 @@ export default function CustomersPage() {
       setEditingCustomer(null);
       form.reset();
       setCurrentCustomerPhotos([]);
+      setTemporaryPhotos([]);
       toast({
         title: "Cliente atualizado",
         description: "Cliente foi atualizado com sucesso.",
@@ -307,7 +310,7 @@ export default function CustomersPage() {
                   />
                 </div>
               </div>
-              
+
               <div className={cn("flex items-center gap-2", isMobile ? "w-full justify-between" : "gap-4")}>
                 <Button
                   variant="outline"
@@ -327,7 +330,7 @@ export default function CustomersPage() {
                   <span className={cn("ml-1", isMobile ? "text-xs" : "text-sm")}>clientes</span>
                 </div>
               </div>
-              
+
               <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogTrigger asChild>
                   <Button 
@@ -339,6 +342,7 @@ export default function CustomersPage() {
                       setEditingCustomer(null);
                       form.reset();
                       setCurrentCustomerPhotos([]);
+                      setTemporaryPhotos([]);
                     }}
                   >
                     <Plus className={cn(isMobile ? "h-4 w-4 mr-1" : "h-5 w-5 mr-2")} />
@@ -622,17 +626,23 @@ export default function CustomersPage() {
                         isMobile ? "flex-col pt-3 mt-3" : "justify-end gap-4 pt-6 mt-6"
                       )}>
                         <Button 
-                          type="button" 
-                          variant="outline" 
-                          onClick={() => setIsModalOpen(false)}
-                          disabled={createMutation.isPending || updateMutation.isPending}
-                          className={cn(
-                            "border-2 border-slate-300 hover:border-slate-400 rounded-lg font-semibold transition-all duration-200",
-                            isMobile ? "h-9 text-sm" : "h-11 px-6"
-                          )}
-                        >
-                          Cancelar
-                        </Button>
+                            type="button" 
+                            variant="outline" 
+                            onClick={() => {
+                              setIsModalOpen(false);
+                              setCurrentCustomerPhotos([]);
+                              setTemporaryPhotos([]);
+                              setEditingCustomer(null);
+                              form.reset();
+                            }}
+                            disabled={createMutation.isPending || updateMutation.isPending}
+                            className={cn(
+                              "border-2 border-slate-300 hover:border-slate-400 rounded-lg font-semibold transition-all duration-200",
+                              isMobile ? "h-9 text-sm" : "h-11 px-6"
+                            )}
+                          >
+                            Cancelar
+                          </Button>
                         <Button 
                           type="submit" 
                           disabled={createMutation.isPending || updateMutation.isPending}
@@ -689,6 +699,7 @@ export default function CustomersPage() {
                       form.reset();
                       setIsModalOpen(true);
                       setCurrentCustomerPhotos([]);
+                      setTemporaryPhotos([]);
                     }}
                   >
                     <Plus className="h-5 w-5 mr-2" />
