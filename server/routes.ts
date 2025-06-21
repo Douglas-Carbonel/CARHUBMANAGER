@@ -517,47 +517,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = req.user!;
       const technicianId = user.role === 'admin' ? null : user.id;
-      
+
       // Buscar todos os serviços
       const allServices = await storage.getServices();
-      
+
       let receitaRealizada = 0;  // Serviços com valorPago > 0
       let receitaPendente = 0;   // Serviços com valorPago = 0
       let servicosConcluidos = 0; // Status = 'completed'
       let pagamentosPendentes = 0; // valorPago = 0
       let servicosComPagamentoParcial = 0; // 0 < valorPago < estimatedValue
-      
+
       allServices.forEach((service: any) => {
         const estimatedValue = parseFloat(service.estimatedValue || 0);
         const valorPago = parseFloat(service.valorPago || 0);
         const status = service.status;
-        
+
         // Receita realizada (serviços que receberam algum pagamento)
         if (valorPago > 0) {
           receitaRealizada += valorPago;
         }
-        
+
         // Receita pendente (valor estimado menos o que foi pago)
         if (valorPago < estimatedValue) {
           receitaPendente += (estimatedValue - valorPago);
         }
-        
+
         // Serviços concluídos
         if (status === 'completed') {
           servicosConcluidos++;
         }
-        
+
         // Pagamentos pendentes (serviços sem nenhum pagamento)
         if (valorPago === 0) {
           pagamentosPendentes++;
         }
-        
+
         // Pagamentos parciais
         if (valorPago > 0 && valorPago < estimatedValue) {
           servicosComPagamentoParcial++;
         }
       });
-      
+
       const stats = {
         receitaRealizada: Math.round(receitaRealizada * 100) / 100,
         receitaPendente: Math.round(receitaPendente * 100) / 100,
@@ -571,7 +571,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         activeCustomers: pagamentosPendentes,
         weeklyServices: servicosConcluidos
       };
-      
+
       console.log("Dashboard stats (nova lógica):", stats);
       res.json(stats);
     } catch (error) {
@@ -610,14 +610,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const days = parseInt(req.query.days as string) || 7;
       console.log(`API: Getting realized revenue data for ${days} days (paid services only)`);
-      
+
       // Buscar todos os serviços dos últimos X dias
       const allServices = await storage.getServices();
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days + 1);
-      
+
       const revenueByDate: Record<string, number> = {};
-      
+
       // Inicializar todos os dias com 0
       for (let i = 0; i < days; i++) {
         const date = new Date(startDate);
@@ -625,29 +625,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const dateStr = date.toISOString().split('T')[0];
         revenueByDate[dateStr] = 0;
       }
-      
+
       // Calcular receita apenas de serviços com pagamento
       allServices.forEach((service: any) => {
         const serviceDate = service.scheduledDate;
         const valorPago = parseFloat(service.valorPago || 0);
-        
+
         if (valorPago > 0 && serviceDate in revenueByDate) {
           revenueByDate[serviceDate] += valorPago;
         }
       });
-      
+
       // Converter para formato esperado pelo gráfico
       const chartData = Object.entries(revenueByDate).map(([date, revenue]) => {
         const dateObj = new Date(date);
         const dayName = dateObj.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
-        
+
         return {
           date: dayName,
           fullDate: date,
           revenue: Math.round((revenue as number) * 100) / 100
         };
       });
-      
+
       console.log('Realized revenue data (paid services):', chartData);
       res.json(chartData);
     } catch (error) {
@@ -656,584 +656,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Top services - versão simplificada
-  app.get("/api/dashboard/top-services", requireAuth, async (req, res) => {
+  app.get("/api/dashboard/top-services", async (req, res) => {
     try {
-      console.log("API: Getting top services...");
-      const user = req.user!;
-      
-      // Buscar todos os serviços e calcular popularidade
-      const allServices = await storage.getServices();
-      const serviceTypeCount: Record<string, { count: number; revenue: number; name: string }> = {};
-      
-      allServices.forEach((service: any) => {
-        const serviceTypeName = service.serviceType?.name || 'Sem categoria';
-        const valorPago = parseFloat(service.valorPago || 0);
-        
-        if (!serviceTypeCount[serviceTypeName]) {
-          serviceTypeCount[serviceTypeName] = { count: 0, revenue: 0, name: serviceTypeName };
-        }
-        
-        serviceTypeCount[serviceTypeName].count += 1;
-        serviceTypeCount[serviceTypeName].revenue += valorPago;
-      });
-      
-      // Converter para array e ordenar
-      const topServices = Object.values(serviceTypeCount)
-        .sort((a, b) => b.count - a.count || b.revenue - a.revenue)
-        .slice(0, 5)
-        .map(item => ({
-          name: item.name,
-          count: item.count,
-          revenue: Math.round(item.revenue * 100) / 100
-        }));
-      
+      const topServices = await storage.getTopServices();
       console.log("API: Top services result:", topServices);
       res.json(topServices);
-    } catch (error: any) {
-      console.error("API Error getting top services:", error);
-      res.status(500).json({ message: "Failed to get top services", error: error.message });
-    }
-  });
-
-  // Recent services
-  app.get("/api/dashboard/recent-services", requireAuth, async (req, res) => {
-    try {
-      console.log("API: Getting recent services...");
-      const user = req.user!;
-      const limit = parseInt(req.query.limit as string) || 5;
-      const recentServices = await storage.getRecentServices(limit, user.role === 'admin' ? null : user.id);
-      console.log("API: Recent services result:", recentServices.length, "services");
-      res.json(recentServices);
     } catch (error) {
-      console.error("API Error getting recent services:", error);
-      res.status(500).json({ message: "Failed to get recent services", error: error.message });
+      console.error("API: Error getting top services:", error);
+      res.status(500).json({ error: "Failed to get top services" });
     }
   });
 
-  // Upcoming appointments
-  app.get("/api/dashboard/upcoming-appointments", requireAuth, async (req, res) => {
+  app.get("/api/dashboard/service-status", async (req, res) => {
     try {
-      console.log("API: Getting upcoming appointments...");
-      const user = req.user!;
-      const limit = parseInt(req.query.limit as string) || 5;
-      const appointments = await storage.getUpcomingAppointments(limit, user.role === 'admin' ? null : user.id);
-      console.log("API: Upcoming appointments result:", appointments.length, "appointments");
-      res.json(appointments);
+      const statusData = await storage.getServiceStatusData();
+      console.log("API: Service status result:", statusData);
+      res.json(statusData);
     } catch (error) {
-      console.error("API Error getting upcoming appointments:", error);
-      res.status(500).json({ message: "Failed to get upcoming appointments", error: error.message });
+      console.error("API: Error getting service status:", error);
+      res.status(500).json({ error: "Failed to get service status data" });
     }
   });
 
-  // Analytics routes - Admin only
-  app.get("/api/analytics/services", requireAdmin, async (req, res) => {
-    try {
-      const analytics = await storage.getServiceAnalytics();
-      res.json(analytics);
-    } catch (error) {
-      console.error("Error getting service analytics:", error);
-      res.status(500).json({ message: "Failed to get service analytics" });
-    }
+  // Health check endpoint
+  app.get("/health", (req, res) => {
+    res.status(200).send("OK");
   });
 
-  app.get("/api/analytics/customers", requireAdmin, async (req, res) => {
-    try {
-      const analytics = await storage.getCustomerAnalytics();
-      res.json(analytics);
-    } catch (error) {
-      console.error("Error getting customer analytics:", error);
-      res.status(500).json({ message: "Failed to get customer analytics" });
-    }
+  // Use the router
+  app.use(router);
+
+  // Handle 404 errors
+  app.use((req, res) => {
+    res.status(404).json({ message: "Not Found" });
   });
-
-app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
-    try {
-      const analytics = await storage.getVehicleAnalytics();
-      res.json(analytics);
-    } catch (error: any) {
-      console.error("Error fetching vehicle analytics:", error);
-      res.status(500).json({ 
-        error: "Failed to fetch vehicle analytics",
-        details: error.message 
-      });
-    }
-  });
-
-  // Schedule analytics
-  app.get("/api/dashboard/schedule-stats", requireAuth, async (req, res) => {
-    try {
-      const user = req.user!;
-      const technicianId = user.role === 'admin' ? null : user.id;
-      const stats = await storage.getScheduleStats(technicianId);
-      res.json(stats);
-    } catch (error) {
-      console.error('Error getting schedule stats:', error);
-      res.status(500).json({ error: 'Failed to get schedule stats' });
-    }
-  });
-
-  // Debug endpoint for today's services
-  app.get("/api/debug/today-services", requireAuth, async (req, res) => {
-    try {
-      // Get current date in Brazilian timezone (UTC-3)
-      const today = new Date();
-      const brazilTime = new Date(today.getTime() - (3 * 60 * 60 * 1000));
-      const todayStr = brazilTime.toISOString().split('T')[0];
-
-      console.log("Debug: Brazilian date for today:", todayStr);
-
-      const result = await db.execute(sql`
-        SELECT 
-          s.id,
-          s.scheduled_date,
-          s.status,
-          s.estimated_value,
-          c.name as customer_name,
-          st.name as service_type_name
-        FROM services s
-        JOIN customers c ON s.customer_id = c.id
-        JOIN service_types st ON s.service_type_id = st.id
-        WHERE s.scheduled_date = ${todayStr}
-        ORDER BY s.id
-      `);
-
-      console.log("Debug: Services found for today:", result.rows);
-
-      res.json({
-        todayDate: todayStr,
-        servicesCount: result.rows.length,
-        services: result.rows
-      });
-    } catch (error) {
-      console.error('Error in debug endpoint:', error);
-      res.status(500).json({ error: 'Debug failed' });
-    }
-  });
-
-  app.get("/api/dashboard/today-appointments", requireAuth, async (req, res) => {
-    try {
-      console.log("API: Getting today appointments...");
-      const user = req.user!;
-      const appointments = await storage.getTodayAppointments(user.role === 'admin' ? null : user.id);
-      console.log("API: Today appointments result:", appointments.length, "appointments");
-      res.json(appointments);
-    } catch (error) {
-      console.error("API Error getting today appointments:", error);
-      res.status(500).json({ message: "Failed to get today appointments", error: error.message });
-    }
-  });
-
-  // Admin user management routes
-  app.get("/api/admin/users", requireAuth, async (req, res) => {
-    try {
-      const users = await storage.getAllUsers();
-      res.json(users);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch users" });
-    }
-  });
-
-  app.post("/api/admin/users", requireAdmin, async (req, res) => {
-    try {
-      const userData = insertUserSchema.parse(req.body);
-
-      // Hash the password before storing
-      if (userData.password) {
-        userData.password = await hashPassword(userData.password);
-      }
-
-      const user = await storage.createUser(userData);
-      res.json(user);
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        res.status(400).json({ message: "Invalid user data", errors: error.errors });
-      } else {
-        res.status(500).json({ message: "Failed to create user" });
-      }
-    }
-  });
-
-  app.patch("/api/admin/users/:id", requireAdmin, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const userData = req.body;
-      const user = await storage.updateUser(id, userData);
-      res.json(user);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to update user" });
-    }
-  });
-
-  app.delete("/api/admin/users/:id", requireAdmin, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      await storage.deleteUser(id);
-      res.json({ message: "User deleted successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete user" });
-    }
-  });
-
-
-
-  app.get("/api/login", (req, res) => {
-    // Redirect to auth page when accessing login via GET
-    res.redirect("/auth");
-  });
-
-  // Photo routes
-  app.get("/api/photos", requireAuth, async (req, res) => {
-    try {
-      const { customerId, vehicleId, serviceId, category } = req.query;
-      const filters: any = {};
-
-      if (customerId) filters.customerId = parseInt(customerId as string);
-      if (vehicleId) filters.vehicleId = parseInt(vehicleId as string);
-      if (serviceId) filters.serviceId = parseInt(serviceId as string);
-      if (category) filters.category = category as string;
-
-      const photos = await photosStorage.getPhotos(filters);
-      res.json(photos);
-    } catch (error) {
-      console.error("Error getting photos:", error);
-      res.status(500).json({ message: "Failed to get photos" });
-    }
-  });
-
-  app.get("/api/customers/:customerId/photos", requireAuth, async (req, res) => {
-    try {
-      const customerId = parseInt(req.params.customerId);
-      const photos = await photosStorage.getPhotos({ customerId });
-      res.json(photos);
-    } catch (error) {
-      console.error("Error getting customer photos:", error);
-      res.status(500).json({ message: "Failed to get customer photos" });
-    }
-  });
-
-  app.get("/api/photos/:id", requireAuth, async (req, res) => {
-    try {
-      const photoId = parseInt(req.params.id);
-      const photo = await storage.getPhoto(photoId);
-
-      if (!photo) {
-        return res.status(404).json({ message: "Photo not found" });
-      }
-
-      res.json(photo);
-    } catch (error) {
-      console.error("Error getting photo:", error);
-      res.status(500).json({ message: "Failed to get photo" });
-    }
-  });
-
-  app.post("/api/photos/upload", requireAuth, upload.single('photo'), async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ message: "No photo file provided" });
-      }
-
-      const { customerId, vehicleId, serviceId, category, description } = req.body;
-
-      // Compress and resize image
-      const compressedFilename = `compressed_${req.file.filename}`;
-      const compressedPath = path.join(uploadsDir, compressedFilename);
-
-      await sharp(req.file.path)
-        .resize(480, 480, { 
-          fit: 'inside',
-          withoutEnlargement: true 
-        })
-        .jpeg({ 
-          quality: 70,
-          progressive: true 
-        })
-        .toFile(compressedPath);
-
-      // Remove original file
-      fs.unlinkSync(req.file.path);
-
-      // Get compressed file stats
-      const compressedStats = fs.statSync(compressedPath);
-
-      // Determine entity type and ID based on what's provided
-      let entityType = 'other';
-      let entityId = 0;
-
-      if (customerId) {
-        entityType = 'customer';
-        entityId = parseInt(customerId);
-      } else if (vehicleId) {
-        entityType = 'vehicle';
-        entityId = parseInt(vehicleId);
-      } else if (serviceId) {
-        entityType = 'service';
-        entityId = parseInt(serviceId);
-      }
-
-      const photoData = {
-        category: category || 'other',
-        fileName: compressedFilename,
-        originalName: req.file.originalname,
-        mimeType: 'image/jpeg',
-        fileSize: compressedStats.size,
-        url: `/uploads/${compressedFilename}`,
-        description: description || undefined,
-        uploadedBy: req.user?.id || undefined,
-      };
-
-      const photo = await photosStorage.createPhoto(entityType, entityId, photoData);
-      res.status(201).json(photo);
-    } catch (error) {
-      console.error("Error uploading photo:", error);
-      res.status(500).json({ message: "Failed to upload photo" });
-    }
-  });
-
-  app.put("/api/photos/:id", requireAuth, async (req, res) => {
-    try {
-      const photoId = parseInt(req.params.id);
-      const updateData = req.body;
-
-      const photo = await storage.updatePhoto(photoId, updateData);
-      res.json(photo);
-    } catch (error) {
-      console.error("Error updating photo:", error);
-      res.status(500).json({ message: "Failed to update photo" });
-    }
-  });
-
-  app.delete("/api/photos/:id", requireAuth, async (req, res) => {
-    try {
-      const photoId = parseInt(req.params.id);
-
-      // Delete photo from database and file system
-      await photosStorage.deletePhoto(photoId);
-      res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting photo:", error);
-      res.status(500).json({ message: "Failed to delete photo" });
-    }
-  });
-
-  // Service extras routes
-  app.get("/api/service-extras", requireAuth, async (req, res) => {
-    try {
-      const serviceExtras = await storage.getServiceExtras();
-      res.json(serviceExtras);
-    } catch (error) {
-      console.error("Error fetching service extras:", error);
-      res.status(500).json({ message: "Failed to fetch service extras" });
-    }
-  });
-
-  app.post("/api/service-extras", requireAuth, async (req, res) => {
-    try {
-      const serviceExtraData = insertServiceExtraSchema.parse(req.body);
-      const serviceExtra = await storage.createServiceExtra(serviceExtraData);
-      res.status(201).json(serviceExtra);
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to create service extra" });
-    }
-  });
-
-  app.put("/api/service-extras/:id", requireAuth, async (req, res) => {
-    try {
-      const serviceExtraData = insertServiceExtraSchema.partial().parse(req.body);
-      const serviceExtra = await storage.updateServiceExtra(parseInt(req.params.id), serviceExtraData);
-      res.json(serviceExtra);
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to update service extra" });
-    }
-  });
-
-  app.delete("/api/service-extras/:id", requireAuth, async (req, res) => {
-    try {
-      await storage.deleteServiceExtra(parseInt(req.params.id));
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete service extra" });
-    }
-  });
-
-  // Service extra items routes
-  app.get("/api/services/:serviceId/extras", requireAuth, async (req, res) => {
-    try {
-      const items = await storage.getServiceExtraItems(parseInt(req.params.serviceId));
-      res.json(items);
-    } catch (error) {
-      console.error("Error fetching service extra items:", error);
-      res.status(500).json({ message: "Failed to fetch service extra items" });
-    }
-  });
-
-  app.post("/api/service-extra-items", requireAuth, async (req, res) => {
-    try {
-      const itemData = insertServiceExtraItemSchema.parse(req.body);
-      const item = await storage.createServiceExtraItem(itemData);
-      res.status(201).json(item);
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to create service extra item" });
-    }
-  });
-
-  app.put("/api/service-extra-items/:id", requireAuth, async (req, res) => {
-    try {
-      const itemData = insertServiceExtraItemSchema.partial().parse(req.body);
-      const item = await storage.updateServiceExtraItem(parseInt(req.params.id), itemData);
-      res.json(item);
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to update service extra item" });
-    }
-  });
-
-  app.delete("/api/service-extra-items/:id", requireAuth, async (req, res) => {
-    try {
-      await storage.deleteServiceExtraItem(parseInt(req.params.id));
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete service extra item" });
-    }
-  });
-
-  // Vehicle photos routes
-  app.get("/api/vehicles/:vehicleId/photos", requireAuth, async (req, res) => {
-    try {
-      const vehicleId = parseInt(req.params.vehicleId);
-      const photos = await photosStorage.getPhotos({ vehicleId });
-      res.json(photos);
-    } catch (error) {
-      console.error("Error getting vehicle photos:", error);
-      res.status(500).json({ message: "Failed to get vehicle photos" });
-    }
-  });
-
-  app.post("/api/vehicles/:vehicleId/photos", requireAuth, async (req, res) => {
-    try {
-      const vehicleId = parseInt(req.params.vehicleId);
-      
-      // Check if it's a file upload or base64 data
-      if (req.headers['content-type']?.includes('multipart/form-data')) {
-        // Handle file upload using multer middleware
-        upload.single('photo')(req, res, async (err) => {
-          if (err) {
-            console.error("Multer error:", err);
-            return res.status(400).json({ message: "File upload error" });
-          }
-
-          if (!req.file) {
-            return res.status(400).json({ message: "No photo file provided" });
-          }
-
-          const { category, description } = req.body;
-
-          try {
-            // Compress and resize image
-            const compressedFilename = `compressed_${req.file.filename}`;
-            const compressedPath = path.join(uploadsDir, compressedFilename);
-
-            await sharp(req.file.path)
-              .resize(480, 480, { 
-                fit: 'inside',
-                withoutEnlargement: true 
-              })
-              .jpeg({ 
-                quality: 70,
-                progressive: true 
-              })
-              .toFile(compressedPath);
-
-            // Remove original file
-            fs.unlinkSync(req.file.path);
-
-            // Get compressed file stats
-            const compressedStats = fs.statSync(compressedPath);
-
-            const photoData = {
-              category: category || 'vehicle',
-              fileName: compressedFilename,
-              originalName: req.file.originalname,
-              mimeType: 'image/jpeg',
-              fileSize: compressedStats.size,
-              url: `/uploads/${compressedFilename}`,
-              description: description || undefined,
-              uploadedBy: req.user?.id || undefined,
-            };
-
-            const photo = await photosStorage.createPhoto('vehicle', vehicleId, photoData);
-            res.status(201).json(photo);
-          } catch (error) {
-            console.error("Error processing uploaded photo:", error);
-            res.status(500).json({ message: "Failed to process uploaded photo" });
-          }
-        });
-      } else {
-        // Handle base64 photo data (from camera)
-        const { photo, category, description } = req.body;
-
-        if (!photo) {
-          return res.status(400).json({ message: "No photo data provided" });
-        }
-
-        // Convert base64 to buffer
-        const base64Data = photo.replace(/^data:image\/\w+;base64,/, '');
-        const buffer = Buffer.from(base64Data, 'base64');
-
-        // Create filename
-        const filename = `camera_${Date.now()}-${Math.round(Math.random() * 1E9)}.jpg`;
-        const filepath = path.join(uploadsDir, filename);
-
-        // Process and save image
-        await sharp(buffer)
-          .resize(480, 480, { 
-            fit: 'inside',
-            withoutEnlargement: true 
-          })
-          .jpeg({ 
-            quality: 70,
-            progressive: true 
-          })
-          .toFile(filepath);
-
-        // Get file stats
-        const stats = fs.statSync(filepath);
-
-        const photoData = {
-          category: category || 'vehicle',
-          fileName: filename,
-          originalName: `camera_capture_${Date.now()}.jpg`,
-          mimeType: 'image/jpeg',
-          fileSize: stats.size,
-          url: `/uploads/${filename}`,
-          description: description || undefined,
-          uploadedBy: req.user?.id || undefined,
-        };
-
-        const savedPhoto = await photosStorage.createPhoto('vehicle', vehicleId, photoData);
-        res.status(201).json(savedPhoto);
-      }
-    } catch (error) {
-      console.error("Error handling vehicle photo:", error);
-      res.status(500).json({ message: "Failed to handle vehicle photo" });
-    }
-  });
-
-  // Serve uploaded files
-  app.use('/uploads', express.static(uploadsDir));
-
-  const httpServer = createServer(app);
-  return httpServer;
-}

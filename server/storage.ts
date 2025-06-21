@@ -173,6 +173,8 @@ export interface IStorage {
   updateServiceExtraItem(id: number, item: Partial<InsertServiceExtraItem>): Promise<ServiceExtraItem>;
   deleteServiceExtraItem(id: number): Promise<void>;
   deleteServiceExtraItemsByServiceId(serviceId: number): Promise<void>;
+
+  getServiceStatusData(): Promise<{ status: string; count: number }[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1652,6 +1654,27 @@ export class DatabaseStorage implements IStorage {
       };
     } catch (error) {
       console.error('Error fetching service:', error);
+      throw error;
+    }
+  }
+
+  async getServiceStatusData(): Promise<{ status: string; count: number }[]> {
+    try {
+      console.log("Storage: Getting service status data...");
+
+      const result = await db
+        .select({
+          status: services.status,
+          count: sql<number>`count(*)`
+        })
+        .from(services)
+        .groupBy(services.status)
+        .orderBy(sql`count(*) desc`);
+
+      console.log("Storage: Service statuses result:", result);
+      return result;
+    } catch (error) {
+      console.error('Error getting service status data:', error);
       throw error;
     }
   }

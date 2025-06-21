@@ -11,6 +11,7 @@ import TopServices from "@/components/dashboard/top-services";
 import RecentServices from "../components/dashboard/recent-services";
 import UpcomingAppointments from "../components/dashboard/upcoming-appointments";
 import PaymentStatusOverview from "@/components/dashboard/payment-status-overview";
+import ServiceStatusChart from "@/components/dashboard/service-status-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -210,6 +211,9 @@ export default function Dashboard() {
                     </div>
                   </div>
                 )}
+
+                {/* Status dos Serviços - Gráfico de Pizza Interativo */}
+                <ServiceStatusChart />
               </div>
 
               {/* Right Column - Operações e Serviços */}
