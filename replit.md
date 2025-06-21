@@ -125,6 +125,7 @@ This is a comprehensive automotive service management system built as a full-sta
 
 ```
 Changelog:
+- June 20, 2025. Improved mobile schedule page layout - moved counter next to "Hoje" for mobile devices
 - June 20, 2025. Removed loyalty/fidelization functionality from the system
 - June 20, 2025. Added payment status filters to services page (Pagos, Pendentes, Parcial)
 - June 20, 2025. Fixed photo deletion preventing form submission with proper event handling

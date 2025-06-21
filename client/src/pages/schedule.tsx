@@ -336,7 +336,14 @@ export default function SchedulePage() {
                     <SelectValue placeholder="Filtrar por período" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="day">Hoje</SelectItem>
+                    <SelectItem value="day">
+                      <div className="flex items-center justify-between w-full sm:block">
+                        <span>Hoje</span>
+                        <span className="ml-2 px-2 py-1 bg-teal-100 text-teal-800 rounded-full text-xs font-bold sm:hidden">
+                          {periodFilter === "day" ? filteredServices.length : ""}
+                        </span>
+                      </div>
+                    </SelectItem>
                     <SelectItem value="week">Esta Semana</SelectItem>
                     <SelectItem value="month">Este Mês</SelectItem>
                     <SelectItem value="all">Todos os Períodos</SelectItem>
@@ -345,7 +352,8 @@ export default function SchedulePage() {
               </div>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full lg:w-auto">
-                <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-4 sm:px-5 py-3 rounded-xl shadow-lg backdrop-blur-sm">
+                {/* Desktop counter - hidden on mobile */}
+                <div className="hidden sm:block bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-4 sm:px-5 py-3 rounded-xl shadow-lg backdrop-blur-sm">
                   <span className="font-bold text-base sm:text-lg">{filteredServices.length}</span>
                   <span className="ml-2 text-xs sm:text-sm font-medium">
                     {periodFilter === "day" ? "hoje" : 
