@@ -161,30 +161,10 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                {/* Receita Realizada */}
-                {user?.role === "admin" && (
-                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div className="p-6 border-b border-gray-100">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-gray-900">Receita Realizada (R$)</h3>
-                        <div className="flex space-x-2">
-                          <button className="px-3 py-1 bg-teal-600 text-white text-xs rounded-md">
-                            Semanal
-                          </button>
-                          <button className="px-3 py-1 text-gray-600 text-xs rounded-md hover:bg-gray-100">
-                            Mensal
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-6">
-                      <RealizedRevenueChart />
-                    </div>
-                  </div>
-                )}
+                
               </div>
 
-              {/* Center Column - Análise de Performance e Receitas */}
+              {/* Center Column - Análises Financeiras Comparativas */}
               <div className="col-span-5 space-y-6">
                 
                 {/* Receita Estimada vs Realizada */}
@@ -209,7 +189,33 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                {/* Serviços Populares */}
+                {/* Receita Realizada - Movido para ficar ao lado da estimada */}
+                {user?.role === "admin" && (
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="p-6 border-b border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-gray-900">Receita Realizada (R$)</h3>
+                        <div className="flex space-x-2">
+                          <button className="px-3 py-1 bg-teal-600 text-white text-xs rounded-md">
+                            Semanal
+                          </button>
+                          <button className="px-3 py-1 text-gray-600 text-xs rounded-md hover:bg-gray-100">
+                            Mensal
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <RealizedRevenueChart />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column - Operações e Serviços */}
+              <div className="col-span-3 space-y-6">
+                
+                {/* Serviços Populares - Movido para a direita */}
                 {user?.role === "admin" && (
                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                     <div className="p-6 border-b border-gray-100">
@@ -220,10 +226,6 @@ export default function Dashboard() {
                     </div>
                   </div>
                 )}
-              </div>
-
-              {/* Right Column - Atividades Operacionais */}
-              <div className="col-span-3 space-y-6">
                 
                 {/* Próximos Agendamentos */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
