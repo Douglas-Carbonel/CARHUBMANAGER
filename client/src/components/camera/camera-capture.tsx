@@ -111,6 +111,14 @@ export default function CameraCapture({
     }
   }, [facingMode, isStreamActive, startCamera]);
 
+  const handleClose = useCallback(() => {
+    stopCamera();
+    setCapturedImage(null);
+    setDescription('');
+    setCategory('other');
+    onClose();
+  }, [stopCamera, onClose]);
+
   const handleSavePhoto = useCallback(async () => {
     if (!capturedImage) return;
 
@@ -183,14 +191,6 @@ export default function CameraCapture({
       });
     }
   }, [capturedImage, customerId, vehicleId, serviceId, category, description, onPhotoTaken, toast, handleClose]);
-
-  const handleClose = useCallback(() => {
-    stopCamera();
-    setCapturedImage(null);
-    setDescription('');
-    setCategory('other');
-    onClose();
-  }, [stopCamera, onClose]);
 
   React.useEffect(() => {
     if (isOpen && !capturedImage) {
