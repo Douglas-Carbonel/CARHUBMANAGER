@@ -1053,6 +1053,73 @@ export default function Services() {
                               accept="image/*"
                               className="hidden"
                               id="service-photo-upload"
+                              onChange={async (event) => {
+                                const files = event.target.files;
+                                if (!files || files.length === 0) return;
+
+                                // For new services without ID, add to temporary photos
+                                if (!editingService?.id) {
+                                  Array.from(files).forEach((file) => {
+                                    const reader = new FileReader();
+                                    reader.onload = (e) => {
+                                      const photo = e.target?.result as string;
+                                      setTemporaryPhotos(prev => [...prev, { photo, category: 'service' }]);
+                                    };
+                                    reader.readAsDataURL(file);
+                                  });
+                                  
+                                  toast({
+                                    title: "Fotos adicionadas!",
+                                    description: "As fotos serão salvas quando o serviço for cadastrado.",
+                                  });
+                                  return;
+                                }
+
+                                // For existing services, upload directly
+                                try {
+                                  for (const file of Array.from(files)) {
+                                    if (!file.type.startsWith('image/')) {
+                                      toast({
+                                        title: "Arquivo inválido",
+                                        description: "Apenas imagens são permitidas.",
+                                        variant: "destructive",
+                                      });
+                                      continue;
+                                    }
+
+                                    const formData = new FormData();
+                                    formData.append('photo', file);
+                                    formData.append('category', 'service');
+                                    formData.append('serviceId', editingService.id.toString());
+
+                                    const res = await fetch('/api/photos/upload', {
+                                      method: 'POST',
+                                      body: formData,
+                                      credentials: 'include',
+                                    });
+
+                                    if (!res.ok) {
+                                      throw new Error(`${res.status}: ${res.statusText}`);
+                                    }
+                                  }
+
+                                  toast({
+                                    title: "Fotos enviadas",
+                                    description: "As fotos foram enviadas com sucesso.",
+                                  });
+
+                                  fetchServicePhotos(editingService.id);
+                                } catch (error: any) {
+                                  toast({
+                                    title: "Erro",
+                                    description: error.message,
+                                    variant: "destructive",
+                                  });
+                                }
+
+                                // Reset file input
+                                event.target.value = '';
+                              }}
                             />
                           </div>
                         </div>
