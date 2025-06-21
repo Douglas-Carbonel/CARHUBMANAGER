@@ -843,7 +843,6 @@ export default function VehiclesPage() {
                                     className="h-11 bg-white/80 border-slate-200 rounded-lg"
                                     {...field} 
                                     value={field.value || ""}
-                                  ```text
                                   />
                                 </FormControl>
                                 <FormMessage />
