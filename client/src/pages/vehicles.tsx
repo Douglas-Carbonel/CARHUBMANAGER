@@ -1185,7 +1185,7 @@ export default function VehiclesPage() {
                               variant="outline"
                               size="sm"
                               onClick={() => setLocation(`/vehicle-photos?vehicleId=${vehicle.id}&vehiclePlate=${encodeURIComponent(vehicle.licensePlate)}`)}
-                              className="border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl h-9"
+                              className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl h-9"
                             >
                               <Camera className="h-3 w-3 mr-1" />
                               <span className="text-xs">Fotos</span>

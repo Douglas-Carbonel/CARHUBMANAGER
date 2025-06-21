@@ -1006,7 +1006,7 @@ export default function CustomersPage() {
                               size="sm"
                                                             onClick={() => handleViewPhotos(customer)}
                               className={cn(
-                                "border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl",
+                                "border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl",
                                 isMobile ? "h-7 px-1" : "h-9"
                               )}
                             >

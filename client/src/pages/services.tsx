@@ -1766,7 +1766,7 @@ export default function Services() {
                           variant="ghost"
                           size="sm"
                           onClick={() => setLocation(`/service-photos?serviceId=${service.id}`)}
-                          className="h-8 w-8 p-0 hover:bg-blue-100 text-blue-600"
+                          className="h-8 w-8 p-0 hover:bg-teal-100 text-teal-600"
                           title="Ver fotos do serviço"
                         >
                           <Camera className="h-4 w-4" />
