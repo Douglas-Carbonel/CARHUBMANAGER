@@ -87,21 +87,23 @@ export default function Services() {
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
 
-  // Get customer filter from URL params
+  // Get filters from URL params
   const urlParams = new URLSearchParams(window.location.search);
   const customerIdFilter = urlParams.get('customerId') || '';
   const customerFilter = urlParams.get('customer') || '';
   const vehicleIdFilter = urlParams.get('vehicleId');
   const vehiclePlateFilter = urlParams.get('vehiclePlate');
+  const statusFilter = urlParams.get('status') || 'all';
 
   // Debug logging
   console.log('Services page - location:', location);
   console.log('Services page - window.location.search:', window.location.search);
   console.log('Services page - customerIdFilter:', customerIdFilter);
   console.log('Services page - customerFilter:', customerFilter);
+  console.log('Services page - statusFilter:', statusFilter);
 
   const [searchTerm, setSearchTerm] = useState(customerFilter);
-  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>(statusFilter);
   const [filterPayment, setFilterPayment] = useState<string>("all");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
@@ -1409,18 +1411,25 @@ export default function Services() {
                 className="pl-10 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm"
               />
             </div>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-48 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm">
-                <SelectValue placeholder="Filtrar por status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os status</SelectItem>
-                <SelectItem value="scheduled">Agendado</SelectItem>
-                <SelectItem value="in_progress">Em Andamento</SelectItem>
-                <SelectItem value="completed">Concluído</SelectItem>
-                <SelectItem value="cancelled">Cancelado</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="relative">
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className={`w-48 h-12 border-2 ${filterStatus !== 'all' ? 'border-blue-400 bg-blue-50' : 'border-teal-200'} focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm`}>
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="scheduled">Agendado</SelectItem>
+                  <SelectItem value="in_progress">Em Andamento</SelectItem>
+                  <SelectItem value="completed">Concluído</SelectItem>
+                  <SelectItem value="cancelled">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+              {filterStatus !== 'all' && statusFilter !== 'all' && (
+                <div className="absolute -top-2 -right-2 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                  <span className="text-xs text-white font-bold">!</span>
+                </div>
+              )}
+            </div>
 
             <Select value={filterPayment} onValueChange={setFilterPayment}>
               <SelectTrigger className="w-48 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm">

@@ -89,6 +89,7 @@ export default function PaymentMethodsChart() {
   };
 
   services.forEach((service: any) => {
+    // Contabiliza cada pagamento recebido, independente do serviço
     // PIX
     const pixValue = parseFloat(service.pixPago || 0);
     if (pixValue > 0) {

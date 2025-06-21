@@ -119,7 +119,7 @@ export default function ServiceStatusChart() {
         {payload?.map((entry: any, index: number) => (
           <div
             key={index}
-            className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
+            className="flex items-center cursor-pointer hover:opacity-80 hover:bg-gray-50 rounded-lg p-2 transition-all duration-200"
             onClick={() => handlePieClick(entry.payload)}
           >
             <div
