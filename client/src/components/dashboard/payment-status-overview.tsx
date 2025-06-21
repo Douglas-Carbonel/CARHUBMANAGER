@@ -9,6 +9,17 @@ interface PaymentStatus {
 export default function PaymentStatusOverview() {
   const { data: services, isLoading, error } = useQuery({
     queryKey: ["/api/services"],
+    queryFn: async () => {
+      const response = await fetch("/api/services", {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    },
+    staleTime: 30000,
+    retry: 3,
   });
 
   if (isLoading) {

@@ -40,21 +40,18 @@ export default function Dashboard() {
       title: "Novo Agendamento",
       description: "Agendar um novo serviço",
       icon: Calendar,
-      color: "bg-gray-800 hover:bg-gray-900",
       route: "/schedule"
     },
     {
       title: "Novo Cliente",
       description: "Cadastrar cliente",
       icon: Users,
-      color: "bg-gray-800 hover:bg-gray-900",
       route: "/customers"
     },
     {
       title: "Serviços",
       description: "Gerenciar serviços",
       icon: Wrench,
-      color: "bg-gray-800 hover:bg-gray-900",
       route: "/services"
     }
   ];
@@ -109,15 +106,8 @@ export default function Dashboard() {
 
             {/* Header Section */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-              <div>
-                <h1 className="text-3xl font-semibold text-gray-900 mb-2">
-                  Dashboard
-                </h1>
-                <div className="flex items-center text-sm text-gray-500">
-                  <span>{new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                  <span className="mx-2">•</span>
-                  <span>Bem-vindo, {user?.firstName || user?.username}</span>
-                </div>
+              <div className="flex items-center text-sm text-gray-500">
+                <span>{new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
               </div>
               
               {/* Search and Actions */}
@@ -138,7 +128,7 @@ export default function Dashboard() {
                   <Button
                     key={index}
                     onClick={() => setLocation(action.route)}
-                    className={`${action.color} text-white border-0 shadow-sm hover:shadow-md transition-all duration-200 h-9 px-4`}
+                    className="bg-teal-600 hover:bg-teal-700 text-white border-0 shadow-sm hover:shadow-md transition-all duration-200 h-9 px-4"
                     size="sm"
                   >
                     <action.icon className="h-4 w-4 mr-2" />
@@ -153,13 +143,13 @@ export default function Dashboard() {
               <TechnicianStatsCards />
             </div>
 
-            {/* Main Content Grid - Maximized Layout */}
+            {/* Main Content Grid - Reorganizado por categorias */}
             <div className="grid grid-cols-12 gap-6">
               
-              {/* Left Column - Payment Status & Appointments */}
+              {/* Left Column - Dashboards Financeiros */}
               <div className="col-span-4 space-y-6">
                 
-                {/* Payment Status Overview - Primeiro card */}
+                {/* Payment Status Overview */}
                 {user?.role === "admin" && (
                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                     <div className="p-6 border-b border-gray-100">
@@ -171,55 +161,14 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                {/* Current Appointments - Melhorado */}
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                  <div className="p-6 border-b border-gray-100">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-900">Próximos Agendamentos</h3>
-                      <button 
-                        onClick={() => setLocation("/schedule")}
-                        className="text-sm text-gray-600 hover:text-gray-700 font-medium"
-                      >
-                        Ver Todos
-                      </button>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <UpcomingAppointments />
-                  </div>
-                </div>
-              </div>
-
-              {/* Center Column - Revenue Chart */}
-              <div className="col-span-5 space-y-6">
-                {user?.role === "admin" && (
-                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div className="p-6 border-b border-gray-100">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-gray-900">Receita Estimada vs Realizada</h3>
-                        <div className="flex space-x-2">
-                          <button className="px-3 py-1 bg-gray-800 text-white text-xs rounded-md">
-                            Últimos 7 dias
-                          </button>
-                          <button className="px-3 py-1 text-gray-600 text-xs rounded-md hover:bg-gray-100">
-                            30 dias
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-6">
-                      <RevenueChart />
-                    </div>
-                  </div>
-                )}
-
+                {/* Receita Realizada - Movido para agrupar com financeiros */}
                 {user?.role === "admin" && (
                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                     <div className="p-6 border-b border-gray-100">
                       <div className="flex items-center justify-between">
                         <h3 className="text-lg font-semibold text-gray-900">Receita Realizada (R$)</h3>
                         <div className="flex space-x-2">
-                          <button className="px-3 py-1 bg-gray-800 text-white text-xs rounded-md">
+                          <button className="px-3 py-1 bg-teal-600 text-white text-xs rounded-md">
                             Semanal
                           </button>
                           <button className="px-3 py-1 text-gray-600 text-xs rounded-md hover:bg-gray-100">
@@ -235,10 +184,52 @@ export default function Dashboard() {
                 )}
               </div>
 
-              {/* Right Column - Activity & Services */}
+              {/* Center Column - Dashboards de Receita e Estimativas */}
+              <div className="col-span-5 space-y-6">
+                {user?.role === "admin" && (
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="p-6 border-b border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-gray-900">Receita Estimada vs Realizada</h3>
+                        <div className="flex space-x-2">
+                          <button className="px-3 py-1 bg-teal-600 text-white text-xs rounded-md">
+                            Últimos 7 dias
+                          </button>
+                          <button className="px-3 py-1 text-gray-600 text-xs rounded-md hover:bg-gray-100">
+                            30 dias
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <RevenueChart />
+                    </div>
+                  </div>
+                )}
+
+                {/* Próximos Agendamentos - Movido para o centro */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="p-6 border-b border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-900">Próximos Agendamentos</h3>
+                      <button 
+                        onClick={() => setLocation("/schedule")}
+                        className="text-sm text-teal-600 hover:text-teal-700 font-medium"
+                      >
+                        Ver Todos
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <UpcomingAppointments />
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column - Dashboards de Serviços */}
               <div className="col-span-3 space-y-6">
                 
-                {/* Most Popular Services - Admin Only */}
+                {/* Serviços Populares */}
                 {user?.role === "admin" && (
                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                     <div className="p-6 border-b border-gray-100">
@@ -250,14 +241,14 @@ export default function Dashboard() {
                   </div>
                 )}
                 
-                {/* Recent Services */}
+                {/* Atividade Recente de Serviços */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                   <div className="p-6 border-b border-gray-100">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-semibold text-gray-900">Atividade Recente</h3>
                       <button 
                         onClick={() => setLocation("/services")}
-                        className="text-sm text-gray-600 hover:text-gray-700 font-medium"
+                        className="text-sm text-teal-600 hover:text-teal-700 font-medium"
                       >
                         Ver Todos
                       </button>
