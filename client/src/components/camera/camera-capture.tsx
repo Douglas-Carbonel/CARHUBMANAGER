@@ -115,6 +115,18 @@ export default function CameraCapture({
     if (!capturedImage) return;
 
     try {
+      // For new services/vehicles without ID, store as temporary photo
+      if (!serviceId && !vehicleId && !customerId) {
+        onPhotoTaken(capturedImage, category);
+        toast({
+          title: "Foto capturada!",
+          description: "A foto será salva quando o serviço for cadastrado.",
+        });
+        handleClose();
+        return;
+      }
+
+      // For existing entities, upload directly
       // Convert data URL to blob with proper MIME type
       const byteCharacters = atob(capturedImage.split(',')[1]);
       const byteNumbers = new Array(byteCharacters.length);
@@ -148,18 +160,13 @@ export default function CameraCapture({
 
       const photo = await uploadResponse.json();
       
-      // For new services without ID, call with photo URL and category
-      if (!serviceId && !vehicleId && !customerId) {
-        onPhotoTaken(capturedImage, category);
-      } else {
-        onPhotoTaken({
-          customerId,
-          vehicleId,
-          serviceId,
-          category,
-          description,
-        });
-      }
+      onPhotoTaken({
+        customerId,
+        vehicleId,
+        serviceId,
+        category,
+        description,
+      });
 
       toast({
         title: "Foto salva",
@@ -175,7 +182,7 @@ export default function CameraCapture({
         variant: "destructive",
       });
     }
-  }, [capturedImage, customerId, vehicleId, serviceId, category, description, onPhotoTaken, toast]);
+  }, [capturedImage, customerId, vehicleId, serviceId, category, description, onPhotoTaken, toast, handleClose]);
 
   const handleClose = useCallback(() => {
     stopCamera();
