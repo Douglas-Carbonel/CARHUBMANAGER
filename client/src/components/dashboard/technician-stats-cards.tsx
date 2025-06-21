@@ -48,8 +48,8 @@ export default function TechnicianStatsCards() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[...Array(4)].map((_, i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {[...Array(2)].map((_, i) => (
           <div key={i} className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
             <div className="flex items-center justify-between mb-4">
               <div className="h-4 bg-gray-200 rounded w-20"></div>
@@ -65,7 +65,7 @@ export default function TechnicianStatsCards() {
 
   if (error) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div className="bg-red-50 border border-red-200 rounded-xl p-6">
           <p className="text-red-600 text-sm">Erro ao carregar dados</p>
         </div>
@@ -89,8 +89,6 @@ export default function TechnicianStatsCards() {
   const previousStats = {
     receitaRealizada: stats?.receitaRealizada * 0.85 || 0,
     receitaPendente: stats?.receitaPendente * 1.15 || 0,
-    servicosConcluidos: (stats?.servicosConcluidos || 0) - 2,
-    pagamentosPendentes: (stats?.pagamentosPendentes || 0) + 1,
   };
 
   const cards = [
@@ -112,28 +110,10 @@ export default function TechnicianStatsCards() {
       iconBg: "bg-orange-50",
       iconColor: "text-orange-600",
     },
-    {
-      title: "Serviços Concluídos",
-      value: stats?.servicosConcluidos || 0,
-      change: calculatePercentage(stats?.servicosConcluidos || 0, previousStats.servicosConcluidos),
-      subtitle: "Finalizados",
-      icon: Calendar,
-      iconBg: "bg-blue-50", 
-      iconColor: "text-blue-600",
-    },
-    {
-      title: "Pagamentos Pendentes",
-      value: stats?.pagamentosPendentes || 0,
-      change: calculatePercentage(stats?.pagamentosPendentes || 0, previousStats.pagamentosPendentes),
-      subtitle: "Sem pagamento",
-      icon: Users,
-      iconBg: "bg-red-50",
-      iconColor: "text-red-600",
-    },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
       {cards.map((card, index) => (
         <div key={index} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-sm transition-shadow">
           {/* Header */}
