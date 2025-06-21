@@ -843,6 +843,7 @@ export default function VehiclesPage() {
                                     className="h-11 bg-white/80 border-slate-200 rounded-lg"
                                     {...field} 
                                     value={field.value || ""}
+                                  ```text
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -878,10 +879,11 @@ export default function VehiclesPage() {
 
                         {/* Photos Section */}
                         <div className="col-span-2 border-t pt-4">
-                          <div className="space-y-4">
+                          
+<div className="space-y-4">
                             <div className="flex items-center justify-between">
                               <h4 className="text-sm font-medium text-gray-700">Fotos</h4>
-                              <div className="flex items-center gap-2 flex-wrap">
+                              <div className="flex items-center gap-2">
                                 <Button
                                   type="button"
                                   variant="outline"
@@ -894,7 +896,7 @@ export default function VehiclesPage() {
                                   className="flex items-center gap-2 text-xs"
                                 >
                                   <Camera className="h-4 w-4" />
-                                  {isMobile ? "Foto" : "Tirar Foto"}
+                                  {isMobile ? "Foto" : "Câmera"}
                                 </Button>
                                 <Button
                                   type="button"
@@ -926,7 +928,7 @@ export default function VehiclesPage() {
                                   className="flex items-center gap-2 text-xs"
                                 >
                                   <Plus className="h-4 w-4" />
-                                  {isMobile ? "+" : "Adicionar Fotos"}
+                                  +
                                 </Button>
                               </div>
                             </div>
