@@ -51,11 +51,36 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   const currentFormValues = form.watch();
   const hasFormChanges = formInitialValues && isOpen && JSON.stringify(currentFormValues) !== JSON.stringify(formInitialValues);
   const hasUnsavedChanges = hasFormChanges || serviceExtras.length > 0;
+  
+  // Debug logs
+  console.log('NewServiceModal - hasUnsavedChanges:', hasUnsavedChanges);
+  console.log('NewServiceModal - hasFormChanges:', hasFormChanges);
+  console.log('NewServiceModal - serviceExtras.length:', serviceExtras.length);
+  console.log('NewServiceModal - formInitialValues:', formInitialValues);
+  console.log('NewServiceModal - currentFormValues:', currentFormValues);
+  console.log('NewServiceModal - isOpen:', isOpen);
 
   const unsavedChanges = useUnsavedChanges({
     hasUnsavedChanges: !!hasUnsavedChanges,
     message: "Você tem alterações não salvas no cadastro do serviço. Deseja realmente sair?"
   });
+
+  // Intercepta o fechamento do modal para verificar alterações não salvas
+  const handleClose = () => {
+    if (hasUnsavedChanges) {
+      unsavedChanges.triggerConfirmation(() => {
+        onClose();
+        form.reset();
+        setServiceExtras([]);
+        setFormInitialValues(null);
+      });
+    } else {
+      onClose();
+      form.reset();
+      setServiceExtras([]);
+      setFormInitialValues(null);
+    }
+  };
 
   // Initialize form values when modal opens
   useEffect(() => {
@@ -608,7 +633,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                 <Button 
                   type="button" 
                   variant="outline"
-                  onClick={onClose}
+                  onClick={handleClose}
                 >
                   Cancelar
                 </Button>
