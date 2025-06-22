@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -32,6 +31,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   const queryClient = useQueryClient();
   const [serviceExtras, setServiceExtras] = useState<any[]>([]);
   const [formInitialValues, setFormInitialValues] = useState<any>(null);
+  const [userHasInteracted, setUserHasInteracted] = useState(false);
 
   const form = useForm<z.infer<typeof serviceSchemaWithoutEstimated>>({
     resolver: zodResolver(serviceSchemaWithoutEstimated),
@@ -49,15 +49,15 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
 
   // Track form changes for unsaved changes detection
   const currentFormValues = form.watch();
-  
+
   // Simplified detection: any non-default value means there are changes
   const hasFormChanges = useMemo(() => {
     if (!isOpen) {
       return false;
     }
-    
+
     const current = currentFormValues;
-    
+
     // Check if any field has been filled with meaningful data
     const hasCustomer = current.customerId && current.customerId > 0;
     const hasVehicle = current.vehicleId && current.vehicleId > 0;
@@ -66,10 +66,10 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
     const hasDate = current.scheduledDate && current.scheduledDate.trim() !== "";
     const hasTime = current.scheduledTime && current.scheduledTime.trim() !== "";
     const hasNotes = current.notes && current.notes.trim() !== "";
-    
+
     const hasAnyMeaningfulData = hasCustomer || hasVehicle || hasServiceType || 
                                 hasTechnician || hasDate || hasTime || hasNotes;
-    
+
     console.log('NewServiceModal - Form changes detection:', {
       current,
       checks: {
@@ -78,12 +78,12 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
       },
       hasAnyMeaningfulData
     });
-    
+
     return hasAnyMeaningfulData;
   }, [currentFormValues, isOpen]);
-  
+
   const hasUnsavedChanges = hasFormChanges || serviceExtras.length > 0;
-  
+
   // Debug logs
   console.log('NewServiceModal - hasUnsavedChanges:', hasUnsavedChanges);
   console.log('NewServiceModal - hasFormChanges:', hasFormChanges);
@@ -105,7 +105,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
     console.log('NewServiceModal - serviceExtras length:', serviceExtras.length);
     console.log('NewServiceModal - form values:', form.getValues());
     console.log('NewServiceModal - initial values:', formInitialValues);
-    
+
     if (hasUnsavedChanges) {
       console.log('NewServiceModal - Triggering confirmation dialog');
       unsavedChanges.triggerConfirmation(() => {
@@ -114,6 +114,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
         form.reset();
         setServiceExtras([]);
         setFormInitialValues(null);
+        setUserHasInteracted(false);
       });
     } else {
       console.log('NewServiceModal - No unsaved changes, closing directly');
@@ -121,6 +122,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
       form.reset();
       setServiceExtras([]);
       setFormInitialValues(null);
+      setUserHasInteracted(false);
     }
   };
 
@@ -128,7 +130,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   useEffect(() => {
     if (isOpen) {
       console.log('NewServiceModal: Modal opened, initializing form...');
-      
+
       const defaultValues = {
         customerId: 0,
         vehicleId: 0,
@@ -139,24 +141,24 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
         scheduledTime: "",
         notes: "",
       };
-      
+
       // Check URL params to pre-select customer if coming from customer page
       const urlParams = new URLSearchParams(window.location.search);
       const customerIdFromUrl = urlParams.get('customerId');
       const vehicleIdFromUrl = urlParams.get('vehicleId');
-      
+
       if (customerIdFromUrl) {
         const customerId = parseInt(customerIdFromUrl);
         console.log('NewServiceModal: Pre-selecting customer from URL:', customerId);
         defaultValues.customerId = customerId;
       }
-      
+
       if (vehicleIdFromUrl) {
         const vehicleId = parseInt(vehicleIdFromUrl);
         console.log('NewServiceModal: Pre-selecting vehicle from URL:', vehicleId);
         defaultValues.vehicleId = vehicleId;
       }
-      
+
       console.log('NewServiceModal: Resetting form with:', defaultValues);
       form.reset(defaultValues);
       setServiceExtras([]);
@@ -221,7 +223,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
         scheduledTime: data.scheduledTime || undefined,
         scheduledDate: data.scheduledDate || new Date().toISOString().split('T')[0],
       };
-      
+
       console.log('Creating service with data:', serviceData);
       await apiRequest("POST", "/api/services", serviceData);
     },
@@ -238,6 +240,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
       form.reset();
       setServiceExtras([]);
       setFormInitialValues(null);
+      setUserHasInteracted(false);
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -276,7 +279,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   // Calculate total value
   const calculateTotalValue = () => {
     let total = 0;
-    
+
     // Add service type value
     if (selectedServiceTypeId && serviceTypes) {
       const selectedServiceType = serviceTypes.find((st: ServiceType) => st.id === selectedServiceTypeId);
@@ -284,14 +287,14 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
         total += Number(selectedServiceType.defaultPrice);
       }
     }
-    
+
     // Add service extras values
     serviceExtras.forEach(extra => {
       if (extra.valor && !isNaN(Number(extra.valor))) {
         total += Number(extra.valor);
       }
     });
-    
+
     return total.toFixed(2);
   };
 
@@ -688,7 +691,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
           </Form>
         </div>
       </DialogContent>
-      
+
       {/* Dialog de confirmação de alterações não salvas */}
       <UnsavedChangesDialog
         isOpen={unsavedChanges.showConfirmDialog}
