@@ -248,6 +248,38 @@ export default function VehiclesPage() {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [temporaryPhotos, setTemporaryPhotos] = useState<{photo: string, category: string}[]>([]);
 
+  const form = useForm<VehicleFormData>({
+    resolver: zodResolver(vehicleFormSchema),
+    defaultValues: {
+      customerId: 0,
+      licensePlate: "",
+      brand: "",
+      model: "",
+      year: new Date().getFullYear(),
+      color: "",
+      chassis: "",
+      engine: "",
+      fuelType: "gasoline",
+      notes: "",
+    },
+  });
+
+  const { data: vehicles = [], isLoading: vehiclesLoading } = useQuery({
+    queryKey: ["/api/vehicles"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/vehicles");
+      return await res.json();
+    },
+  });
+
+  const { data: customers = [] } = useQuery({
+    queryKey: ["/api/customers"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/customers");
+      return await res.json();
+    },
+  });
+
   // Check URL parameters for customer filtering
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -284,38 +316,6 @@ export default function VehiclesPage() {
       }
     }
   }, [customers]);
-
-  const form = useForm<VehicleFormData>({
-    resolver: zodResolver(vehicleFormSchema),
-    defaultValues: {
-      customerId: 0,
-      licensePlate: "",
-      brand: "",
-      model: "",
-      year: new Date().getFullYear(),
-      color: "",
-      chassis: "",
-      engine: "",
-      fuelType: "gasoline",
-      notes: "",
-    },
-  });
-
-  const { data: vehicles = [], isLoading: vehiclesLoading } = useQuery({
-    queryKey: ["/api/vehicles"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/vehicles");
-      return await res.json();
-    },
-  });
-
-  const { data: customers = [] } = useQuery({
-    queryKey: ["/api/customers"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/customers");
-      return await res.json();
-    },
-  });
 
   const createMutation = useMutation({
     mutationFn: async (data: VehicleFormData) => {
