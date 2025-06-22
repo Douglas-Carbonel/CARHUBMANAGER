@@ -1583,8 +1583,7 @@ export default function Services() {
                         <Input
                           type="text"
                           placeholder="0.00"
-                          ```text
-value={formatCurrency(paymentMethods.cheque)}
+                          value={formatCurrency(paymentMethods.cheque)}
                           onChange={(e) => {
                             const formattedValue = formatCurrency(e.target.value);
                             setPaymentMethods(prev => ({ ...prev, cheque: parseCurrency(formattedValue) }));
