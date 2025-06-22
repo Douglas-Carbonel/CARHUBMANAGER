@@ -986,13 +986,9 @@ export default function CustomersPage() {
                                 if (res.ok) {
                                   const customerVehicles = await res.json();
                                   
-                                  if (customerVehicles.length === 0) {
-                                    // No vehicles found, navigate with autoCreate parameter
-                                    setLocation(`/vehicles?customerId=${customer.id}&autoCreate=true`);
-                                  } else {
-                                    // Has vehicles, navigate normally
-                                    setLocation(`/vehicles?customerId=${customer.id}`);
-                                  }
+                                  // Always navigate to vehicles page filtered by customer
+                                  // The vehicles page will show appropriate message if no vehicles found
+                                  setLocation(`/vehicles?customerId=${customer.id}`);
                                 } else {
                                   // Error checking vehicles, navigate normally
                                   setLocation(`/vehicles?customerId=${customer.id}`);

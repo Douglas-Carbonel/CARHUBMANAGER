@@ -286,7 +286,7 @@ export default function VehiclesPage() {
     const customerId = urlParams.get('customerId');
     if (customerId) {
       setCustomerFilter(parseInt(customerId));
-      
+
       // Check if we should auto-open the modal for new vehicle registration
       const autoCreate = urlParams.get('autoCreate');
       if (autoCreate === 'true') {
@@ -311,7 +311,7 @@ export default function VehiclesPage() {
           setCustomModel("");
           setIsModalOpen(true);
         }, 500);
-        
+
         return () => clearTimeout(timer);
       }
     }
@@ -850,8 +850,7 @@ export default function VehiclesPage() {
                                   <Input 
                                     type="number" 
                                     placeholder="2024" 
-                                    className="h-11 bg-white/80 border-slate-200 rounded-lg"
-                                    {...field}
+                                    className="h-11 bg-white/80 border-slate-200 rounded-lg"{...field}
                                     onChange={(e) => field.onChange(parseInt(e.target.value))}
                                   />
                                 </FormControl>
@@ -906,7 +905,7 @@ export default function VehiclesPage() {
 
                         {/* Photos Section */}
                         <div className="col-span-2 border-t pt-4">
-                          
+
 <div className="space-y-4">
                             <div className="flex items-center justify-between">
                               <h4 className="text-sm font-medium text-gray-700">Fotos</h4>
@@ -985,7 +984,7 @@ export default function VehiclesPage() {
                                         type="button"
                                         onClick={async () => {
                                           if (!confirm('Tem certeza que deseja remover esta foto?')) return;
-                                          
+
                                           try {
                                             const res = await fetch(`/api/photos/${photo.id}`, {
                                               method: 'DELETE',
@@ -1132,7 +1131,7 @@ export default function VehiclesPage() {
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">
                   {customerFilter 
-                    ? `Nenhum veículo encontrado para ${customers.find(c => c.id === customerFilter)?.name || 'este cliente'}`
+                    ? `${customers.find(c => c.id === customerFilter)?.name || 'Cliente'} não possui veículos cadastrados`
                     : "Nenhum veículo encontrado"
                   }
                 </h3>
@@ -1140,7 +1139,7 @@ export default function VehiclesPage() {
                   {searchTerm 
                     ? 'Tente ajustar os termos de busca.' 
                     : customerFilter 
-                      ? 'Este cliente ainda não possui veículos cadastrados.'
+                      ? 'Deseja cadastrar um veículo para este cliente?'
                       : 'Comece adicionando seu primeiro veículo.'
                   }
                 </p>
