@@ -227,6 +227,26 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ isOpen, onClose, onPhotoT
   );
 };
 
+// Unsaved Changes Dialog Component
+const UnsavedChangesDialog = ({ open, onConfirm, onCancel }: { open: boolean; onConfirm: () => void; onCancel: () => void }) => {
+  return (
+    <Dialog open={open} onOpenChange={(open) => !open && onCancel()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Você tem alterações não salvas.</DialogTitle>
+        </DialogHeader>
+        <p className="mb-4">Deseja realmente sair?</p>
+        <div className="flex justify-end space-x-2">
+          <Button variant="secondary" onClick={onCancel}>
+            Cancelar
+          </Button>
+          <Button onClick={onConfirm}>Confirmar</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export default function VehiclesPage() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -244,6 +264,9 @@ export default function VehiclesPage() {
   const [temporaryPhotos, setTemporaryPhotos] = useState<{photo: string, category: string}[]>([]);
   const [isServiceWarningOpen, setIsServiceWarningOpen] = useState(false);
   const [vehicleForServiceWarning, setVehicleForServiceWarning] = useState<Vehicle | null>(null);
+  const [formInitialValues, setFormInitialValues] = useState<VehicleFormData | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [navigationConfirmation, setNavigationConfirmation] = useState(() => () => {});
 
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleFormSchema),
@@ -282,7 +305,7 @@ export default function VehiclesPage() {
     const urlParams = new URLSearchParams(window.location.search);
     const customerId = urlParams.get('customerId');
     const openModal = urlParams.get('openModal');
-    
+
     if (customerId) {
       setCustomerFilter(parseInt(customerId));
 
@@ -503,8 +526,45 @@ export default function VehiclesPage() {
     }
   };
 
+  const confirmNavigation = () => {
+    navigationConfirmation();
+    setNavigationConfirmation(() => {});
+  };
+
+  const cancelNavigation = () => {
+    setShowConfirmDialog(false);
+    setNavigationConfirmation(() => {});
+  };
+
+  const handleModalOpenChange = (open: boolean) => {
+    if (!open && form.isDirty()) {
+      setShowConfirmDialog(true);
+      setNavigationConfirmation(() => () => {
+        setIsModalOpen(false);
+        setFormInitialValues(null);
+        setCurrentVehiclePhotos([]);
+        setTemporaryPhotos([]);
+        setEditingVehicle(null);
+        form.reset();
+      });
+    } else if (!open) {
+      setIsModalOpen(false);
+      setFormInitialValues(null);
+      setCurrentVehiclePhotos([]);
+      setTemporaryPhotos([]);
+      setEditingVehicle(null);
+      form.reset();
+    } else {
+      setIsModalOpen(true);
+    }
+  };
+
   const handleEdit = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle);
+    setFormInitialValues({
+      ...vehicle,
+      customerId: vehicle.customerId,
+    });
     form.reset({
       ...vehicle,
       customerId: vehicle.customerId,
@@ -602,7 +662,7 @@ export default function VehiclesPage() {
 
                 {/* Only show + Novo button if not showing customer-specific no vehicles message */}
                 {!(filteredVehicles.length === 0 && customerFilter && !searchTerm) && (
-                  <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                  <Dialog open={isModalOpen} onOpenChange={handleModalOpenChange}>
                     <DialogTrigger asChild>
                       <Button 
                         className={cn(
@@ -610,10 +670,22 @@ export default function VehiclesPage() {
                           isMobile ? "w-full h-10 text-sm px-4" : "px-6"
                         )}
                         onClick={() => {
-                          setEditingVehicle(null);
-                          form.reset();
-                          setTemporaryPhotos([]);
-                          setCurrentVehiclePhotos([]);
+                          if (form.isDirty()) {
+                            setShowConfirmDialog(true);
+                            setNavigationConfirmation(() => () => {
+                              setEditingVehicle(null);
+                              form.reset();
+                              setTemporaryPhotos([]);
+                              setCurrentVehiclePhotos([]);
+                              setIsModalOpen(true);
+                            });
+                          } else {
+                            setEditingVehicle(null);
+                            form.reset();
+                            setTemporaryPhotos([]);
+                            setCurrentVehiclePhotos([]);
+                            setIsModalOpen(true);
+                          }
                         }}
                       >
                         <Plus className={cn(isMobile ? "h-4 w-4 mr-1" : "h-5 w-5 mr-2")} />
@@ -806,8 +878,7 @@ export default function VehiclesPage() {
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    setIsCameraOpen(true);
-                                  }}
+                                    setIsCameraOpen(true);                                  }}
                                   className="flex items-center gap-2 text-xs"
                                 >
                                   <Camera className="h-4 w-4" />
@@ -976,6 +1047,21 @@ export default function VehiclesPage() {
               </div>
             </div>
 
+            {/* Unsaved Changes Dialog */}
+            <UnsavedChangesDialog
+              open={showConfirmDialog}
+              onConfirm={() => {
+                confirmNavigation();
+                setIsModalOpen(false);
+                setFormInitialValues(null);
+                setCurrentVehiclePhotos([]);
+                setTemporaryPhotos([]);
+                setEditingVehicle(null);
+                form.reset();
+              }}
+              onCancel={cancelNavigation}
+            />
+
             {/* Camera Capture Modal */}
             <CameraCapture
               isOpen={isCameraOpen}
@@ -1034,7 +1120,7 @@ export default function VehiclesPage() {
                   }
                 </p>
                 {!searchTerm && (
-                  <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                  <Dialog open={isModalOpen} onOpenChange={handleModalOpenChange}>
                     <DialogTrigger asChild>
                       <Button
                         className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
@@ -1582,18 +1668,18 @@ export default function VehiclesPage() {
           </div>
         </main>
 
-        {/* Modal de aviso quando veículo não tem serviços */}
+        {/* Vehicle Warning Modal */}
         <Dialog open={isServiceWarningOpen} onOpenChange={setIsServiceWarningOpen}>
           <DialogContent className="max-w-md bg-gradient-to-br from-teal-50 to-emerald-50 border-teal-200">
             <DialogHeader className="text-center pb-4">
-              <div className="mx-auto mb-4 w-16 h-16 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-full flex items-center justify-center">
+              <div className="mx-auto mb-4 w-16 h-16 bg-gradient-to-br from-teal-500 to-emerald600 rounded-full flex items-center justify-center">
                 <Wrench className="h-8 w-8 text-white" />
               </div>
               <DialogTitle className="text-xl font-bold text-teal-900">
                 Primeiro Serviço
               </DialogTitle>
             </DialogHeader>
-            
+
             <div className="text-center space-y-4">
               <p className="text-gray-700">
                 O veículo <strong>{vehicleForServiceWarning?.licensePlate}</strong> ({vehicleForServiceWarning?.brand} {vehicleForServiceWarning?.model}) ainda não possui serviços cadastrados.
