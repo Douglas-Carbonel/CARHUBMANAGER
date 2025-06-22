@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
@@ -31,8 +31,8 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [serviceExtras, setServiceExtras] = useState<any[]>([]);
-  const [initialFormState, setInitialFormState] = useState<any>(null);
   const [hasFormChanges, setHasFormChanges] = useState(false);
+  const initialFormStateRef = useRef<any>(null);
 
   const form = useForm<z.infer<typeof serviceSchemaWithoutEstimated>>({
     resolver: zodResolver(serviceSchemaWithoutEstimated),
@@ -53,21 +53,23 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
 
   // Check for changes when form values change
   useEffect(() => {
-    if (!isOpen || !initialFormState) {
-      console.log('NewServiceModal - Skipping change check:', { isOpen, hasInitialState: !!initialFormState });
+    const initialState = initialFormStateRef.current;
+    
+    if (!isOpen || !initialState) {
+      console.log('NewServiceModal - Skipping change check:', { isOpen, hasInitialState: !!initialState });
       return;
     }
 
     // Compare each field individually for better debugging
     const changes = {
-      customerId: formValues.customerId !== initialFormState.customerId,
-      vehicleId: formValues.vehicleId !== initialFormState.vehicleId,
-      serviceTypeId: formValues.serviceTypeId !== initialFormState.serviceTypeId,
-      technicianId: formValues.technicianId !== initialFormState.technicianId,
-      status: formValues.status !== initialFormState.status,
-      scheduledDate: formValues.scheduledDate !== initialFormState.scheduledDate,
-      scheduledTime: formValues.scheduledTime !== initialFormState.scheduledTime,
-      notes: formValues.notes !== initialFormState.notes,
+      customerId: formValues.customerId !== initialState.customerId,
+      vehicleId: formValues.vehicleId !== initialState.vehicleId,
+      serviceTypeId: formValues.serviceTypeId !== initialState.serviceTypeId,
+      technicianId: formValues.technicianId !== initialState.technicianId,
+      status: formValues.status !== initialState.status,
+      scheduledDate: formValues.scheduledDate !== initialState.scheduledDate,
+      scheduledTime: formValues.scheduledTime !== initialState.scheduledTime,
+      notes: formValues.notes !== initialState.notes,
     };
 
     const hasChanges = Object.values(changes).some(changed => changed);
@@ -76,11 +78,11 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
       hasChanges,
       changes,
       currentValues: formValues,
-      initialValues: initialFormState
+      initialValues: initialState
     });
 
     setHasFormChanges(hasChanges);
-  }, [formValues, initialFormState, isOpen]);
+  }, [formValues, isOpen]);
 
   const hasUnsavedChanges = hasFormChanges || serviceExtras.length > 0;
 
@@ -128,7 +130,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
     });
     setServiceExtras([]);
     setHasFormChanges(false);
-    setInitialFormState(null);
+    initialFormStateRef.current = null;
   };
 
   // Initialize form when modal opens
@@ -171,9 +173,9 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
       form.reset(defaultValues);
       setServiceExtras([]);
       
-      // Set initial state immediately
-      setInitialFormState({ ...defaultValues });
-      console.log('NewServiceModal: Initial form state set:', defaultValues);
+      // Set initial state in ref immediately
+      initialFormStateRef.current = { ...defaultValues };
+      console.log('NewServiceModal: Initial form state set in ref:', defaultValues);
     }
   }, [isOpen, form]);
 
