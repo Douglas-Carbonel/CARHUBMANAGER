@@ -32,6 +32,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   const queryClient = useQueryClient();
   const [serviceExtras, setServiceExtras] = useState<any[]>([]);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const [initialFormValues, setInitialFormValues] = useState<any>(null);
 
   const form = useForm<z.infer<typeof serviceSchemaWithoutEstimated>>({
     resolver: zodResolver(serviceSchemaWithoutEstimated),
@@ -50,31 +51,32 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   // Watch all form values
   const formValues = form.watch();
 
-  // Track if user has made meaningful changes
+  // Track if user has made changes compared to initial values
   const hasFormChanges = useMemo(() => {
-    if (!isOpen || !hasUserInteracted) {
+    if (!isOpen || !hasUserInteracted || !initialFormValues) {
       return false;
     }
 
-    // Check if any field has meaningful data
-    const hasMeaningfulData = 
-      (formValues.customerId && formValues.customerId > 0) ||
-      (formValues.vehicleId && formValues.vehicleId > 0) ||
-      (formValues.serviceTypeId && formValues.serviceTypeId > 0) ||
-      (formValues.technicianId && formValues.technicianId > 0) ||
-      (formValues.scheduledDate && formValues.scheduledDate.trim() !== "") ||
-      (formValues.scheduledTime && formValues.scheduledTime.trim() !== "") ||
-      (formValues.notes && formValues.notes.trim() !== "");
+    // Compare current values with initial values
+    const hasChanges = 
+      formValues.customerId !== initialFormValues.customerId ||
+      formValues.vehicleId !== initialFormValues.vehicleId ||
+      formValues.serviceTypeId !== initialFormValues.serviceTypeId ||
+      formValues.technicianId !== initialFormValues.technicianId ||
+      formValues.scheduledDate !== initialFormValues.scheduledDate ||
+      formValues.scheduledTime !== initialFormValues.scheduledTime ||
+      formValues.notes !== initialFormValues.notes;
 
     console.log('NewServiceModal - Form changes check:', {
       isOpen,
       hasUserInteracted,
+      initialFormValues,
       formValues,
-      hasMeaningfulData
+      hasChanges
     });
 
-    return hasMeaningfulData;
-  }, [formValues, isOpen, hasUserInteracted]);
+    return hasChanges;
+  }, [formValues, isOpen, hasUserInteracted, initialFormValues]);
 
   const hasUnsavedChanges = hasFormChanges || serviceExtras.length > 0;
 
@@ -123,6 +125,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
     });
     setServiceExtras([]);
     setHasUserInteracted(false);
+    setInitialFormValues(null);
   };
 
   // Initialize form when modal opens
@@ -132,6 +135,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
 
       // Reset interaction state
       setHasUserInteracted(false);
+      setInitialFormValues(null);
 
       const defaultValues = {
         customerId: 0,
@@ -164,6 +168,9 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
       console.log('NewServiceModal: Setting form with values:', defaultValues);
       form.reset(defaultValues);
       setServiceExtras([]);
+
+      // Store initial values for comparison
+      setInitialFormValues({ ...defaultValues });
 
       // Mark as interacted after a brief delay to allow form reset
       setTimeout(() => {
