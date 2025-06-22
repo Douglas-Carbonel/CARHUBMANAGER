@@ -1227,6 +1227,14 @@ export default function CustomersPage() {
             </Dialog>
           </div>
         </main>
+        
+        {/* Dialog de confirmação de alterações não salvas */}
+        <UnsavedChangesDialog
+          isOpen={unsavedChanges.showConfirmDialog}
+          onConfirm={unsavedChanges.confirmNavigation}
+          onCancel={unsavedChanges.cancelNavigation}
+          message={unsavedChanges.message}
+        />
       </div>
     </div>
   );
