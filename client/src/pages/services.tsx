@@ -130,7 +130,7 @@ export default function Services() {
 
   // Auto-open modal when openModal=true in URL
   useEffect(() => {
-    if (openModalParam && customers.length > 0 && vehicles.length > 0) {
+    if (openModalParam && customers && customers.length > 0 && vehicles && vehicles.length > 0) {
       const timer = setTimeout(() => {
         setEditingService(null);
         form.reset();
@@ -167,7 +167,7 @@ export default function Services() {
 
       return () => clearTimeout(timer);
     }
-  }, [openModalParam, customers.length, vehicles.length, customerIdFilter, vehicleIdFilter, form]);
+  }, [openModalParam, customers, vehicles, customerIdFilter, vehicleIdFilter, form]);
 
   const fetchServicePhotos = async (serviceId: number | undefined) => {
     if (!serviceId) {
