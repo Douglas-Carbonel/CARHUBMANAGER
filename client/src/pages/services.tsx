@@ -155,6 +155,13 @@ export default function Services() {
   // Track form changes for unsaved changes detection
   const currentFormValues = form.watch();
   const hasUnsavedChanges = formInitialValues && isDialogOpen && JSON.stringify(currentFormValues) !== JSON.stringify(formInitialValues);
+  
+  console.log('Services - hasUnsavedChanges:', hasUnsavedChanges);
+  console.log('Services - formInitialValues:', formInitialValues);
+  console.log('Services - currentFormValues:', currentFormValues);
+  console.log('Services - temporaryPhotos:', temporaryPhotos.length);
+  console.log('Services - serviceExtras:', serviceExtras.length);
+  console.log('Services - isDialogOpen:', isDialogOpen);
 
   const unsavedChanges = useUnsavedChanges({
     hasUnsavedChanges: !!hasUnsavedChanges || temporaryPhotos.length > 0 || serviceExtras.length > 0,
