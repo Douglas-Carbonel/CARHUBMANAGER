@@ -242,6 +242,8 @@ export default function VehiclesPage() {
   const [currentVehiclePhotos, setCurrentVehiclePhotos] = useState<Photo[]>([]);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [temporaryPhotos, setTemporaryPhotos] = useState<{photo: string, category: string}[]>([]);
+  const [isServiceWarningOpen, setIsServiceWarningOpen] = useState(false);
+  const [vehicleForServiceWarning, setVehicleForServiceWarning] = useState<Vehicle | null>(null);
 
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleFormSchema),
@@ -1514,7 +1516,34 @@ export default function VehiclesPage() {
                         {/* Ações */}
                         <div className="space-y-2">
                           <Button
-                            onClick={() => setLocation(`/services?vehicleId=${vehicle.id}&vehiclePlate=${encodeURIComponent(vehicle.licensePlate)}`)}
+                            onClick={async () => {
+                              try {
+                                // Verificar se o veículo tem serviços cadastrados
+                                const res = await fetch(`/api/services?vehicleId=${vehicle.id}`, {
+                                  credentials: 'include',
+                                });
+
+                                if (!res.ok) {
+                                  throw new Error('Erro ao verificar serviços do veículo');
+                                }
+
+                                const vehicleServices = await res.json();
+
+                                // Se o veículo não tem serviços cadastrados
+                                if (!vehicleServices || vehicleServices.length === 0) {
+                                  setVehicleForServiceWarning(vehicle);
+                                  setIsServiceWarningOpen(true);
+                                  return;
+                                }
+
+                                // Veículo tem serviços, pode navegar para a página de serviços
+                                setLocation(`/services?vehicleId=${vehicle.id}&vehiclePlate=${encodeURIComponent(vehicle.licensePlate)}`);
+                              } catch (error) {
+                                console.error('Erro ao verificar serviços:', error);
+                                // Em caso de erro, navega para a página de serviços normalmente
+                                setLocation(`/services?vehicleId=${vehicle.id}&vehiclePlate=${encodeURIComponent(vehicle.licensePlate)}`);
+                              }
+                            }}
                             className="w-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-sm rounded-xl h-10"
                             size="sm"
                           >
@@ -1552,6 +1581,57 @@ export default function VehiclesPage() {
             )}
           </div>
         </main>
+
+        {/* Modal de aviso quando veículo não tem serviços */}
+        <Dialog open={isServiceWarningOpen} onOpenChange={setIsServiceWarningOpen}>
+          <DialogContent className="max-w-md bg-gradient-to-br from-teal-50 to-emerald-50 border-teal-200">
+            <DialogHeader className="text-center pb-4">
+              <div className="mx-auto mb-4 w-16 h-16 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-full flex items-center justify-center">
+                <Wrench className="h-8 w-8 text-white" />
+              </div>
+              <DialogTitle className="text-xl font-bold text-teal-900">
+                Primeiro Serviço
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="text-center space-y-4">
+              <p className="text-gray-700">
+                O veículo <strong>{vehicleForServiceWarning?.licensePlate}</strong> ({vehicleForServiceWarning?.brand} {vehicleForServiceWarning?.model}) ainda não possui serviços cadastrados.
+              </p>
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                <p className="text-orange-800 text-sm font-medium">
+                  Deseja criar o primeiro serviço para este veículo?
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsServiceWarningOpen(false);
+                  setVehicleForServiceWarning(null);
+                }}
+                className="flex-1 border-teal-300 text-teal-700 hover:bg-teal-50"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={() => {
+                  if (vehicleForServiceWarning) {
+                    const customer = customers.find((c: Customer) => c.id === vehicleForServiceWarning.customerId);
+                    setLocation(`/services?vehicleId=${vehicleForServiceWarning.id}&customerId=${vehicleForServiceWarning.customerId}&vehiclePlate=${encodeURIComponent(vehicleForServiceWarning.licensePlate)}&customerName=${encodeURIComponent(customer?.name || '')}&openModal=true`);
+                  }
+                  setIsServiceWarningOpen(false);
+                  setVehicleForServiceWarning(null);
+                }}
+                className="flex-1 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white"
+              >
+                Criar Serviço
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

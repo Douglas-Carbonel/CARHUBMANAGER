@@ -94,9 +94,11 @@ export default function Services() {
   const urlParams = new URLSearchParams(window.location.search);
   const customerIdFilter = urlParams.get('customerId') || '';
   const customerFilter = urlParams.get('customer') || '';
+  const customerNameFilter = urlParams.get('customerName') || '';
   const vehicleIdFilter = urlParams.get('vehicleId');
   const vehiclePlateFilter = urlParams.get('vehiclePlate');
   const statusFilter = urlParams.get('status') || 'all';
+  const openModalParam = urlParams.get('openModal') === 'true';
 
   // Debug logging
   console.log('Services page - location:', location);
@@ -125,6 +127,47 @@ export default function Services() {
     cartao: ""
   });
   const [temporaryPhotos, setTemporaryPhotos] = useState<Array<{ photo: string; category: string }>>([]);
+
+  // Auto-open modal when openModal=true in URL
+  useEffect(() => {
+    if (openModalParam && customers.length > 0 && vehicles.length > 0) {
+      const timer = setTimeout(() => {
+        setEditingService(null);
+        form.reset();
+        setTemporaryPhotos([]);
+        setCurrentServicePhotos([]);
+        setServiceExtras([]);
+        setPaymentMethods({
+          pix: "",
+          dinheiro: "",
+          cheque: "",
+          cartao: ""
+        });
+
+        // Pre-fill form with URL parameters
+        if (customerIdFilter) {
+          const customerId = parseInt(customerIdFilter);
+          console.log('Auto-opening service modal with customer:', customerId);
+          form.setValue('customerId', customerId);
+        }
+
+        if (vehicleIdFilter) {
+          const vehicleId = parseInt(vehicleIdFilter);
+          console.log('Auto-opening service modal with vehicle:', vehicleId);
+          form.setValue('vehicleId', vehicleId);
+        }
+
+        setIsDialogOpen(true);
+
+        // Remove openModal parameter from URL to prevent re-opening
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('openModal');
+        window.history.replaceState({}, '', newUrl.toString());
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [openModalParam, customers.length, vehicles.length, customerIdFilter, vehicleIdFilter, form]);
 
   const fetchServicePhotos = async (serviceId: number | undefined) => {
     if (!serviceId) {
