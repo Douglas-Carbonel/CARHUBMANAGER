@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
@@ -49,7 +49,36 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
 
   // Track form changes for unsaved changes detection
   const currentFormValues = form.watch();
-  const hasFormChanges = formInitialValues && isOpen && JSON.stringify(currentFormValues) !== JSON.stringify(formInitialValues);
+  
+  // Check if form has meaningful changes (ignore empty -> 0 changes for numeric fields)
+  const hasFormChanges = useMemo(() => {
+    if (!formInitialValues || !isOpen) return false;
+    
+    // Compare each field individually for better control
+    const current = currentFormValues;
+    const initial = formInitialValues;
+    
+    // Check if any field has changed from its initial value
+    const customersChanged = current.customerId !== initial.customerId;
+    const vehicleChanged = current.vehicleId !== initial.vehicleId;
+    const serviceTypeChanged = current.serviceTypeId !== initial.serviceTypeId;
+    const technicianChanged = current.technicianId !== initial.technicianId;
+    const statusChanged = current.status !== initial.status;
+    const dateChanged = (current.scheduledDate || "") !== (initial.scheduledDate || "");
+    const timeChanged = (current.scheduledTime || "") !== (initial.scheduledTime || "");
+    const notesChanged = (current.notes || "") !== (initial.notes || "");
+    
+    const anyFieldChanged = customersChanged || vehicleChanged || serviceTypeChanged || 
+                           technicianChanged || statusChanged || dateChanged || timeChanged || notesChanged;
+    
+    console.log('NewServiceModal - Form field changes:', {
+      customersChanged, vehicleChanged, serviceTypeChanged, technicianChanged,
+      statusChanged, dateChanged, timeChanged, notesChanged, anyFieldChanged
+    });
+    
+    return anyFieldChanged;
+  }, [currentFormValues, formInitialValues, isOpen]);
+  
   const hasUnsavedChanges = hasFormChanges || serviceExtras.length > 0;
   
   // Debug logs
@@ -85,45 +114,55 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   // Initialize form values when modal opens
   useEffect(() => {
     if (isOpen) {
-      const defaultValues = {
-        customerId: 0,
-        vehicleId: 0,
-        serviceTypeId: 0,
-        technicianId: 0,
-        status: "scheduled" as "scheduled" | "in_progress" | "completed" | "cancelled",
-        scheduledDate: "",
-        scheduledTime: "",
-        notes: "",
-      };
-      
-      // Check URL params to pre-select customer if coming from customer page
-      const urlParams = new URLSearchParams(window.location.search);
-      const customerIdFromUrl = urlParams.get('customerId');
-      const vehicleIdFromUrl = urlParams.get('vehicleId');
-      
-      if (customerIdFromUrl) {
-        const customerId = parseInt(customerIdFromUrl);
-        console.log('NewServiceModal: Pre-selecting customer from URL:', customerId);
-        defaultValues.customerId = customerId;
-      }
-      
-      if (vehicleIdFromUrl) {
-        const vehicleId = parseInt(vehicleIdFromUrl);
-        console.log('NewServiceModal: Pre-selecting vehicle from URL:', vehicleId);
-        defaultValues.vehicleId = vehicleId;
-      }
-      
-      setFormInitialValues(defaultValues);
-      form.reset({
-        customerId: defaultValues.customerId,
-        vehicleId: defaultValues.vehicleId,
-        serviceTypeId: defaultValues.serviceTypeId,
-        technicianId: defaultValues.technicianId,
-        status: defaultValues.status,
-        scheduledDate: defaultValues.scheduledDate,
-        scheduledTime: defaultValues.scheduledTime,
-        notes: defaultValues.notes,
-      });
+      // Use a timeout to ensure the form is ready
+      setTimeout(() => {
+        const defaultValues = {
+          customerId: 0,
+          vehicleId: 0,
+          serviceTypeId: 0,
+          technicianId: 0,
+          status: "scheduled" as "scheduled" | "in_progress" | "completed" | "cancelled",
+          scheduledDate: "",
+          scheduledTime: "",
+          notes: "",
+        };
+        
+        // Check URL params to pre-select customer if coming from customer page
+        const urlParams = new URLSearchParams(window.location.search);
+        const customerIdFromUrl = urlParams.get('customerId');
+        const vehicleIdFromUrl = urlParams.get('vehicleId');
+        
+        if (customerIdFromUrl) {
+          const customerId = parseInt(customerIdFromUrl);
+          console.log('NewServiceModal: Pre-selecting customer from URL:', customerId);
+          defaultValues.customerId = customerId;
+        }
+        
+        if (vehicleIdFromUrl) {
+          const vehicleId = parseInt(vehicleIdFromUrl);
+          console.log('NewServiceModal: Pre-selecting vehicle from URL:', vehicleId);
+          defaultValues.vehicleId = vehicleId;
+        }
+        
+        // Reset form with the correct values
+        form.reset({
+          customerId: defaultValues.customerId,
+          vehicleId: defaultValues.vehicleId,
+          serviceTypeId: defaultValues.serviceTypeId,
+          technicianId: defaultValues.technicianId,
+          status: defaultValues.status,
+          scheduledDate: defaultValues.scheduledDate,
+          scheduledTime: defaultValues.scheduledTime,
+          notes: defaultValues.notes,
+        });
+        
+        // Set initial values AFTER form reset to ensure correct comparison
+        setFormInitialValues(defaultValues);
+        setServiceExtras([]);
+      }, 100);
+    } else {
+      // Reset when modal closes
+      setFormInitialValues(null);
       setServiceExtras([]);
     }
   }, [isOpen, form]);
