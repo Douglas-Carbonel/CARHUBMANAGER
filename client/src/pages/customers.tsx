@@ -82,6 +82,7 @@ export default function CustomersPage() {
   const [temporaryPhotos, setTemporaryPhotos] = useState<{photo: string, category: string}[]>([]);
   const [isVehicleWarningOpen, setIsVehicleWarningOpen] = useState(false);
   const [customerForVehicleWarning, setCustomerForVehicleWarning] = useState<Customer | null>(null);
+  const [formInitialValues, setFormInitialValues] = useState<CustomerFormData | null>(null);
 
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerFormSchema),
