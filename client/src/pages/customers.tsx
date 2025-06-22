@@ -981,11 +981,11 @@ export default function CustomersPage() {
                             onClick={() => {
                               // Navegação instantânea com informação contextual
                               // A página de veículos já tem toda a lógica necessária para lidar com ambos cenários
-                              setLocation(`/vehicles?customerId=${customer.id}`);
+                              setLocation("/vehicles?customerId=" + customer.id);
 
                               // Opcional: Fazer pré-cache em background para melhorar UX futura
                               setTimeout(() => {
-                                fetch(`/api/vehicles?customerId=${customer.id}`, {
+                                fetch("/api/vehicles?customerId=" + customer.id, {
                                   credentials: 'include',
                                 }).catch(() => {
                                   // Ignorar erros de pré-cache - não afeta a funcionalidade
@@ -1007,7 +1007,7 @@ export default function CustomersPage() {
                             onClick={async () => {
                               try {
                                 // Buscar veículos do cliente
-                                const res = await fetch(`/api/customers/${customer.id}/vehicles`, {
+                                const res = await fetch("/api/customers/" + customer.id + "/vehicles", {
                                   credentials: 'include',
                                 });
 
@@ -1027,13 +1027,13 @@ export default function CustomersPage() {
 
                                   if (confirmVehicle) {
                                     // Navegar para página de veículos com o cliente pré-selecionado
-                                    setLocation(`/vehicles?customerId=${customer.id}`);
+                                    setLocation("/vehicles?customerId=" + customer.id);
                                   }
                                   return;
                                 }
 
                                 // Cliente tem veículos, pode navegar para serviços
-                                setLocation(`/services?customerId=${customer.id}`);
+                                setLocation("/services?customerId=" + customer.id);
 
                               } catch (error) {
                                 console.error('Erro ao verificar veículos:', error);
