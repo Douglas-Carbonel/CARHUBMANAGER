@@ -1005,9 +1005,48 @@ export default function CustomersPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => setLocation(`/services?customerId=${customer.id}`)}
+                              onClick={async () => {
+                                try {
+                                  // Verificar se o cliente tem veículos cadastrados
+                                  const res = await fetch("/api/customers/" + customer.id + "/vehicles", {
+                                    credentials: 'include',
+                                  });
+
+                                  if (!res.ok) {
+                                    throw new Error('Erro ao verificar veículos do cliente');
+                                  }
+
+                                  const customerVehicles = await res.json();
+
+                                  // Se o cliente não tem veículos cadastrados
+                                  if (!customerVehicles || customerVehicles.length === 0) {
+                                    const confirmVehicle = window.confirm(
+                                      customer.name + " não possui veículos cadastrados.\n\n" +
+                                      'Não é possível criar serviços sem um veículo cadastrado.\n\n' +
+                                      'Deseja cadastrar o primeiro veículo para este cliente?'
+                                    );
+
+                                    if (confirmVehicle) {
+                                      // Navegar para página de veículos com o cliente pré-selecionado
+                                      setLocation("/vehicles?customerId=" + customer.id);
+                                    }
+                                    return;
+                                  }
+
+                                  // Cliente tem veículos, pode navegar para serviços
+                                  setLocation("/services?customerId=" + customer.id);
+
+                                } catch (error) {
+                                  console.error('Erro ao verificar veículos:', error);
+                                  toast({
+                                    title: "Erro",
+                                    description: "Erro ao verificar veículos do cliente. Tente novamente.",
+                                    variant: "destructive",
+                                  });
+                                }
+                              }}
                               className={cn(
-                                "border-teal-200 text-teal-700 hover:bg-teal-50 rounded-xl",
+                                "border-green-200 text-green-700 hover:bg-green-50 rounded-xl",
                                 isMobile ? "h-7 px-1" : "h-9"
                               )}
                             >
