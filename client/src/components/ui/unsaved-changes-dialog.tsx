@@ -36,13 +36,19 @@ export function UnsavedChangesDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel 
-            onClick={onCancel}
+            onClick={(e) => {
+              e.preventDefault();
+              onCancel();
+            }}
             className="border-gray-300 hover:bg-gray-50"
           >
             Cancelar
           </AlertDialogCancel>
           <AlertDialogAction
-            onClick={onConfirm}
+            onClick={(e) => {
+              e.preventDefault();
+              onConfirm();
+            }}
             className="bg-orange-600 hover:bg-orange-700 text-white"
           >
             Sair sem salvar

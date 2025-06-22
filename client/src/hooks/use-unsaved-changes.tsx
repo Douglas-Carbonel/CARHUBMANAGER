@@ -55,7 +55,12 @@ export function useUnsavedChanges({
     if (callback) {
       callback();
     } else if (pendingCallback) {
-      pendingCallback();
+      const callbackToExecute = pendingCallback;
+      setPendingCallback(null);
+      setPendingNavigation(null);
+      setShowConfirmDialog(false);
+      callbackToExecute();
+      return;
     } else if (pendingNavigation) {
       originalSetLocation.current(pendingNavigation);
     }
