@@ -96,14 +96,21 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
 
   // Intercepta o fechamento do modal para verificar alterações não salvas
   const handleClose = () => {
+    console.log('NewServiceModal - handleClose called, hasUnsavedChanges:', hasUnsavedChanges);
+    console.log('NewServiceModal - handleClose - form values:', form.getValues());
+    console.log('NewServiceModal - handleClose - initial values:', formInitialValues);
+    
     if (hasUnsavedChanges) {
+      console.log('NewServiceModal - Triggering confirmation dialog');
       unsavedChanges.triggerConfirmation(() => {
+        console.log('NewServiceModal - User confirmed exit');
         onClose();
         form.reset();
         setServiceExtras([]);
         setFormInitialValues(null);
       });
     } else {
+      console.log('NewServiceModal - No unsaved changes, closing directly');
       onClose();
       form.reset();
       setServiceExtras([]);

@@ -77,10 +77,13 @@ export function useUnsavedChanges({
 
   // Add method to trigger confirmation with custom callback
   const triggerConfirmation = (callback: () => void) => {
+    console.log('useUnsavedChanges - triggerConfirmation called, hasUnsavedChanges:', hasUnsavedChanges);
     if (hasUnsavedChanges) {
+      console.log('useUnsavedChanges - Setting up confirmation dialog');
       setPendingCallback(() => callback);
       setShowConfirmDialog(true);
     } else {
+      console.log('useUnsavedChanges - No unsaved changes, executing callback directly');
       callback();
     }
   };
