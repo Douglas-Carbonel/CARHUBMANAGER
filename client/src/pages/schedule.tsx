@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Plus, Search, Edit, Trash2, Calendar, Clock, User, Car, Wrench, Calculator } from "lucide-react";
 import ServiceExtras from "@/components/service/service-extras";
 import { cn } from "@/lib/utils";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertServiceSchema, type Service, type Customer, type Vehicle, type ServiceType } from "@shared/schema";
@@ -73,6 +74,17 @@ export default function SchedulePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [serviceExtras, setServiceExtras] = useState<any[]>([]);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    onConfirm: () => {},
+  });
 
   const form = useForm<ServiceFormData>({
     resolver: zodResolver(serviceFormSchema),
@@ -208,9 +220,15 @@ export default function SchedulePage() {
   };
 
   const handleDelete = (id: number) => {
-    if (confirm("Tem certeza que deseja excluir este agendamento?")) {
-      deleteMutation.mutate(id);
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Excluir Agendamento",
+      description: "Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.",
+      onConfirm: () => {
+        deleteMutation.mutate(id);
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      },
+    });
   };
 
   
@@ -766,7 +784,17 @@ export default function SchedulePage() {
           </div>
         </main>
 
-        
+        {/* Dialog de confirmação para exclusões */}
+        <ConfirmationDialog
+          isOpen={confirmDialog.isOpen}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+          title={confirmDialog.title}
+          description={confirmDialog.description}
+          confirmText="Excluir"
+          cancelText="Cancelar"
+          variant="destructive"
+        />
       </div>
     </div>
   );
