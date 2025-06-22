@@ -50,60 +50,37 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   // Track form changes for unsaved changes detection
   const currentFormValues = form.watch();
   
-  // Check if form has meaningful changes (ignore empty -> 0 changes for numeric fields)
+  // Simplified detection: any non-default value means there are changes
   const hasFormChanges = useMemo(() => {
-    if (!formInitialValues || !isOpen) {
-      console.log('NewServiceModal - No initial values or modal closed:', { formInitialValues, isOpen });
+    if (!isOpen) {
       return false;
     }
     
-    // Compare each field individually for better control
     const current = currentFormValues;
-    const initial = formInitialValues;
     
-    // Check if any field has changed from its initial value
-    const customersChanged = current.customerId !== initial.customerId;
-    const vehicleChanged = current.vehicleId !== initial.vehicleId;
-    const serviceTypeChanged = current.serviceTypeId !== initial.serviceTypeId;
-    const technicianChanged = current.technicianId !== initial.technicianId;
-    const statusChanged = current.status !== initial.status;
-    const dateChanged = (current.scheduledDate || "") !== (initial.scheduledDate || "");
-    const timeChanged = (current.scheduledTime || "") !== (initial.scheduledTime || "");
-    const notesChanged = (current.notes || "").trim() !== (initial.notes || "").trim();
+    // Check if any field has been filled with meaningful data
+    const hasCustomer = current.customerId && current.customerId > 0;
+    const hasVehicle = current.vehicleId && current.vehicleId > 0;
+    const hasServiceType = current.serviceTypeId && current.serviceTypeId > 0;
+    const hasTechnician = current.technicianId && current.technicianId > 0;
+    const hasDate = current.scheduledDate && current.scheduledDate.trim() !== "";
+    const hasTime = current.scheduledTime && current.scheduledTime.trim() !== "";
+    const hasNotes = current.notes && current.notes.trim() !== "";
     
-    const anyFieldChanged = customersChanged || vehicleChanged || serviceTypeChanged || 
-                           technicianChanged || statusChanged || dateChanged || timeChanged || notesChanged;
+    const hasAnyMeaningfulData = hasCustomer || hasVehicle || hasServiceType || 
+                                hasTechnician || hasDate || hasTime || hasNotes;
     
-    console.log('NewServiceModal - Form field changes:', {
-      current: {
-        customerId: current.customerId,
-        vehicleId: current.vehicleId,
-        serviceTypeId: current.serviceTypeId,
-        technicianId: current.technicianId,
-        status: current.status,
-        scheduledDate: current.scheduledDate,
-        scheduledTime: current.scheduledTime,
-        notes: current.notes
+    console.log('NewServiceModal - Form changes detection:', {
+      current,
+      checks: {
+        hasCustomer, hasVehicle, hasServiceType, hasTechnician,
+        hasDate, hasTime, hasNotes
       },
-      initial: {
-        customerId: initial.customerId,
-        vehicleId: initial.vehicleId,
-        serviceTypeId: initial.serviceTypeId,
-        technicianId: initial.technicianId,
-        status: initial.status,
-        scheduledDate: initial.scheduledDate,
-        scheduledTime: initial.scheduledTime,
-        notes: initial.notes
-      },
-      changes: {
-        customersChanged, vehicleChanged, serviceTypeChanged, technicianChanged,
-        statusChanged, dateChanged, timeChanged, notesChanged
-      },
-      anyFieldChanged
+      hasAnyMeaningfulData
     });
     
-    return anyFieldChanged;
-  }, [currentFormValues, formInitialValues, isOpen]);
+    return hasAnyMeaningfulData;
+  }, [currentFormValues, isOpen]);
   
   const hasUnsavedChanges = hasFormChanges || serviceExtras.length > 0;
   
@@ -152,53 +129,36 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
     if (isOpen) {
       console.log('NewServiceModal: Modal opened, initializing form...');
       
-      // Use a timeout to ensure the form is ready
-      setTimeout(() => {
-        const defaultValues = {
-          customerId: 0,
-          vehicleId: 0,
-          serviceTypeId: 0,
-          technicianId: 0,
-          status: "scheduled" as "scheduled" | "in_progress" | "completed" | "cancelled",
-          scheduledDate: "",
-          scheduledTime: "",
-          notes: "",
-        };
-        
-        // Check URL params to pre-select customer if coming from customer page
-        const urlParams = new URLSearchParams(window.location.search);
-        const customerIdFromUrl = urlParams.get('customerId');
-        const vehicleIdFromUrl = urlParams.get('vehicleId');
-        
-        if (customerIdFromUrl) {
-          const customerId = parseInt(customerIdFromUrl);
-          console.log('NewServiceModal: Pre-selecting customer from URL:', customerId);
-          defaultValues.customerId = customerId;
-        }
-        
-        if (vehicleIdFromUrl) {
-          const vehicleId = parseInt(vehicleIdFromUrl);
-          console.log('NewServiceModal: Pre-selecting vehicle from URL:', vehicleId);
-          defaultValues.vehicleId = vehicleId;
-        }
-        
-        console.log('NewServiceModal: Setting initial values to:', defaultValues);
-        
-        // Reset form first to clear any previous values
-        form.reset(defaultValues);
-        
-        // Then set initial values for comparison - adding a small delay to ensure form is updated
-        setTimeout(() => {
-          setFormInitialValues({ ...defaultValues });
-          console.log('NewServiceModal: Initial values set for comparison:', defaultValues);
-        }, 50);
-        
-        setServiceExtras([]);
-      }, 150);
-    } else {
-      // Reset when modal closes
-      console.log('NewServiceModal: Modal closed, resetting...');
-      setFormInitialValues(null);
+      const defaultValues = {
+        customerId: 0,
+        vehicleId: 0,
+        serviceTypeId: 0,
+        technicianId: 0,
+        status: "scheduled" as "scheduled" | "in_progress" | "completed" | "cancelled",
+        scheduledDate: "",
+        scheduledTime: "",
+        notes: "",
+      };
+      
+      // Check URL params to pre-select customer if coming from customer page
+      const urlParams = new URLSearchParams(window.location.search);
+      const customerIdFromUrl = urlParams.get('customerId');
+      const vehicleIdFromUrl = urlParams.get('vehicleId');
+      
+      if (customerIdFromUrl) {
+        const customerId = parseInt(customerIdFromUrl);
+        console.log('NewServiceModal: Pre-selecting customer from URL:', customerId);
+        defaultValues.customerId = customerId;
+      }
+      
+      if (vehicleIdFromUrl) {
+        const vehicleId = parseInt(vehicleIdFromUrl);
+        console.log('NewServiceModal: Pre-selecting vehicle from URL:', vehicleId);
+        defaultValues.vehicleId = vehicleId;
+      }
+      
+      console.log('NewServiceModal: Resetting form with:', defaultValues);
+      form.reset(defaultValues);
       setServiceExtras([]);
     }
   }, [isOpen, form]);
