@@ -261,6 +261,15 @@ export default function VehiclesPage() {
     },
   });
 
+  // Track form changes for unsaved changes detection
+  const currentFormValues = form.watch();
+  const hasUnsavedChanges = formInitialValues && isModalOpen && JSON.stringify(currentFormValues) !== JSON.stringify(formInitialValues);
+
+  const unsavedChanges = useUnsavedChanges({
+    hasUnsavedChanges: !!hasUnsavedChanges || temporaryPhotos.length > 0,
+    message: "Você tem alterações não salvas no cadastro do veículo. Deseja realmente sair?"
+  });
+
   const { data: vehicles = [], isLoading: vehiclesLoading } = useQuery({
     queryKey: ["/api/vehicles"],
     queryFn: async () => {
