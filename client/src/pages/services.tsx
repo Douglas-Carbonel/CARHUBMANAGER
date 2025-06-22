@@ -673,12 +673,39 @@ export default function Services() {
 
                       // Check URL params to pre-select customer if coming from customer page
                       const urlParams = new URLSearchParams(window.location.search);
-
                       const customerIdFromUrl = urlParams.get('customerId');
 
                       if (customerIdFromUrl) {
                         const customerId = parseInt(customerIdFromUrl);
                         console.log('Services: Pre-selecting customer from URL:', customerId);
+                        
+                        // Verificar se o cliente tem veículos antes de prosseguir
+                        try {
+                          const customerVehicles = vehicles.filter(vehicle => 
+                            vehicle.customerId === customerId || vehicle.customer?.id === customerId
+                          );
+                          
+                          if (customerVehicles.length === 0) {
+                            const customerName = customers.find(c => c.id === customerId)?.name || 'Cliente';
+                            const confirmVehicle = window.confirm(
+                              `${customerName} não possui veículos cadastrados.\n\n` +
+                              'Não é possível criar serviços sem um veículo cadastrado.\n\n' +
+                              'Deseja cadastrar o primeiro veículo para este cliente?'
+                            );
+                            
+                            if (confirmVehicle) {
+                              setLocation(`/vehicles?customerId=${customerId}`);
+                              return;
+                            } else {
+                              // Se não quiser cadastrar veículo, limpar o filtro
+                              setLocation('/services');
+                              return;
+                            }
+                          }
+                        } catch (error) {
+                          console.error('Erro ao verificar veículos do cliente:', error);
+                        }
+                        
                         form.setValue('customerId', customerId);
                         // Reset vehicle when customer is pre-selected
                         form.setValue('vehicleId', 0);
@@ -1701,7 +1728,7 @@ export default function Services() {
                   {!searchTerm && filterStatus === "all" && (
                     <Button
                       className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 shadow-lg"
-                      onClick={() => {
+                      onClick={async () => {
                         setEditingService(null);
                         form.reset();
 
@@ -1712,6 +1739,30 @@ export default function Services() {
                         if (customerIdFromUrl) {
                           const customerId = parseInt(customerIdFromUrl);
                           console.log('Services: Pre-selecting customer from URL (first service):', customerId);
+                          
+                          // Verificar se o cliente tem veículos antes de prosseguir
+                          const customerVehicles = vehicles.filter(vehicle => 
+                            vehicle.customerId === customerId || vehicle.customer?.id === customerId
+                          );
+                          
+                          if (customerVehicles.length === 0) {
+                            const customerName = customers.find(c => c.id === customerId)?.name || 'Cliente';
+                            const confirmVehicle = window.confirm(
+                              `${customerName} não possui veículos cadastrados.\n\n` +
+                              'Não é possível criar serviços sem um veículo cadastrado.\n\n' +
+                              'Deseja cadastrar o primeiro veículo para este cliente?'
+                            );
+                            
+                            if (confirmVehicle) {
+                              setLocation(`/vehicles?customerId=${customerId}`);
+                              return;
+                            } else {
+                              // Se não quiser cadastrar veículo, limpar o filtro
+                              setLocation('/services');
+                              return;
+                            }
+                          }
+                          
                           form.setValue('customerId', customerId);
                           // Reset vehicle when customer is pre-selected
                           form.setValue('vehicleId', 0);

@@ -111,7 +111,7 @@ export default function CustomersPage() {
     onSuccess: async (newCustomer) => {
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/analytics/customers"] });
-      
+
       // Save temporary photos if any
       if (temporaryPhotos.length > 0) {
         let photosSaved = 0;
@@ -710,7 +710,7 @@ export default function CustomersPage() {
 
                                   for (const file of Array.from(files)) {
                                     if (!file.type.startsWith('image/')) continue;
-                                    
+
                                     // Convert to base64 for preview
                                     const reader = new FileReader();
                                     reader.onload = (event) => {
@@ -719,7 +719,7 @@ export default function CustomersPage() {
                                     };
                                     reader.readAsDataURL(file);
                                   }
-                                  
+
                                   // Clear the input
                                   e.target.value = '';
                                 }}
@@ -798,7 +798,8 @@ export default function CustomersPage() {
                               setCurrentCustomerPhotos([]);
                               setTemporaryPhotos([]);
                               setEditingCustomer(null);
-                              form.reset();
+                              form```text
+.reset();
                             }}
                             disabled={createMutation.isPending || updateMutation.isPending}
                             className={cn(
@@ -981,7 +982,7 @@ export default function CustomersPage() {
                               // Navegação instantânea com informação contextual
                               // A página de veículos já tem toda a lógica necessária para lidar com ambos cenários
                               setLocation(`/vehicles?customerId=${customer.id}`);
-                              
+
                               // Opcional: Fazer pré-cache em background para melhorar UX futura
                               setTimeout(() => {
                                 fetch(`/api/vehicles?customerId=${customer.id}`, {
@@ -1003,17 +1004,54 @@ export default function CustomersPage() {
 
                           <div className={cn("grid gap-1", isMobile ? "grid-cols-3 gap-1" : "grid-cols-3 gap-2")}>
                             <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setLocation(`/services?customerId=${customer.id}`)}
-                              className={cn(
-                                "border-teal-200 text-teal-700 hover:bg-teal-50 rounded-xl",
-                                isMobile ? "h-7 px-1" : "h-9"
-                              )}
-                            >
-                              <Wrench className={cn(isMobile ? "h-2.5 w-2.5" : "h-3 w-3 mr-1")} />
-                              {!isMobile && <span className="text-xs">Serviços</span>}
-                            </Button>
+                            onClick={async () => {
+                              try {
+                                // Buscar veículos do cliente
+                                const res = await fetch(`/api/customers/${customer.id}/vehicles`, {
+                                  credentials: 'include',
+                                });
+
+                                if (!res.ok) {
+                                  throw new Error('Erro ao verificar veículos do cliente');
+                                }
+
+                                const customerVehicles = await res.json();
+
+                                // Se o cliente não tem veículos cadastrados
+                                if (!customerVehicles || customerVehicles.length === 0) {
+                                  const confirmVehicle = window.confirm(
+                                    `${customer.name} não possui veículos cadastrados.\n\n` +
+                                    'Não é possível criar serviços sem um veículo cadastrado.\n\n' +
+                                    'Deseja cadastrar o primeiro veículo para este cliente?'
+                                  );
+
+                                  if (confirmVehicle) {
+                                    // Navegar para página de veículos com o cliente pré-selecionado
+                                    setLocation(`/vehicles?customerId=${customer.id}`);
+                                  }
+                                  return;
+                                }
+
+                                // Cliente tem veículos, pode navegar para serviços
+                                setLocation(`/services?customerId=${customer.id}`);
+
+                              } catch (error) {
+                                console.error('Erro ao verificar veículos:', error);
+                                toast({
+                                  title: "Erro",
+                                  description: "Erro ao verificar veículos do cliente. Tente novamente.",
+                                  variant: "destructive",
+                                });
+                              }
+                            }}
+                            className={cn(
+                              "border-teal-200 text-teal-700 hover:bg-teal-50 rounded-xl",
+                              isMobile ? "h-7 px-1" : "h-9"
+                            )}
+                          >
+                            <Wrench className={cn(isMobile ? "h-2.5 w-2.5" : "h-3 w-3 mr-1")} />
+                            {!isMobile && <span className="text-xs">Serviços</span>}
+                          </Button>
                             <Button
                               variant="outline"
                               size="sm"
