@@ -408,7 +408,7 @@ export default function CustomersPage() {
                   📊 {isMobile ? "Relatórios" : "Ver Relatórios"}
                 </Button>
                 <div className={cn(
-                  "bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-lg shadow-md",
+                  "bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg shadow-md",
                   isMobile ? "px-2 py-1" : "px-4 py-2"
                 )}>
                   <span className={cn("font-semibold", isMobile ? "text-sm" : "")}>{filteredCustomers.length}</span>
@@ -847,8 +847,8 @@ export default function CustomersPage() {
               </div>
             ) : filteredCustomers.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <div className="bg-gradient-to-br from-teal-100 to-emerald-100 p-6 rounded-full mb-6 w-24 h-24 flex items-center justify-center">
-                  <User className="h-12 w-12 text-teal-600" />
+                <div className="bg-gradient-to-br from-green-100 to-emerald-100 p-6 rounded-full mb-6 w-24 h-24 flex items-center justify-center">
+                  <User className="h-12 w-12 text-green-600" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">
                   Nenhum cliente encontrado
@@ -880,11 +880,11 @@ export default function CustomersPage() {
                       isMobile ? "rounded-lg" : "rounded-2xl"
                     )}>
                       {/* Background gradient sutil */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-teal-50/30 to-emerald-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-green-50/30 to-emerald-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                       {/* Header colorido */}
                       <div className={cn(
-                        "relative bg-gradient-to-r from-teal-500 to-emerald-600 flex items-center justify-between",
+                        "relative bg-gradient-to-r from-green-500 to-emerald-600 flex items-center justify-between",
                         isMobile ? "h-16 p-3" : "h-20 p-4"
                       )}>
                         <div className={cn("flex items-center", isMobile ? "space-x-2" : "space-x-3")}>
@@ -992,7 +992,7 @@ export default function CustomersPage() {
                               }, 100);
                             }}
                             className={cn(
-                              "w-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-sm rounded-xl",
+                              "w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-sm rounded-xl",
                               isMobile ? "h-8 text-xs" : "h-10"
                             )}
                             size="sm"
@@ -1003,6 +1003,8 @@ export default function CustomersPage() {
 
                           <div className={cn("grid gap-1", isMobile ? "grid-cols-3 gap-1" : "grid-cols-3 gap-2")}>
                             <Button
+                              variant="outline"
+                              size="sm"
                             onClick={async () => {
                               try {
                                 // Buscar veículos do cliente
