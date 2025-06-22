@@ -280,17 +280,17 @@ export default function VehiclesPage() {
     },
   });
 
-  // Check URL parameters for customer filtering
+  // Check URL parameters for customer filtering and auto-open modal
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const customerId = urlParams.get('customerId');
+    const openModal = urlParams.get('openModal');
+    
     if (customerId) {
       setCustomerFilter(parseInt(customerId));
 
-      // Check if we should auto-open the modal for new vehicle registration
-      const autoCreate = urlParams.get('autoCreate');
-      if (autoCreate === 'true') {
-        // Wait for customers data to load before opening modal
+      // Auto-open modal if requested (from vehicle validation)
+      if (openModal === 'true') {
         const timer = setTimeout(() => {
           setEditingVehicle(null);
           form.reset({
@@ -314,6 +314,9 @@ export default function VehiclesPage() {
 
         return () => clearTimeout(timer);
       }
+    } else {
+      // Clear customer filter if no customerId in URL
+      setCustomerFilter(null);
     }
   }, [customers]);
 

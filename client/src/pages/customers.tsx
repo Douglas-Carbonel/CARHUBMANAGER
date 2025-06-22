@@ -1160,7 +1160,7 @@ export default function CustomersPage() {
                     <Button
                       onClick={() => {
                         if (customerForVehicleWarning) {
-                          setLocation("/vehicles?customerId=" + customerForVehicleWarning.id);
+                          setLocation("/vehicles?customerId=" + customerForVehicleWarning.id + "&openModal=true");
                         }
                         setIsVehicleWarningOpen(false);
                         setCustomerForVehicleWarning(null);
