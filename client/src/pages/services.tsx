@@ -703,12 +703,28 @@ export default function Services() {
                     )}
                     onClick={async () => {
                       setEditingService(null);
-                      form.reset();
-
-                      // Reset temporary photos for new services
-                      setTemporaryPhotos([]);
                       setCurrentServicePhotos([]);
                       setServiceExtras([]);
+                      setTemporaryPhotos([]);
+
+                      const defaultValues = {
+                        customerId: 0,
+                        vehicleId: 0,
+                        serviceTypeId: 0,
+                        technicianId: 0,
+                        scheduledDate: "",
+                        scheduledTime: "",
+                        status: "scheduled",
+                        notes: "",
+                        valorPago: "0",
+                        pixPago: "0.00",
+                        dinheiroPago: "0.00",
+                        chequePago: "0.00",
+                        cartaoPago: "0.00",
+                      };
+                      
+                      setFormInitialValues(defaultValues);
+                      form.reset(defaultValues);
 
                       // Reset payment methods when creating new service
                       setPaymentMethods({
@@ -1304,9 +1320,37 @@ export default function Services() {
                         type="button" 
                         variant="outline" 
                         onClick={() => {
-                          setIsDialogOpen(false);
-                          setCurrentServicePhotos([]);
-                          setServiceExtras([]);
+                          if (hasUnsavedChanges || temporaryPhotos.length > 0 || serviceExtras.length > 0) {
+                            unsavedChanges.triggerConfirmation(() => {
+                              setIsDialogOpen(false);
+                              setFormInitialValues(null);
+                              setCurrentServicePhotos([]);
+                              setServiceExtras([]);
+                              setEditingService(null);
+                              form.reset();
+                              setTemporaryPhotos([]);
+                              setPaymentMethods({
+                                pix: "",
+                                dinheiro: "",
+                                cheque: "",
+                                cartao: ""
+                              });
+                            });
+                          } else {
+                            setIsDialogOpen(false);
+                            setFormInitialValues(null);
+                            setCurrentServicePhotos([]);
+                            setServiceExtras([]);
+                            setEditingService(null);
+                            form.reset();
+                            setTemporaryPhotos([]);
+                            setPaymentMethods({
+                              pix: "",
+                              dinheiro: "",
+                              cheque: "",
+                              cartao: ""
+                            });
+                          }
                         }}
                         className="px-6 py-2 font-medium"
                       >
@@ -1797,7 +1841,44 @@ export default function Services() {
                   }
                 </p>
                 {!searchTerm && (
-                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                    if (!open && (hasUnsavedChanges || temporaryPhotos.length > 0 || serviceExtras.length > 0)) {
+                      unsavedChanges.triggerConfirmation(() => {
+                        setIsDialogOpen(false);
+                        setFormInitialValues(null);
+                        setCurrentServicePhotos([]);
+                        setServiceExtras([]);
+                        setEditingService(null);
+                        form.reset();
+                        setTemporaryPhotos([]);
+                        setPaymentMethods({
+                          pix: "",
+                          dinheiro: "",
+                          cheque: "",
+                          cartao: ""
+                        });
+                      });
+                      return;
+                    }
+                    
+                    if (!open) {
+                      setIsDialogOpen(false);
+                      setFormInitialValues(null);
+                      setCurrentServicePhotos([]);
+                      setServiceExtras([]);
+                      setEditingService(null);
+                      form.reset();
+                      setTemporaryPhotos([]);
+                      setPaymentMethods({
+                        pix: "",
+                        dinheiro: "",
+                        cheque: "",
+                        cartao: ""
+                      });
+                    } else {
+                      setIsDialogOpen(true);
+                    }
+                  }}>
                     <DialogTrigger asChild>
                       <Button
                         className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
