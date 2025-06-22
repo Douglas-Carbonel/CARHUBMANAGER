@@ -26,6 +26,7 @@ import { BarChart3 } from "lucide-react";
 import PhotoUpload from "@/components/photos/photo-upload";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
   const res = await fetch(url, {
@@ -247,6 +248,17 @@ export default function VehiclesPage() {
   const [isServiceWarningOpen, setIsServiceWarningOpen] = useState(false);
   const [vehicleForServiceWarning, setVehicleForServiceWarning] = useState<Vehicle | null>(null);
   const [formInitialValues, setFormInitialValues] = useState<VehicleFormData | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    onConfirm: () => {},
+  });
 
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleFormSchema),
@@ -528,9 +540,15 @@ export default function VehiclesPage() {
   };
 
   const handleDelete = (id: number) => {
-    if (confirm("Tem certeza que deseja remover este veículo?")) {
-      deleteMutation.mutate(id);
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Excluir Veículo",
+      description: "Tem certeza que deseja remover este veículo? Esta ação não pode ser desfeita.",
+      onConfirm: () => {
+        deleteMutation.mutate(id);
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      },
+    });
   };
 
   if (!user) {
@@ -1719,6 +1737,18 @@ export default function VehiclesPage() {
           onConfirm={unsavedChanges.confirmNavigation}
           onCancel={unsavedChanges.cancelNavigation}
           message={unsavedChanges.message}
+        />
+
+        {/* Dialog de confirmação para exclusões */}
+        <ConfirmationDialog
+          isOpen={confirmDialog.isOpen}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+          title={confirmDialog.title}
+          description={confirmDialog.description}
+          confirmText="Excluir"
+          cancelText="Cancelar"
+          variant="destructive"
         />
       </div>
     </div>
