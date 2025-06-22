@@ -327,8 +327,7 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
         {extras.length === 0 && (
           <Card className="border border-dashed border-gray-300">
             <CardContent className="p-6 text-center">
-              <p className="text-gray-500 text-sm">Nenhum adicional foi adicionado ainda.</p>
-              <p className="text-gray-400 text-xs mt-1">Clique em "Adicionar" para incluir adicionais ao serviço.</p>
+              <p className="text-gray-500 text-sm">Sem adicionais até o momento. Clique em 'Adicionar' para cadastrar.</p>
             </CardContent>
           </Card>
         )}
