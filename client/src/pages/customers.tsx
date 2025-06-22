@@ -49,6 +49,7 @@ async function apiRequest(method: string, url: string, data?: any): Promise<Resp
 
 const customerFormSchema = insertCustomerSchema.extend({
   name: z.string().min(1, "Nome é obrigatório"),
+  phone: z.string().min(1, "Telefone é obrigatório"),
   document: z.string().optional().refine((doc) => {
     if (!doc || doc.trim() === '') return true;
     const cleanDoc = doc.replace(/\D/g, '');
@@ -526,12 +527,13 @@ export default function CustomersPage() {
                                 isMobile ? "text-xs" : "text-sm"
                               )}>
                                 <Phone className={cn(isMobile ? "h-3 w-3 mr-1" : "h-4 w-4 mr-2")} />
-                                Telefone
+                                Telefone <span className="text-red-500 ml-1">*</span>
                               </FormLabel>
                               <FormControl>
                                 <Input 
                                   placeholder="(11) 99999-9999" 
                                   {...field}
+                                  required
                                   value={field.value || ""}
                                   onChange={(e) => {
                                     field.onChange(applyPhoneMask(e.target.value));
