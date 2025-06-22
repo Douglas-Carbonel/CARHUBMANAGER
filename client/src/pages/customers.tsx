@@ -1121,25 +1121,27 @@ export default function CustomersPage() {
 
             {/* Vehicle Warning Modal */}
             <Dialog open={isVehicleWarningOpen} onOpenChange={setIsVehicleWarningOpen}>
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-md bg-gradient-to-br from-slate-50 to-blue-50/30 border-2 border-blue-100">
                 <DialogHeader>
-                  <DialogTitle className="flex items-center text-orange-700">
-                    <Car className="h-5 w-5 mr-2" />
+                  <DialogTitle className="flex items-center text-blue-800 font-bold text-lg">
+                    <Car className="h-6 w-6 mr-3 text-blue-600" />
                     Veículos Necessários
                   </DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4">
+                <div className="space-y-6 pt-2">
                   <div className="text-center">
-                    <div className="bg-orange-100 p-6 rounded-full mb-4 w-20 h-20 flex items-center justify-center mx-auto">
-                      <Car className="h-10 w-10 text-orange-600" />
+                    <div className="bg-gradient-to-br from-blue-100 to-indigo-100 p-6 rounded-full mb-4 w-20 h-20 flex items-center justify-center mx-auto border-2 border-blue-200 shadow-lg">
+                      <Car className="h-10 w-10 text-blue-600" />
                     </div>
-                    <h3 className="font-semibold text-gray-900 mb-2">
+                    <h3 className="font-bold text-gray-900 mb-3 text-lg">
                       {customerForVehicleWarning?.name} não possui veículos cadastrados
                     </h3>
-                    <p className="text-gray-600 text-sm mb-4">
-                      Não é possível criar serviços sem um veículo cadastrado.
-                    </p>
-                    <p className="text-gray-800 font-medium">
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                      <p className="text-amber-800 text-sm font-medium">
+                        ⚠️ Não é possível criar serviços sem um veículo cadastrado
+                      </p>
+                    </div>
+                    <p className="text-gray-700 font-medium">
                       Deseja cadastrar o primeiro veículo para este cliente?
                     </p>
                   </div>
@@ -1151,7 +1153,7 @@ export default function CustomersPage() {
                         setIsVehicleWarningOpen(false);
                         setCustomerForVehicleWarning(null);
                       }}
-                      className="flex-1"
+                      className="flex-1 border-2 border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-lg transition-all duration-200"
                     >
                       Cancelar
                     </Button>
@@ -1163,8 +1165,9 @@ export default function CustomersPage() {
                         setIsVehicleWarningOpen(false);
                         setCustomerForVehicleWarning(null);
                       }}
-                      className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
                     >
+                      <Car className="h-4 w-4 mr-2" />
                       Cadastrar Veículo
                     </Button>
                   </div>
