@@ -826,7 +826,6 @@ export default function Services() {
                         control={form.control}
                         name="serviceTypeId"
                         render={({ field }) => (
-Refactored the Services component to handle cases where vehicles have no associated services, providing a user-friendly message and a button to create the first service for the vehicle.```text
                           <FormItem className="space-y-2">
                             <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
                               <Wrench className="h-4 w-4 mr-2 text-teal-600" />
