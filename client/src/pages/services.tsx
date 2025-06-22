@@ -600,7 +600,7 @@ export default function Services() {
       return matchesCustomer && matchesStatus && matchesPayment;
     }
 
-    // Vehicle Filtering by ID
+    // Vehicle Filtering by ID (priority filter)
     if (vehicleIdFilter) {
       const vehicleId = parseInt(vehicleIdFilter);
       const matchesVehicle = service.vehicleId === vehicleId;
@@ -613,13 +613,17 @@ export default function Services() {
       (service.customer?.name || "").toLowerCase().includes(searchLower) ||
       (service.vehicle?.licensePlate || "").toLowerCase().includes(searchLower) ||
       (service.serviceType?.name || "").toLowerCase().includes(searchLower) ||
-      (service.notes || "").toLowerCase().includes(searchLower)
+      (service.notes || "").toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const matchesStatus = filterStatus === "all" || service.status === filterStatus;
 
     return matchesSearch && matchesStatus && matchesPayment;
   });
+
+  // Check if we're filtering by a specific vehicle and have no results
+  const isFilteringByVehicle = !!vehicleIdFilter;
+  const hasNoServicesForVehicle = isFilteringByVehicle && filteredServices.length === 0;
 
   // Pre-fill search with customer name or vehicle plate if provided
   useEffect(() => {
@@ -822,6 +826,7 @@ export default function Services() {
                         control={form.control}
                         name="serviceTypeId"
                         render={({ field }) => (
+Refactored the Services component to handle cases where vehicles have no associated services, providing a user-friendly message and a button to create the first service for the vehicle.```text
                           <FormItem className="space-y-2">
                             <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
                               <Wrench className="h-4 w-4 mr-2 text-teal-600" />
@@ -1579,7 +1584,8 @@ export default function Services() {
                         <Input
                           type="text"
                           placeholder="0.00"
-                          value={formatCurrency(paymentMethods.cheque)}
+                          ```text
+value={formatCurrency(paymentMethods.cheque)}
                           onChange={(e) => {
                             const formattedValue = formatCurrency(e.target.value);
                             setPaymentMethods(prev => ({ ...prev, cheque: parseCurrency(formattedValue) }));
@@ -1730,52 +1736,102 @@ export default function Services() {
                 </Card>
               ))}
             </div>
-          ) : filteredServices.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <Card className="w-full max-w-md text-center bg-white/80 backdrop-blur-sm border border-teal-200">
-                <CardContent className="pt-8 pb-6">
-                  <Wrench className="h-16 w-16 text-teal-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">
-                    Nenhum serviço encontrado
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    {searchTerm || filterStatus !== "all" ? 'Tente ajustar os filtros de busca.' : 'Comece criando o primeiro serviço.'}
-                  </p>
-                  {!searchTerm && filterStatus === "all" && (
-                    <Button
-                      className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 shadow-lg"
-                      onClick={() => {
-                        setEditingService(null);
-                        form.reset();
+          ) : filteredServices.length === 0 && vehicleIdFilter ? (
+              // Specific case: vehicle has no services
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="bg-gradient-to-br from-blue-100 to-indigo-100 p-6 rounded-full mb-6 w-24 h-24 flex items-center justify-center">
+                  <Wrench className="h-12 w-12 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  Nenhum serviço encontrado para este veículo
+                </h3>
+                <p className="text-gray-600 mb-2 text-center">
+                  O veículo <strong>{vehiclePlateFilter ? decodeURIComponent(vehiclePlateFilter) : 'selecionado'}</strong> ainda não possui serviços cadastrados.
+                </p>
+                <p className="text-gray-600 mb-6 text-center">
+                  Deseja cadastrar o primeiro serviço para este veículo?
+                </p>
+                <Button
+                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                  onClick={() => {
+                    setEditingService(null);
+                    form.reset();
+                    setTemporaryPhotos([]);
+                    setCurrentServicePhotos([]);
+                    setServiceExtras([]);
+                    setPaymentMethods({
+                      pix: "",
+                      dinheiro: "",
+                      cheque: "",
+                      cartao: ""
+                    });
 
-                        // Check URL params to pre-select customer if coming from customer page
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const customerIdFromUrl = urlParams.get('customerId');
+                    // Pre-fill vehicle data
+                    if (vehicleIdFilter) {
+                      const vehicleId = parseInt(vehicleIdFilter);
+                      const selectedVehicle = vehicles.find(v => v.id === vehicleId);
+                      if (selectedVehicle) {
+                        form.setValue('customerId', selectedVehicle.customerId);
+                        form.setValue('vehicleId', vehicleId);
+                      }
+                    }
 
-                        if (customerIdFromUrl) {
-                          const customerId = parseInt(customerIdFromUrl);
-                          console.log('Services: Pre-selecting customer from URL (first service):', customerId);
-                          form.setValue('customerId', customerId);
-                          // Reset vehicle when customer is pre-selected
-                          form.setValue('vehicleId', 0);
-                        }
-
-                        setIsDialogOpen(true);
-                      }}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Criar Primeiro Serviço
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          ) : (
-            <div className={cn(
-              "grid gap-4",
-              isMobile ? "grid-cols-1": "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            )}>
-              {filteredServices.map((service) => {
+                    setIsDialogOpen(true);
+                  }}
+                >
+                  <Plus className="h-5 w-5 mr-2" />
+                  Cadastrar Primeiro Serviço
+                </Button>
+              </div>
+            ) : filteredServices.length === 0 ? (
+              // General case: no services found
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="bg-gradient-to-br from-teal-100 to-emerald-100 p-6 rounded-full mb-6 w-24 h-24 flex items-center justify-center">
+                  <Wrench className="h-12 w-12 text-teal-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  {searchTerm ? "Nenhum serviço encontrado" : "Nenhum serviço cadastrado"}
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  {searchTerm 
+                    ? 'Tente ajustar os termos de busca ou filtros.' 
+                    : 'Comece adicionando seu primeiro serviço.'
+                  }
+                </p>
+                {!searchTerm && (
+                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                        onClick={() => {
+                          setEditingService(null);
+                          form.reset();
+                          setTemporaryPhotos([]);
+                          setCurrentServicePhotos([]);
+                          setServiceExtras([]);
+                          setPaymentMethods({
+                            pix: "",
+                            dinheiro: "",
+                            cheque: "",
+                            cartao: ""
+                          });
+                        }}
+                      >
+                        <Plus className="h-5 w-5 mr-2" />
+                        Adicionar Primeiro Serviço
+                      </Button>
+                    </DialogTrigger>
+                  </Dialog>
+                )}
+              </div>
+            ) : (
+              <div className={cn(
+                "grid gap-4",
+                isMobile 
+                  ? "grid-cols-1" 
+                  : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              )}>
+                {filteredServices.map((service) => {
                  const totalValue = service.estimatedValue || "0";
                  const paymentStatus = getPaymentStatus(service.valorPago || "0", totalValue);
 
