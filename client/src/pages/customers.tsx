@@ -1044,7 +1044,7 @@ export default function CustomersPage() {
                               }
                             }}
                             className={cn(
-                              "border-teal-200 text-teal-700 hover:bg-teal-50 rounded-xl",
+                              "border-green-200 text-green-700 hover:bg-green-50 rounded-xl",
                               isMobile ? "h-7 px-1" : "h-9"
                             )}
                           >
