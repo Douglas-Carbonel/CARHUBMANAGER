@@ -977,27 +977,19 @@ export default function CustomersPage() {
                         {/* Ações */}
                         <div className={cn(isMobile ? "space-y-2" : "space-y-2")}>
                           <Button
-                            onClick={async () => {
-                              // Check if customer has vehicles before navigating
-                              try {
-                                const res = await fetch(`/api/vehicles?customerId=${customer.id}`, {
+                            onClick={() => {
+                              // Navegação instantânea com informação contextual
+                              // A página de veículos já tem toda a lógica necessária para lidar com ambos cenários
+                              setLocation(`/vehicles?customerId=${customer.id}`);
+                              
+                              // Opcional: Fazer pré-cache em background para melhorar UX futura
+                              setTimeout(() => {
+                                fetch(`/api/vehicles?customerId=${customer.id}`, {
                                   credentials: 'include',
+                                }).catch(() => {
+                                  // Ignorar erros de pré-cache - não afeta a funcionalidade
                                 });
-                                if (res.ok) {
-                                  const customerVehicles = await res.json();
-                                  
-                                  // Always navigate to vehicles page filtered by customer
-                                  // The vehicles page will show appropriate message if no vehicles found
-                                  setLocation(`/vehicles?customerId=${customer.id}`);
-                                } else {
-                                  // Error checking vehicles, navigate normally
-                                  setLocation(`/vehicles?customerId=${customer.id}`);
-                                }
-                              } catch (error) {
-                                console.error('Error checking customer vehicles:', error);
-                                // On error, navigate normally
-                                setLocation(`/vehicles?customerId=${customer.id}`);
-                              }
+                              }, 100);
                             }}
                             className={cn(
                               "w-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-sm rounded-xl",
