@@ -53,14 +53,30 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
 
   // Check for changes when form values change
   useEffect(() => {
-    if (!isOpen || !initialFormState) return;
+    if (!isOpen || !initialFormState) {
+      console.log('NewServiceModal - Skipping change check:', { isOpen, hasInitialState: !!initialFormState });
+      return;
+    }
 
-    const hasChanges = JSON.stringify(formValues) !== JSON.stringify(initialFormState);
+    // Compare each field individually for better debugging
+    const changes = {
+      customerId: formValues.customerId !== initialFormState.customerId,
+      vehicleId: formValues.vehicleId !== initialFormState.vehicleId,
+      serviceTypeId: formValues.serviceTypeId !== initialFormState.serviceTypeId,
+      technicianId: formValues.technicianId !== initialFormState.technicianId,
+      status: formValues.status !== initialFormState.status,
+      scheduledDate: formValues.scheduledDate !== initialFormState.scheduledDate,
+      scheduledTime: formValues.scheduledTime !== initialFormState.scheduledTime,
+      notes: formValues.notes !== initialFormState.notes,
+    };
+
+    const hasChanges = Object.values(changes).some(changed => changed);
     
-    console.log('NewServiceModal - Form change check:', {
+    console.log('NewServiceModal - Detailed change check:', {
       hasChanges,
-      formValues,
-      initialFormState
+      changes,
+      currentValues: formValues,
+      initialValues: initialFormState
     });
 
     setHasFormChanges(hasChanges);
@@ -122,7 +138,6 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
 
       // Reset states
       setHasFormChanges(false);
-      setInitialFormState(null);
 
       const defaultValues = {
         customerId: 0,
@@ -155,12 +170,10 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
       console.log('NewServiceModal: Setting form with values:', defaultValues);
       form.reset(defaultValues);
       setServiceExtras([]);
-
-      // Set initial state after form reset
-      setTimeout(() => {
-        setInitialFormState({ ...defaultValues });
-        console.log('NewServiceModal: Initial form state set:', defaultValues);
-      }, 100);
+      
+      // Set initial state immediately
+      setInitialFormState({ ...defaultValues });
+      console.log('NewServiceModal: Initial form state set:', defaultValues);
     }
   }, [isOpen, form]);
 
