@@ -79,6 +79,8 @@ export default function CustomersPage() {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const isMobile = useIsMobile();
   const [temporaryPhotos, setTemporaryPhotos] = useState<{photo: string, category: string}[]>([]);
+  const [isVehicleWarningOpen, setIsVehicleWarningOpen] = useState(false);
+  const [customerForVehicleWarning, setCustomerForVehicleWarning] = useState<Customer | null>(null);
 
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerFormSchema),
@@ -1020,16 +1022,8 @@ export default function CustomersPage() {
 
                                   // Se o cliente não tem veículos cadastrados
                                   if (!customerVehicles || customerVehicles.length === 0) {
-                                    const confirmVehicle = window.confirm(
-                                      customer.name + " não possui veículos cadastrados.\n\n" +
-                                      'Não é possível criar serviços sem um veículo cadastrado.\n\n' +
-                                      'Deseja cadastrar o primeiro veículo para este cliente?'
-                                    );
-
-                                    if (confirmVehicle) {
-                                      // Navegar para página de veículos com o cliente pré-selecionado
-                                      setLocation("/vehicles?customerId=" + customer.id);
-                                    }
+                                    setCustomerForVehicleWarning(customer);
+                                    setIsVehicleWarningOpen(true);
                                     return;
                                   }
 
@@ -1124,6 +1118,59 @@ export default function CustomersPage() {
               onPhotoTaken={handlePhotoTaken}
               customerId={editingCustomer?.id}
             />
+
+            {/* Vehicle Warning Modal */}
+            <Dialog open={isVehicleWarningOpen} onOpenChange={setIsVehicleWarningOpen}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center text-orange-700">
+                    <Car className="h-5 w-5 mr-2" />
+                    Veículos Necessários
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="bg-orange-100 p-6 rounded-full mb-4 w-20 h-20 flex items-center justify-center mx-auto">
+                      <Car className="h-10 w-10 text-orange-600" />
+                    </div>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      {customerForVehicleWarning?.name} não possui veículos cadastrados
+                    </h3>
+                    <p className="text-gray-600 text-sm mb-4">
+                      Não é possível criar serviços sem um veículo cadastrado.
+                    </p>
+                    <p className="text-gray-800 font-medium">
+                      Deseja cadastrar o primeiro veículo para este cliente?
+                    </p>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsVehicleWarningOpen(false);
+                        setCustomerForVehicleWarning(null);
+                      }}
+                      className="flex-1"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if (customerForVehicleWarning) {
+                          setLocation("/vehicles?customerId=" + customerForVehicleWarning.id);
+                        }
+                        setIsVehicleWarningOpen(false);
+                        setCustomerForVehicleWarning(null);
+                      }}
+                      className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                    >
+                      Cadastrar Veículo
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </main>
       </div>
