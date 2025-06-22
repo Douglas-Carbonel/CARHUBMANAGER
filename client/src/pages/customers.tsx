@@ -977,7 +977,32 @@ export default function CustomersPage() {
                         {/* Ações */}
                         <div className={cn(isMobile ? "space-y-2" : "space-y-2")}>
                           <Button
-                            onClick={() => setLocation(`/vehicles?customerId=${customer.id}`)}
+                            onClick={async () => {
+                              // Check if customer has vehicles before navigating
+                              try {
+                                const res = await fetch(`/api/vehicles?customerId=${customer.id}`, {
+                                  credentials: 'include',
+                                });
+                                if (res.ok) {
+                                  const customerVehicles = await res.json();
+                                  
+                                  if (customerVehicles.length === 0) {
+                                    // No vehicles found, navigate with autoCreate parameter
+                                    setLocation(`/vehicles?customerId=${customer.id}&autoCreate=true`);
+                                  } else {
+                                    // Has vehicles, navigate normally
+                                    setLocation(`/vehicles?customerId=${customer.id}`);
+                                  }
+                                } else {
+                                  // Error checking vehicles, navigate normally
+                                  setLocation(`/vehicles?customerId=${customer.id}`);
+                                }
+                              } catch (error) {
+                                console.error('Error checking customer vehicles:', error);
+                                // On error, navigate normally
+                                setLocation(`/vehicles?customerId=${customer.id}`);
+                              }
+                            }}
                             className={cn(
                               "w-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-sm rounded-xl",
                               isMobile ? "h-8 text-xs" : "h-10"

@@ -263,10 +263,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Vehicle routes
   app.get("/api/vehicles", requireAuth, async (req, res) => {
     try {
-      const vehicles = await storage.getVehiclesWithCustomers();
+      const { customerId } = req.query;
+      let vehicles;
+
+      if (customerId) {
+        // Filter vehicles by customer ID
+        const allVehicles = await storage.getVehicles();
+        vehicles = allVehicles.filter(vehicle => vehicle.customerId === parseInt(customerId as string));
+        console.log(`Retrieved ${vehicles.length} vehicles for customer ${customerId}`);
+      } else {
+        vehicles = await storage.getVehicles();
+        console.log(`Retrieved ${vehicles.length} vehicles`);
+      }
+
       res.json(vehicles);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch vehicles" });
+      console.error("Error getting vehicles:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   });
 
@@ -385,7 +398,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           second: '2-digit',
           hour12: false
         });
-        
+
         const parts = formatter.formatToParts(now);
         const year = parts.find(p => p.type === 'year')?.value;
         const month = parts.find(p => p.type === 'month')?.value;
@@ -393,9 +406,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const hour = parts.find(p => p.type === 'hour')?.value;
         const minute = parts.find(p => p.type === 'minute')?.value;
         const second = parts.find(p => p.type === 'second')?.value;
-        
+
         serviceData.scheduledDate = `${year}-${month}-${day}`;
-        
+
         // Se não foi informada hora de agendamento, usar a hora atual no timezone brasileiro
         if (!serviceData.scheduledTime || serviceData.scheduledTime === "") {
           serviceData.scheduledTime = `${hour}:${minute}:${second}`;
@@ -410,12 +423,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           second: '2-digit',
           hour12: false
         });
-        
+
         const parts = formatter.formatToParts(now);
         const hour = parts.find(p => p.type === 'hour')?.value;
         const minute = parts.find(p => p.type === 'minute')?.value;
         const second = parts.find(p => p.type === 'second')?.value;
-        
+
         serviceData.scheduledTime = `${hour}:${minute}:${second}`;
       }
 

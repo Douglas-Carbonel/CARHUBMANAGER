@@ -254,8 +254,36 @@ export default function VehiclesPage() {
     const customerId = urlParams.get('customerId');
     if (customerId) {
       setCustomerFilter(parseInt(customerId));
+      
+      // Check if we should auto-open the modal for new vehicle registration
+      const autoCreate = urlParams.get('autoCreate');
+      if (autoCreate === 'true') {
+        // Wait for customers data to load before opening modal
+        const timer = setTimeout(() => {
+          setEditingVehicle(null);
+          form.reset({
+            customerId: parseInt(customerId),
+            licensePlate: "",
+            brand: "",
+            model: "",
+            year: new Date().getFullYear(),
+            color: "",
+            chassis: "",
+            engine: "",
+            fuelType: "gasoline",
+            notes: "",
+          });
+          setTemporaryPhotos([]);
+          setCurrentVehiclePhotos([]);
+          setSelectedBrand("");
+          setCustomModel("");
+          setIsModalOpen(true);
+        }, 500);
+        
+        return () => clearTimeout(timer);
+      }
     }
-  }, []);
+  }, [customers]);
 
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleFormSchema),
@@ -1103,22 +1131,49 @@ export default function VehiclesPage() {
                   <Car className="h-12 w-12 text-teal-600" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  Nenhum veículo encontrado
+                  {customerFilter 
+                    ? `Nenhum veículo encontrado para ${customers.find(c => c.id === customerFilter)?.name || 'este cliente'}`
+                    : "Nenhum veículo encontrado"
+                  }
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  {searchTerm ? 'Tente ajustar os termos de busca.' : 'Comece adicionando seu primeiro veículo.'}
+                  {searchTerm 
+                    ? 'Tente ajustar os termos de busca.' 
+                    : customerFilter 
+                      ? 'Este cliente ainda não possui veículos cadastrados.'
+                      : 'Comece adicionando seu primeiro veículo.'
+                  }
                 </p>
                 {!searchTerm && (
                   <Button
                     className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
                     onClick={() => {
                       setEditingVehicle(null);
-                      form.reset();
+                      const defaultValues = {
+                        customerId: customerFilter || 0,
+                        licensePlate: "",
+                        brand: "",
+                        model: "",
+                        year: new Date().getFullYear(),
+                        color: "",
+                        chassis: "",
+                        engine: "",
+                        fuelType: "gasoline",
+                        notes: "",
+                      };
+                      form.reset(defaultValues);
+                      setTemporaryPhotos([]);
+                      setCurrentVehiclePhotos([]);
+                      setSelectedBrand("");
+                      setCustomModel("");
                       setIsModalOpen(true);
                     }}
                   >
                     <Plus className="h-5 w-5 mr-2" />
-                    Adicionar Primeiro Veículo
+                    {customerFilter 
+                      ? `Cadastrar Veículo para ${customers.find(c => c.id === customerFilter)?.name || 'Cliente'}`
+                      : "Adicionar Primeiro Veículo"
+                    }
                   </Button>
                 )}
               </div>
