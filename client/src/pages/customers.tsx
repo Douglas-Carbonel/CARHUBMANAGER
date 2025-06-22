@@ -111,13 +111,13 @@ export default function CustomersPage() {
     onSuccess: async (newCustomer) => {
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/analytics/customers"] });
-
+      
       // Save temporary photos if any
       if (temporaryPhotos.length > 0) {
         let photosSaved = 0;
         for (const tempPhoto of temporaryPhotos) {
           try {
-            const res = await fetch("/api/customers/" + newCustomer.id + "/photos", {
+            const res = await fetch(`/api/customers/${newCustomer.id}/photos`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -138,7 +138,7 @@ export default function CustomersPage() {
             console.error('Error saving temporary photo:', error);
           }
         }
-        console.log(photosSaved + " of " + temporaryPhotos.length + " temporary photos processed");
+        console.log(`${photosSaved} of ${temporaryPhotos.length} temporary photos processed`);
         setTemporaryPhotos([]); // Clear temporary photos after saving
       }
 
@@ -164,7 +164,7 @@ export default function CustomersPage() {
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: CustomerFormData }) => {
       console.log('Updating customer with data:', data);
-      const res = await apiRequest("PUT", "/api/customers/" + id, data);
+      const res = await apiRequest("PUT", `/api/customers/${id}`, data);
       return await res.json();
     },
     onSuccess: () => {
@@ -192,7 +192,7 @@ export default function CustomersPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", "/api/customers/" + id);
+      await apiRequest("DELETE", `/api/customers/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
@@ -214,7 +214,7 @@ export default function CustomersPage() {
   const generateCustomerCode = () => {
     const timestamp = Date.now().toString(36).toUpperCase();
     const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-    return timestamp + random;
+    return `${timestamp}${random}`;
   };
 
   const onSubmit = (data: CustomerFormData) => {
@@ -275,7 +275,7 @@ export default function CustomersPage() {
     }
 
     try {
-      const res = await apiRequest("GET", "/api/customers/" + customerId + "/photos");
+      const res = await apiRequest("GET", `/api/customers/${customerId}/photos`);
       const photos = await res.json();
       setCurrentCustomerPhotos(photos);
     } catch (error) {
@@ -319,7 +319,7 @@ export default function CustomersPage() {
 
     // If customer ID exists (editing existing customer), save immediately
     try {
-      const res = await fetch("/api/customers/" + customerId + "/photos", {
+      const res = await fetch(`/api/customers/${customerId}/photos`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -408,7 +408,7 @@ export default function CustomersPage() {
                   📊 {isMobile ? "Relatórios" : "Ver Relatórios"}
                 </Button>
                 <div className={cn(
-                  "bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg shadow-md",
+                  "bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-lg shadow-md",
                   isMobile ? "px-2 py-1" : "px-4 py-2"
                 )}>
                   <span className={cn("font-semibold", isMobile ? "text-sm" : "")}>{filteredCustomers.length}</span>
@@ -710,7 +710,7 @@ export default function CustomersPage() {
 
                                   for (const file of Array.from(files)) {
                                     if (!file.type.startsWith('image/')) continue;
-
+                                    
                                     // Convert to base64 for preview
                                     const reader = new FileReader();
                                     reader.onload = (event) => {
@@ -719,7 +719,7 @@ export default function CustomersPage() {
                                     };
                                     reader.readAsDataURL(file);
                                   }
-
+                                  
                                   // Clear the input
                                   e.target.value = '';
                                 }}
@@ -748,7 +748,7 @@ export default function CustomersPage() {
                                   <div key={index} className="relative group">
                                     <img 
                                       src={tempPhoto.photo} 
-                                      alt={"Foto temporária " + (index + 1)}
+                                      alt={`Foto temporária ${index + 1}`}
                                       className={cn(
                                         "w-full object-cover rounded-lg border border-gray-200",
                                         isMobile ? "h-16" : "h-20"
@@ -847,8 +847,8 @@ export default function CustomersPage() {
               </div>
             ) : filteredCustomers.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <div className="bg-gradient-to-br from-green-100 to-emerald-100 p-6 rounded-full mb-6 w-24 h-24 flex items-center justify-center">
-                  <User className="h-12 w-12 text-green-600" />
+                <div className="bg-gradient-to-br from-teal-100 to-emerald-100 p-6 rounded-full mb-6 w-24 h-24 flex items-center justify-center">
+                  <User className="h-12 w-12 text-teal-600" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">
                   Nenhum cliente encontrado
@@ -880,11 +880,11 @@ export default function CustomersPage() {
                       isMobile ? "rounded-lg" : "rounded-2xl"
                     )}>
                       {/* Background gradient sutil */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-green-50/30 to-emerald-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-teal-50/30 to-emerald-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                       {/* Header colorido */}
                       <div className={cn(
-                        "relative bg-gradient-to-r from-green-500 to-emerald-600 flex items-center justify-between",
+                        "relative bg-gradient-to-r from-teal-500 to-emerald-600 flex items-center justify-between",
                         isMobile ? "h-16 p-3" : "h-20 p-4"
                       )}>
                         <div className={cn("flex items-center", isMobile ? "space-x-2" : "space-x-3")}>
@@ -980,11 +980,11 @@ export default function CustomersPage() {
                             onClick={() => {
                               // Navegação instantânea com informação contextual
                               // A página de veículos já tem toda a lógica necessária para lidar com ambos cenários
-                              setLocation("/vehicles?customerId=" + customer.id);
-
+                              setLocation(`/vehicles?customerId=${customer.id}`);
+                              
                               // Opcional: Fazer pré-cache em background para melhorar UX futura
                               setTimeout(() => {
-                                fetch("/api/vehicles?customerId=" + customer.id, {
+                                fetch(`/api/vehicles?customerId=${customer.id}`, {
                                   credentials: 'include',
                                 }).catch(() => {
                                   // Ignorar erros de pré-cache - não afeta a funcionalidade
@@ -992,7 +992,7 @@ export default function CustomersPage() {
                               }, 100);
                             }}
                             className={cn(
-                              "w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-sm rounded-xl",
+                              "w-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-sm rounded-xl",
                               isMobile ? "h-8 text-xs" : "h-10"
                             )}
                             size="sm"
@@ -1005,54 +1005,15 @@ export default function CustomersPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                            onClick={async () => {
-                              try {
-                                // Buscar veículos do cliente
-                                const res = await fetch("/api/customers/" + customer.id + "/vehicles", {
-                                  credentials: 'include',
-                                });
-
-                                if (!res.ok) {
-                                  throw new Error('Erro ao verificar veículos do cliente');
-                                }
-
-                                const customerVehicles = await res.json();
-
-                                // Se o cliente não tem veículos cadastrados
-                                if (!customerVehicles || customerVehicles.length === 0) {
-                                  const confirmVehicle = window.confirm(
-                                    customer.name + " não possui veículos cadastrados.\n\n" +
-                                    'Não é possível criar serviços sem um veículo cadastrado.\n\n' +
-                                    'Deseja cadastrar o primeiro veículo para este cliente?'
-                                  );
-
-                                  if (confirmVehicle) {
-                                    // Navegar para página de veículos com o cliente pré-selecionado
-                                    setLocation("/vehicles?customerId=" + customer.id);
-                                  }
-                                  return;
-                                }
-
-                                // Cliente tem veículos, pode navegar para serviços
-                                setLocation("/services?customerId=" + customer.id);
-
-                              } catch (error) {
-                                console.error('Erro ao verificar veículos:', error);
-                                toast({
-                                  title: "Erro",
-                                  description: "Erro ao verificar veículos do cliente. Tente novamente.",
-                                  variant: "destructive",
-                                });
-                              }
-                            }}
-                            className={cn(
-                              "border-green-200 text-green-700 hover:bg-green-50 rounded-xl",
-                              isMobile ? "h-7 px-1" : "h-9"
-                            )}
-                          >
-                            <Wrench className={cn(isMobile ? "h-2.5 w-2.5" : "h-3 w-3 mr-1")} />
-                            {!isMobile && <span className="text-xs">Serviços</span>}
-                          </Button>
+                              onClick={() => setLocation(`/services?customerId=${customer.id}`)}
+                              className={cn(
+                                "border-teal-200 text-teal-700 hover:bg-teal-50 rounded-xl",
+                                isMobile ? "h-7 px-1" : "h-9"
+                              )}
+                            >
+                              <Wrench className={cn(isMobile ? "h-2.5 w-2.5" : "h-3 w-3 mr-1")} />
+                              {!isMobile && <span className="text-xs">Serviços</span>}
+                            </Button>
                             <Button
                               variant="outline"
                               size="sm"
