@@ -1147,36 +1147,494 @@ export default function VehiclesPage() {
                   }
                 </p>
                 {!searchTerm && (
-                  <Button
-                    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-                    onClick={() => {
-                      setEditingVehicle(null);
-                      const defaultValues = {
-                        customerId: customerFilter || 0,
-                        licensePlate: "",
-                        brand: "",
-                        model: "",
-                        year: new Date().getFullYear(),
-                        color: "",
-                        chassis: "",
-                        engine: "",
-                        fuelType: "gasoline",
-                        notes: "",
-                      };
-                      form.reset(defaultValues);
-                      setTemporaryPhotos([]);
-                      setCurrentVehiclePhotos([]);
-                      setSelectedBrand("");
-                      setCustomModel("");
-                      setIsModalOpen(true);
-                    }}
-                  >
-                    <Plus className="h-5 w-5 mr-2" />
-                    {customerFilter 
-                      ? `Cadastrar Veículo para ${customers.find(c => c.id === customerFilter)?.name || 'Cliente'}`
-                      : "Adicionar Primeiro Veículo"
-                    }
-                  </Button>
+                  <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                        onClick={() => {
+                          setEditingVehicle(null);
+                          const defaultValues = {
+                            customerId: customerFilter || 0,
+                            licensePlate: "",
+                            brand: "",
+                            model: "",
+                            year: new Date().getFullYear(),
+                            color: "",
+                            chassis: "",
+                            engine: "",
+                            fuelType: "gasoline",
+                            notes: "",
+                          };
+                          form.reset(defaultValues);
+                          setTemporaryPhotos([]);
+                          setCurrentVehiclePhotos([]);
+                          setSelectedBrand("");
+                          setCustomModel("");
+                        }}
+                      >
+                        <Plus className="h-5 w-5 mr-2" />
+                        {customerFilter 
+                          ? `Cadastrar Veículo para ${customers.find(c => c.id === customerFilter)?.name || 'Cliente'}`
+                          : "Adicionar Primeiro Veículo"
+                        }
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className={cn(
+                      "bg-gradient-to-br from-slate-50 to-blue-50/30",
+                      isMobile ? "max-w-[95vw] max-h-[90vh] overflow-y-auto" : "max-w-2xl"
+                    )}>
+                      <DialogHeader className="pb-6">
+                        <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent">
+                          {editingVehicle ? "Editar Veículo" : "Novo Veículo"}
+                        </DialogTitle>
+                      </DialogHeader>
+                      <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <FormField
+                              control={form.control}
+                              name="customerId"
+                              render={({ field }) => (
+                                <FormItem className="space-y-2">
+                                  <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                    <User className="h-4 w-4 mr-2 text-teal-600" />
+                                    Cliente
+                                  </FormLabel>
+                                  <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                                    <FormControl>
+                                      <SelectTrigger className="h-11 bg-white/80 border-slate-200 rounded-lg">
+                                        <SelectValue placeholder="Selecione o cliente" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {customers.map((customer: Customer) => (
+                                        <SelectItem key={customer.id} value={customer.id.toString()}>
+                                          {customer.name}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                          control={form.control}
+                          name="licensePlate"
+                          render={({ field }) => (
+                            <FormItem className="space-y-2">
+                              <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                <Car className="h-4 w-4 mr-2 text-teal-600" />
+                                Placa
+                              </FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="ABC-1234" 
+                                  className="h-11 bg-white/80 border-slate-200 rounded-lg uppercase"
+                                  maxLength={8}
+                                  {...field}
+                                  onChange={(e) => {
+                                    let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                                    if (value.length > 3) {
+                                      value = value.slice(0, 3) + '-' + value.slice(3, 7);
+                                    }
+                                    field.onChange(value);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <FormField
+                          control={form.control}
+                          name="brand"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col space-y-2">
+                              <FormLabel className="text-sm font-semibold text-slate-700">Marca</FormLabel>
+                              <Popover open={openBrandSelect} onOpenChange={setOpenBrandSelect}>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant="outline"
+                                      role="combobox"
+                                      className={cn(
+                                        "h-11 bg-white/80 border-slate-200 rounded-lg justify-between text-left font-normal",
+                                        !field.value && "text-muted-foreground"
+                                      )}
+                                    >
+                                      <span className="truncate">
+                                        {selectedBrand || "Selecione uma marca..."}
+                                      </span>
+                                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" side={isMobile ? "bottom" : "bottom"} align="start">
+                                  <Command>
+                                    <CommandInput placeholder="Buscar marca..." className="h-9" />
+                                    <CommandList>
+                                      <CommandEmpty>Nenhuma marca encontrada.</CommandEmpty>
+                                      <CommandGroup className="max-h-[200px] overflow-auto">
+                                        {vehicleBrands.map((brand) => (
+                                          <CommandItem
+                                            key={brand}
+                                            value={brand}
+                                            onSelect={(currentValue) => {
+                                              const newBrand = currentValue === selectedBrand ? "" : brand;
+                                              setSelectedBrand(newBrand);
+                                              field.onChange(newBrand);
+                                              setOpenBrandSelect(false);
+                                              if (newBrand) {
+                                                form.setValue("model", "");
+                                                setCustomModel("");
+                                              }
+                                            }}
+                                            className="text-sm"
+                                          >
+                                            <Check
+                                              className={cn(
+                                                "mr-2 h-4 w-4",
+                                                selectedBrand === brand ? "opacity-100" : "opacity-0"
+                                              )}
+                                            />
+                                            {brand}
+                                          </CommandItem>
+                                        ))}
+                                      </CommandGroup>
+                                    </CommandList>
+                                  </Command>
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                            <FormField
+                          control={form.control}
+                          name="model"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col space-y-2">
+                              <FormLabel className="text-sm font-semibold text-slate-700">Modelo</FormLabel>
+                              <Popover open={openModelSelect} onOpenChange={setOpenModelSelect}>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant="outline"
+                                      role="combobox"
+                                      className={cn(
+                                        "h-11 bg-white/80 border-slate-200 rounded-lg justify-between text-left font-normal",
+                                        !field.value && "text-muted-foreground"
+                                      )}
+                                      disabled={!selectedBrand}
+                                    >
+                                      <span className="truncate">
+                                        {field.value || customModel || "Selecione um modelo..."}
+                                      </span>
+                                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" side={isMobile ? "bottom" : "bottom"} align="start">
+                                  <Command>
+                                    <CommandInput 
+                                      placeholder="Buscar modelo ou digite um personalizado..." 
+                                      value={customModel}
+                                      onValueChange={(value) => {
+                                        setCustomModel(value);
+                                        field.onChange(value);
+                                      }}
+                                      className="h-9"
+                                    />
+                                    <CommandList>
+                                      {selectedBrand && vehicleModels[selectedBrand] && vehicleModels[selectedBrand].length > 0 ? (
+                                        <>
+                                          <CommandEmpty>Nenhum modelo encontrado.</CommandEmpty>
+                                          <CommandGroup className="max-h-[200px] overflow-auto">
+                                            {vehicleModels[selectedBrand]?.map((model) => (
+                                              <CommandItem
+                                                key={model}
+                                                value={model}
+                                                onSelect={(currentValue) => {
+                                                  field.onChange(currentValue);
+                                                  setCustomModel("");
+                                                  setOpenModelSelect(false);
+                                                }}
+                                                className="text-sm"
+                                              >
+                                                <Check
+                                                  className={cn(
+                                                    "mr-2 h-4 w-4",
+                                                    field.value === model ? "opacity-100" : "opacity-0"
+                                                  )}
+                                                />
+                                                {model}
+                                              </CommandItem>
+                                            ))}
+                                          </CommandGroup>
+                                        </>
+                                      ) : (
+                                        <div className="p-2 text-sm text-muted-foreground">
+                                          Digite o nome do modelo
+                                        </div>
+                                      )}
+                                    </CommandList>
+                                  </Command>
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <FormField
+                              control={form.control}
+                              name="year"
+                              render={({ field }) => (
+                                <FormItem className="space-y-2">
+                                  <FormLabel className="text-sm font-semibold text-slate-700">Ano</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      type="number" 
+                                      placeholder="2024" 
+                                      className="h-11 bg-white/80 border-slate-200 rounded-lg"{...field}
+                                      onChange={(e) => field.onChange(parseInt(e.target.value))}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="color"
+                              render={({ field }) => (
+                                <FormItem className="space-y-2">
+                                  <FormLabel className="text-sm font-semibold text-slate-700">Cor</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      placeholder="Preto" 
+                                      className="h-11 bg-white/80 border-slate-200 rounded-lg"
+                                      {...field} 
+                                      value={field.value || ""}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          <FormField
+                            control={form.control}
+                            name="fuelType"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Combustível</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Selecione o combustível" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {fuelTypes.map((fuel) => (
+                                      <SelectItem key={fuel.value} value={fuel.value}>
+                                        {fuel.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          {/* Photos Section */}
+                          <div className="col-span-2 border-t pt-4">
+
+  <div className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <h4 className="text-sm font-medium text-gray-700">Fotos</h4>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setIsCameraOpen(true);
+                                    }}
+                                    className="flex items-center gap-2 text-xs"
+                                  >
+                                    <Camera className="h-4 w-4" />
+                                    {isMobile ? "Foto" : "Câmera"}
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      // Trigger file upload
+                                      const input = document.createElement('input');
+                                      input.type = 'file';
+                                      input.accept = 'image/*';
+                                      input.multiple = true;
+                                      input.onchange = async (event) => {
+                                        const files = (event.target as HTMLInputElement).files;
+                                        if (files) {
+                                          for (const file of Array.from(files)) {
+                                            const reader = new FileReader();
+                                            reader.onload = (e) => {
+                                              const photo = e.target?.result as string;
+                                              // Use vehicleId if editing, undefined if creating new
+                                              handlePhotoTaken(photo, 'vehicle', editingVehicle?.id);
+                                            };
+                                            reader.readAsDataURL(file);
+                                          }
+                                        }
+                                      };
+                                      input.click();
+                                    }}
+                                    className="flex items-center gap-2 text-xs"
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                    +
+                                  </Button>
+                                </div>
+                              </div>
+
+                              {/* Exibir fotos existentes do veículo em edição */}
+                              {editingVehicle && currentVehiclePhotos.length > 0 && (
+                                <div className="mt-4 space-y-2">
+                                  <h5 className="text-sm font-medium text-gray-600">Fotos do veículo:</h5>
+                                  <div className="grid grid-cols-3 gap-2">
+                                    {currentVehiclePhotos.map((photo) => (
+                                      <div key={photo.id} className="relative group">
+                                        <img 
+                                          src={photo.url} 
+                                          alt={photo.description || 'Foto do veículo'}
+                                          className="w-full h-20 object-cover rounded-lg border border-gray-200"
+                                        />
+                                        <div className="absolute bottom-1 left-1 right-1">
+                                          <span className="text-xs bg-black bg-opacity-70 text-white px-1 py-0.5 rounded text-center block">
+                                            {photo.category === 'vehicle' ? 'Veículo' : 
+                                             photo.category === 'damage' ? 'Dano' :
+                                             photo.category === 'before' ? 'Antes' :
+                                             photo.category === 'after' ? 'Depois' : 'Outro'}
+                                          </span>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={async () => {
+                                            if (!confirm('Tem certeza que deseja remover esta foto?')) return;
+
+                                            try {
+                                              const res = await fetch(`/api/photos/${photo.id}`, {
+                                                method: 'DELETE',
+                                                credentials: 'include',
+                                              });
+
+                                              if (res.ok) {
+                                                toast({
+                                                  title: "Foto removida",
+                                                  description: "A foto foi removida com sucesso.",
+                                                });
+                                                fetchVehiclePhotos(editingVehicle.id);
+                                              }
+                                            } catch (error) {
+                                              toast({
+                                                title: "Erro",
+                                                description: "Erro ao remover a foto.",
+                                                variant: "destructive",
+                                              });
+                                            }
+                                          }}
+                                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                          ×
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Mostrar fotos temporárias para novos veículos */}
+                              {!editingVehicle && temporaryPhotos.length > 0 && (
+                                <div className="mt-4 space-y-2">
+                                  <h5 className="text-sm font-medium text-gray-600">Fotos capturadas (serão salvas após cadastrar o veículo):</h5>
+                                  <div className="grid grid-cols-3 gap-2">
+                                    {temporaryPhotos.map((tempPhoto, index) => (
+                                      <div key={index} className="relative group">
+                                        <img 
+                                          src={tempPhoto.photo} 
+                                          alt={`Foto temporária ${index + 1}`}
+                                          className="w-full h-20 object-cover rounded-lg border border-gray-200"
+                                        />
+                                        <div className="absolute bottom-1 left-1 right-1">
+                                          <span className="text-xs bg-black bg-opacity-70 text-white px-1 py-0.5 rounded text-center block">
+                                            {tempPhoto.category === 'vehicle' ? 'Veículo' : 
+                                             tempPhoto.category === 'damage' ? 'Dano' :
+                                             tempPhoto.category === 'before' ? 'Antes' :
+                                             tempPhoto.category === 'after' ? 'Depois' : 'Outro'}
+                                          </span>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setTemporaryPhotos(prev => prev.filter((_, i) => i !== index));
+                                            toast({
+                                              title: "Foto removida",
+                                              description: "A foto temporária foi removida.",
+                                            });
+                                          }}
+                                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                          ×
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end gap-4 pt-4">
+                            <Button 
+                              type="button" 
+                              variant="outline"
+                              onClick={() => {
+                                setIsModalOpen(false);
+                                setCurrentVehiclePhotos([]);
+                                setTemporaryPhotos([]);
+                                setEditingVehicle(null);
+                                form.reset();
+                              }}
+                            >
+                              Cancelar
+                            </Button>
+                            <Button 
+                              type="submit" 
+                              disabled={createMutation.isPending || updateMutation.isPending}
+                              className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl"
+                            >
+                              {editingVehicle ? "Atualizar" : "Cadastrar"}
+                            </Button>
+                          </div>
+                        </form>
+                      </Form>
+                    </DialogContent>
+                  </Dialog>
                 )}
               </div>
             ) : (
