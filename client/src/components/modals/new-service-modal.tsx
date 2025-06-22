@@ -31,7 +31,8 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [serviceExtras, setServiceExtras] = useState<any[]>([]);
-  const [hasUserMadeChanges, setHasUserMadeChanges] = useState(false);
+  const [initialFormState, setInitialFormState] = useState<any>(null);
+  const [hasFormChanges, setHasFormChanges] = useState(false);
 
   const form = useForm<z.infer<typeof serviceSchemaWithoutEstimated>>({
     resolver: zodResolver(serviceSchemaWithoutEstimated),
@@ -47,11 +48,29 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
     },
   });
 
-  const hasUnsavedChanges = hasUserMadeChanges || serviceExtras.length > 0;
+  // Watch all form values
+  const formValues = form.watch();
+
+  // Check for changes when form values change
+  useEffect(() => {
+    if (!isOpen || !initialFormState) return;
+
+    const hasChanges = JSON.stringify(formValues) !== JSON.stringify(initialFormState);
+    
+    console.log('NewServiceModal - Form change check:', {
+      hasChanges,
+      formValues,
+      initialFormState
+    });
+
+    setHasFormChanges(hasChanges);
+  }, [formValues, initialFormState, isOpen]);
+
+  const hasUnsavedChanges = hasFormChanges || serviceExtras.length > 0;
 
   console.log('NewServiceModal - State:', {
     isOpen,
-    hasUserMadeChanges,
+    hasFormChanges,
     serviceExtrasLength: serviceExtras.length,
     hasUnsavedChanges
   });
@@ -92,7 +111,8 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
       notes: "",
     });
     setServiceExtras([]);
-    setHasUserMadeChanges(false);
+    setHasFormChanges(false);
+    setInitialFormState(null);
   };
 
   // Initialize form when modal opens
@@ -100,8 +120,9 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
     if (isOpen) {
       console.log('NewServiceModal: Modal opened, initializing...');
 
-      // Reset change tracking
-      setHasUserMadeChanges(false);
+      // Reset states
+      setHasFormChanges(false);
+      setInitialFormState(null);
 
       const defaultValues = {
         customerId: 0,
@@ -134,21 +155,14 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
       console.log('NewServiceModal: Setting form with values:', defaultValues);
       form.reset(defaultValues);
       setServiceExtras([]);
+
+      // Set initial state after form reset
+      setTimeout(() => {
+        setInitialFormState({ ...defaultValues });
+        console.log('NewServiceModal: Initial form state set:', defaultValues);
+      }, 100);
     }
   }, [isOpen, form]);
-
-  // Watch for any form field changes to mark as changed
-  useEffect(() => {
-    if (isOpen) {
-      const subscription = form.watch(() => {
-        if (!hasUserMadeChanges) {
-          setHasUserMadeChanges(true);
-          console.log('NewServiceModal: User made changes to form');
-        }
-      });
-      return () => subscription.unsubscribe();
-    }
-  }, [form, isOpen, hasUserMadeChanges]);
 
   const { data: customers = [], isLoading: loadingCustomers } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
@@ -542,9 +556,6 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                       <ServiceExtras
                         onChange={(extras) => {
                           setServiceExtras(extras);
-                          if (extras.length > 0 && !hasUserMadeChanges) {
-                            setHasUserMadeChanges(true);
-                          }
                         }}
                         initialExtras={[]}
                       />
