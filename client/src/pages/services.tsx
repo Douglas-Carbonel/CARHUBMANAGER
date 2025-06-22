@@ -788,7 +788,7 @@ export default function Services() {
                         technicianId: 0,
                         scheduledDate: "",
                         scheduledTime: "",
-                        status: "scheduled",
+                        status: "scheduled" as "scheduled" | "in_progress" | "completed" | "cancelled",
                         notes: "",
                         valorPago: "0",
                         pixPago: "0.00",
@@ -797,8 +797,30 @@ export default function Services() {
                         cartaoPago: "0.00",
                       };
                       
-                      setFormInitialValues(defaultValues);
+                      // Check URL params to pre-select values
+                      const urlParams2 = new URLSearchParams(window.location.search);
+                      const customerIdFromUrl2 = urlParams2.get('customerId');
+                      const vehicleIdFromUrl2 = urlParams2.get('vehicleId');
+                      
+                      if (customerIdFromUrl2) {
+                        const customerId = parseInt(customerIdFromUrl2);
+                        console.log('Services: Pre-selecting customer from URL:', customerId);
+                        defaultValues.customerId = customerId;
+                      }
+                      
+                      if (vehicleIdFromUrl2) {
+                        const vehicleId = parseInt(vehicleIdFromUrl2);
+                        console.log('Services: Pre-selecting vehicle from URL:', vehicleId);
+                        defaultValues.vehicleId = vehicleId;
+                      }
+                      
+                      // Reset form with correct values FIRST
                       form.reset(defaultValues);
+                      
+                      // THEN set initial values for comparison
+                      setTimeout(() => {
+                        setFormInitialValues(defaultValues);
+                      }, 100);
 
                       // Reset payment methods when creating new service
                       setPaymentMethods({
@@ -807,19 +829,6 @@ export default function Services() {
                         cheque: "",
                         cartao: ""
                       });
-
-                      // Check URL params to pre-select customer if coming from customer page
-                      const urlParams = new URLSearchParams(window.location.search);
-
-                      const customerIdFromUrl = urlParams.get('customerId');
-
-                      if (customerIdFromUrl) {
-                        const customerId = parseInt(customerIdFromUrl);
-                        console.log('Services: Pre-selecting customer from URL:', customerId);
-                        form.setValue('customerId', customerId);
-                        // Reset vehicle when customer is pre-selected
-                        form.setValue('vehicleId', 0);
-                      }
                     }}
                   >
                     <Plus className={cn(isMobile ? "h-4 w-4 mr-1" : "h-5 w-5 mr-2")} />
