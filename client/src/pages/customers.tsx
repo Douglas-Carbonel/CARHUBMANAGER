@@ -117,7 +117,7 @@ export default function CustomersPage() {
         let photosSaved = 0;
         for (const tempPhoto of temporaryPhotos) {
           try {
-            const res = await fetch(`/api/customers/${newCustomer.id}/photos`, {
+            const res = await fetch("/api/customers/" + newCustomer.id + "/photos", {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -138,7 +138,7 @@ export default function CustomersPage() {
             console.error('Error saving temporary photo:', error);
           }
         }
-        console.log(`${photosSaved} of ${temporaryPhotos.length} temporary photos processed`);
+        console.log(photosSaved + " of " + temporaryPhotos.length + " temporary photos processed");
         setTemporaryPhotos([]); // Clear temporary photos after saving
       }
 
@@ -164,7 +164,7 @@ export default function CustomersPage() {
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: CustomerFormData }) => {
       console.log('Updating customer with data:', data);
-      const res = await apiRequest("PUT", `/api/customers/${id}`, data);
+      const res = await apiRequest("PUT", "/api/customers/" + id, data);
       return await res.json();
     },
     onSuccess: () => {
@@ -192,7 +192,7 @@ export default function CustomersPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/customers/${id}`);
+      await apiRequest("DELETE", "/api/customers/" + id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
@@ -214,7 +214,7 @@ export default function CustomersPage() {
   const generateCustomerCode = () => {
     const timestamp = Date.now().toString(36).toUpperCase();
     const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-    return `${timestamp}${random}`;
+    return timestamp + random;
   };
 
   const onSubmit = (data: CustomerFormData) => {
@@ -275,7 +275,7 @@ export default function CustomersPage() {
     }
 
     try {
-      const res = await apiRequest("GET", `/api/customers/${customerId}/photos`);
+      const res = await apiRequest("GET", "/api/customers/" + customerId + "/photos");
       const photos = await res.json();
       setCurrentCustomerPhotos(photos);
     } catch (error) {
@@ -319,7 +319,7 @@ export default function CustomersPage() {
 
     // If customer ID exists (editing existing customer), save immediately
     try {
-      const res = await fetch(`/api/customers/${customerId}/photos`, {
+      const res = await fetch("/api/customers/" + customerId + "/photos", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -748,7 +748,7 @@ export default function CustomersPage() {
                                   <div key={index} className="relative group">
                                     <img 
                                       src={tempPhoto.photo} 
-                                      alt={`Foto temporária ${index + 1}`}
+                                      alt={"Foto temporária " + (index + 1)}
                                       className={cn(
                                         "w-full object-cover rounded-lg border border-gray-200",
                                         isMobile ? "h-16" : "h-20"
@@ -798,8 +798,7 @@ export default function CustomersPage() {
                               setCurrentCustomerPhotos([]);
                               setTemporaryPhotos([]);
                               setEditingCustomer(null);
-                              form```text
-.reset();
+                              form.reset();
                             }}
                             disabled={createMutation.isPending || updateMutation.isPending}
                             className={cn(
@@ -1020,7 +1019,7 @@ export default function CustomersPage() {
                                 // Se o cliente não tem veículos cadastrados
                                 if (!customerVehicles || customerVehicles.length === 0) {
                                   const confirmVehicle = window.confirm(
-                                    `${customer.name} não possui veículos cadastrados.\n\n` +
+                                    customer.name + " não possui veículos cadastrados.\n\n" +
                                     'Não é possível criar serviços sem um veículo cadastrado.\n\n' +
                                     'Deseja cadastrar o primeiro veículo para este cliente?'
                                   );
