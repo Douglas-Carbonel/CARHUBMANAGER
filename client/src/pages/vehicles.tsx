@@ -24,6 +24,8 @@ import { cn } from "@/lib/utils";
 import VehicleAnalytics from "@/components/dashboard/vehicle-analytics";
 import { BarChart3 } from "lucide-react";
 import PhotoUpload from "@/components/photos/photo-upload";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
   const res = await fetch(url, {
@@ -244,6 +246,7 @@ export default function VehiclesPage() {
   const [temporaryPhotos, setTemporaryPhotos] = useState<{photo: string, category: string}[]>([]);
   const [isServiceWarningOpen, setIsServiceWarningOpen] = useState(false);
   const [vehicleForServiceWarning, setVehicleForServiceWarning] = useState<Vehicle | null>(null);
+  const [formInitialValues, setFormInitialValues] = useState<VehicleFormData | null>(null);
 
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleFormSchema),
@@ -514,10 +517,12 @@ export default function VehiclesPage() {
 
   const handleEdit = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle);
-    form.reset({
+    const editValues = {
       ...vehicle,
       customerId: vehicle.customerId,
-    });
+    };
+    setFormInitialValues(editValues);
+    form.reset(editValues);
     fetchVehiclePhotos(vehicle.id);
     setIsModalOpen(true);
   };
@@ -611,7 +616,27 @@ export default function VehiclesPage() {
 
                 {/* Only show + Novo button if not showing customer-specific no vehicles message */}
                 {!(filteredVehicles.length === 0 && customerFilter && !searchTerm) && (
-                  <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                  <Dialog open={isModalOpen} onOpenChange={(open) => {
+                    if (!open && (hasUnsavedChanges || temporaryPhotos.length > 0)) {
+                      unsavedChanges.triggerConfirmation(() => {
+                        setIsModalOpen(false);
+                        setFormInitialValues(null);
+                        setCurrentVehiclePhotos([]);
+                        setTemporaryPhotos([]);
+                        setEditingVehicle(null);
+                        form.reset();
+                      });
+                    } else {
+                      setIsModalOpen(open);
+                      if (!open) {
+                        setFormInitialValues(null);
+                        setCurrentVehiclePhotos([]);
+                        setTemporaryPhotos([]);
+                        setEditingVehicle(null);
+                        form.reset();
+                      }
+                    }
+                  }}>
                     <DialogTrigger asChild>
                       <Button 
                         className={cn(
@@ -620,7 +645,20 @@ export default function VehiclesPage() {
                         )}
                         onClick={() => {
                           setEditingVehicle(null);
-                          form.reset();
+                          const defaultValues = {
+                            customerId: customerFilter || 0,
+                            licensePlate: "",
+                            brand: "",
+                            model: "",
+                            year: new Date().getFullYear(),
+                            color: "",
+                            chassis: "",
+                            engine: "",
+                            fuelType: "gasoline",
+                            notes: "",
+                          };
+                          form.reset(defaultValues);
+                          setFormInitialValues(defaultValues);
                           setTemporaryPhotos([]);
                           setCurrentVehiclePhotos([]);
                         }}
@@ -1043,7 +1081,27 @@ export default function VehiclesPage() {
                   }
                 </p>
                 {!searchTerm && (
-                  <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                  <Dialog open={isModalOpen} onOpenChange={(open) => {
+                    if (!open && (hasUnsavedChanges || temporaryPhotos.length > 0)) {
+                      unsavedChanges.triggerConfirmation(() => {
+                        setIsModalOpen(false);
+                        setFormInitialValues(null);
+                        setCurrentVehiclePhotos([]);
+                        setTemporaryPhotos([]);
+                        setEditingVehicle(null);
+                        form.reset();
+                      });
+                    } else {
+                      setIsModalOpen(open);
+                      if (!open) {
+                        setFormInitialValues(null);
+                        setCurrentVehiclePhotos([]);
+                        setTemporaryPhotos([]);
+                        setEditingVehicle(null);
+                        form.reset();
+                      }
+                    }
+                  }}>
                     <DialogTrigger asChild>
                       <Button
                         className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
@@ -1062,6 +1120,7 @@ export default function VehiclesPage() {
                             notes: "",
                           };
                           form.reset(defaultValues);
+                          setFormInitialValues(defaultValues);
                           setTemporaryPhotos([]);
                           setCurrentVehiclePhotos([]);
                         }}
@@ -1404,11 +1463,23 @@ export default function VehiclesPage() {
                               type="button" 
                               variant="outline"
                               onClick={() => {
-                                setIsModalOpen(false);
-                                setCurrentVehiclePhotos([]);
-                                setTemporaryPhotos([]);
-                                setEditingVehicle(null);
-                                form.reset();
+                                if (hasUnsavedChanges || temporaryPhotos.length > 0) {
+                                  unsavedChanges.triggerConfirmation(() => {
+                                    setIsModalOpen(false);
+                                    setFormInitialValues(null);
+                                    setCurrentVehiclePhotos([]);
+                                    setTemporaryPhotos([]);
+                                    setEditingVehicle(null);
+                                    form.reset();
+                                  });
+                                } else {
+                                  setIsModalOpen(false);
+                                  setFormInitialValues(null);
+                                  setCurrentVehiclePhotos([]);
+                                  setTemporaryPhotos([]);
+                                  setEditingVehicle(null);
+                                  form.reset();
+                                }
                               }}
                             >
                               Cancelar
@@ -1641,6 +1712,14 @@ export default function VehiclesPage() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Dialog de confirmação de alterações não salvas */}
+        <UnsavedChangesDialog
+          isOpen={unsavedChanges.showConfirmDialog}
+          onConfirm={unsavedChanges.confirmNavigation}
+          onCancel={unsavedChanges.cancelNavigation}
+          message={unsavedChanges.message}
+        />
       </div>
     </div>
   );

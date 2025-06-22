@@ -27,6 +27,8 @@ import ServiceExtras from "@/components/service/service-extras";
 import PaymentManager from "@/components/service/payment-manager";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 
 // Utility functions for currency formatting
 const formatCurrency = (value: string): string => {
@@ -127,6 +129,7 @@ export default function Services() {
     cartao: ""
   });
   const [temporaryPhotos, setTemporaryPhotos] = useState<Array<{ photo: string; category: string }>>([]);
+  const [formInitialValues, setFormInitialValues] = useState<z.infer<typeof serviceFormSchema> | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -147,6 +150,15 @@ export default function Services() {
       chequePago: "0.00",
       cartaoPago: "0.00",
     },
+  });
+
+  // Track form changes for unsaved changes detection
+  const currentFormValues = form.watch();
+  const hasUnsavedChanges = formInitialValues && isDialogOpen && JSON.stringify(currentFormValues) !== JSON.stringify(formInitialValues);
+
+  const unsavedChanges = useUnsavedChanges({
+    hasUnsavedChanges: !!hasUnsavedChanges || temporaryPhotos.length > 0 || serviceExtras.length > 0,
+    message: "Você tem alterações não salvas no cadastro do serviço. Deseja realmente sair?"
   });
 
   const { data: services = [] } = useQuery<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]>({
@@ -525,7 +537,7 @@ export default function Services() {
 
   const handleEdit = (service: Service) => {
     setEditingService(service);
-    form.reset({
+    const editValues = {
       customerId: service.customerId,
       vehicleId: service.vehicleId,
       serviceTypeId: service.serviceTypeId,
@@ -539,7 +551,10 @@ export default function Services() {
       dinheiroPago: service.dinheiroPago || "0.00",
       chequePago: service.chequePago || "0.00",
       cartaoPago: service.cartaoPago || "0.00",
-    });
+    };
+    
+    setFormInitialValues(editValues);
+    form.reset(editValues);
     fetchServicePhotos(service.id);
     // Load existing service extras
     fetchServiceExtras(service.id);
@@ -694,7 +709,41 @@ export default function Services() {
               <p className="text-teal-700 mt-2 font-medium">Controle completo de ordens de serviço</p>
             </div>
 
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <Dialog open={isDialogOpen} onOpenChange={(open) => {
+              if (!open && (hasUnsavedChanges || temporaryPhotos.length > 0 || serviceExtras.length > 0)) {
+                unsavedChanges.triggerConfirmation(() => {
+                  setIsDialogOpen(false);
+                  setFormInitialValues(null);
+                  setCurrentServicePhotos([]);
+                  setServiceExtras([]);
+                  setEditingService(null);
+                  form.reset();
+                  setTemporaryPhotos([]);
+                  setPaymentMethods({
+                    pix: "",
+                    dinheiro: "",
+                    cheque: "",
+                    cartao: ""
+                  });
+                });
+              } else {
+                setIsDialogOpen(open);
+                if (!open) {
+                  setFormInitialValues(null);
+                  setCurrentServicePhotos([]);
+                  setServiceExtras([]);
+                  setEditingService(null);
+                  form.reset();
+                  setTemporaryPhotos([]);
+                  setPaymentMethods({
+                    pix: "",
+                    dinheiro: "",
+                    cheque: "",
+                    cartao: ""
+                  });
+                }
+              }
+            }}>
               <DialogTrigger asChild>
                 <Button 
                     className={cn(
@@ -2019,6 +2068,14 @@ export default function Services() {
             </div>
           )}
         </main>
+
+        {/* Dialog de confirmação de alterações não salvas */}
+        <UnsavedChangesDialog
+          isOpen={unsavedChanges.showConfirmDialog}
+          onConfirm={unsavedChanges.confirmNavigation}
+          onCancel={unsavedChanges.cancelNavigation}
+          message={unsavedChanges.message}
+        />
       </div>
     </div>
   );
