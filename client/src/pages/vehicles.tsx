@@ -607,26 +607,28 @@ export default function VehiclesPage() {
                   </Button>
                 )}
 
-                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                  <DialogTrigger asChild>
-                    <Button 
-                      className={cn(
-                        "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl",
-                        isMobile ? "w-full h-10 text-sm px-4" : "px-6"
-                      )}
-                      onClick={() => {
-                        setEditingVehicle(null);
-                        form.reset();
-                        setTemporaryPhotos([]);
-                        setCurrentVehiclePhotos([]);
-                        setSelectedBrand("");
-                        setCustomModel("");
-                      }}
-                    >
-                      <Plus className={cn(isMobile ? "h-4 w-4 mr-1" : "h-5 w-5 mr-2")} />
-                      {isMobile ? "Novo" : "Novo Veículo"}
-                    </Button>
-                  </DialogTrigger>
+                {/* Only show + Novo button if not showing customer-specific no vehicles message */}
+                {!(filteredVehicles.length === 0 && customerFilter && !searchTerm) && (
+                  <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        className={cn(
+                          "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl",
+                          isMobile ? "w-full h-10 text-sm px-4" : "px-6"
+                        )}
+                        onClick={() => {
+                          setEditingVehicle(null);
+                          form.reset();
+                          setTemporaryPhotos([]);
+                          setCurrentVehiclePhotos([]);
+                          setSelectedBrand("");
+                          setCustomModel("");
+                        }}
+                      >
+                        <Plus className={cn(isMobile ? "h-4 w-4 mr-1" : "h-5 w-5 mr-2")} />
+                        {isMobile ? "Novo" : "Novo Veículo"}
+                      </Button>
+                    </DialogTrigger>
                   <DialogContent className={cn(
                     "bg-gradient-to-br from-slate-50 to-blue-50/30",
                     isMobile ? "max-w-[95vw] max-h-[90vh] overflow-y-auto" : "max-w-2xl"
@@ -1082,7 +1084,8 @@ export default function VehiclesPage() {
                       </form>
                     </Form>
                   </DialogContent>
-                </Dialog>
+                  </Dialog>
+                )}
               </div>
             </div>
 
