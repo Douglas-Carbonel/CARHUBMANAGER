@@ -28,6 +28,7 @@ import PhotoUpload from "@/components/photos/photo-upload";
 import CameraCapture from "@/components/camera/camera-capture";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
   console.log(`API Request: ${method} ${url}`, data);
@@ -85,6 +86,17 @@ export default function CustomersPage() {
   const [isVehicleWarningOpen, setIsVehicleWarningOpen] = useState(false);
   const [customerForVehicleWarning, setCustomerForVehicleWarning] = useState<Customer | null>(null);
   const [formInitialValues, setFormInitialValues] = useState<CustomerFormData | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    onConfirm: () => {},
+  });
 
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerFormSchema),
@@ -281,9 +293,15 @@ export default function CustomersPage() {
   };
 
   const handleDelete = (id: number) => {
-    if (confirm("Tem certeza que deseja remover este cliente?")) {
-      deleteMutation.mutate(id);
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Excluir Cliente",
+      description: "Tem certeza que deseja remover este cliente? Esta ação não pode ser desfeita.",
+      onConfirm: () => {
+        deleteMutation.mutate(id);
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      },
+    });
   };
 
   const handleViewPhotos = (customer: Customer) => {
@@ -1236,6 +1254,18 @@ export default function CustomersPage() {
           onConfirm={unsavedChanges.confirmNavigation}
           onCancel={unsavedChanges.cancelNavigation}
           message={unsavedChanges.message}
+        />
+
+        {/* Dialog de confirmação para exclusões */}
+        <ConfirmationDialog
+          isOpen={confirmDialog.isOpen}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+          title={confirmDialog.title}
+          description={confirmDialog.description}
+          confirmText="Excluir"
+          cancelText="Cancelar"
+          variant="destructive"
         />
       </div>
     </div>

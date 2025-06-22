@@ -29,6 +29,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 // Utility functions for currency formatting
 const formatCurrency = (value: string): string => {
@@ -131,6 +132,17 @@ export default function Services() {
   });
   const [temporaryPhotos, setTemporaryPhotos] = useState<Array<{ photo: string; category: string }>>([]);
   const [formInitialValues, setFormInitialValues] = useState<z.infer<typeof serviceFormSchema> | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    onConfirm: () => {},
+  });
 
   const queryClient = useQueryClient();
 
@@ -159,15 +171,7 @@ export default function Services() {
   const hasServiceExtrasChanges = JSON.stringify(serviceExtras) !== JSON.stringify(initialServiceExtras);
   const hasUnsavedChanges = hasFormChanges || temporaryPhotos.length > 0 || hasServiceExtrasChanges;
 
-  // Debug logs para encontrar o problema
-  if (isDialogOpen && editingService) {
-    console.log('DEBUG - Form changes:', hasFormChanges);
-    console.log('DEBUG - Temporary photos:', temporaryPhotos.length);
-    console.log('DEBUG - Service extras changes:', hasServiceExtrasChanges);
-    console.log('DEBUG - Current service extras:', JSON.stringify(serviceExtras));
-    console.log('DEBUG - Initial service extras:', JSON.stringify(initialServiceExtras));
-    console.log('DEBUG - Has unsaved changes:', hasUnsavedChanges);
-  }
+
 
   const unsavedChanges = useUnsavedChanges({
     hasUnsavedChanges: !!hasUnsavedChanges,
@@ -593,9 +597,15 @@ export default function Services() {
   };
 
   const handleDelete = (id: number) => {
-    if (confirm("Tem certeza que deseja excluir este serviço?")) {
-      deleteMutation.mutate(id);
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Excluir Serviço",
+      description: "Tem certeza que deseja excluir este serviço? Esta ação não pode ser desfeita.",
+      onConfirm: () => {
+        deleteMutation.mutate(id);
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      },
+    });
   };
 
   const getPaymentCategory = (valorPago: string, totalValue: string) => {
@@ -2091,6 +2101,18 @@ export default function Services() {
           onConfirm={unsavedChanges.confirmNavigation}
           onCancel={unsavedChanges.cancelNavigation}
           message={unsavedChanges.message}
+        />
+
+        {/* Dialog de confirmação para exclusões */}
+        <ConfirmationDialog
+          isOpen={confirmDialog.isOpen}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+          title={confirmDialog.title}
+          description={confirmDialog.description}
+          confirmText="Excluir"
+          cancelText="Cancelar"
+          variant="destructive"
         />
       </div>
     </div>
