@@ -261,7 +261,7 @@ export default function CustomersPage() {
 
   const handleEdit = (customer: Customer) => {
     setEditingCustomer(customer);
-    form.reset({
+    const editValues = {
       code: customer.code,
       name: customer.name,
       email: customer.email || "",
@@ -270,7 +270,9 @@ export default function CustomersPage() {
       documentType: (customer.documentType as "cpf" | "cnpj") || "cpf",
       address: customer.address || "",
       observations: customer.observations || "",
-    });
+    };
+    setFormInitialValues(editValues);
+    form.reset(editValues);
     setIsModalOpen(true);
     fetchCustomerPhotos(customer.id);
   };
@@ -434,7 +436,27 @@ export default function CustomersPage() {
                 </div>
               </div>
 
-              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+              <Dialog open={isModalOpen} onOpenChange={(open) => {
+                if (!open && (hasUnsavedChanges || temporaryPhotos.length > 0)) {
+                  unsavedChanges.triggerConfirmation(() => {
+                    setIsModalOpen(false);
+                    setFormInitialValues(null);
+                    setCurrentCustomerPhotos([]);
+                    setTemporaryPhotos([]);
+                    setEditingCustomer(null);
+                    form.reset();
+                  });
+                } else {
+                  setIsModalOpen(open);
+                  if (!open) {
+                    setFormInitialValues(null);
+                    setCurrentCustomerPhotos([]);
+                    setTemporaryPhotos([]);
+                    setEditingCustomer(null);
+                    form.reset();
+                  }
+                }
+              }}>
                 <DialogTrigger asChild>
                   <Button 
                     className={cn(
@@ -449,6 +471,7 @@ export default function CustomersPage() {
                         email: "",
                         phone: "",
                         document: "",
+                        documentType: "cpf" as const,
                         address: "",
                         observations: "",
                       };
