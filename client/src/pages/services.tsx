@@ -128,121 +128,6 @@ export default function Services() {
   });
   const [temporaryPhotos, setTemporaryPhotos] = useState<Array<{ photo: string; category: string }>>([]);
 
-  // Auto-open modal when openModal=true in URL
-  useEffect(() => {
-    if (openModalParam && customers?.length > 0 && vehicles?.length > 0) {
-      const timer = setTimeout(() => {
-        setEditingService(null);
-        form.reset();
-        setTemporaryPhotos([]);
-        setCurrentServicePhotos([]);
-        setServiceExtras([]);
-        setPaymentMethods({
-          pix: "",
-          dinheiro: "",
-          cheque: "",
-          cartao: ""
-        });
-
-        // Pre-fill form with URL parameters
-        if (customerIdFilter) {
-          const customerId = parseInt(customerIdFilter);
-          console.log('Auto-opening service modal with customer:', customerId);
-          form.setValue('customerId', customerId);
-        }
-
-        if (vehicleIdFilter) {
-          const vehicleId = parseInt(vehicleIdFilter);
-          console.log('Auto-opening service modal with vehicle:', vehicleId);
-          form.setValue('vehicleId', vehicleId);
-        }
-
-        setIsDialogOpen(true);
-
-        // Remove openModal parameter from URL to prevent re-opening
-        const newUrl = new URL(window.location.href);
-        newUrl.searchParams.delete('openModal');
-        window.history.replaceState({}, '', newUrl.toString());
-      }, 500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [openModalParam, customers?.length, vehicles?.length, customerIdFilter, vehicleIdFilter, form]);
-
-  const fetchServicePhotos = async (serviceId: number | undefined) => {
-    if (!serviceId) {
-      setCurrentServicePhotos([]);
-      return;
-    }
-
-    try {
-      console.log('Fetching photos for service ID:', serviceId);
-      const res = await fetch(`/api/photos?serviceId=${serviceId}`, {
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
-      const photos = await res.json();
-      console.log('Photos found for service:', photos.length);
-      setCurrentServicePhotos(photos);
-    } catch (error: any) {
-      console.error('Error fetching service photos:', error);
-      toast({
-        title: "Erro ao carregar fotos do serviço",
-        description: error.message,
-        variant: "destructive",
-      });
-      setCurrentServicePhotos([]);
-    }
-  };
-
-  const fetchServiceExtras = async (serviceId: number) => {
-    try {
-      const response = await fetch(`/api/services/${serviceId}/extras`, {
-        credentials: "include",
-      });
-      if (response.ok) {
-        const existingExtras = await response.json();
-        console.log('Loaded existing service extras:', existingExtras);
-
-        // Convert existing extras to the format expected by serviceExtras state
-        const mappedExtras = existingExtras.map((item: any) => ({
-          serviceExtraId: item.serviceExtraId,
-          valor: item.valor || "0.00",
-          observacao: item.observacao || "",
-          serviceExtra: item.serviceExtra,
-        }));
-
-        setServiceExtras(mappedExtras);
-      }
-    } catch (error) {
-      console.error("Error fetching service extras:", error);
-    }
-  };
-
-  const handlePhotoTaken = async (photoUrl?: string, category?: string) => {
-    // For new services (no ID yet), store as temporary photo
-    if (!editingService?.id) {
-      if (photoUrl && category) {
-        setTemporaryPhotos(prev => [...prev, { photo: photoUrl, category }]);
-        toast({
-          title: "Foto capturada!",
-          description: "A foto será salva quando o serviço for cadastrado.",
-        });
-      }
-      setIsCameraOpen(false);
-      return;
-    }
-
-    // For existing services, fetch updated photos
-    fetchServicePhotos(editingService.id);
-    queryClient.invalidateQueries({ queryKey: ['/api/photos'] });
-    toast({
-      title: "Foto capturada",
-      description: "Foto foi adicionada com sucesso.",
-    });
-    setIsCameraOpen(false);
-  };
-
   const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof serviceFormSchema>>({
@@ -328,6 +213,121 @@ export default function Services() {
       return await res.json();
     },
   });
+
+  // Auto-open modal when openModal=true in URL
+  useEffect(() => {
+    if (openModalParam && customers.length > 0 && vehicles.length > 0) {
+      const timer = setTimeout(() => {
+        setEditingService(null);
+        form.reset();
+        setTemporaryPhotos([]);
+        setCurrentServicePhotos([]);
+        setServiceExtras([]);
+        setPaymentMethods({
+          pix: "",
+          dinheiro: "",
+          cheque: "",
+          cartao: ""
+        });
+
+        // Pre-fill form with URL parameters
+        if (customerIdFilter) {
+          const customerId = parseInt(customerIdFilter);
+          console.log('Auto-opening service modal with customer:', customerId);
+          form.setValue('customerId', customerId);
+        }
+
+        if (vehicleIdFilter) {
+          const vehicleId = parseInt(vehicleIdFilter);
+          console.log('Auto-opening service modal with vehicle:', vehicleId);
+          form.setValue('vehicleId', vehicleId);
+        }
+
+        setIsDialogOpen(true);
+
+        // Remove openModal parameter from URL to prevent re-opening
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('openModal');
+        window.history.replaceState({}, '', newUrl.toString());
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [openModalParam, customers, vehicles, customerIdFilter, vehicleIdFilter, form]);
+
+  const fetchServicePhotos = async (serviceId: number | undefined) => {
+    if (!serviceId) {
+      setCurrentServicePhotos([]);
+      return;
+    }
+
+    try {
+      console.log('Fetching photos for service ID:', serviceId);
+      const res = await fetch(`/api/photos?serviceId=${serviceId}`, {
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
+      const photos = await res.json();
+      console.log('Photos found for service:', photos.length);
+      setCurrentServicePhotos(photos);
+    } catch (error: any) {
+      console.error('Error fetching service photos:', error);
+      toast({
+        title: "Erro ao carregar fotos do serviço",
+        description: error.message,
+        variant: "destructive",
+      });
+      setCurrentServicePhotos([]);
+    }
+  };
+
+  const fetchServiceExtras = async (serviceId: number) => {
+    try {
+      const response = await fetch(`/api/services/${serviceId}/extras`, {
+        credentials: "include",
+      });
+      if (response.ok) {
+        const existingExtras = await response.json();
+        console.log('Loaded existing service extras:', existingExtras);
+
+        // Convert existing extras to the format expected by serviceExtras state
+        const mappedExtras = existingExtras.map((item: any) => ({
+          serviceExtraId: item.serviceExtraId,
+          valor: item.valor || "0.00",
+          observacao: item.observacao || "",
+          serviceExtra: item.serviceExtra,
+        }));
+
+        setServiceExtras(mappedExtras);
+      }
+    } catch (error) {
+      console.error("Error fetching service extras:", error);
+    }
+  };
+
+  const handlePhotoTaken = async (photoUrl?: string, category?: string) => {
+    // For new services (no ID yet), store as temporary photo
+    if (!editingService?.id) {
+      if (photoUrl && category) {
+        setTemporaryPhotos(prev => [...prev, { photo: photoUrl, category }]);
+        toast({
+          title: "Foto capturada!",
+          description: "A foto será salva quando o serviço for cadastrado.",
+        });
+      }
+      setIsCameraOpen(false);
+      return;
+    }
+
+    // For existing services, fetch updated photos
+    fetchServicePhotos(editingService.id);
+    queryClient.invalidateQueries({ queryKey: ['/api/photos'] });
+    toast({
+      title: "Foto capturada",
+      description: "Foto foi adicionada com sucesso.",
+    });
+    setIsCameraOpen(false);
+  };
 
   // Define isLoading based on the main queries
   const isLoading = false; // Since we're using individual queries with default values, we don't need loading state
