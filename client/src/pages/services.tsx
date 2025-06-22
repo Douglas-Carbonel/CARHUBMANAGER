@@ -120,6 +120,7 @@ export default function Services() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [serviceExtras, setServiceExtras] = useState<any[]>([]);
+  const [initialServiceExtras, setInitialServiceExtras] = useState<any[]>([]);
   const [isResumeModalOpen, setIsResumeModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState({
@@ -154,17 +155,12 @@ export default function Services() {
 
   // Track form changes for unsaved changes detection
   const currentFormValues = form.watch();
-  const hasUnsavedChanges = formInitialValues && isDialogOpen && JSON.stringify(currentFormValues) !== JSON.stringify(formInitialValues);
-  
-  console.log('Services - hasUnsavedChanges:', hasUnsavedChanges);
-  console.log('Services - formInitialValues:', formInitialValues);
-  console.log('Services - currentFormValues:', currentFormValues);
-  console.log('Services - temporaryPhotos:', temporaryPhotos.length);
-  console.log('Services - serviceExtras:', serviceExtras.length);
-  console.log('Services - isDialogOpen:', isDialogOpen);
+  const hasFormChanges = formInitialValues && isDialogOpen && JSON.stringify(currentFormValues) !== JSON.stringify(formInitialValues);
+  const hasServiceExtrasChanges = JSON.stringify(serviceExtras) !== JSON.stringify(initialServiceExtras);
+  const hasUnsavedChanges = hasFormChanges || temporaryPhotos.length > 0 || hasServiceExtrasChanges;
 
   const unsavedChanges = useUnsavedChanges({
-    hasUnsavedChanges: !!hasUnsavedChanges || temporaryPhotos.length > 0 || serviceExtras.length > 0,
+    hasUnsavedChanges: !!hasUnsavedChanges,
     message: "Você tem alterações não salvas no cadastro do serviço. Deseja realmente sair?"
   });
 
@@ -318,6 +314,7 @@ export default function Services() {
         }));
 
         setServiceExtras(mappedExtras);
+        setInitialServiceExtras(mappedExtras); // Define os service extras iniciais
       }
     } catch (error) {
       console.error("Error fetching service extras:", error);
@@ -1922,6 +1919,7 @@ export default function Services() {
                       setFormInitialValues(null);
                       setCurrentServicePhotos([]);
                       setServiceExtras([]);
+                      setInitialServiceExtras([]); // Reset service extras iniciais
                       setEditingService(null);
                       form.reset();
                       setTemporaryPhotos([]);
