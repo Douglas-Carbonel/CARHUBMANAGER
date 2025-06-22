@@ -177,7 +177,7 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
       valor: "0.00",
       observacao: "",
     };
-    setExtras([...extras, newExtra]);
+    setExtras([newExtra, ...extras]);
   };
 
   const removeExtra = (index: number) => {
