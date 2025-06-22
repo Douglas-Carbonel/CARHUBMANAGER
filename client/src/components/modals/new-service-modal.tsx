@@ -72,6 +72,18 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                            technicianChanged || statusChanged || dateChanged || timeChanged || notesChanged;
     
     console.log('NewServiceModal - Form field changes:', {
+      current: {
+        customerId: current.customerId,
+        vehicleId: current.vehicleId,
+        serviceTypeId: current.serviceTypeId,
+        notes: current.notes
+      },
+      initial: {
+        customerId: initial.customerId,
+        vehicleId: initial.vehicleId,
+        serviceTypeId: initial.serviceTypeId,
+        notes: initial.notes
+      },
       customersChanged, vehicleChanged, serviceTypeChanged, technicianChanged,
       statusChanged, dateChanged, timeChanged, notesChanged, anyFieldChanged
     });
@@ -151,7 +163,12 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
           defaultValues.vehicleId = vehicleId;
         }
         
-        // Reset form with the correct values
+        console.log('NewServiceModal: Setting initial values to:', defaultValues);
+        
+        // Set initial values FIRST
+        setFormInitialValues(defaultValues);
+        
+        // Reset form with the correct values AFTER setting initial values
         form.reset({
           customerId: defaultValues.customerId,
           vehicleId: defaultValues.vehicleId,
@@ -163,8 +180,6 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
           notes: defaultValues.notes,
         });
         
-        // Set initial values AFTER form reset to ensure correct comparison
-        setFormInitialValues(defaultValues);
         setServiceExtras([]);
       }, 100);
     } else {
@@ -309,7 +324,11 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   const selectedServiceType = serviceTypes?.find((st: ServiceType) => st.id === selectedServiceTypeId);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) {
+        handleClose();
+      }
+    }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col bg-gradient-to-br from-slate-50 to-blue-50/30">
         <DialogHeader className="pb-6">
           <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent">
