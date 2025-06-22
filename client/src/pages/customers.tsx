@@ -97,6 +97,21 @@ export default function CustomersPage() {
     },
   });
 
+  // Track form changes for unsaved changes detection
+  const currentFormValues = form.watch();
+  const hasUnsavedChanges = formInitialValues && isModalOpen && JSON.stringify(currentFormValues) !== JSON.stringify(formInitialValues);
+  
+  console.log('Customers - hasUnsavedChanges:', hasUnsavedChanges);
+  console.log('Customers - formInitialValues:', formInitialValues);
+  console.log('Customers - currentFormValues:', currentFormValues);
+  console.log('Customers - temporaryPhotos:', temporaryPhotos.length);
+  console.log('Customers - isModalOpen:', isModalOpen);
+
+  const unsavedChanges = useUnsavedChanges({
+    hasUnsavedChanges: !!hasUnsavedChanges || temporaryPhotos.length > 0,
+    message: "Você tem alterações não salvas no cadastro do cliente. Deseja realmente sair?"
+  });
+
   const { data: customers = [], isLoading } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
     queryFn: async () => {
@@ -428,7 +443,17 @@ export default function CustomersPage() {
                     )}
                     onClick={() => {
                       setEditingCustomer(null);
-                      form.reset();
+                      const defaultValues = {
+                        code: "",
+                        name: "",
+                        email: "",
+                        phone: "",
+                        document: "",
+                        address: "",
+                        observations: "",
+                      };
+                      setFormInitialValues(defaultValues);
+                      form.reset(defaultValues);
                       setCurrentCustomerPhotos([]);
                       setTemporaryPhotos([]);
                     }}
