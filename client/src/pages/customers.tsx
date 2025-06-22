@@ -26,6 +26,8 @@ import { insertCustomerSchema } from "@shared/schema";
 import PhotoUpload from "@/components/photos/photo-upload";
 import CameraCapture from "@/components/camera/camera-capture";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
   console.log(`API Request: ${method} ${url}`, data);
@@ -84,6 +86,11 @@ export default function CustomersPage() {
   const [customerForVehicleWarning, setCustomerForVehicleWarning] = useState<Customer | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [formInitialValues, setFormInitialValues] = useState<CustomerFormData | null>(null);
+  
+  const unsavedChanges = useUnsavedChanges({
+    hasUnsavedChanges,
+    message: "Você tem alterações não salvas no formulário do cliente. Deseja realmente sair?"
+  });
 
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerFormSchema),
@@ -444,7 +451,16 @@ export default function CustomersPage() {
                   open={isModalOpen} 
                   onOpenChange={(open) => {
                     if (!open && (hasUnsavedChanges || temporaryPhotos.length > 0)) {
-                      // Prevent closing if there are unsaved changes
+                      // Show confirmation dialog instead of preventing close
+                      unsavedChanges.confirmNavigation(() => {
+                        setIsModalOpen(false);
+                        setFormInitialValues(null);
+                        setEditingCustomer(null);
+                        form.reset();
+                        setCurrentCustomerPhotos([]);
+                        setTemporaryPhotos([]);
+                        setHasUnsavedChanges(false);
+                      });
                       return;
                     }
                     setIsModalOpen(open);
@@ -454,6 +470,7 @@ export default function CustomersPage() {
                       form.reset();
                       setCurrentCustomerPhotos([]);
                       setTemporaryPhotos([]);
+                      setHasUnsavedChanges(false);
                     }
                   }}
                 >
@@ -1231,6 +1248,14 @@ export default function CustomersPage() {
                 </div>
               </DialogContent>
             </Dialog>
+
+            {/* Unsaved Changes Dialog */}
+            <UnsavedChangesDialog
+              open={unsavedChanges.showConfirmDialog}
+              onConfirm={unsavedChanges.confirmNavigation}
+              onCancel={unsavedChanges.cancelNavigation}
+              message={unsavedChanges.message}
+            />
           </div>
         </main>
       </div>

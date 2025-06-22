@@ -24,6 +24,8 @@ import { cn } from "@/lib/utils";
 import VehicleAnalytics from "@/components/dashboard/vehicle-analytics";
 import { BarChart3 } from "lucide-react";
 import PhotoUpload from "@/components/photos/photo-upload";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
   const res = await fetch(url, {
@@ -227,25 +229,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ isOpen, onClose, onPhotoT
   );
 };
 
-// Unsaved Changes Dialog Component
-const UnsavedChangesDialog = ({ open, onConfirm, onCancel }: { open: boolean; onConfirm: () => void; onCancel: () => void }) => {
-  return (
-    <Dialog open={open} onOpenChange={(open) => !open && onCancel()}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Você tem alterações não salvas.</DialogTitle>
-        </DialogHeader>
-        <p className="mb-4">Deseja realmente sair?</p>
-        <div className="flex justify-end space-x-2">
-          <Button variant="secondary" onClick={onCancel}>
-            Cancelar
-          </Button>
-          <Button onClick={onConfirm}>Confirmar</Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
+
 
 export default function VehiclesPage() {
   const { user } = useAuth();
@@ -265,8 +249,12 @@ export default function VehiclesPage() {
   const [isServiceWarningOpen, setIsServiceWarningOpen] = useState(false);
   const [vehicleForServiceWarning, setVehicleForServiceWarning] = useState<Vehicle | null>(null);
   const [formInitialValues, setFormInitialValues] = useState<VehicleFormData | null>(null);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [navigationConfirmation, setNavigationConfirmation] = useState(() => () => {});
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
+  const unsavedChanges = useUnsavedChanges({
+    hasUnsavedChanges,
+    message: "Você tem alterações não salvas no formulário do veículo. Deseja realmente sair?"
+  });
 
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleFormSchema),
@@ -283,6 +271,19 @@ export default function VehiclesPage() {
       notes: "",
     },
   });
+
+  // Track form changes for unsaved changes warning
+  useEffect(() => {
+    const subscription = form.watch((value, { name, type }) => {
+      if (formInitialValues) {
+        const changed = Object.keys(value).some(key => {
+          return String(value[key]) !== String(formInitialValues[key]);
+        });
+        setHasUnsavedChanges(changed);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form, formInitialValues]);
 
   const { data: vehicles = [], isLoading: vehiclesLoading } = useQuery({
     queryKey: ["/api/vehicles"],
@@ -526,34 +527,29 @@ export default function VehiclesPage() {
     }
   };
 
-  const confirmNavigation = () => {
-    navigationConfirmation();
-    setNavigationConfirmation(() => {});
-  };
-
-  const cancelNavigation = () => {
-    setShowConfirmDialog(false);
-    setNavigationConfirmation(() => {});
-  };
-
   const handleModalOpenChange = (open: boolean) => {
-    if (!open && form.isDirty()) {
-      setShowConfirmDialog(true);
-      setNavigationConfirmation(() => () => {
+    if (!open && (hasUnsavedChanges || temporaryPhotos.length > 0)) {
+      unsavedChanges.confirmNavigation(() => {
         setIsModalOpen(false);
         setFormInitialValues(null);
         setCurrentVehiclePhotos([]);
         setTemporaryPhotos([]);
         setEditingVehicle(null);
         form.reset();
+        setHasUnsavedChanges(false);
       });
-    } else if (!open) {
+      return;
+    }
+    
+    
+    if (!open) {
       setIsModalOpen(false);
       setFormInitialValues(null);
       setCurrentVehiclePhotos([]);
       setTemporaryPhotos([]);
       setEditingVehicle(null);
       form.reset();
+      setHasUnsavedChanges(false);
     } else {
       setIsModalOpen(true);
     }
@@ -561,15 +557,14 @@ export default function VehiclesPage() {
 
   const handleEdit = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle);
-    setFormInitialValues({
+    const initialValues = {
       ...vehicle,
       customerId: vehicle.customerId,
-    });
-    form.reset({
-      ...vehicle,
-      customerId: vehicle.customerId,
-    });
+    };
+    setFormInitialValues(initialValues);
+    form.reset(initialValues);
     fetchVehiclePhotos(vehicle.id);
+    setHasUnsavedChanges(false);
     setIsModalOpen(true);
   };
 
@@ -670,13 +665,13 @@ export default function VehiclesPage() {
                           isMobile ? "w-full h-10 text-sm px-4" : "px-6"
                         )}
                         onClick={() => {
-                          if (form.isDirty()) {
-                            setShowConfirmDialog(true);
-                            setNavigationConfirmation(() => () => {
+                          if (hasUnsavedChanges || temporaryPhotos.length > 0) {
+                            unsavedChanges.confirmNavigation(() => {
                               setEditingVehicle(null);
                               form.reset();
                               setTemporaryPhotos([]);
                               setCurrentVehiclePhotos([]);
+                              setHasUnsavedChanges(false);
                               setIsModalOpen(true);
                             });
                           } else {
@@ -684,6 +679,7 @@ export default function VehiclesPage() {
                             form.reset();
                             setTemporaryPhotos([]);
                             setCurrentVehiclePhotos([]);
+                            setHasUnsavedChanges(false);
                             setIsModalOpen(true);
                           }
                         }}
@@ -1049,17 +1045,10 @@ export default function VehiclesPage() {
 
             {/* Unsaved Changes Dialog */}
             <UnsavedChangesDialog
-              open={showConfirmDialog}
-              onConfirm={() => {
-                confirmNavigation();
-                setIsModalOpen(false);
-                setFormInitialValues(null);
-                setCurrentVehiclePhotos([]);
-                setTemporaryPhotos([]);
-                setEditingVehicle(null);
-                form.reset();
-              }}
-              onCancel={cancelNavigation}
+              open={unsavedChanges.showConfirmDialog}
+              onConfirm={unsavedChanges.confirmNavigation}
+              onCancel={unsavedChanges.cancelNavigation}
+              message={unsavedChanges.message}
             />
 
             {/* Camera Capture Modal */}
@@ -1138,7 +1127,9 @@ export default function VehiclesPage() {
                             fuelType: "gasoline",
                             notes: "",
                           };
+                          setFormInitialValues(defaultValues);
                           form.reset(defaultValues);
+                          setHasUnsavedChanges(false);
                           setTemporaryPhotos([]);
                           setCurrentVehiclePhotos([]);
                         }}
