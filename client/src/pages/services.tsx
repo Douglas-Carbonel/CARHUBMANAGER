@@ -159,6 +159,16 @@ export default function Services() {
   const hasServiceExtrasChanges = JSON.stringify(serviceExtras) !== JSON.stringify(initialServiceExtras);
   const hasUnsavedChanges = hasFormChanges || temporaryPhotos.length > 0 || hasServiceExtrasChanges;
 
+  // Debug logs para encontrar o problema
+  if (isDialogOpen && editingService) {
+    console.log('DEBUG - Form changes:', hasFormChanges);
+    console.log('DEBUG - Temporary photos:', temporaryPhotos.length);
+    console.log('DEBUG - Service extras changes:', hasServiceExtrasChanges);
+    console.log('DEBUG - Current service extras:', JSON.stringify(serviceExtras));
+    console.log('DEBUG - Initial service extras:', JSON.stringify(initialServiceExtras));
+    console.log('DEBUG - Has unsaved changes:', hasUnsavedChanges);
+  }
+
   const unsavedChanges = useUnsavedChanges({
     hasUnsavedChanges: !!hasUnsavedChanges,
     message: "Você tem alterações não salvas no cadastro do serviço. Deseja realmente sair?"
