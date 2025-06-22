@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertServiceSchema, type Customer, type Vehicle, type ServiceType } from "@shared/schema";
@@ -29,6 +31,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [serviceExtras, setServiceExtras] = useState<any[]>([]);
+  const [formInitialValues, setFormInitialValues] = useState<any>(null);
 
   const form = useForm<z.infer<typeof serviceSchemaWithoutEstimated>>({
     resolver: zodResolver(serviceSchemaWithoutEstimated),
@@ -44,40 +47,108 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
     },
   });
 
-  // Check URL params to pre-select customer if coming from customer page
+  // Track form changes for unsaved changes detection
+  const currentFormValues = form.watch();
+  const hasFormChanges = formInitialValues && isOpen && JSON.stringify(currentFormValues) !== JSON.stringify(formInitialValues);
+  const hasUnsavedChanges = hasFormChanges || serviceExtras.length > 0;
+
+  const unsavedChanges = useUnsavedChanges({
+    hasUnsavedChanges: !!hasUnsavedChanges,
+    message: "Você tem alterações não salvas no cadastro do serviço. Deseja realmente sair?"
+  });
+
+  // Initialize form values when modal opens
   useEffect(() => {
     if (isOpen) {
+      const defaultValues = {
+        customerId: 0,
+        vehicleId: 0,
+        serviceTypeId: 0,
+        technicianId: 0,
+        status: "scheduled" as "scheduled" | "in_progress" | "completed" | "cancelled",
+        scheduledDate: "",
+        scheduledTime: "",
+        notes: "",
+      };
+      
+      // Check URL params to pre-select customer if coming from customer page
       const urlParams = new URLSearchParams(window.location.search);
       const customerIdFromUrl = urlParams.get('customerId');
+      const vehicleIdFromUrl = urlParams.get('vehicleId');
       
       if (customerIdFromUrl) {
         const customerId = parseInt(customerIdFromUrl);
         console.log('NewServiceModal: Pre-selecting customer from URL:', customerId);
-        form.setValue('customerId', customerId);
-        // Reset vehicle when customer is pre-selected
-        form.setValue('vehicleId', 0);
+        defaultValues.customerId = customerId;
       }
+      
+      if (vehicleIdFromUrl) {
+        const vehicleId = parseInt(vehicleIdFromUrl);
+        console.log('NewServiceModal: Pre-selecting vehicle from URL:', vehicleId);
+        defaultValues.vehicleId = vehicleId;
+      }
+      
+      setFormInitialValues(defaultValues);
+      form.reset({
+        customerId: defaultValues.customerId,
+        vehicleId: defaultValues.vehicleId,
+        serviceTypeId: defaultValues.serviceTypeId,
+        technicianId: defaultValues.technicianId,
+        status: defaultValues.status,
+        scheduledDate: defaultValues.scheduledDate,
+        scheduledTime: defaultValues.scheduledTime,
+        notes: defaultValues.notes,
+      });
+      setServiceExtras([]);
     }
   }, [isOpen, form]);
 
-  const { data: customers, isLoading: loadingCustomers } = useQuery({
+  const { data: customers = [], isLoading: loadingCustomers } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
     enabled: isOpen,
+    queryFn: async () => {
+      const res = await fetch("/api/customers", {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
+      return await res.json();
+    },
   });
 
-  const { data: vehicles, isLoading: loadingVehicles } = useQuery({
+  const { data: vehicles = [], isLoading: loadingVehicles } = useQuery<Vehicle[]>({
     queryKey: ["/api/vehicles"],
     enabled: isOpen,
+    queryFn: async () => {
+      const res = await fetch("/api/vehicles", {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
+      return await res.json();
+    },
   });
 
-  const { data: serviceTypes, isLoading: loadingServiceTypes } = useQuery({
+  const { data: serviceTypes = [], isLoading: loadingServiceTypes } = useQuery<ServiceType[]>({
     queryKey: ["/api/service-types"],
     enabled: isOpen,
+    queryFn: async () => {
+      const res = await fetch("/api/service-types", {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
+      return await res.json();
+    },
   });
 
-  const { data: users, isLoading: loadingUsers } = useQuery({
+  const { data: users = [], isLoading: loadingUsers } = useQuery<any[]>({
     queryKey: ["/api/admin/users"],
     enabled: isOpen,
+    queryFn: async () => {
+      const res = await fetch("/api/admin/users", {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
+      return await res.json();
+    },
   });
 
   const createMutation = useMutation({
@@ -106,6 +177,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
       onClose();
       form.reset();
       setServiceExtras([]);
+      setFormInitialValues(null);
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -552,6 +624,14 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
           </Form>
         </div>
       </DialogContent>
+      
+      {/* Dialog de confirmação de alterações não salvas */}
+      <UnsavedChangesDialog
+        isOpen={unsavedChanges.showConfirmDialog}
+        onConfirm={unsavedChanges.confirmNavigation}
+        onCancel={unsavedChanges.cancelNavigation}
+        message={unsavedChanges.message}
+      />
     </Dialog>
   );
 }
