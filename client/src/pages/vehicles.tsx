@@ -529,7 +529,7 @@ export default function VehiclesPage() {
 
   const handleModalOpenChange = (open: boolean) => {
     if (!open && (hasUnsavedChanges || temporaryPhotos.length > 0)) {
-      unsavedChanges.confirmNavigation(() => {
+      unsavedChanges.triggerConfirmation(() => {
         setIsModalOpen(false);
         setFormInitialValues(null);
         setCurrentVehiclePhotos([]);
@@ -666,7 +666,7 @@ export default function VehiclesPage() {
                         )}
                         onClick={() => {
                           if (hasUnsavedChanges || temporaryPhotos.length > 0) {
-                            unsavedChanges.confirmNavigation(() => {
+                            unsavedChanges.triggerConfirmation(() => {
                               setEditingVehicle(null);
                               form.reset();
                               setTemporaryPhotos([]);

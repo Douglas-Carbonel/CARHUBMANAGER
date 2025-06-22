@@ -13,7 +13,7 @@ export function useUnsavedChanges({
 }: UseUnsavedChangesProps) {
   const [, setLocation] = useLocation();
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
+  const [pendingCallback, setPendingCallback] = useState<(() => void) | null>(null);
   const originalSetLocation = useRef(setLocation);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ export function useUnsavedChanges({
       // Override setLocation to show confirmation
       const interceptedSetLocation = (path: string) => {
         if (hasUnsavedChanges) {
-          setPendingNavigation(path);
+          setPendingCallback(() => () => originalSetLocation.current(path));
           setShowConfirmDialog(true);
         } else {
           originalSetLocation.current(path);
@@ -51,23 +51,36 @@ export function useUnsavedChanges({
     };
   }, [hasUnsavedChanges, message]);
 
-  const confirmNavigation = () => {
-    if (pendingNavigation) {
-      originalSetLocation.current(pendingNavigation);
-      setPendingNavigation(null);
+  const confirmNavigation = (callback?: () => void) => {
+    if (callback) {
+      callback();
+    } else if (pendingCallback) {
+      pendingCallback();
     }
+    setPendingCallback(null);
     setShowConfirmDialog(false);
   };
 
   const cancelNavigation = () => {
-    setPendingNavigation(null);
+    setPendingCallback(null);
     setShowConfirmDialog(false);
+  };
+
+  // Add method to trigger confirmation with custom callback
+  const triggerConfirmation = (callback: () => void) => {
+    if (hasUnsavedChanges) {
+      setPendingCallback(() => callback);
+      setShowConfirmDialog(true);
+    } else {
+      callback();
+    }
   };
 
   return {
     showConfirmDialog,
     confirmNavigation,
     cancelNavigation,
+    triggerConfirmation,
     message
   };
 }

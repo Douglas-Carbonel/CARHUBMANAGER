@@ -452,7 +452,7 @@ export default function CustomersPage() {
                   onOpenChange={(open) => {
                     if (!open && (hasUnsavedChanges || temporaryPhotos.length > 0)) {
                       // Show confirmation dialog instead of preventing close
-                      unsavedChanges.confirmNavigation(() => {
+                      unsavedChanges.triggerConfirmation(() => {
                         setIsModalOpen(false);
                         setFormInitialValues(null);
                         setEditingCustomer(null);
@@ -855,7 +855,7 @@ export default function CustomersPage() {
                             variant="outline"
                             onClick={() => {
                               if (hasUnsavedChanges || temporaryPhotos.length > 0) {
-                                if (confirm("Você tem alterações não salvas. Deseja realmente sair?")) {
+                                unsavedChanges.triggerConfirmation(() => {
                                   setIsModalOpen(false);
                                   setCurrentCustomerPhotos([]);
                                   setTemporaryPhotos([]);
@@ -863,7 +863,7 @@ export default function CustomersPage() {
                                   form.reset();
                                   setHasUnsavedChanges(false);
                                   setFormInitialValues(null);
-                                }
+                                });
                               } else {
                                 setIsModalOpen(false);
                                 setCurrentCustomerPhotos([]);

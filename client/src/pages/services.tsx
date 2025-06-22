@@ -156,9 +156,9 @@ export default function Services() {
   const currentFormValues = form.watch();
   const hasUnsavedChanges = formInitialValues && isDialogOpen && JSON.stringify(currentFormValues) !== JSON.stringify(formInitialValues);
 
-  const { showConfirmDialog, confirmNavigation, cancelNavigation } = useUnsavedChanges({
+  const unsavedChanges = useUnsavedChanges({
     hasUnsavedChanges: !!hasUnsavedChanges || temporaryPhotos.length > 0 || serviceExtras.length > 0,
-    message: "Você tem alterações não salvas. Deseja realmente sair?"
+    message: "Você tem alterações não salvas no formulário do serviço. Deseja realmente sair?"
   });
 
   const { data: services = [] } = useQuery<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]>({
@@ -2030,6 +2030,14 @@ export default function Services() {
             </div>
           )}
         </main>
+
+        {/* Unsaved Changes Dialog */}
+        <UnsavedChangesDialog
+          open={unsavedChanges.showConfirmDialog}
+          onConfirm={unsavedChanges.confirmNavigation}
+          onCancel={unsavedChanges.cancelNavigation}
+          message={unsavedChanges.message}
+        />
       </div>
     </div>
   );
