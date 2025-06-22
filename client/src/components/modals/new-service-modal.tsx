@@ -52,7 +52,10 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   
   // Check if form has meaningful changes (ignore empty -> 0 changes for numeric fields)
   const hasFormChanges = useMemo(() => {
-    if (!formInitialValues || !isOpen) return false;
+    if (!formInitialValues || !isOpen) {
+      console.log('NewServiceModal - No initial values or modal closed:', { formInitialValues, isOpen });
+      return false;
+    }
     
     // Compare each field individually for better control
     const current = currentFormValues;
@@ -66,7 +69,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
     const statusChanged = current.status !== initial.status;
     const dateChanged = (current.scheduledDate || "") !== (initial.scheduledDate || "");
     const timeChanged = (current.scheduledTime || "") !== (initial.scheduledTime || "");
-    const notesChanged = (current.notes || "") !== (initial.notes || "");
+    const notesChanged = (current.notes || "").trim() !== (initial.notes || "").trim();
     
     const anyFieldChanged = customersChanged || vehicleChanged || serviceTypeChanged || 
                            technicianChanged || statusChanged || dateChanged || timeChanged || notesChanged;
@@ -76,16 +79,27 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
         customerId: current.customerId,
         vehicleId: current.vehicleId,
         serviceTypeId: current.serviceTypeId,
+        technicianId: current.technicianId,
+        status: current.status,
+        scheduledDate: current.scheduledDate,
+        scheduledTime: current.scheduledTime,
         notes: current.notes
       },
       initial: {
         customerId: initial.customerId,
         vehicleId: initial.vehicleId,
         serviceTypeId: initial.serviceTypeId,
+        technicianId: initial.technicianId,
+        status: initial.status,
+        scheduledDate: initial.scheduledDate,
+        scheduledTime: initial.scheduledTime,
         notes: initial.notes
       },
-      customersChanged, vehicleChanged, serviceTypeChanged, technicianChanged,
-      statusChanged, dateChanged, timeChanged, notesChanged, anyFieldChanged
+      changes: {
+        customersChanged, vehicleChanged, serviceTypeChanged, technicianChanged,
+        statusChanged, dateChanged, timeChanged, notesChanged
+      },
+      anyFieldChanged
     });
     
     return anyFieldChanged;
@@ -108,14 +122,17 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
 
   // Intercepta o fechamento do modal para verificar alterações não salvas
   const handleClose = () => {
-    console.log('NewServiceModal - handleClose called, hasUnsavedChanges:', hasUnsavedChanges);
-    console.log('NewServiceModal - handleClose - form values:', form.getValues());
-    console.log('NewServiceModal - handleClose - initial values:', formInitialValues);
+    console.log('NewServiceModal - handleClose called');
+    console.log('NewServiceModal - hasUnsavedChanges:', hasUnsavedChanges);
+    console.log('NewServiceModal - hasFormChanges:', hasFormChanges);
+    console.log('NewServiceModal - serviceExtras length:', serviceExtras.length);
+    console.log('NewServiceModal - form values:', form.getValues());
+    console.log('NewServiceModal - initial values:', formInitialValues);
     
     if (hasUnsavedChanges) {
       console.log('NewServiceModal - Triggering confirmation dialog');
       unsavedChanges.triggerConfirmation(() => {
-        console.log('NewServiceModal - User confirmed exit');
+        console.log('NewServiceModal - User confirmed exit, cleaning up...');
         onClose();
         form.reset();
         setServiceExtras([]);
@@ -133,6 +150,8 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   // Initialize form values when modal opens
   useEffect(() => {
     if (isOpen) {
+      console.log('NewServiceModal: Modal opened, initializing form...');
+      
       // Use a timeout to ensure the form is ready
       setTimeout(() => {
         const defaultValues = {
@@ -165,25 +184,20 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
         
         console.log('NewServiceModal: Setting initial values to:', defaultValues);
         
-        // Set initial values FIRST
-        setFormInitialValues(defaultValues);
+        // Reset form first to clear any previous values
+        form.reset(defaultValues);
         
-        // Reset form with the correct values AFTER setting initial values
-        form.reset({
-          customerId: defaultValues.customerId,
-          vehicleId: defaultValues.vehicleId,
-          serviceTypeId: defaultValues.serviceTypeId,
-          technicianId: defaultValues.technicianId,
-          status: defaultValues.status,
-          scheduledDate: defaultValues.scheduledDate,
-          scheduledTime: defaultValues.scheduledTime,
-          notes: defaultValues.notes,
-        });
+        // Then set initial values for comparison - adding a small delay to ensure form is updated
+        setTimeout(() => {
+          setFormInitialValues({ ...defaultValues });
+          console.log('NewServiceModal: Initial values set for comparison:', defaultValues);
+        }, 50);
         
         setServiceExtras([]);
-      }, 100);
+      }, 150);
     } else {
       // Reset when modal closes
+      console.log('NewServiceModal: Modal closed, resetting...');
       setFormInitialValues(null);
       setServiceExtras([]);
     }
