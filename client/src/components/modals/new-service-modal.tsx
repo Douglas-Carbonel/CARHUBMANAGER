@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -30,8 +31,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [serviceExtras, setServiceExtras] = useState<any[]>([]);
-  const [formInitialValues, setFormInitialValues] = useState<any>(null);
-  const [userHasInteracted, setUserHasInteracted] = useState(false);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
 
   const form = useForm<z.infer<typeof serviceSchemaWithoutEstimated>>({
     resolver: zodResolver(serviceSchemaWithoutEstimated),
@@ -47,89 +47,91 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
     },
   });
 
-  // Track form changes for unsaved changes detection
-  const currentFormValues = form.watch();
+  // Watch all form values
+  const formValues = form.watch();
 
-  // Simplified detection: any non-default value means there are changes
+  // Track if user has made meaningful changes
   const hasFormChanges = useMemo(() => {
-    if (!isOpen) {
+    if (!isOpen || !hasUserInteracted) {
       return false;
     }
 
-    const current = currentFormValues;
+    // Check if any field has meaningful data
+    const hasMeaningfulData = 
+      (formValues.customerId && formValues.customerId > 0) ||
+      (formValues.vehicleId && formValues.vehicleId > 0) ||
+      (formValues.serviceTypeId && formValues.serviceTypeId > 0) ||
+      (formValues.technicianId && formValues.technicianId > 0) ||
+      (formValues.scheduledDate && formValues.scheduledDate.trim() !== "") ||
+      (formValues.scheduledTime && formValues.scheduledTime.trim() !== "") ||
+      (formValues.notes && formValues.notes.trim() !== "");
 
-    // Check if any field has been filled with meaningful data
-    const hasCustomer = current.customerId && current.customerId > 0;
-    const hasVehicle = current.vehicleId && current.vehicleId > 0;
-    const hasServiceType = current.serviceTypeId && current.serviceTypeId > 0;
-    const hasTechnician = current.technicianId && current.technicianId > 0;
-    const hasDate = current.scheduledDate && current.scheduledDate.trim() !== "";
-    const hasTime = current.scheduledTime && current.scheduledTime.trim() !== "";
-    const hasNotes = current.notes && current.notes.trim() !== "";
-
-    const hasAnyMeaningfulData = hasCustomer || hasVehicle || hasServiceType || 
-                                hasTechnician || hasDate || hasTime || hasNotes;
-
-    console.log('NewServiceModal - Form changes detection:', {
-      current,
-      checks: {
-        hasCustomer, hasVehicle, hasServiceType, hasTechnician,
-        hasDate, hasTime, hasNotes
-      },
-      hasAnyMeaningfulData
+    console.log('NewServiceModal - Form changes check:', {
+      isOpen,
+      hasUserInteracted,
+      formValues,
+      hasMeaningfulData
     });
 
-    return hasAnyMeaningfulData;
-  }, [currentFormValues, isOpen]);
+    return hasMeaningfulData;
+  }, [formValues, isOpen, hasUserInteracted]);
 
   const hasUnsavedChanges = hasFormChanges || serviceExtras.length > 0;
 
-  // Debug logs
-  console.log('NewServiceModal - hasUnsavedChanges:', hasUnsavedChanges);
-  console.log('NewServiceModal - hasFormChanges:', hasFormChanges);
-  console.log('NewServiceModal - serviceExtras.length:', serviceExtras.length);
-  console.log('NewServiceModal - formInitialValues:', formInitialValues);
-  console.log('NewServiceModal - currentFormValues:', currentFormValues);
-  console.log('NewServiceModal - isOpen:', isOpen);
+  console.log('NewServiceModal - State:', {
+    isOpen,
+    hasUserInteracted,
+    hasFormChanges,
+    serviceExtrasLength: serviceExtras.length,
+    hasUnsavedChanges
+  });
 
   const unsavedChanges = useUnsavedChanges({
     hasUnsavedChanges: !!hasUnsavedChanges,
     message: "Você tem alterações não salvas no cadastro do serviço. Deseja realmente sair?"
   });
 
-  // Intercepta o fechamento do modal para verificar alterações não salvas
+  // Handle modal close with unsaved changes check
   const handleClose = () => {
-    console.log('NewServiceModal - handleClose called');
-    console.log('NewServiceModal - hasUnsavedChanges:', hasUnsavedChanges);
-    console.log('NewServiceModal - hasFormChanges:', hasFormChanges);
-    console.log('NewServiceModal - serviceExtras length:', serviceExtras.length);
-    console.log('NewServiceModal - form values:', form.getValues());
-    console.log('NewServiceModal - initial values:', formInitialValues);
+    console.log('NewServiceModal - handleClose called, hasUnsavedChanges:', hasUnsavedChanges);
 
     if (hasUnsavedChanges) {
-      console.log('NewServiceModal - Triggering confirmation dialog');
+      console.log('NewServiceModal - Showing unsaved changes dialog');
       unsavedChanges.triggerConfirmation(() => {
         console.log('NewServiceModal - User confirmed exit, cleaning up...');
+        resetModal();
         onClose();
-        form.reset();
-        setServiceExtras([]);
-        setFormInitialValues(null);
-        setUserHasInteracted(false);
       });
     } else {
       console.log('NewServiceModal - No unsaved changes, closing directly');
+      resetModal();
       onClose();
-      form.reset();
-      setServiceExtras([]);
-      setFormInitialValues(null);
-      setUserHasInteracted(false);
     }
   };
 
-  // Initialize form values when modal opens
+  // Reset modal state
+  const resetModal = () => {
+    form.reset({
+      customerId: 0,
+      vehicleId: 0,
+      serviceTypeId: 0,
+      technicianId: 0,
+      status: "scheduled",
+      scheduledDate: "",
+      scheduledTime: "",
+      notes: "",
+    });
+    setServiceExtras([]);
+    setHasUserInteracted(false);
+  };
+
+  // Initialize form when modal opens
   useEffect(() => {
     if (isOpen) {
-      console.log('NewServiceModal: Modal opened, initializing form...');
+      console.log('NewServiceModal: Modal opened, initializing...');
+
+      // Reset interaction state
+      setHasUserInteracted(false);
 
       const defaultValues = {
         customerId: 0,
@@ -142,7 +144,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
         notes: "",
       };
 
-      // Check URL params to pre-select customer if coming from customer page
+      // Check URL params
       const urlParams = new URLSearchParams(window.location.search);
       const customerIdFromUrl = urlParams.get('customerId');
       const vehicleIdFromUrl = urlParams.get('vehicleId');
@@ -159,11 +161,27 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
         defaultValues.vehicleId = vehicleId;
       }
 
-      console.log('NewServiceModal: Resetting form with:', defaultValues);
+      console.log('NewServiceModal: Setting form with values:', defaultValues);
       form.reset(defaultValues);
       setServiceExtras([]);
+
+      // Mark as interacted after a brief delay to allow form reset
+      setTimeout(() => {
+        setHasUserInteracted(true);
+        console.log('NewServiceModal: User interaction tracking enabled');
+      }, 500);
     }
   }, [isOpen, form]);
+
+  // Watch for form field changes to mark as interacted
+  useEffect(() => {
+    if (isOpen && hasUserInteracted) {
+      const subscription = form.watch(() => {
+        console.log('NewServiceModal: Form values changed');
+      });
+      return () => subscription.unsubscribe();
+    }
+  }, [form, isOpen, hasUserInteracted]);
 
   const { data: customers = [], isLoading: loadingCustomers } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
@@ -236,11 +254,8 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
         title: "Sucesso",
         description: "Serviço criado com sucesso!",
       });
+      resetModal();
       onClose();
-      form.reset();
-      setServiceExtras([]);
-      setFormInitialValues(null);
-      setUserHasInteracted(false);
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -415,7 +430,6 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                       onValueChange={(value) => {
                         const numValue = parseInt(value);
                         field.onChange(numValue);
-                        // Reset extras when service type changes
                         setServiceExtras([]);
                       }}
                       value={field.value ? field.value.toString() : ""}
@@ -613,59 +627,6 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                           </div>
                         </>
                       )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              <FormField
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Observações</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Observações sobre o serviço..."
-                        rows={3}
-                        {...field}
-                        value={field.value || ""}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {selectedServiceTypeId && (
-                <Card className="border-emerald-200 bg-emerald-50/50 backdrop-blur-sm shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-emerald-700">Serviço Base:</span>
-                        <span className="text-sm font-medium text-emerald-700">
-                          R$ {Number(selectedServiceType?.defaultPrice || 0).toFixed(2)}
-                        </span>
-                      </div>
-                      {serviceExtras.length > 0 && (
-                        <>
-                          {serviceExtras.map((extra, index) => (
-                            <div key={index} className="flex justify-between items-center">
-                              <span className="text-xs text-emerald-600">
-                                {extra.serviceExtra?.descricao || 'Adicional'}
-                              </span>
-                              <span className="text-xs font-medium text-emerald-600">
-                                R$ {Number(extra.valor || 0).toFixed(2)}
-                              </span>
-                            </div>
-                          ))}
-                        </>
-                      )}
-                      <div className="border-t border-emerald-300 my-2"></div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-lg font-semibold text-emerald-800">Valor Total:</span>
-                        <span className="text-xl font-bold text-emerald-700">R$ {calculateTotalValue()}</span>
-                      </div>
                     </div>
                   </CardContent>
                 </Card>
