@@ -24,8 +24,6 @@ import { cn } from "@/lib/utils";
 import VehicleAnalytics from "@/components/dashboard/vehicle-analytics";
 import { BarChart3 } from "lucide-react";
 import PhotoUpload from "@/components/photos/photo-upload";
-import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
-import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
   const res = await fetch(url, {
@@ -229,8 +227,6 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ isOpen, onClose, onPhotoT
   );
 };
 
-
-
 export default function VehiclesPage() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -248,13 +244,6 @@ export default function VehiclesPage() {
   const [temporaryPhotos, setTemporaryPhotos] = useState<{photo: string, category: string}[]>([]);
   const [isServiceWarningOpen, setIsServiceWarningOpen] = useState(false);
   const [vehicleForServiceWarning, setVehicleForServiceWarning] = useState<Vehicle | null>(null);
-  const [formInitialValues, setFormInitialValues] = useState<VehicleFormData | null>(null);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  
-  const unsavedChanges = useUnsavedChanges({
-    hasUnsavedChanges,
-    message: "Você tem alterações não salvas no formulário do veículo. Deseja realmente sair?"
-  });
 
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleFormSchema),
@@ -271,19 +260,6 @@ export default function VehiclesPage() {
       notes: "",
     },
   });
-
-  // Track form changes for unsaved changes warning
-  useEffect(() => {
-    const subscription = form.watch((value, { name, type }) => {
-      if (formInitialValues) {
-        const changed = Object.keys(value).some(key => {
-          return String(value[key]) !== String(formInitialValues[key]);
-        });
-        setHasUnsavedChanges(changed);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [form, formInitialValues]);
 
   const { data: vehicles = [], isLoading: vehiclesLoading } = useQuery({
     queryKey: ["/api/vehicles"],
@@ -306,7 +282,7 @@ export default function VehiclesPage() {
     const urlParams = new URLSearchParams(window.location.search);
     const customerId = urlParams.get('customerId');
     const openModal = urlParams.get('openModal');
-
+    
     if (customerId) {
       setCustomerFilter(parseInt(customerId));
 
@@ -527,44 +503,13 @@ export default function VehiclesPage() {
     }
   };
 
-  const handleModalOpenChange = (open: boolean) => {
-    if (!open && (hasUnsavedChanges || temporaryPhotos.length > 0)) {
-      unsavedChanges.triggerConfirmation(() => {
-        setIsModalOpen(false);
-        setFormInitialValues(null);
-        setCurrentVehiclePhotos([]);
-        setTemporaryPhotos([]);
-        setEditingVehicle(null);
-        form.reset();
-        setHasUnsavedChanges(false);
-      });
-      return;
-    }
-    
-    
-    if (!open) {
-      setIsModalOpen(false);
-      setFormInitialValues(null);
-      setCurrentVehiclePhotos([]);
-      setTemporaryPhotos([]);
-      setEditingVehicle(null);
-      form.reset();
-      setHasUnsavedChanges(false);
-    } else {
-      setIsModalOpen(true);
-    }
-  };
-
   const handleEdit = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle);
-    const initialValues = {
+    form.reset({
       ...vehicle,
       customerId: vehicle.customerId,
-    };
-    setFormInitialValues(initialValues);
-    form.reset(initialValues);
+    });
     fetchVehiclePhotos(vehicle.id);
-    setHasUnsavedChanges(false);
     setIsModalOpen(true);
   };
 
@@ -657,7 +602,7 @@ export default function VehiclesPage() {
 
                 {/* Only show + Novo button if not showing customer-specific no vehicles message */}
                 {!(filteredVehicles.length === 0 && customerFilter && !searchTerm) && (
-                  <Dialog open={isModalOpen} onOpenChange={handleModalOpenChange}>
+                  <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                     <DialogTrigger asChild>
                       <Button 
                         className={cn(
@@ -665,23 +610,10 @@ export default function VehiclesPage() {
                           isMobile ? "w-full h-10 text-sm px-4" : "px-6"
                         )}
                         onClick={() => {
-                          if (hasUnsavedChanges || temporaryPhotos.length > 0) {
-                            unsavedChanges.triggerConfirmation(() => {
-                              setEditingVehicle(null);
-                              form.reset();
-                              setTemporaryPhotos([]);
-                              setCurrentVehiclePhotos([]);
-                              setHasUnsavedChanges(false);
-                              setIsModalOpen(true);
-                            });
-                          } else {
-                            setEditingVehicle(null);
-                            form.reset();
-                            setTemporaryPhotos([]);
-                            setCurrentVehiclePhotos([]);
-                            setHasUnsavedChanges(false);
-                            setIsModalOpen(true);
-                          }
+                          setEditingVehicle(null);
+                          form.reset();
+                          setTemporaryPhotos([]);
+                          setCurrentVehiclePhotos([]);
                         }}
                       >
                         <Plus className={cn(isMobile ? "h-4 w-4 mr-1" : "h-5 w-5 mr-2")} />
@@ -874,7 +806,8 @@ export default function VehiclesPage() {
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    setIsCameraOpen(true);                                  }}
+                                    setIsCameraOpen(true);
+                                  }}
                                   className="flex items-center gap-2 text-xs"
                                 >
                                   <Camera className="h-4 w-4" />
@@ -1043,14 +976,6 @@ export default function VehiclesPage() {
               </div>
             </div>
 
-            {/* Unsaved Changes Dialog */}
-            <UnsavedChangesDialog
-              open={unsavedChanges.showConfirmDialog}
-              onConfirm={unsavedChanges.confirmNavigation}
-              onCancel={unsavedChanges.cancelNavigation}
-              message={unsavedChanges.message}
-            />
-
             {/* Camera Capture Modal */}
             <CameraCapture
               isOpen={isCameraOpen}
@@ -1109,7 +1034,7 @@ export default function VehiclesPage() {
                   }
                 </p>
                 {!searchTerm && (
-                  <Dialog open={isModalOpen} onOpenChange={handleModalOpenChange}>
+                  <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                     <DialogTrigger asChild>
                       <Button
                         className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
@@ -1127,9 +1052,7 @@ export default function VehiclesPage() {
                             fuelType: "gasoline",
                             notes: "",
                           };
-                          setFormInitialValues(defaultValues);
                           form.reset(defaultValues);
-                          setHasUnsavedChanges(false);
                           setTemporaryPhotos([]);
                           setCurrentVehiclePhotos([]);
                         }}
@@ -1659,18 +1582,18 @@ export default function VehiclesPage() {
           </div>
         </main>
 
-        {/* Vehicle Warning Modal */}
+        {/* Modal de aviso quando veículo não tem serviços */}
         <Dialog open={isServiceWarningOpen} onOpenChange={setIsServiceWarningOpen}>
           <DialogContent className="max-w-md bg-gradient-to-br from-teal-50 to-emerald-50 border-teal-200">
             <DialogHeader className="text-center pb-4">
-              <div className="mx-auto mb-4 w-16 h-16 bg-gradient-to-br from-teal-500 to-emerald600 rounded-full flex items-center justify-center">
+              <div className="mx-auto mb-4 w-16 h-16 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-full flex items-center justify-center">
                 <Wrench className="h-8 w-8 text-white" />
               </div>
               <DialogTitle className="text-xl font-bold text-teal-900">
                 Primeiro Serviço
               </DialogTitle>
             </DialogHeader>
-
+            
             <div className="text-center space-y-4">
               <p className="text-gray-700">
                 O veículo <strong>{vehicleForServiceWarning?.licensePlate}</strong> ({vehicleForServiceWarning?.brand} {vehicleForServiceWarning?.model}) ainda não possui serviços cadastrados.

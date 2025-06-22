@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -26,8 +26,6 @@ import { insertCustomerSchema } from "@shared/schema";
 import PhotoUpload from "@/components/photos/photo-upload";
 import CameraCapture from "@/components/camera/camera-capture";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
-import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
   console.log(`API Request: ${method} ${url}`, data);
@@ -84,13 +82,6 @@ export default function CustomersPage() {
   const [temporaryPhotos, setTemporaryPhotos] = useState<{photo: string, category: string}[]>([]);
   const [isVehicleWarningOpen, setIsVehicleWarningOpen] = useState(false);
   const [customerForVehicleWarning, setCustomerForVehicleWarning] = useState<Customer | null>(null);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [formInitialValues, setFormInitialValues] = useState<CustomerFormData | null>(null);
-  
-  const unsavedChanges = useUnsavedChanges({
-    hasUnsavedChanges,
-    message: "Você tem alterações não salvas no formulário do cliente. Deseja realmente sair?"
-  });
 
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerFormSchema),
@@ -105,22 +96,6 @@ export default function CustomersPage() {
       observations: "",
     },
   });
-
-  useEffect(() => {
-    // Update hasUnsavedChanges when form values change
-    const subscription = form.watch((value, { name, type }) => {
-      if (formInitialValues) {
-        const changed = Object.keys(value).some(key => {
-          if (key === 'document' && (value[key] === '' && formInitialValues[key] === null)) {
-            return false;
-          }
-          return String(value[key]) !== String(formInitialValues[key]);
-        });
-        setHasUnsavedChanges(changed);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [form, formInitialValues]);
 
   const { data: customers = [], isLoading } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
@@ -139,7 +114,7 @@ export default function CustomersPage() {
     onSuccess: async (newCustomer) => {
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/analytics/customers"] });
-
+      
       // Save temporary photos if any
       if (temporaryPhotos.length > 0) {
         let photosSaved = 0;
@@ -271,7 +246,7 @@ export default function CustomersPage() {
 
   const handleEdit = (customer: Customer) => {
     setEditingCustomer(customer);
-    const initialValues = {
+    form.reset({
       code: customer.code,
       name: customer.name,
       email: customer.email || "",
@@ -280,9 +255,7 @@ export default function CustomersPage() {
       documentType: (customer.documentType as "cpf" | "cnpj") || "cpf",
       address: customer.address || "",
       observations: customer.observations || "",
-    };
-    setFormInitialValues(initialValues);
-    form.reset(initialValues);
+    });
     setIsModalOpen(true);
     fetchCustomerPhotos(customer.id);
   };
@@ -446,116 +419,87 @@ export default function CustomersPage() {
                 </div>
               </div>
 
-              
-                <Dialog 
-                  open={isModalOpen} 
-                  onOpenChange={(open) => {
-                    if (!open && (hasUnsavedChanges || temporaryPhotos.length > 0)) {
-                      // Show confirmation dialog instead of preventing close
-                      unsavedChanges.triggerConfirmation(() => {
-                        setIsModalOpen(false);
-                        setFormInitialValues(null);
-                        setEditingCustomer(null);
-                        form.reset();
-                        setCurrentCustomerPhotos([]);
-                        setTemporaryPhotos([]);
-                        setHasUnsavedChanges(false);
-                      });
-                      return;
-                    }
-                    setIsModalOpen(open);
-                    if (!open) {
-                      setFormInitialValues(null);
+              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    className={cn(
+                      "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200",
+                      isMobile ? "w-full h-10 text-sm" : ""
+                    )}
+                    onClick={() => {
                       setEditingCustomer(null);
                       form.reset();
                       setCurrentCustomerPhotos([]);
                       setTemporaryPhotos([]);
-                      setHasUnsavedChanges(false);
-                    }
-                  }}
-                >
-                  <DialogTrigger asChild>
-                    <Button 
-                      className={cn(
-                        "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200",
-                        isMobile ? "w-full h-10 text-sm" : ""
-                      )}
-                      onClick={() => {
-                        setEditingCustomer(null);
-                        form.reset();
-                        setCurrentCustomerPhotos([]);
-                        setTemporaryPhotos([]);
-                        setHasUnsavedChanges(false);
-                        setFormInitialValues(null);
-                      }}
-                    >
-                      <Plus className={cn(isMobile ? "h-4 w-4 mr-1" : "h-5 w-5 mr-2")} />
-                      {isMobile ? "Novo Cliente" : "Novo Cliente"}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className={cn(
-                    "bg-gradient-to-br from-slate-50 to-blue-50/30",
-                    isMobile ? "max-w-[95vw] max-h-[95vh] overflow-y-auto" : "max-w-2xl"
-                  )}>
-                    <DialogHeader className={cn(isMobile ? "pb-3" : "pb-6")}>
-                      <DialogTitle className={cn(
-                        "bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent font-bold",
-                        isMobile ? "text-lg" : "text-2xl"
+                    }}
+                  >
+                    <Plus className={cn(isMobile ? "h-4 w-4 mr-1" : "h-5 w-5 mr-2")} />
+                    {isMobile ? "Novo Cliente" : "Novo Cliente"}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className={cn(
+                  "bg-gradient-to-br from-slate-50 to-blue-50/30",
+                  isMobile ? "max-w-[95vw] max-h-[95vh] overflow-y-auto" : "max-w-2xl"
+                )}>
+                  <DialogHeader className={cn(isMobile ? "pb-3" : "pb-6")}>
+                    <DialogTitle className={cn(
+                      "bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent font-bold",
+                      isMobile ? "text-lg" : "text-2xl"
+                    )}>
+                      {editingCustomer ? "Editar Cliente" : "Novo Cliente"}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
+                      console.log('Form validation errors:', errors);
+                      toast({
+                        title: "Erro de validação",
+                        description: "Por favor, verifique os campos obrigatórios",
+                        variant: "destructive",
+                      });
+                    })} className={cn(isMobile ? "space-y-4" : "space-y-6")}>
+                      <div className={cn(
+                        "grid gap-4",
+                        isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 gap-6"
                       )}>
-                        {editingCustomer ? "Editar Cliente" : "Novo Cliente"}
-                      </DialogTitle>
-                    </DialogHeader>
-                    <Form {...form}>
-                      <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
-                        console.log('Form validation errors:', errors);
-                        toast({
-                          title: "Erro de validação",
-                          description: "Por favor, verifique os campos obrigatórios",
-                          variant: "destructive",
-                        });
-                      })} className={cn(isMobile ? "space-y-4" : "space-y-6")}>
-                        <div className={cn(
-                          "grid gap-4",
-                          isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 gap-6"
-                        )}>
-                          <FormField
-                            control={form.control}
-                            name="name"
-                            render={({ field }) => (
-                              <FormItem className={cn(isMobile ? "space-y-1" : "space-y-2")}>
-                                <FormLabel className={cn(
-                                  "font-semibold text-slate-700 flex items-center",
-                                  isMobile ? "text-xs" : "text-sm"
-                                )}>
-                                  <User className={cn(isMobile ? "h-3 w-3 mr-1" : "h-4 w-4 mr-2")} />
-                                  Nome <span className="text-red-500 ml-1">*</span>
-                                </FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Nome completo" 
-                                    {...field} 
-                                    required 
-                                    className={cn(
-                                      "border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md",
-                                      isMobile ? "h-9 text-sm" : "h-11"
-                                    )}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="email"
-                            render={({ field }) => (
-                              <FormItem className={cn(isMobile ? "space-y-1" : "space-y-2")}>
-                                <FormLabel className={cn(
-                                  "font-semibold text-slate-700 flex items-center",
-                                  isMobile ? "text-xs" : "text-sm"
-                                )}>
-                                  <Mail className={cn(isMobile ? "h-3 w-3 mr-1" : "h-4 w-4 mr-2")} />
-                                  Email
+                        <FormField
+                          control={form.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem className={cn(isMobile ? "space-y-1" : "space-y-2")}>
+                              <FormLabel className={cn(
+                                "font-semibold text-slate-700 flex items-center",
+                                isMobile ? "text-xs" : "text-sm"
+                              )}>
+                                <User className={cn(isMobile ? "h-3 w-3 mr-1" : "h-4 w-4 mr-2")} />
+                                Nome <span className="text-red-500 ml-1">*</span>
+                              </FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Nome completo" 
+                                  {...field} 
+                                  required 
+                                  className={cn(
+                                    "border-2 border-slate-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md",
+                                    isMobile ? "h-9 text-sm" : "h-11"
+                                  )}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem className={cn(isMobile ? "space-y-1" : "space-y-2")}>
+                              <FormLabel className={cn(
+                                "font-semibold text-slate-700 flex items-center",
+                                isMobile ? "text-xs" : "text-sm"
+                              )}>
+                                <Mail className={cn(isMobile ? "h-3 w-3 mr-1" : "h-4 w-4 mr-2")} />
+                                Email
                               </FormLabel>
                               <FormControl>
                                 <Input 
@@ -770,7 +714,7 @@ export default function CustomersPage() {
 
                                   for (const file of Array.from(files)) {
                                     if (!file.type.startsWith('image/')) continue;
-
+                                    
                                     // Convert to base64 for preview
                                     const reader = new FileReader();
                                     reader.onload = (event) => {
@@ -779,7 +723,7 @@ export default function CustomersPage() {
                                     };
                                     reader.readAsDataURL(file);
                                   }
-
+                                  
                                   // Clear the input
                                   e.target.value = '';
                                 }}
@@ -852,27 +796,13 @@ export default function CustomersPage() {
                       )}>
                         <Button 
                             type="button" 
-                            variant="outline"
+                            variant="outline" 
                             onClick={() => {
-                              if (hasUnsavedChanges || temporaryPhotos.length > 0) {
-                                unsavedChanges.triggerConfirmation(() => {
-                                  setIsModalOpen(false);
-                                  setCurrentCustomerPhotos([]);
-                                  setTemporaryPhotos([]);
-                                  setEditingCustomer(null);
-                                  form.reset();
-                                  setHasUnsavedChanges(false);
-                                  setFormInitialValues(null);
-                                });
-                              } else {
-                                setIsModalOpen(false);
-                                setCurrentCustomerPhotos([]);
-                                setTemporaryPhotos([]);
-                                setEditingCustomer(null);
-                                form.reset();
-                                setHasUnsavedChanges(false);
-                                setFormInitialValues(null);
-                              }
+                              setIsModalOpen(false);
+                              setCurrentCustomerPhotos([]);
+                              setTemporaryPhotos([]);
+                              setEditingCustomer(null);
+                              form.reset();
                             }}
                             disabled={createMutation.isPending || updateMutation.isPending}
                             className={cn(
@@ -939,8 +869,6 @@ export default function CustomersPage() {
                       setIsModalOpen(true);
                       setCurrentCustomerPhotos([]);
                       setTemporaryPhotos([]);
-                      setHasUnsavedChanges(false);
-                      setFormInitialValues(null);
                     }}
                   >
                     <Plus className="h-5 w-5 mr-2" />
@@ -1057,7 +985,7 @@ export default function CustomersPage() {
                               // Navegação instantânea com informação contextual
                               // A página de veículos já tem toda a lógica necessária para lidar com ambos cenários
                               setLocation(`/vehicles?customerId=${customer.id}`);
-
+                              
                               // Opcional: Fazer pré-cache em background para melhorar UX futura
                               setTimeout(() => {
                                 fetch(`/api/vehicles?customerId=${customer.id}`, {
@@ -1219,7 +1147,7 @@ export default function CustomersPage() {
                       Deseja cadastrar o primeiro veículo para este cliente?
                     </p>
                   </div>
-
+                  
                   <div className="flex gap-3">
                     <Button
                       variant="outline"
@@ -1248,14 +1176,6 @@ export default function CustomersPage() {
                 </div>
               </DialogContent>
             </Dialog>
-
-            {/* Unsaved Changes Dialog */}
-            <UnsavedChangesDialog
-              open={unsavedChanges.showConfirmDialog}
-              onConfirm={unsavedChanges.confirmNavigation}
-              onCancel={unsavedChanges.cancelNavigation}
-              message={unsavedChanges.message}
-            />
           </div>
         </main>
       </div>
