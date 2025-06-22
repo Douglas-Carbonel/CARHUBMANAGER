@@ -317,6 +317,7 @@ export default function Services() {
 
         // Convert existing extras to the format expected by serviceExtras state
         const mappedExtras = existingExtras.map((item: any) => ({
+          id: item.id, // Incluir o ID para manter consistência
           serviceExtraId: item.serviceExtraId,
           valor: item.valor || "0.00",
           observacao: item.observacao || "",
