@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import { insertCustomerSchema } from "@shared/schema";
 import PhotoUpload from "@/components/photos/photo-upload";
 import CameraCapture from "@/components/camera/camera-capture";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 
 async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
   console.log(`API Request: ${method} ${url}`, data);
