@@ -1121,23 +1121,23 @@ export default function CustomersPage() {
 
             {/* Vehicle Warning Modal */}
             <Dialog open={isVehicleWarningOpen} onOpenChange={setIsVehicleWarningOpen}>
-              <DialogContent className="max-w-md bg-gradient-to-br from-slate-50 to-blue-50/30 border-2 border-blue-100">
+              <DialogContent className="max-w-md bg-gradient-to-br from-teal-50/50 to-emerald-50/30 border-2 border-teal-200/50">
                 <DialogHeader>
-                  <DialogTitle className="flex items-center text-blue-800 font-bold text-lg">
-                    <Car className="h-6 w-6 mr-3 text-blue-600" />
+                  <DialogTitle className="flex items-center text-teal-800 font-bold text-lg">
+                    <Car className="h-6 w-6 mr-3 text-teal-600" />
                     Veículos Necessários
                   </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-6 pt-2">
                   <div className="text-center">
-                    <div className="bg-gradient-to-br from-blue-100 to-indigo-100 p-6 rounded-full mb-4 w-20 h-20 flex items-center justify-center mx-auto border-2 border-blue-200 shadow-lg">
-                      <Car className="h-10 w-10 text-blue-600" />
+                    <div className="bg-gradient-to-br from-teal-100 to-emerald-100 p-6 rounded-full mb-4 w-20 h-20 flex items-center justify-center mx-auto border-2 border-teal-200 shadow-lg">
+                      <Car className="h-10 w-10 text-teal-600" />
                     </div>
                     <h3 className="font-bold text-gray-900 mb-3 text-lg">
                       {customerForVehicleWarning?.name} não possui veículos cadastrados
                     </h3>
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
-                      <p className="text-amber-800 text-sm font-medium">
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4">
+                      <p className="text-orange-800 text-sm font-medium">
                         ⚠️ Não é possível criar serviços sem um veículo cadastrado
                       </p>
                     </div>
@@ -1165,7 +1165,7 @@ export default function CustomersPage() {
                         setIsVehicleWarningOpen(false);
                         setCustomerForVehicleWarning(null);
                       }}
-                      className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                      className="flex-1 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
                     >
                       <Car className="h-4 w-4 mr-2" />
                       Cadastrar Veículo
