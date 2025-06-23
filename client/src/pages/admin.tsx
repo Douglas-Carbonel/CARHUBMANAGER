@@ -62,6 +62,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 interface User {
   id: number;
@@ -104,6 +105,12 @@ export default function AdminPage() {
     isActive: true
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: "",
+    description: "",
+    onConfirm: () => {}
+  });
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -231,10 +238,16 @@ export default function AdminPage() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm("Tem certeza que deseja excluir este usuário?")) {
-      deleteUserMutation.mutate(id);
-    }
+  const handleDelete = (id: number, username: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Confirmar Exclusão",
+      description: `Tem certeza que deseja excluir o usuário "${username}"? Esta ação não pode ser desfeita.`,
+      onConfirm: () => {
+        deleteUserMutation.mutate(id);
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      }
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -626,7 +639,7 @@ export default function AdminPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleDelete(user.id)}
+                                onClick={() => handleDelete(user.id, user.username)}
                                 className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
                                 title="Excluir usuário"
                               >
@@ -652,6 +665,18 @@ export default function AdminPage() {
             <ServiceExtrasManagement />
           </TabsContent>
         </Tabs>
+
+        {/* Dialog de confirmação para exclusões */}
+        <ConfirmationDialog
+          isOpen={confirmDialog.isOpen}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+          title={confirmDialog.title}
+          description={confirmDialog.description}
+          confirmText="Excluir"
+          cancelText="Cancelar"
+          variant="destructive"
+        />
       </div>
     </div>
   );

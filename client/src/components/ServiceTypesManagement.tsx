@@ -37,6 +37,7 @@ import {
   Search,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 interface ServiceType {
   id: number;
@@ -70,6 +71,12 @@ export default function ServiceTypesManagement() {
     defaultPrice: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: "",
+    description: "",
+    onConfirm: () => {}
+  });
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -189,10 +196,16 @@ export default function ServiceTypesManagement() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm("Tem certeza que deseja excluir este tipo de serviço?")) {
-      deleteServiceTypeMutation.mutate(id);
-    }
+  const handleDelete = (id: number, name: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Confirmar Exclusão",
+      description: `Tem certeza que deseja excluir o tipo de serviço "${name}"? Esta ação não pode ser desfeita.`,
+      onConfirm: () => {
+        deleteServiceTypeMutation.mutate(id);
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      }
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -435,7 +448,7 @@ export default function ServiceTypesManagement() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDelete(serviceType.id)}
+                          onClick={() => handleDelete(serviceType.id, serviceType.name)}
                           className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                           title="Excluir tipo de serviço"
                         >
@@ -450,6 +463,18 @@ export default function ServiceTypesManagement() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialog de confirmação para exclusões */}
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+        title={confirmDialog.title}
+        description={confirmDialog.description}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        variant="destructive"
+      />
     </div>
   );
 }
