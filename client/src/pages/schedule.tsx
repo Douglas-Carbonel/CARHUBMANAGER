@@ -185,7 +185,7 @@ function CalendarView({ services, isLoading, onEdit, onDelete, isMobile }: {
                 <div
                   key={index}
                   className={cn(
-                    "border rounded-lg transition-all duration-200 hover:shadow-md relative",
+                    "border rounded-lg transition-all duration-200 hover:shadow-md relative cursor-pointer",
                     isToday 
                       ? "bg-gradient-to-br from-teal-50 to-emerald-50 border-teal-300 shadow-md" 
                       : dayServices.length > 0 
@@ -193,6 +193,15 @@ function CalendarView({ services, isLoading, onEdit, onDelete, isMobile }: {
                         : "bg-gray-50 border-gray-200 hover:bg-gray-100",
                     isMobile ? "min-h-[90px] p-1" : "min-h-[120px] p-2"
                   )}
+                  onClick={() => {
+                    if (isMobile && dayServices.length > 1) {
+                      setDayServicesModal({
+                        isOpen: true,
+                        date: date,
+                        services: dayServices
+                      });
+                    }
+                  }}
                 >
                   <div className={cn("text-center font-medium flex items-center justify-between", isMobile ? "text-xs mb-1" : "text-sm mb-2")}>
                     <span className={cn(isToday ? "text-teal-800 font-bold" : "text-gray-700")}>
@@ -253,14 +262,13 @@ function CalendarView({ services, isLoading, onEdit, onDelete, isMobile }: {
                             className={cn("text-center text-teal-600 font-medium cursor-pointer hover:text-teal-800 transition-colors bg-teal-50 rounded p-1", isMobile ? "text-xs" : "text-xs")}
                             onClick={(e) => {
                               e.stopPropagation();
-                              // Create a better modal experience for mobile showing all services
-                              const dateStr = date.toLocaleDateString('pt-BR');
-                              const allServicesText = dayServices.map((s, idx) => 
-                                `${idx + 1}. ${s.customer?.name || 'Cliente'}\n   ${s.serviceType?.name || 'Serviço'}${s.scheduledTime ? `\n   ${s.scheduledTime.slice(0, 5)}` : ''}\n   Status: ${statusLabels[s.status as keyof typeof statusLabels] || s.status}`
-                              ).join('\n\n');
-                              
-                              // Show all appointments in a confirm dialog
-                              const result = window.confirm(`📅 TODOS OS AGENDAMENTOS\n${dateStr}\n\n${allServicesText}\n\n✏️ Toque em "OK" para fechar ou "Cancelar" para voltar`);
+                              if (isMobile) {
+                                setDayServicesModal({
+                                  isOpen: true,
+                                  date: date,
+                                  services: dayServices
+                                });
+                              }
                             }}
                           >
                             +{dayServices.length - 2} mais
@@ -295,6 +303,15 @@ export default function SchedulePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [serviceExtras, setServiceExtras] = useState<any[]>([]);
+  const [dayServicesModal, setDayServicesModal] = useState<{
+    isOpen: boolean;
+    date: Date | null;
+    services: Service[];
+  }>({
+    isOpen: false,
+    date: null,
+    services: []
+  });
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     title: string;
