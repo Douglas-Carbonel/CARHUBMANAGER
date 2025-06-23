@@ -463,16 +463,16 @@ export default function ServiceTypesManagement() {
         </Card>
 
         {/* Dialog de confirmação para exclusões */}
-      <ConfirmationDialog
-        isOpen={confirmDialog.isOpen}
-        onConfirm={confirmDialog.onConfirm}
-        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
-        title={confirmDialog.title}
-        description={confirmDialog.description}
-        confirmText="Excluir"
-        cancelText="Cancelar"
-        variant="destructive"
-      />
-    </div>
-  );
-}
+        <ConfirmationDialog
+          isOpen={confirmDialog.isOpen}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+          title={confirmDialog.title}
+          description={confirmDialog.description}
+          confirmText="Excluir"
+          cancelText="Cancelar"
+          variant="destructive"
+        />
+      </div>
+    );
+  }
