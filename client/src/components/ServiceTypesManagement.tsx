@@ -283,10 +283,24 @@ export default function ServiceTypesManagement() {
                   type="text"
                   value={formData.defaultPrice}
                   onChange={(e) => {
-                    const value = e.target.value.replace(/[^\d,]/g, '').replace(',', '.');
-                    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                      setFormData(prev => ({ ...prev, defaultPrice: value }));
+                    let value = e.target.value;
+                    
+                    // Remove tudo que não é número
+                    value = value.replace(/[^\d]/g, '');
+                    
+                    // Se vazio, deixa vazio
+                    if (value === '') {
+                      setFormData(prev => ({ ...prev, defaultPrice: '' }));
+                      return;
                     }
+                    
+                    // Converte para número e divide por 100 para ter centavos
+                    const numValue = parseInt(value) / 100;
+                    
+                    // Formata com 2 casas decimais e vírgula
+                    const formatted = numValue.toFixed(2).replace('.', ',');
+                    
+                    setFormData(prev => ({ ...prev, defaultPrice: formatted }));
                   }}
                   placeholder="0,00"
                 />
