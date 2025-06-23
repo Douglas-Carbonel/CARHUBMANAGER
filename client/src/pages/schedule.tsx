@@ -191,7 +191,7 @@ function CalendarView({ services, isLoading, onEdit, onDelete, isMobile }: {
                       : dayServices.length > 0 
                         ? "bg-white border-teal-200 hover:bg-teal-50" 
                         : "bg-gray-50 border-gray-200 hover:bg-gray-100",
-                    isMobile ? "min-h-[80px] p-1" : "min-h-[120px] p-2"
+                    isMobile ? "min-h-[90px] p-1" : "min-h-[120px] p-2"
                   )}
                 >
                   <div className={cn("text-center font-medium flex items-center justify-between", isMobile ? "text-xs mb-1" : "text-sm mb-2")}>
@@ -208,15 +208,16 @@ function CalendarView({ services, isLoading, onEdit, onDelete, isMobile }: {
                     )}
                   </div>
                   
-                  <div className="space-y-1 overflow-y-auto" style={{ maxHeight: isMobile ? "40px" : "60px" }}>
+                  <div className="space-y-1 overflow-y-auto" style={{ maxHeight: isMobile ? "60px" : "80px" }}>
                     {dayServices.length > 0 ? (
                       <>
-                        {dayServices.slice(0, isMobile ? 1 : 2).map((service) => (
+                        {/* No mobile, mostrar até 2 agendamentos se houver espaço */}
+                        {dayServices.slice(0, isMobile ? Math.min(2, dayServices.length) : 2).map((service) => (
                           <div
                             key={service.id}
                             className={cn(
                               "px-2 py-1 rounded-md text-white cursor-pointer transition-all duration-200 hover:scale-105 shadow-sm",
-                              isMobile ? "text-xs" : "text-xs",
+                              isMobile ? "text-xs leading-tight" : "text-xs",
                               service.status === "scheduled" ? "bg-blue-500 hover:bg-blue-600" :
                               service.status === "in_progress" ? "bg-yellow-500 hover:bg-yellow-600" :
                               service.status === "completed" ? "bg-green-500 hover:bg-green-600" :
@@ -246,25 +247,23 @@ function CalendarView({ services, isLoading, onEdit, onDelete, isMobile }: {
                             )}
                           </div>
                         ))}
-                        {dayServices.length > (isMobile ? 1 : 2) && (
+                        {/* Botão "Ver todos" apenas se houver mais de 2 agendamentos */}
+                        {dayServices.length > 2 && (
                           <div 
                             className={cn("text-center text-teal-600 font-medium cursor-pointer hover:text-teal-800 transition-colors bg-teal-50 rounded p-1", isMobile ? "text-xs" : "text-xs")}
-                            onClick={() => {
-                              // Create a better modal experience for mobile
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Create a better modal experience for mobile showing all services
                               const dateStr = date.toLocaleDateString('pt-BR');
-                              const allServices = dayServices.map((s, idx) => 
-                                `${idx + 1}. ${s.customer?.name}\n   ${s.serviceType?.name}${s.scheduledTime ? `\n   Horário: ${s.scheduledTime.slice(0, 5)}` : ''}\n   Status: ${statusLabels[s.status as keyof typeof statusLabels]}`
+                              const allServicesText = dayServices.map((s, idx) => 
+                                `${idx + 1}. ${s.customer?.name || 'Cliente'}\n   ${s.serviceType?.name || 'Serviço'}${s.scheduledTime ? `\n   ${s.scheduledTime.slice(0, 5)}` : ''}\n   Status: ${statusLabels[s.status as keyof typeof statusLabels] || s.status}`
                               ).join('\n\n');
                               
-                              // Create a styled alert for better UX
-                              const alertMessage = `📅 AGENDAMENTOS - ${dateStr}\n\n${allServices}\n\n💡 Toque em qualquer agendamento acima para editá-lo`;
-                              
-                              if (window.confirm(alertMessage)) {
-                                // User can tap individual services to edit them
-                              }
+                              // Show all appointments in a confirm dialog
+                              const result = window.confirm(`📅 TODOS OS AGENDAMENTOS\n${dateStr}\n\n${allServicesText}\n\n✏️ Toque em "OK" para fechar ou "Cancelar" para voltar`);
                             }}
                           >
-                            Ver todos ({dayServices.length})
+                            +{dayServices.length - 2} mais
                           </div>
                         )}
                       </>
