@@ -72,6 +72,14 @@ export interface IStorage {
   getServiceType(id: number): Promise<ServiceType | undefined>;
   createServiceType(serviceType: InsertServiceType): Promise<ServiceType>;
   updateServiceType(id: number, serviceType: Partial<InsertServiceType>): Promise<ServiceType>;
+  deleteServiceType(id: number): Promise<void>;
+
+  // Service extras operations
+  getServiceExtras(): Promise<ServiceExtra[]>;
+  getServiceExtra(id: number): Promise<ServiceExtra | undefined>;
+  createServiceExtra(serviceExtra: InsertServiceExtra): Promise<ServiceExtra>;
+  updateServiceExtra(id: number, serviceExtra: Partial<InsertServiceExtra>): Promise<ServiceExtra>;
+  deleteServiceExtra(id: number): Promise<void>;
 
   // Payment operations
   getPaymentsByService(serviceId: number): Promise<Payment[]>;
@@ -508,6 +516,38 @@ export class DatabaseStorage implements IStorage {
       .where(eq(serviceTypes.id, id))
       .returning();
     return updatedServiceType;
+  }
+
+  async deleteServiceType(id: number): Promise<void> {
+    await db.delete(serviceTypes).where(eq(serviceTypes.id, id));
+  }
+
+  // Service extras operations
+  async getServiceExtras(): Promise<ServiceExtra[]> {
+    return await db.select().from(serviceExtras).orderBy(asc(serviceExtras.descricao));
+  }
+
+  async getServiceExtra(id: number): Promise<ServiceExtra | undefined> {
+    const [serviceExtra] = await db.select().from(serviceExtras).where(eq(serviceExtras.id, id));
+    return serviceExtra;
+  }
+
+  async createServiceExtra(serviceExtra: InsertServiceExtra): Promise<ServiceExtra> {
+    const [newServiceExtra] = await db.insert(serviceExtras).values(serviceExtra).returning();
+    return newServiceExtra;
+  }
+
+  async updateServiceExtra(id: number, serviceExtra: Partial<InsertServiceExtra>): Promise<ServiceExtra> {
+    const [updatedServiceExtra] = await db
+      .update(serviceExtras)
+      .set(serviceExtra)
+      .where(eq(serviceExtras.id, id))
+      .returning();
+    return updatedServiceExtra;
+  }
+
+  async deleteServiceExtra(id: number): Promise<void> {
+    await db.delete(serviceExtras).where(eq(serviceExtras.id, id));
   }
 
   // Payment operations

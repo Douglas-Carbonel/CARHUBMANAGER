@@ -926,6 +926,104 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     }
   });
 
+  // Service Types management routes
+  app.get("/api/admin/service-types", requireAdmin, async (req, res) => {
+    try {
+      const serviceTypes = await storage.getServiceTypes();
+      res.json(serviceTypes);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch service types" });
+    }
+  });
+
+  app.post("/api/admin/service-types", requireAdmin, async (req, res) => {
+    try {
+      const serviceTypeData = insertServiceTypeSchema.parse(req.body);
+      const serviceType = await storage.createServiceType(serviceTypeData);
+      res.json(serviceType);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        res.status(400).json({ message: "Invalid service type data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create service type" });
+      }
+    }
+  });
+
+  app.put("/api/admin/service-types/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const serviceTypeData = insertServiceTypeSchema.partial().parse(req.body);
+      const serviceType = await storage.updateServiceType(id, serviceTypeData);
+      res.json(serviceType);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        res.status(400).json({ message: "Invalid service type data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update service type" });
+      }
+    }
+  });
+
+  app.delete("/api/admin/service-types/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteServiceType(id);
+      res.json({ message: "Service type deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete service type" });
+    }
+  });
+
+  // Service Extras management routes
+  app.get("/api/admin/service-extras", requireAdmin, async (req, res) => {
+    try {
+      const serviceExtras = await storage.getServiceExtras();
+      res.json(serviceExtras);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch service extras" });
+    }
+  });
+
+  app.post("/api/admin/service-extras", requireAdmin, async (req, res) => {
+    try {
+      const serviceExtraData = insertServiceExtraSchema.parse(req.body);
+      const serviceExtra = await storage.createServiceExtra(serviceExtraData);
+      res.json(serviceExtra);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        res.status(400).json({ message: "Invalid service extra data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create service extra" });
+      }
+    }
+  });
+
+  app.put("/api/admin/service-extras/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const serviceExtraData = insertServiceExtraSchema.partial().parse(req.body);
+      const serviceExtra = await storage.updateServiceExtra(id, serviceExtraData);
+      res.json(serviceExtra);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        res.status(400).json({ message: "Invalid service extra data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update service extra" });
+      }
+    }
+  });
+
+  app.delete("/api/admin/service-extras/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteServiceExtra(id);
+      res.json({ message: "Service extra deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete service extra" });
+    }
+  });
+
 
 
   app.get("/api/login", (req, res) => {

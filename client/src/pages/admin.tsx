@@ -49,9 +49,19 @@ import {
   Plus,
   ArrowLeft,
   Home,
+  Settings,
+  Wrench,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Link } from "wouter";
+import ServiceTypesManagement from "@/components/ServiceTypesManagement";
+import ServiceExtrasManagement from "@/components/ServiceExtrasManagement";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 interface User {
   id: number;
@@ -311,24 +321,15 @@ export default function AdminPage() {
               </Link>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                  Administração de Usuários
+                  Administração do Sistema
                 </h1>
                 <p className="text-gray-600">
-                  Gerencie usuários e suas permissões no sistema
+                  Gerencie usuários, tipos de serviços e configurações do sistema
                 </p>
               </div>
             </div>
 
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  onClick={resetForm}
-                  className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-medium px-6 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo Usuário
-                </Button>
-              </DialogTrigger>
+
                 
                 <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
@@ -479,7 +480,186 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Filters */}
+        {/* Admin Tabs */}
+        <Tabs defaultValue="users" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Usuários
+            </TabsTrigger>
+            <TabsTrigger value="service-types" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Tipos de Serviços
+            </TabsTrigger>
+            <TabsTrigger value="service-extras" className="flex items-center gap-2">
+              <Wrench className="h-4 w-4" />
+              Adicionais
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="users" className="space-y-6">
+            {/* User Management Dialog */}
+            <div className="flex justify-end">
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    onClick={resetForm}
+                    className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-medium px-6 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Novo Usuário
+                  </Button>
+                </DialogTrigger>
+                
+                <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="text-xl font-semibold text-gray-900">
+                      {editingUser ? "Editar Usuário" : "Novo Usuário"}
+                    </DialogTitle>
+                    <DialogDescription className="text-gray-600">
+                      {editingUser ? "Edite as informações do usuário" : "Crie um novo usuário no sistema"}
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="firstName">Nome</Label>
+                        <Input
+                          id="firstName"
+                          value={formData.firstName}
+                          onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                          className={errors.firstName ? "border-red-500" : ""}
+                        />
+                        {errors.firstName && (
+                          <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <Label htmlFor="lastName">Sobrenome</Label>
+                        <Input
+                          id="lastName"
+                          value={formData.lastName}
+                          onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+                          className={errors.lastName ? "border-red-500" : ""}
+                        />
+                        {errors.lastName && (
+                          <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="username">Nome de usuário</Label>
+                      <Input
+                        id="username"
+                        value={formData.username}
+                        onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                        className={errors.username ? "border-red-500" : ""}
+                      />
+                      {errors.username && (
+                        <p className="text-red-500 text-xs mt-1">{errors.username}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="email">Email (opcional)</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                        className={errors.email ? "border-red-500" : ""}
+                      />
+                      {errors.email && (
+                        <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="password">
+                        {editingUser ? "Nova Senha (deixe vazio para manter)" : "Senha"}
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          value={formData.password}
+                          onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                          className={errors.password ? "border-red-500" : ""}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                      {errors.password && (
+                        <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="role">Função</Label>
+                      <Select
+                        value={formData.role}
+                        onValueChange={(value: "admin" | "technician") =>
+                          setFormData(prev => ({ ...prev, role: value }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="admin">Administrador</SelectItem>
+                          <SelectItem value="technician">Colaborador</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="isActive"
+                        checked={formData.isActive}
+                        onCheckedChange={(checked) =>
+                          setFormData(prev => ({ ...prev, isActive: checked }))
+                        }
+                      />
+                      <Label htmlFor="isActive">Usuário ativo</Label>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setIsDialogOpen(false)}
+                        className="w-full sm:w-auto"
+                      >
+                        Cancelar
+                      </Button>
+                      <Button 
+                        type="submit"
+                        disabled={createUserMutation.isPending || updateUserMutation.isPending}
+                        className="w-full sm:w-auto bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700"
+                      >
+                        {editingUser ? "Atualizar" : "Criar"}
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {/* Filters */}
         <Card className="border-0 shadow-lg">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg text-gray-800">Filtros</CardTitle>
@@ -516,6 +696,113 @@ export default function AdminPage() {
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="active">Ativo</SelectItem>
+                  <SelectItem value="inactive">Inativo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Users Display */}
+        <Card className="border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-lg text-gray-800">
+              Usuários ({filteredUsers.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto"></div>
+                <p className="mt-2 text-gray-500">Carregando usuários...</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Função</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Data de Criação</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {user.firstName} {user.lastName}
+                          </div>
+                          <div className="text-sm text-gray-500">@{user.username}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-gray-600">
+                          {user.email || "Não informado"}
+                        </span>
+                      </TableCell>
+                      <TableCell>{getRoleBadge(user.role || "technician")}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={user.isActive ? "default" : "secondary"}
+                          className={
+                            user.isActive
+                              ? "bg-green-100 text-green-800 hover:bg-green-200"
+                              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                          }
+                        >
+                          {user.isActive ? "Ativo" : "Inativo"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-gray-600 text-sm">
+                          {new Date(user.createdAt).toLocaleDateString("pt-BR")}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(user)}
+                            className="text-teal-600 hover:text-teal-700 hover:bg-teal-50"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(user.id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+          </TabsContent>
+
+          <TabsContent value="service-types">
+            <ServiceTypesManagement />
+          </TabsContent>
+
+          <TabsContent value="service-extras">
+            <ServiceExtrasManagement />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}
                   <SelectItem value="inactive">Inativo</SelectItem>
                 </SelectContent>
               </Select>
