@@ -49,7 +49,6 @@ interface ServiceExtra {
 const serviceExtraSchema = z.object({
   descricao: z.string().min(1, "Descrição é obrigatória"),
   valorPadrao: z.string().optional(),
-  isActive: z.boolean().default(true),
 });
 
 type ServiceExtraFormData = z.infer<typeof serviceExtraSchema>;
@@ -61,7 +60,6 @@ export default function ServiceExtrasManagement() {
   const [formData, setFormData] = useState<ServiceExtraFormData>({
     descricao: "",
     valorPadrao: "",
-    isActive: true,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -167,7 +165,6 @@ export default function ServiceExtrasManagement() {
     setFormData({
       descricao: "",
       valorPadrao: "",
-      isActive: true,
     });
     setErrors({});
     setEditingServiceExtra(null);
@@ -178,7 +175,6 @@ export default function ServiceExtrasManagement() {
     setFormData({
       descricao: serviceExtra.descricao,
       valorPadrao: serviceExtra.valorPadrao || "",
-      isActive: serviceExtra.isActive ?? true,
     });
     setIsDialogOpen(true);
   };
@@ -273,14 +269,7 @@ export default function ServiceExtrasManagement() {
                 />
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="isActive"
-                  checked={formData.isActive}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
-                />
-                <Label htmlFor="isActive">Ativo</Label>
-              </div>
+
 
               <div className="flex justify-end space-x-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
@@ -328,7 +317,6 @@ export default function ServiceExtrasManagement() {
               <TableRow>
                 <TableHead>Descrição</TableHead>
                 <TableHead>Valor Padrão</TableHead>
-                <TableHead>Status</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -338,11 +326,6 @@ export default function ServiceExtrasManagement() {
                   <TableCell className="font-medium">{serviceExtra.descricao}</TableCell>
                   <TableCell>
                     {serviceExtra.valorPadrao ? `R$ ${parseFloat(serviceExtra.valorPadrao).toFixed(2)}` : "-"}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={serviceExtra.isActive ? "default" : "secondary"}>
-                      {serviceExtra.isActive ? "Ativo" : "Inativo"}
-                    </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">

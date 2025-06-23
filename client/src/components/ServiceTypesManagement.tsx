@@ -56,11 +56,6 @@ const serviceTypeSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   description: z.string().optional(),
   defaultPrice: z.string().optional(),
-  estimatedDuration: z.number().optional(),
-  isActive: z.boolean().default(true),
-  isRecurring: z.boolean().default(false),
-  intervalMonths: z.number().optional(),
-  loyaltyPoints: z.number().default(0),
 });
 
 type ServiceTypeFormData = z.infer<typeof serviceTypeSchema>;
@@ -73,11 +68,6 @@ export default function ServiceTypesManagement() {
     name: "",
     description: "",
     defaultPrice: "",
-    estimatedDuration: 60,
-    isActive: true,
-    isRecurring: false,
-    intervalMonths: 12,
-    loyaltyPoints: 0,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -184,11 +174,6 @@ export default function ServiceTypesManagement() {
       name: "",
       description: "",
       defaultPrice: "",
-      estimatedDuration: 60,
-      isActive: true,
-      isRecurring: false,
-      intervalMonths: 12,
-      loyaltyPoints: 0,
     });
     setErrors({});
     setEditingServiceType(null);
@@ -200,11 +185,6 @@ export default function ServiceTypesManagement() {
       name: serviceType.name,
       description: serviceType.description || "",
       defaultPrice: serviceType.defaultPrice || "",
-      estimatedDuration: serviceType.estimatedDuration || 60,
-      isActive: serviceType.isActive ?? true,
-      isRecurring: serviceType.isRecurring ?? false,
-      intervalMonths: serviceType.intervalMonths || 12,
-      loyaltyPoints: serviceType.loyaltyPoints || 0,
     });
     setIsDialogOpen(true);
   };
@@ -304,58 +284,9 @@ export default function ServiceTypesManagement() {
                   step="0.01"
                   value={formData.defaultPrice}
                   onChange={(e) => setFormData(prev => ({ ...prev, defaultPrice: e.target.value }))}
+                  placeholder="0.00"
                 />
               </div>
-
-              <div>
-                <Label htmlFor="estimatedDuration">Duração Estimada (minutos)</Label>
-                <Input
-                  id="estimatedDuration"
-                  type="number"
-                  value={formData.estimatedDuration}
-                  onChange={(e) => setFormData(prev => ({ ...prev, estimatedDuration: parseInt(e.target.value) || 0 }))}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="loyaltyPoints">Pontos de Fidelidade</Label>
-                <Input
-                  id="loyaltyPoints"
-                  type="number"
-                  value={formData.loyaltyPoints}
-                  onChange={(e) => setFormData(prev => ({ ...prev, loyaltyPoints: parseInt(e.target.value) || 0 }))}
-                />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="isActive"
-                  checked={formData.isActive}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
-                />
-                <Label htmlFor="isActive">Ativo</Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="isRecurring"
-                  checked={formData.isRecurring}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isRecurring: checked }))}
-                />
-                <Label htmlFor="isRecurring">Serviço Recorrente</Label>
-              </div>
-
-              {formData.isRecurring && (
-                <div>
-                  <Label htmlFor="intervalMonths">Intervalo (meses)</Label>
-                  <Input
-                    id="intervalMonths"
-                    type="number"
-                    value={formData.intervalMonths}
-                    onChange={(e) => setFormData(prev => ({ ...prev, intervalMonths: parseInt(e.target.value) || 12 }))}
-                  />
-                </div>
-              )}
 
               <div className="flex justify-end space-x-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
@@ -404,8 +335,6 @@ export default function ServiceTypesManagement() {
                 <TableHead>Nome</TableHead>
                 <TableHead>Descrição</TableHead>
                 <TableHead>Preço Padrão</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Recorrente</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -416,16 +345,6 @@ export default function ServiceTypesManagement() {
                   <TableCell className="max-w-xs truncate">{serviceType.description || "-"}</TableCell>
                   <TableCell>
                     {serviceType.defaultPrice ? `R$ ${parseFloat(serviceType.defaultPrice).toFixed(2)}` : "-"}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={serviceType.isActive ? "default" : "secondary"}>
-                      {serviceType.isActive ? "Ativo" : "Inativo"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={serviceType.isRecurring ? "default" : "outline"}>
-                      {serviceType.isRecurring ? "Sim" : "Não"}
-                    </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
