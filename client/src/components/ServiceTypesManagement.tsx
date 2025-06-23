@@ -11,7 +11,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -37,6 +36,7 @@ import {
   Search,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 interface ServiceType {
   id: number;
@@ -70,6 +70,12 @@ export default function ServiceTypesManagement() {
     defaultPrice: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    description: '',
+    onConfirm: () => {}
+  });
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -190,14 +196,20 @@ export default function ServiceTypesManagement() {
   };
 
   const handleDelete = (id: number) => {
-    if (confirm("Tem certeza que deseja excluir este tipo de serviço?")) {
-      deleteServiceTypeMutation.mutate(id);
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Excluir Tipo de Serviço',
+      description: `Tem certeza que deseja excluir este tipo de serviço?`,
+      onConfirm: () => {
+        deleteServiceTypeMutation.mutate(id);
+        setConfirmDialog({ ...confirmDialog, isOpen: false });
+      },
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const validatedData = serviceTypeSchema.parse(formData);
       setErrors({});
@@ -286,7 +298,7 @@ export default function ServiceTypesManagement() {
               Novo Tipo
             </Button>
           </DialogTrigger>
-          
+
           <DialogContent className="sm:max-w-lg max-w-[95vw] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
@@ -326,22 +338,22 @@ export default function ServiceTypesManagement() {
                   value={formData.defaultPrice}
                   onChange={(e) => {
                     let value = e.target.value;
-                    
+
                     // Remove tudo que não é número
                     value = value.replace(/[^\d]/g, '');
-                    
+
                     // Se vazio, deixa vazio
                     if (value === '') {
                       setFormData(prev => ({ ...prev, defaultPrice: '' }));
                       return;
                     }
-                    
+
                     // Converte para número e divide por 100 para ter centavos
                     const numValue = parseInt(value) / 100;
-                    
+
                     // Formata com 2 casas decimais e vírgula
                     const formatted = numValue.toFixed(2).replace('.', ',');
-                    
+
                     setFormData(prev => ({ ...prev, defaultPrice: formatted }));
                   }}
                   placeholder="0,00"
@@ -368,88 +380,100 @@ export default function ServiceTypesManagement() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
 
-      {/* Search */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Buscar</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Buscar por nome ou descrição..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </CardContent>
-      </Card>
+        {/* Search */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Buscar</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Buscar por nome ou descrição..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Service Types Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Tipos de Serviços ({filteredServiceTypes.length})</CardTitle>
-        </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <div className="min-w-full">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="min-w-[120px]">Nome</TableHead>
-                  <TableHead className="min-w-[200px] hidden sm:table-cell">Descrição</TableHead>
-                  <TableHead className="min-w-[120px]">Preço Padrão</TableHead>
-                  <TableHead className="min-w-[100px]">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredServiceTypes.map((serviceType) => (
-                  <TableRow key={serviceType.id}>
-                    <TableCell className="font-medium">
-                      <div>
-                        <div>{serviceType.name}</div>
-                        <div className="text-sm text-gray-500 sm:hidden">
-                          {serviceType.description ? serviceType.description.substring(0, 30) + '...' : "-"}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell max-w-xs truncate">
-                      {serviceType.description || "-"}
-                    </TableCell>
-                    <TableCell>
-                      {serviceType.defaultPrice ? `R$ ${parseFloat(serviceType.defaultPrice).toFixed(2).replace('.', ',')}` : "-"}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(serviceType)}
-                          className="h-8 w-8 p-0 text-teal-600 hover:text-teal-700 hover:bg-teal-50"
-                          title="Editar tipo de serviço"
-                        >
-                          <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDelete(serviceType.id)}
-                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                          title="Excluir tipo de serviço"
-                        >
-                          <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+        {/* Service Types Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Tipos de Serviços ({filteredServiceTypes.length})</CardTitle>
+          </CardHeader>
+          <CardContent className="overflow-x-auto">
+            <div className="min-w-full">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[120px]">Nome</TableHead>
+                    <TableHead className="min-w-[200px] hidden sm:table-cell">Descrição</TableHead>
+                    <TableHead className="min-w-[120px]">Preço Padrão</TableHead>
+                    <TableHead className="min-w-[100px]">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+                </TableHeader>
+                <TableBody>
+                  {filteredServiceTypes.map((serviceType) => (
+                    <TableRow key={serviceType.id}>
+                      <TableCell className="font-medium">
+                        <div>
+                          <div>{serviceType.name}</div>
+                          <div className="text-sm text-gray-500 sm:hidden">
+                            {serviceType.description ? serviceType.description.substring(0, 30) + '...' : "-"}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell max-w-xs truncate">
+                        {serviceType.description || "-"}
+                      </TableCell>
+                      <TableCell>
+                        {serviceType.defaultPrice ? `R$ ${parseFloat(serviceType.defaultPrice).toFixed(2).replace('.', ',')}` : "-"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(serviceType)}
+                            className="h-8 w-8 p-0 text-teal-600 hover:text-teal-700 hover:bg-teal-50"
+                            title="Editar tipo de serviço"
+                          >
+                            <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(serviceType.id)}
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            title="Excluir tipo de serviço"
+                          >
+                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Dialog de confirmação para exclusões */}
+        <ConfirmationDialog
+          isOpen={confirmDialog.isOpen}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+          title={confirmDialog.title}
+          description={confirmDialog.description}
+          confirmText="Excluir"
+          cancelText="Cancelar"
+          variant="destructive"
+        />
+      </div>
+    
   );
 }
