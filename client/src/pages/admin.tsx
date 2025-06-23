@@ -329,17 +329,20 @@ export default function AdminPage() {
         {/* Admin Tabs */}
         <Tabs defaultValue="users" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="users" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Usuários
+            <TabsTrigger value="users" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Usuários</span>
+              <span className="sm:hidden">Users</span>
             </TabsTrigger>
-            <TabsTrigger value="service-types" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Tipos de Serviços
+            <TabsTrigger value="service-types" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Tipos de Serviços</span>
+              <span className="sm:hidden">Tipos</span>
             </TabsTrigger>
-            <TabsTrigger value="service-extras" className="flex items-center gap-2">
-              <Wrench className="h-4 w-4" />
-              Adicionais
+            <TabsTrigger value="service-extras" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Wrench className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Adicionais</span>
+              <span className="sm:hidden">Extras</span>
             </TabsTrigger>
           </TabsList>
 
@@ -609,22 +612,26 @@ export default function AdminPage() {
                             </span>
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-1 sm:space-x-2">
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleEdit(user)}
-                                className="text-teal-600 hover:text-teal-700 hover:bg-teal-50"
+                                className="text-teal-600 hover:text-teal-700 hover:bg-teal-50 h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
+                                title="Editar usuário"
                               >
-                                <Edit className="h-4 w-4" />
+                                <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                                <span className="hidden sm:inline ml-1">Editar</span>
                               </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleDelete(user.id)}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
+                                title="Excluir usuário"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                                <span className="hidden sm:inline ml-1">Excluir</span>
                               </Button>
                             </div>
                           </TableCell>

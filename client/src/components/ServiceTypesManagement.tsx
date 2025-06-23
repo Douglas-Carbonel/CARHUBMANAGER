@@ -226,7 +226,49 @@ export default function ServiceTypesManagement() {
   );
 
   if (isLoading) {
-    return <div className="p-6">Carregando tipos de serviço...</div>;
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <div className="h-8 bg-teal-200 rounded-lg w-64 animate-pulse mb-2"></div>
+            <div className="h-4 bg-teal-100 rounded w-80 animate-pulse"></div>
+          </div>
+          <div className="h-10 bg-teal-200 rounded-lg w-32 animate-pulse"></div>
+        </div>
+
+        {/* Search Card Skeleton */}
+        <Card>
+          <CardHeader>
+            <div className="h-5 bg-teal-200 rounded w-20 animate-pulse"></div>
+          </CardHeader>
+          <CardContent>
+            <div className="h-10 bg-teal-100 rounded animate-pulse"></div>
+          </CardContent>
+        </Card>
+
+        {/* Table Skeleton */}
+        <Card>
+          <CardHeader>
+            <div className="h-5 bg-teal-200 rounded w-48 animate-pulse"></div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center space-x-4 p-4 border rounded">
+                  <div className="h-4 bg-teal-100 rounded flex-1 animate-pulse"></div>
+                  <div className="h-4 bg-teal-100 rounded w-32 animate-pulse"></div>
+                  <div className="h-4 bg-teal-100 rounded w-24 animate-pulse"></div>
+                  <div className="flex space-x-2">
+                    <div className="h-8 w-8 bg-teal-200 rounded animate-pulse"></div>
+                    <div className="h-8 w-8 bg-red-200 rounded animate-pulse"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -385,17 +427,19 @@ export default function ServiceTypesManagement() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleEdit(serviceType)}
-                          className="h-8 w-8 p-0"
+                          className="h-8 w-8 p-0 text-teal-600 hover:text-teal-700 hover:bg-teal-50"
+                          title="Editar tipo de serviço"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleDelete(serviceType.id)}
-                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          title="Excluir tipo de serviço"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                       </div>
                     </TableCell>
