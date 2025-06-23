@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Edit, Trash2, Calendar, Clock, User, Car, Wrench, Calculator } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Calendar, Clock, User, Car, Wrench, Calculator, Grid3X3, CalendarDays } from "lucide-react";
 import ServiceExtras from "@/components/service/service-extras";
 import { cn } from "@/lib/utils";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
@@ -63,6 +63,183 @@ const statusLabels = {
   cancelled: "Cancelado",
 };
 
+// Calendar View Component
+function CalendarView({ services, isLoading, onEdit, onDelete, isMobile }: {
+  services: Service[];
+  isLoading: boolean;
+  onEdit: (service: Service) => void;
+  onDelete: (id: number) => void;
+  isMobile: boolean;
+}) {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  
+  // Get current month data
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const firstDayOfMonth = new Date(year, month, 1);
+  const lastDayOfMonth = new Date(year, month + 1, 0);
+  const firstDayOfWeek = firstDayOfMonth.getDay();
+  const daysInMonth = lastDayOfMonth.getDate();
+  
+  // Get services by date
+  const getServicesForDate = (date: Date) => {
+    const dateString = date.toISOString().split('T')[0];
+    return services.filter(service => service.scheduledDate === dateString);
+  };
+  
+  // Generate calendar days
+  const days = [];
+  
+  // Add empty cells for days before the first day of the month
+  for (let i = 0; i < firstDayOfWeek; i++) {
+    days.push(null);
+  }
+  
+  // Add days of the month
+  for (let day = 1; day <= daysInMonth; day++) {
+    days.push(new Date(year, month, day));
+  }
+  
+  const monthNames = [
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+  ];
+  
+  const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  
+  if (isLoading) {
+    return (
+      <Card className="bg-white/80 backdrop-blur-sm border border-teal-200">
+        <CardContent className="p-6">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-teal-200 rounded w-1/3"></div>
+            <div className="grid grid-cols-7 gap-2">
+              {[...Array(42)].map((_, i) => (
+                <div key={i} className="h-20 bg-teal-100 rounded"></div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  return (
+    <Card className="bg-white/95 backdrop-blur-sm border border-teal-200/50 shadow-lg">
+      <CardHeader className="border-b border-teal-100">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-xl font-bold text-teal-800">
+            {monthNames[month]} {year}
+          </CardTitle>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentDate(new Date(year, month - 1, 1))}
+              className="border-teal-200 text-teal-600 hover:bg-teal-50"
+            >
+              Anterior
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentDate(new Date())}
+              className="border-teal-200 text-teal-600 hover:bg-teal-50"
+            >
+              Hoje
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentDate(new Date(year, month + 1, 1))}
+              className="border-teal-200 text-teal-600 hover:bg-teal-50"
+            >
+              Próximo
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="p-6">
+        {/* Calendar Grid */}
+        <div className="space-y-4">
+          {/* Day headers */}
+          <div className={cn("grid grid-cols-7 gap-2", isMobile ? "text-xs" : "text-sm")}>
+            {dayNames.map((day) => (
+              <div key={day} className="text-center font-semibold text-teal-700 py-2">
+                {day}
+              </div>
+            ))}
+          </div>
+          
+          {/* Calendar days */}
+          <div className={cn("grid grid-cols-7 gap-2", isMobile ? "gap-1" : "gap-2")}>
+            {days.map((date, index) => {
+              if (!date) {
+                return <div key={index} className={cn("", isMobile ? "h-16" : "h-24")}></div>;
+              }
+              
+              const dayServices = getServicesForDate(date);
+              const isToday = date.toDateString() === new Date().toDateString();
+              
+              return (
+                <div
+                  key={index}
+                  className={cn(
+                    "border rounded-lg transition-all duration-200 hover:shadow-md",
+                    isToday 
+                      ? "bg-gradient-to-br from-teal-50 to-emerald-50 border-teal-300" 
+                      : "bg-white border-teal-100 hover:bg-teal-50",
+                    isMobile ? "h-16 p-1" : "h-24 p-2"
+                  )}
+                >
+                  <div className={cn("text-center font-medium", isMobile ? "text-xs mb-1" : "text-sm mb-2", isToday ? "text-teal-800" : "text-gray-700")}>
+                    {date.getDate()}
+                  </div>
+                  
+                  <div className="space-y-1 overflow-y-auto max-h-16">
+                    {dayServices.slice(0, isMobile ? 1 : 3).map((service) => (
+                      <div
+                        key={service.id}
+                        className={cn(
+                          "px-1 py-0.5 rounded text-white cursor-pointer transition-all duration-200 hover:scale-105",
+                          isMobile ? "text-xs" : "text-xs",
+                          service.status === "scheduled" ? "bg-blue-500" :
+                          service.status === "in_progress" ? "bg-yellow-500" :
+                          service.status === "completed" ? "bg-green-500" :
+                          "bg-red-500"
+                        )}
+                        onClick={() => onEdit(service)}
+                        title={`${service.customer?.name} - ${service.serviceType?.name}`}
+                      >
+                        <div className="truncate">
+                          {isMobile 
+                            ? service.customer?.name?.split(' ')[0] 
+                            : service.customer?.name
+                          }
+                        </div>
+                        {!isMobile && (
+                          <div className="truncate text-xs opacity-90">
+                            {service.serviceType?.name}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {dayServices.length > (isMobile ? 1 : 3) && (
+                      <div className={cn("text-center text-teal-600 font-medium", isMobile ? "text-xs" : "text-xs")}>
+                        +{dayServices.length - (isMobile ? 1 : 3)} mais
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function SchedulePage() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -71,6 +248,7 @@ export default function SchedulePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [periodFilter, setPeriodFilter] = useState<string>("day");
+  const [viewMode, setViewMode] = useState<"cards" | "calendar">("cards");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [serviceExtras, setServiceExtras] = useState<any[]>([]);
@@ -342,6 +520,42 @@ export default function SchedulePage() {
                     <SelectItem value="month">Este Mês</SelectItem>
                   </SelectContent>
                 </Select>
+
+                {/* View Mode Toggle */}
+                <div className={cn("bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-xl p-1 shadow-sm", isMobile ? "w-full" : "")}>
+                  <div className="flex gap-1">
+                    <Button
+                      variant={viewMode === "cards" ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setViewMode("cards")}
+                      className={cn(
+                        "transition-all duration-200 rounded-lg",
+                        viewMode === "cards" 
+                          ? "bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-md" 
+                          : "text-teal-600 hover:bg-teal-50",
+                        isMobile ? "flex-1 h-9" : "px-3"
+                      )}
+                    >
+                      <Grid3X3 className={cn("mr-2", isMobile ? "h-4 w-4" : "h-4 w-4")} />
+                      {!isMobile && "Cards"}
+                    </Button>
+                    <Button
+                      variant={viewMode === "calendar" ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setViewMode("calendar")}
+                      className={cn(
+                        "transition-all duration-200 rounded-lg",
+                        viewMode === "calendar" 
+                          ? "bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-md" 
+                          : "text-teal-600 hover:bg-teal-50",
+                        isMobile ? "flex-1 h-9" : "px-3"
+                      )}
+                    >
+                      <CalendarDays className={cn("mr-2", isMobile ? "h-4 w-4" : "h-4 w-4")} />
+                      {!isMobile && "Calendário"}
+                    </Button>
+                  </div>
+                </div>
 
                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                   <DialogTrigger asChild>
@@ -698,88 +912,100 @@ export default function SchedulePage() {
             </div>
 
             {/* Main Content */}
-            {isLoading ? (
-              <div className={cn("grid gap-4", isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3")}>
-                {[...Array(6)].map((_, i) => (
-                  <Card key={i} className="animate-pulse bg-white/80 backdrop-blur-sm border border-teal-200">
-                    <CardHeader className={cn(isMobile ? "p-4" : "")}>
-                      <div className="h-5 bg-teal-200 rounded w-3/4"></div>
-                      <div className="h-4 bg-teal-200 rounded w-1/2"></div>
-                    </CardHeader>
-                    <CardContent className={cn(isMobile ? "p-4 pt-0" : "")}>
-                      <div className="space-y-3">
-                        <div className="h-4 bg-teal-200 rounded"></div>
-                        <div className="h-4 bg-teal-200 rounded w-2/3"></div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className={cn("grid gap-4", isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3")}>
-                {filteredServices.map((service) => (
-                  <Card key={service.id} className={cn("group transition-all duration-300 bg-white/95 backdrop-blur-sm border border-teal-200/50 shadow-lg", isMobile ? "hover:shadow-lg" : "hover:shadow-2xl hover:-translate-y-1 hover:scale-105")}>
-                    <CardHeader className={cn(isMobile ? "p-4 pb-2" : "pb-4")}>
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3 flex-1 min-w-0">
-                          <div className={cn("bg-gradient-to-br from-teal-600 via-emerald-600 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0", isMobile ? "w-12 h-12" : "w-12 h-12")}>
-                            <Calendar className={cn("text-white", isMobile ? "h-5 w-5" : "h-6 w-6")} />
+            {viewMode === "cards" ? (
+              // Cards View
+              isLoading ? (
+                <div className={cn("grid gap-4", isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3")}>
+                  {[...Array(6)].map((_, i) => (
+                    <Card key={i} className="animate-pulse bg-white/80 backdrop-blur-sm border border-teal-200">
+                      <CardHeader className={cn(isMobile ? "p-4" : "")}>
+                        <div className="h-5 bg-teal-200 rounded w-3/4"></div>
+                        <div className="h-4 bg-teal-200 rounded w-1/2"></div>
+                      </CardHeader>
+                      <CardContent className={cn(isMobile ? "p-4 pt-0" : "")}>
+                        <div className="space-y-3">
+                          <div className="h-4 bg-teal-200 rounded"></div>
+                          <div className="h-4 bg-teal-200 rounded w-2/3"></div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className={cn("grid gap-4", isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3")}>
+                  {filteredServices.map((service) => (
+                    <Card key={service.id} className={cn("group transition-all duration-300 bg-white/95 backdrop-blur-sm border border-teal-200/50 shadow-lg", isMobile ? "hover:shadow-lg" : "hover:shadow-2xl hover:-translate-y-1 hover:scale-105")}>
+                      <CardHeader className={cn(isMobile ? "p-4 pb-2" : "pb-4")}>
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center space-x-3 flex-1 min-w-0">
+                            <div className={cn("bg-gradient-to-br from-teal-600 via-emerald-600 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0", isMobile ? "w-12 h-12" : "w-12 h-12")}>
+                              <Calendar className={cn("text-white", isMobile ? "h-5 w-5" : "h-6 w-6")} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <CardTitle className={cn("font-bold text-teal-800 group-hover:text-emerald-600 transition-colors", isMobile ? "text-sm leading-tight" : "text-sm")}>
+                                {service.serviceType?.name || "Serviço"}
+                              </CardTitle>
+                              <Badge className={cn("font-medium rounded-lg px-2 py-1 mt-2 inline-block", isMobile ? "text-xs" : "text-xs", statusColors[service.status as keyof typeof statusColors])}>
+                                {statusLabels[service.status as keyof typeof statusLabels]}
+                              </Badge>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <CardTitle className={cn("font-bold text-teal-800 group-hover:text-emerald-600 transition-colors", isMobile ? "text-sm leading-tight" : "text-sm")}>
-                              {service.serviceType?.name || "Serviço"}
-                            </CardTitle>
-                            <Badge className={cn("font-medium rounded-lg px-2 py-1 mt-2 inline-block", isMobile ? "text-xs" : "text-xs", statusColors[service.status as keyof typeof statusColors])}>
-                              {statusLabels[service.status as keyof typeof statusLabels]}
-                            </Badge>
+                          <div className={cn("flex space-x-1 transition-opacity flex-shrink-0", isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEdit(service)}
+                              className={cn("p-0 hover:bg-emerald-100 hover:text-emerald-600 rounded-lg", isMobile ? "h-8 w-8" : "h-8 w-8")}
+                            >
+                              <Edit className={cn(isMobile ? "h-4 w-4" : "h-4 w-4")} />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDelete(service.id)}
+                              className={cn("p-0 hover:bg-red-100 hover:text-red-600 rounded-lg", isMobile ? "h-8 w-8" : "h-8 w-8")}
+                            >
+                              <Trash2 className={cn(isMobile ? "h-4 w-4" : "h-4 w-4")} />
+                            </Button>
                           </div>
                         </div>
-                        <div className={cn("flex space-x-1 transition-opacity flex-shrink-0", isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleEdit(service)}
-                            className={cn("p-0 hover:bg-emerald-100 hover:text-emerald-600 rounded-lg", isMobile ? "h-8 w-8" : "h-8 w-8")}
-                          >
-                            <Edit className={cn(isMobile ? "h-4 w-4" : "h-4 w-4")} />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDelete(service.id)}
-                            className={cn("p-0 hover:bg-red-100 hover:text-red-600 rounded-lg", isMobile ? "h-8 w-8" : "h-8 w-8")}
-                          >
-                            <Trash2 className={cn(isMobile ? "h-4 w-4" : "h-4 w-4")} />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className={cn(isMobile ? "p-4 pt-0" : "pt-0")}>
-                      <div className="space-y-3">
-                        <div className={cn("flex items-center text-teal-700", isMobile ? "text-sm" : "text-sm")}>
-                          <User className={cn("mr-2 text-teal-500 flex-shrink-0", isMobile ? "h-4 w-4" : "h-4 w-4")} />
-                          <span className="font-medium truncate">{service.customer?.name}</span>
-                        </div>
-                        <div className={cn("flex items-center text-teal-700", isMobile ? "text-sm" : "text-sm")}>
-                          <Car className={cn("mr-2 text-teal-500 flex-shrink-0", isMobile ? "h-4 w-4" : "h-4 w-4")} />
-                          <span className="truncate">{service.vehicle?.brand} {service.vehicle?.model} - {service.vehicle?.licensePlate}</span>
-                        </div>
-                        {service.scheduledDate && (
+                      </CardHeader>
+                      <CardContent className={cn(isMobile ? "p-4 pt-0" : "pt-0")}>
+                        <div className="space-y-3">
                           <div className={cn("flex items-center text-teal-700", isMobile ? "text-sm" : "text-sm")}>
-                            <Clock className={cn("mr-2 text-teal-500 flex-shrink-0", isMobile ? "h-4 w-4" : "h-4 w-4")} />
-                            <span className="truncate">{new Date(service.scheduledDate + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
+                            <User className={cn("mr-2 text-teal-500 flex-shrink-0", isMobile ? "h-4 w-4" : "h-4 w-4")} />
+                            <span className="font-medium truncate">{service.customer?.name}</span>
                           </div>
-                        )}
-                        {service.estimatedValue && (
-                          <div className={cn("font-semibold text-emerald-600", isMobile ? "text-sm" : "text-sm")}>
-                            R$ {parseFloat(service.estimatedValue.toString()).toFixed(2)}
+                          <div className={cn("flex items-center text-teal-700", isMobile ? "text-sm" : "text-sm")}>
+                            <Car className={cn("mr-2 text-teal-500 flex-shrink-0", isMobile ? "h-4 w-4" : "h-4 w-4")} />
+                            <span className="truncate">{service.vehicle?.brand} {service.vehicle?.model} - {service.vehicle?.licensePlate}</span>
                           </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                          {service.scheduledDate && (
+                            <div className={cn("flex items-center text-teal-700", isMobile ? "text-sm" : "text-sm")}>
+                              <Clock className={cn("mr-2 text-teal-500 flex-shrink-0", isMobile ? "h-4 w-4" : "h-4 w-4")} />
+                              <span className="truncate">{new Date(service.scheduledDate + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
+                            </div>
+                          )}
+                          {service.estimatedValue && (
+                            <div className={cn("font-semibold text-emerald-600", isMobile ? "text-sm" : "text-sm")}>
+                              R$ {parseFloat(service.estimatedValue.toString()).toFixed(2)}
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )
+            ) : (
+              // Calendar View
+              <CalendarView
+                services={filteredServices}
+                isLoading={isLoading}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                isMobile={isMobile}
+              />
             )}
           </div>
         </main>
