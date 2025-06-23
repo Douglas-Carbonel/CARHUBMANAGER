@@ -222,13 +222,16 @@ function CalendarView({ services, isLoading, onEdit, onDelete, isMobile }: {
                               service.status === "completed" ? "bg-green-500 hover:bg-green-600" :
                               "bg-red-500 hover:bg-red-600"
                             )}
-                            onClick={() => onEdit(service)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEdit(service);
+                            }}
                             title={`${service.customer?.name} - ${service.serviceType?.name} ${service.scheduledTime ? `às ${service.scheduledTime.slice(0, 5)}` : ''}`}
                           >
                             <div className="truncate font-medium">
                               {isMobile 
-                                ? service.customer?.name?.split(' ')[0] 
-                                : service.customer?.name
+                                ? service.customer?.name?.split(' ')[0] || 'Cliente'
+                                : service.customer?.name || 'Cliente'
                               }
                             </div>
                             {!isMobile && (
@@ -244,8 +247,24 @@ function CalendarView({ services, isLoading, onEdit, onDelete, isMobile }: {
                           </div>
                         ))}
                         {dayServices.length > (isMobile ? 1 : 2) && (
-                          <div className={cn("text-center text-teal-600 font-medium cursor-pointer hover:text-teal-800", isMobile ? "text-xs" : "text-xs")}>
-                            +{dayServices.length - (isMobile ? 1 : 2)} mais
+                          <div 
+                            className={cn("text-center text-teal-600 font-medium cursor-pointer hover:text-teal-800 transition-colors bg-teal-50 rounded p-1", isMobile ? "text-xs" : "text-xs")}
+                            onClick={() => {
+                              // Create a better modal experience for mobile
+                              const dateStr = date.toLocaleDateString('pt-BR');
+                              const allServices = dayServices.map((s, idx) => 
+                                `${idx + 1}. ${s.customer?.name}\n   ${s.serviceType?.name}${s.scheduledTime ? `\n   Horário: ${s.scheduledTime.slice(0, 5)}` : ''}\n   Status: ${statusLabels[s.status as keyof typeof statusLabels]}`
+                              ).join('\n\n');
+                              
+                              // Create a styled alert for better UX
+                              const alertMessage = `📅 AGENDAMENTOS - ${dateStr}\n\n${allServices}\n\n💡 Toque em qualquer agendamento acima para editá-lo`;
+                              
+                              if (window.confirm(alertMessage)) {
+                                // User can tap individual services to edit them
+                              }
+                            }}
+                          >
+                            Ver todos ({dayServices.length})
                           </div>
                         )}
                       </>
@@ -474,8 +493,9 @@ export default function SchedulePage() {
 
     const matchesStatus = statusFilter === "all" || service.status === statusFilter;
 
+    // No modo calendário, não aplicar filtro de período para mostrar todos os agendamentos
     let matchesPeriod = true;
-    if (periodFilter !== "all" && service.scheduledDate) {
+    if (viewMode === "cards" && periodFilter !== "all" && service.scheduledDate) {
       const dateRange = getDateRange(periodFilter);
       if (dateRange) {
         const serviceDate = service.scheduledDate;
@@ -534,17 +554,19 @@ export default function SchedulePage() {
                   </SelectContent>
                 </Select>
 
-                <Select value={periodFilter} onValueChange={setPeriodFilter}>
-                  <SelectTrigger className={cn("bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-xl shadow-sm focus:shadow-md transition-all duration-200", isMobile ? "w-full h-11" : "w-48")}>
-                    <SelectValue placeholder="Filtrar por período" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os Períodos</SelectItem>
-                    <SelectItem value="day">Hoje</SelectItem>
-                    <SelectItem value="week">Esta Semana</SelectItem>
-                    <SelectItem value="month">Este Mês</SelectItem>
-                  </SelectContent>
-                </Select>
+{viewMode === "cards" && (
+                  <Select value={periodFilter} onValueChange={setPeriodFilter}>
+                    <SelectTrigger className={cn("bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-xl shadow-sm focus:shadow-md transition-all duration-200", isMobile ? "w-full h-11" : "w-48")}>
+                      <SelectValue placeholder="Filtrar por período" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os Períodos</SelectItem>
+                      <SelectItem value="day">Hoje</SelectItem>
+                      <SelectItem value="week">Esta Semana</SelectItem>
+                      <SelectItem value="month">Este Mês</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
 
                 {/* View Mode Toggle */}
                 <div className={cn("bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-xl p-1 shadow-sm", isMobile ? "w-full" : "")}>

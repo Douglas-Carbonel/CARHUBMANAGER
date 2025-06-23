@@ -125,6 +125,7 @@ This is a comprehensive automotive service management system built as a full-sta
 
 ```
 Changelog:
+- January 18, 2025. Improved mobile calendar experience - period filters only apply to cards view, better multiple appointments display with enhanced modal
 - January 18, 2025. Made admin panel fully responsive for mobile devices - card view for small screens, table view for desktop
 - January 18, 2025. Added confirmation dialogs for deletion in admin panel (users, service types, service extras) with consistent UI matching other pages
 - January 18, 2025. Fixed currency formatting bug in admin panel - values with commas now convert to dots before database submission
