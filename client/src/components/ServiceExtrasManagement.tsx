@@ -234,7 +234,7 @@ export default function ServiceExtrasManagement() {
             </Button>
           </DialogTrigger>
           
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-lg max-w-[95vw] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingServiceExtra ? "Editar Adicional" : "Novo Adicional"}
@@ -244,7 +244,7 @@ export default function ServiceExtrasManagement() {
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4 px-1">
               <div>
                 <Label htmlFor="descricao">Descrição *</Label>
                 <Input
@@ -261,24 +261,33 @@ export default function ServiceExtrasManagement() {
                 <Label htmlFor="valorPadrao">Valor Padrão (R$)</Label>
                 <Input
                   id="valorPadrao"
-                  type="number"
-                  step="0.01"
+                  type="text"
                   value={formData.valorPadrao}
-                  onChange={(e) => setFormData(prev => ({ ...prev, valorPadrao: e.target.value }))}
-                  placeholder="0.00"
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^\d,]/g, '').replace(',', '.');
+                    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                      setFormData(prev => ({ ...prev, valorPadrao: value }));
+                    }
+                  }}
+                  placeholder="0,00"
                 />
               </div>
 
 
 
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+              <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsDialogOpen(false)}
+                  className="w-full sm:w-auto"
+                >
                   Cancelar
                 </Button>
                 <Button 
                   type="submit"
                   disabled={createServiceExtraMutation.isPending || updateServiceExtraMutation.isPending}
-                  className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700"
+                  className="w-full sm:w-auto bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700"
                 >
                   {editingServiceExtra ? "Atualizar" : "Criar"}
                 </Button>
@@ -311,45 +320,48 @@ export default function ServiceExtrasManagement() {
         <CardHeader>
           <CardTitle>Adicionais ({filteredServiceExtras.length})</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Valor Padrão</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredServiceExtras.map((serviceExtra) => (
-                <TableRow key={serviceExtra.id}>
-                  <TableCell className="font-medium">{serviceExtra.descricao}</TableCell>
-                  <TableCell>
-                    {serviceExtra.valorPadrao ? `R$ ${parseFloat(serviceExtra.valorPadrao).toFixed(2)}` : "-"}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(serviceExtra)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(serviceExtra.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+        <CardContent className="overflow-x-auto">
+          <div className="min-w-full">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="min-w-[200px]">Descrição</TableHead>
+                  <TableHead className="min-w-[120px]">Valor Padrão</TableHead>
+                  <TableHead className="min-w-[100px]">Ações</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredServiceExtras.map((serviceExtra) => (
+                  <TableRow key={serviceExtra.id}>
+                    <TableCell className="font-medium">{serviceExtra.descricao}</TableCell>
+                    <TableCell>
+                      {serviceExtra.valorPadrao ? `R$ ${parseFloat(serviceExtra.valorPadrao).toFixed(2).replace('.', ',')}` : "-"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(serviceExtra)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(serviceExtra.id)}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
