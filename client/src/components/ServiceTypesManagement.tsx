@@ -473,6 +473,6 @@ export default function ServiceTypesManagement() {
           cancelText="Cancelar"
           variant="destructive"
         />
-      </div>
-    );
-  }
+    </div>
+  );
+}
