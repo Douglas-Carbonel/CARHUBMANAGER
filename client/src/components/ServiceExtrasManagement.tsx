@@ -11,6 +11,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -35,7 +36,6 @@ import {
   Search,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 interface ServiceExtra {
   id: number;
@@ -62,12 +62,6 @@ export default function ServiceExtrasManagement() {
     valorPadrao: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-    const [confirmDialog, setConfirmDialog] = useState({
-    isOpen: false,
-    title: '',
-    description: '',
-    onConfirm: () => {}
-  });
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -186,20 +180,14 @@ export default function ServiceExtrasManagement() {
   };
 
   const handleDelete = (id: number) => {
-      setConfirmDialog({
-      isOpen: true,
-      title: 'Excluir Adicional',
-      description: `Tem certeza que deseja excluir este adicional?`,
-      onConfirm: async () => {
-        deleteServiceExtraMutation.mutate(id);
-        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
-      }
-    });
+    if (confirm("Tem certeza que deseja excluir este adicional?")) {
+      deleteServiceExtraMutation.mutate(id);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     try {
       const validatedData = serviceExtraSchema.parse(formData);
       setErrors({});
@@ -286,7 +274,7 @@ export default function ServiceExtrasManagement() {
               Novo Adicional
             </Button>
           </DialogTrigger>
-
+          
           <DialogContent className="sm:max-w-lg max-w-[95vw] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
@@ -318,22 +306,22 @@ export default function ServiceExtrasManagement() {
                   value={formData.valorPadrao}
                   onChange={(e) => {
                     let value = e.target.value;
-
+                    
                     // Remove tudo que não é número
                     value = value.replace(/[^\d]/g, '');
-
+                    
                     // Se vazio, deixa vazio
                     if (value === '') {
                       setFormData(prev => ({ ...prev, valorPadrao: '' }));
                       return;
                     }
-
+                    
                     // Converte para número e divide por 100 para ter centavos
                     const numValue = parseInt(value) / 100;
-
+                    
                     // Formata com 2 casas decimais e vírgula
                     const formatted = numValue.toFixed(2).replace('.', ',');
-
+                    
                     setFormData(prev => ({ ...prev, valorPadrao: formatted }));
                   }}
                   placeholder="0,00"
@@ -362,18 +350,6 @@ export default function ServiceExtrasManagement() {
             </form>
           </DialogContent>
         </Dialog>
-
-        {/* Dialog de confirmação para exclusões */}
-        <ConfirmationDialog
-          isOpen={confirmDialog.isOpen}
-          onConfirm={confirmDialog.onConfirm}
-          onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
-          title={confirmDialog.title}
-          description={confirmDialog.description}
-          confirmText="Excluir"
-          cancelText="Cancelar"
-          variant="destructive"
-        />
       </div>
 
       {/* Search */}

@@ -11,9 +11,9 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -62,7 +62,6 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 interface User {
   id: number;
@@ -105,12 +104,6 @@ export default function AdminPage() {
     isActive: true
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [confirmDialog, setConfirmDialog] = useState({
-    isOpen: false,
-    title: '',
-    description: '',
-    onConfirm: () => {}
-  });
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -239,26 +232,20 @@ export default function AdminPage() {
   };
 
   const handleDelete = (id: number) => {
-    setConfirmDialog({
-      isOpen: true,
-      title: 'Excluir Usuário',
-      description: `Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.`,
-      onConfirm: async () => {
-        deleteUserMutation.mutate(id);
-        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
-      }
-    });
+    if (confirm("Tem certeza que deseja excluir este usuário?")) {
+      deleteUserMutation.mutate(id);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     try {
       // For updates, make password optional if not provided
       const schema = editingUser && !formData.password 
         ? userSchema.omit({ password: true })
         : userSchema;
-
+      
       const validatedData = schema.parse(formData);
       setErrors({});
 
@@ -372,7 +359,7 @@ export default function AdminPage() {
                     Novo Usuário
                   </Button>
                 </DialogTrigger>
-
+                
                 <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle className="text-xl font-semibold text-gray-900">
@@ -665,21 +652,6 @@ export default function AdminPage() {
             <ServiceExtrasManagement />
           </TabsContent>
         </Tabs>
-
-      {/* Dialog de confirmação para exclusões */}
-      <ConfirmationDialog
-        isOpen={confirmDialog.isOpen}
-        onConfirm={async () => {
-          await deleteUserMutation.mutate(filteredUsers.find((user) => user.id === 1)?.id || 0); // Find first user
-          setConfirmDialog(prev => ({ ...prev, isOpen: false }));
-        }}
-        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
-        title={confirmDialog.title}
-        description={confirmDialog.description}
-        confirmText="Excluir"
-        cancelText="Cancelar"
-        variant="destructive"
-      />
       </div>
     </div>
   );

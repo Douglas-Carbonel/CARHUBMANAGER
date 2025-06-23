@@ -11,6 +11,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -36,7 +37,6 @@ import {
   Search,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 interface ServiceType {
   id: number;
@@ -70,12 +70,6 @@ export default function ServiceTypesManagement() {
     defaultPrice: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [confirmDialog, setConfirmDialog] = useState({
-    isOpen: false,
-    title: '',
-    description: '',
-    onConfirm: () => {}
-  });
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -196,20 +190,14 @@ export default function ServiceTypesManagement() {
   };
 
   const handleDelete = (id: number) => {
-    setConfirmDialog({
-      isOpen: true,
-      title: 'Excluir Tipo de Serviço',
-      description: `Tem certeza que deseja excluir este tipo de serviço?`,
-      onConfirm: () => {
-        deleteServiceTypeMutation.mutate(id);
-        setConfirmDialog({ ...confirmDialog, isOpen: false });
-      },
-    });
+    if (confirm("Tem certeza que deseja excluir este tipo de serviço?")) {
+      deleteServiceTypeMutation.mutate(id);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     try {
       const validatedData = serviceTypeSchema.parse(formData);
       setErrors({});
@@ -298,7 +286,7 @@ export default function ServiceTypesManagement() {
               Novo Tipo
             </Button>
           </DialogTrigger>
-
+          
           <DialogContent className="sm:max-w-lg max-w-[95vw] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
@@ -338,22 +326,22 @@ export default function ServiceTypesManagement() {
                   value={formData.defaultPrice}
                   onChange={(e) => {
                     let value = e.target.value;
-
+                    
                     // Remove tudo que não é número
                     value = value.replace(/[^\d]/g, '');
-
+                    
                     // Se vazio, deixa vazio
                     if (value === '') {
                       setFormData(prev => ({ ...prev, defaultPrice: '' }));
                       return;
                     }
-
+                    
                     // Converte para número e divide por 100 para ter centavos
                     const numValue = parseInt(value) / 100;
-
+                    
                     // Formata com 2 casas decimais e vírgula
                     const formatted = numValue.toFixed(2).replace('.', ',');
-
+                    
                     setFormData(prev => ({ ...prev, defaultPrice: formatted }));
                   }}
                   placeholder="0,00"
@@ -380,8 +368,7 @@ export default function ServiceTypesManagement() {
             </form>
           </DialogContent>
         </Dialog>
-
-        </div>
+      </div>
 
       {/* Search */}
       <Card>
@@ -463,18 +450,6 @@ export default function ServiceTypesManagement() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Dialog de confirmação para exclusões */}
-      <ConfirmationDialog
-        isOpen={confirmDialog.isOpen}
-        onConfirm={confirmDialog.onConfirm}
-        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
-        title={confirmDialog.title}
-        description={confirmDialog.description}
-        confirmText="Excluir"
-        cancelText="Cancelar"
-        variant="destructive"
-      />
     </div>
   );
 }
