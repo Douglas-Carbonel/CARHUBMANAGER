@@ -381,99 +381,100 @@ export default function ServiceTypesManagement() {
           </DialogContent>
         </Dialog>
 
-        {/* Search */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Buscar</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Buscar por nome ou descrição..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </CardContent>
-        </Card>
+        </div>
 
-        {/* Service Types Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Tipos de Serviços ({filteredServiceTypes.length})</CardTitle>
-          </CardHeader>
-          <CardContent className="overflow-x-auto">
-            <div className="min-w-full">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="min-w-[120px]">Nome</TableHead>
-                    <TableHead className="min-w-[200px] hidden sm:table-cell">Descrição</TableHead>
-                    <TableHead className="min-w-[120px]">Preço Padrão</TableHead>
-                    <TableHead className="min-w-[100px]">Ações</TableHead>
+      {/* Search */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Buscar</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Buscar por nome ou descrição..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Service Types Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Tipos de Serviços ({filteredServiceTypes.length})</CardTitle>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          <div className="min-w-full">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="min-w-[120px]">Nome</TableHead>
+                  <TableHead className="min-w-[200px] hidden sm:table-cell">Descrição</TableHead>
+                  <TableHead className="min-w-[120px]">Preço Padrão</TableHead>
+                  <TableHead className="min-w-[100px]">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredServiceTypes.map((serviceType) => (
+                  <TableRow key={serviceType.id}>
+                    <TableCell className="font-medium">
+                      <div>
+                        <div>{serviceType.name}</div>
+                        <div className="text-sm text-gray-500 sm:hidden">
+                          {serviceType.description ? serviceType.description.substring(0, 30) + '...' : "-"}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell max-w-xs truncate">
+                      {serviceType.description || "-"}
+                    </TableCell>
+                    <TableCell>
+                      {serviceType.defaultPrice ? `R$ ${parseFloat(serviceType.defaultPrice).toFixed(2).replace('.', ',')}` : "-"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(serviceType)}
+                          className="h-8 w-8 p-0 text-teal-600 hover:text-teal-700 hover:bg-teal-50"
+                          title="Editar tipo de serviço"
+                        >
+                          <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(serviceType.id)}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          title="Excluir tipo de serviço"
+                        >
+                          <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredServiceTypes.map((serviceType) => (
-                    <TableRow key={serviceType.id}>
-                      <TableCell className="font-medium">
-                        <div>
-                          <div>{serviceType.name}</div>
-                          <div className="text-sm text-gray-500 sm:hidden">
-                            {serviceType.description ? serviceType.description.substring(0, 30) + '...' : "-"}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell max-w-xs truncate">
-                        {serviceType.description || "-"}
-                      </TableCell>
-                      <TableCell>
-                        {serviceType.defaultPrice ? `R$ ${parseFloat(serviceType.defaultPrice).toFixed(2).replace('.', ',')}` : "-"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-1">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(serviceType)}
-                            className="h-8 w-8 p-0 text-teal-600 hover:text-teal-700 hover:bg-teal-50"
-                            title="Editar tipo de serviço"
-                          >
-                            <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDelete(serviceType.id)}
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                            title="Excluir tipo de serviço"
-                          >
-                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Dialog de confirmação para exclusões */}
-        <ConfirmationDialog
-          isOpen={confirmDialog.isOpen}
-          onConfirm={confirmDialog.onConfirm}
-          onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
-          title={confirmDialog.title}
-          description={confirmDialog.description}
-          confirmText="Excluir"
-          cancelText="Cancelar"
-          variant="destructive"
-        />
-      </div>
-    </Dialog>
+      {/* Dialog de confirmação para exclusões */}
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+        title={confirmDialog.title}
+        description={confirmDialog.description}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        variant="destructive"
+      />
+    </div>
   );
 }
