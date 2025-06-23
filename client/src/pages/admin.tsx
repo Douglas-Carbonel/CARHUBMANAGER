@@ -572,86 +572,142 @@ export default function AdminPage() {
                   Usuários ({filteredUsers.length})
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto"></div>
-                    <p className="mt-2 text-gray-500">Carregando usuários...</p>
+              <CardContent className="p-4 sm:p-6">
+                {filteredUsers.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 text-sm">
+                    Nenhum usuário encontrado
                   </div>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nome</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Função</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Data de Criação</TableHead>
-                        <TableHead>Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredUsers.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium text-gray-900">
-                                {user.firstName} {user.lastName}
+                  <>
+                    {/* Mobile Card View */}
+                    <div className="block sm:hidden">
+                      <div className="space-y-3">
+                        {filteredUsers.map((user) => (
+                          <div key={user.id} className="border rounded-lg p-4 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="font-medium text-sm">{user.firstName} {user.lastName}</div>
+                                <div className="text-xs text-gray-500">@{user.username}</div>
                               </div>
-                              <div className="text-sm text-gray-500">@{user.username}</div>
+                              {getRoleBadge(user.role || "technician")}
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-gray-600">
+                            <div className="text-xs text-gray-600">
                               {user.email || "Não informado"}
-                            </span>
-                          </TableCell>
-                          <TableCell>{getRoleBadge(user.role || "technician")}</TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={user.isActive ? "default" : "secondary"}
-                              className={
-                                user.isActive
-                                  ? "bg-green-100 text-green-800 hover:bg-green-200"
-                                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                              }
-                            >
-                              {user.isActive ? "Ativo" : "Inativo"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-gray-600 text-sm">
-                              {new Date(user.createdAt).toLocaleDateString("pt-BR")}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-1 sm:space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleEdit(user)}
-                                className="text-teal-600 hover:text-teal-700 hover:bg-teal-50 h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
-                                title="Editar usuário"
-                              >
-                                <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
-                                <span className="hidden sm:inline ml-1">Editar</span>
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDelete(user.id, user.username)}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
-                                title="Excluir usuário"
-                              >
-                                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                                <span className="hidden sm:inline ml-1">Excluir</span>
-                              </Button>
                             </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                            <div className="flex items-center justify-between pt-2">
+                              <Badge
+                                variant={user.isActive ? "default" : "secondary"}
+                                className={
+                                  user.isActive
+                                    ? "bg-green-100 text-green-800 text-xs"
+                                    : "bg-gray-100 text-gray-600 text-xs"
+                                }
+                              >
+                                {user.isActive ? "Ativo" : "Inativo"}
+                              </Badge>
+                              <div className="flex space-x-1">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEdit(user)}
+                                  className="text-teal-600 hover:text-teal-700 hover:bg-teal-50 h-8 w-8 p-0"
+                                  title="Editar usuário"
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDelete(user.id, user.username)}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+                                  title="Excluir usuário"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Desktop Table View */}
+                    <div className="hidden sm:block overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="min-w-[200px]">Usuário</TableHead>
+                            <TableHead className="min-w-[200px] hidden sm:table-cell">Email</TableHead>
+                            <TableHead className="min-w-[120px]">Função</TableHead>
+                            <TableHead className="min-w-[100px] hidden md:table-cell">Status</TableHead>
+                            <TableHead className="min-w-[120px] hidden lg:table-cell">Criado em</TableHead>
+                            <TableHead className="min-w-[140px]">Ações</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredUsers.map((user) => (
+                            <TableRow key={user.id}>
+                              <TableCell>
+                                <div>
+                                  <div className="font-medium text-gray-900">
+                                    {user.firstName} {user.lastName}
+                                  </div>
+                                  <div className="text-sm text-gray-500">@{user.username}</div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="hidden sm:table-cell">
+                                <span className="text-gray-600">
+                                  {user.email || "Não informado"}
+                                </span>
+                              </TableCell>
+                              <TableCell>{getRoleBadge(user.role || "technician")}</TableCell>
+                              <TableCell className="hidden md:table-cell">
+                                <Badge
+                                  variant={user.isActive ? "default" : "secondary"}
+                                  className={
+                                    user.isActive
+                                      ? "bg-green-100 text-green-800 hover:bg-green-200"
+                                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                  }
+                                >
+                                  {user.isActive ? "Ativo" : "Inativo"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="hidden lg:table-cell">
+                                <span className="text-gray-600 text-sm">
+                                  {new Date(user.createdAt).toLocaleDateString("pt-BR")}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center space-x-1 sm:space-x-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleEdit(user)}
+                                    className="text-teal-600 hover:text-teal-700 hover:bg-teal-50 h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
+                                    title="Editar usuário"
+                                  >
+                                    <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                                    <span className="hidden sm:inline ml-1">Editar</span>
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDelete(user.id, user.username)}
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
+                                    title="Excluir usuário"
+                                  >
+                                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                                    <span className="hidden sm:inline ml-1">Excluir</span>
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </>
                 )}
               </CardContent>
             </Card>

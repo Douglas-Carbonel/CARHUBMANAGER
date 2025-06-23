@@ -291,18 +291,19 @@ export default function ServiceTypesManagement() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Tipos de Serviços</h2>
-          <p className="text-gray-600">Gerencie os tipos de serviços disponíveis</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Tipos de Serviços</h2>
+          <p className="text-sm sm:text-base text-gray-600">Gerencie os tipos de serviços disponíveis</p>
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={resetForm} className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700">
+            <Button onClick={resetForm} className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 w-full sm:w-auto text-sm">
               <Plus className="h-4 w-4 mr-2" />
-              Novo Tipo
+              <span className="hidden sm:inline">Novo Tipo</span>
+              <span className="sm:hidden">Novo</span>
             </Button>
           </DialogTrigger>
           
@@ -391,17 +392,17 @@ export default function ServiceTypesManagement() {
 
       {/* Search */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Buscar</CardTitle>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-base sm:text-lg">Buscar</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Buscar por nome ou descrição..."
+              placeholder="Buscar por nome..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 text-sm"
             />
           </div>
         </CardContent>
@@ -409,16 +410,56 @@ export default function ServiceTypesManagement() {
 
       {/* Service Types Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>Tipos de Serviços ({filteredServiceTypes.length})</CardTitle>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-base sm:text-lg">Tipos de Serviços ({filteredServiceTypes.length})</CardTitle>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <div className="min-w-full">
+        <CardContent className="p-0 sm:p-6">
+          {/* Mobile Card View */}
+          <div className="block sm:hidden">
+            <div className="space-y-3 p-4">
+              {filteredServiceTypes.map((serviceType) => (
+                <div key={serviceType.id} className="border rounded-lg p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="font-medium text-sm">{serviceType.name}</div>
+                    <div className="text-xs text-teal-600 font-medium">
+                      {serviceType.defaultPrice ? `R$ ${parseFloat(serviceType.defaultPrice).toFixed(2).replace('.', ',')}` : "-"}
+                    </div>
+                  </div>
+                  {serviceType.description && (
+                    <div className="text-xs text-gray-600">{serviceType.description}</div>
+                  )}
+                  <div className="flex justify-end space-x-1 pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(serviceType)}
+                      className="h-8 w-8 p-0 text-teal-600 hover:text-teal-700 hover:bg-teal-50"
+                      title="Editar tipo de serviço"
+                    >
+                      <Edit className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(serviceType.id, serviceType.name)}
+                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      title="Excluir tipo de serviço"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="min-w-[120px]">Nome</TableHead>
-                  <TableHead className="min-w-[200px] hidden sm:table-cell">Descrição</TableHead>
+                  <TableHead className="min-w-[200px] hidden md:table-cell">Descrição</TableHead>
                   <TableHead className="min-w-[120px]">Preço Padrão</TableHead>
                   <TableHead className="min-w-[100px]">Ações</TableHead>
                 </TableRow>
@@ -429,12 +470,12 @@ export default function ServiceTypesManagement() {
                     <TableCell className="font-medium">
                       <div>
                         <div>{serviceType.name}</div>
-                        <div className="text-sm text-gray-500 sm:hidden">
+                        <div className="text-sm text-gray-500 md:hidden">
                           {serviceType.description ? serviceType.description.substring(0, 30) + '...' : "-"}
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell max-w-xs truncate">
+                    <TableCell className="hidden md:table-cell max-w-xs truncate">
                       {serviceType.description || "-"}
                     </TableCell>
                     <TableCell>

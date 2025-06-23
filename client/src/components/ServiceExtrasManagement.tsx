@@ -279,18 +279,19 @@ export default function ServiceExtrasManagement() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Adicionais de Serviços</h2>
-          <p className="text-gray-600">Gerencie os adicionais disponíveis para os serviços</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Adicionais de Serviços</h2>
+          <p className="text-sm sm:text-base text-gray-600">Gerencie os adicionais disponíveis para os serviços</p>
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={resetForm} className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700">
+            <Button onClick={resetForm} className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 w-full sm:w-auto text-sm">
               <Plus className="h-4 w-4 mr-2" />
-              Novo Adicional
+              <span className="hidden sm:inline">Novo Adicional</span>
+              <span className="sm:hidden">Novo</span>
             </Button>
           </DialogTrigger>
           
@@ -373,17 +374,17 @@ export default function ServiceExtrasManagement() {
 
       {/* Search */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Buscar</CardTitle>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-base sm:text-lg">Buscar</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               placeholder="Buscar por descrição..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 text-sm"
             />
           </div>
         </CardContent>
@@ -391,11 +392,48 @@ export default function ServiceExtrasManagement() {
 
       {/* Service Extras Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>Adicionais ({filteredServiceExtras.length})</CardTitle>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-base sm:text-lg">Adicionais ({filteredServiceExtras.length})</CardTitle>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <div className="min-w-full">
+        <CardContent className="p-0 sm:p-6">
+          {/* Mobile Card View */}
+          <div className="block sm:hidden">
+            <div className="space-y-3 p-4">
+              {filteredServiceExtras.map((serviceExtra) => (
+                <div key={serviceExtra.id} className="border rounded-lg p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="font-medium text-sm">{serviceExtra.descricao}</div>
+                    <div className="text-xs text-teal-600 font-medium">
+                      {serviceExtra.valorPadrao ? `R$ ${parseFloat(serviceExtra.valorPadrao).toFixed(2).replace('.', ',')}` : "-"}
+                    </div>
+                  </div>
+                  <div className="flex justify-end space-x-1 pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(serviceExtra)}
+                      className="h-8 w-8 p-0 text-teal-600 hover:text-teal-700 hover:bg-teal-50"
+                      title="Editar adicional"
+                    >
+                      <Edit className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(serviceExtra.id, serviceExtra.descricao)}
+                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      title="Excluir adicional"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
