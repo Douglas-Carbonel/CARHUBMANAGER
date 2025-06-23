@@ -185,48 +185,73 @@ function CalendarView({ services, isLoading, onEdit, onDelete, isMobile }: {
                 <div
                   key={index}
                   className={cn(
-                    "border rounded-lg transition-all duration-200 hover:shadow-md",
+                    "border rounded-lg transition-all duration-200 hover:shadow-md relative",
                     isToday 
-                      ? "bg-gradient-to-br from-teal-50 to-emerald-50 border-teal-300" 
-                      : "bg-white border-teal-100 hover:bg-teal-50",
-                    isMobile ? "h-16 p-1" : "h-24 p-2"
+                      ? "bg-gradient-to-br from-teal-50 to-emerald-50 border-teal-300 shadow-md" 
+                      : dayServices.length > 0 
+                        ? "bg-white border-teal-200 hover:bg-teal-50" 
+                        : "bg-gray-50 border-gray-200 hover:bg-gray-100",
+                    isMobile ? "min-h-[80px] p-1" : "min-h-[120px] p-2"
                   )}
                 >
-                  <div className={cn("text-center font-medium", isMobile ? "text-xs mb-1" : "text-sm mb-2", isToday ? "text-teal-800" : "text-gray-700")}>
-                    {date.getDate()}
+                  <div className={cn("text-center font-medium flex items-center justify-between", isMobile ? "text-xs mb-1" : "text-sm mb-2")}>
+                    <span className={cn(isToday ? "text-teal-800 font-bold" : "text-gray-700")}>
+                      {date.getDate()}
+                    </span>
+                    {dayServices.length > 0 && (
+                      <span className={cn(
+                        "bg-teal-500 text-white rounded-full flex items-center justify-center font-bold",
+                        isMobile ? "w-4 h-4 text-xs" : "w-5 h-5 text-xs"
+                      )}>
+                        {dayServices.length}
+                      </span>
+                    )}
                   </div>
                   
-                  <div className="space-y-1 overflow-y-auto max-h-16">
-                    {dayServices.slice(0, isMobile ? 1 : 3).map((service) => (
-                      <div
-                        key={service.id}
-                        className={cn(
-                          "px-1 py-0.5 rounded text-white cursor-pointer transition-all duration-200 hover:scale-105",
-                          isMobile ? "text-xs" : "text-xs",
-                          service.status === "scheduled" ? "bg-blue-500" :
-                          service.status === "in_progress" ? "bg-yellow-500" :
-                          service.status === "completed" ? "bg-green-500" :
-                          "bg-red-500"
-                        )}
-                        onClick={() => onEdit(service)}
-                        title={`${service.customer?.name} - ${service.serviceType?.name}`}
-                      >
-                        <div className="truncate">
-                          {isMobile 
-                            ? service.customer?.name?.split(' ')[0] 
-                            : service.customer?.name
-                          }
-                        </div>
-                        {!isMobile && (
-                          <div className="truncate text-xs opacity-90">
-                            {service.serviceType?.name}
+                  <div className="space-y-1 overflow-y-auto" style={{ maxHeight: isMobile ? "40px" : "60px" }}>
+                    {dayServices.length > 0 ? (
+                      <>
+                        {dayServices.slice(0, isMobile ? 1 : 2).map((service) => (
+                          <div
+                            key={service.id}
+                            className={cn(
+                              "px-2 py-1 rounded-md text-white cursor-pointer transition-all duration-200 hover:scale-105 shadow-sm",
+                              isMobile ? "text-xs" : "text-xs",
+                              service.status === "scheduled" ? "bg-blue-500 hover:bg-blue-600" :
+                              service.status === "in_progress" ? "bg-yellow-500 hover:bg-yellow-600" :
+                              service.status === "completed" ? "bg-green-500 hover:bg-green-600" :
+                              "bg-red-500 hover:bg-red-600"
+                            )}
+                            onClick={() => onEdit(service)}
+                            title={`${service.customer?.name} - ${service.serviceType?.name} ${service.scheduledTime ? `às ${service.scheduledTime.slice(0, 5)}` : ''}`}
+                          >
+                            <div className="truncate font-medium">
+                              {isMobile 
+                                ? service.customer?.name?.split(' ')[0] 
+                                : service.customer?.name
+                              }
+                            </div>
+                            {!isMobile && (
+                              <div className="truncate text-xs opacity-90">
+                                {service.serviceType?.name}
+                              </div>
+                            )}
+                            {service.scheduledTime && (
+                              <div className="text-xs opacity-80">
+                                {service.scheduledTime.slice(0, 5)}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        {dayServices.length > (isMobile ? 1 : 2) && (
+                          <div className={cn("text-center text-teal-600 font-medium cursor-pointer hover:text-teal-800", isMobile ? "text-xs" : "text-xs")}>
+                            +{dayServices.length - (isMobile ? 1 : 2)} mais
                           </div>
                         )}
-                      </div>
-                    ))}
-                    {dayServices.length > (isMobile ? 1 : 3) && (
-                      <div className={cn("text-center text-teal-600 font-medium", isMobile ? "text-xs" : "text-xs")}>
-                        +{dayServices.length - (isMobile ? 1 : 3)} mais
+                      </>
+                    ) : (
+                      <div className="text-gray-400 text-xs text-center py-1">
+                        {/* Espaço vazio para dias sem agendamentos */}
                       </div>
                     )}
                   </div>
