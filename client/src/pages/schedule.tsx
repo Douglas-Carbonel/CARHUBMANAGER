@@ -64,12 +64,13 @@ const statusLabels = {
 };
 
 // Calendar View Component
-function CalendarView({ services, isLoading, onEdit, onDelete, isMobile }: {
+function CalendarView({ services, isLoading, onEdit, onDelete, isMobile, onDayClick }: {
   services: Service[];
   isLoading: boolean;
   onEdit: (service: Service) => void;
   onDelete: (id: number) => void;
   isMobile: boolean;
+  onDayClick?: (date: Date, services: Service[]) => void;
 }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   
@@ -194,12 +195,8 @@ function CalendarView({ services, isLoading, onEdit, onDelete, isMobile }: {
                     isMobile ? "min-h-[90px] p-1" : "min-h-[120px] p-2"
                   )}
                   onClick={() => {
-                    if (isMobile && dayServices.length > 1) {
-                      setDayServicesModal({
-                        isOpen: true,
-                        date: date,
-                        services: dayServices
-                      });
+                    if (isMobile && dayServices.length > 1 && onDayClick) {
+                      onDayClick(date, dayServices);
                     }
                   }}
                 >
@@ -262,12 +259,8 @@ function CalendarView({ services, isLoading, onEdit, onDelete, isMobile }: {
                             className={cn("text-center text-teal-600 font-medium cursor-pointer hover:text-teal-800 transition-colors bg-teal-50 rounded p-1", isMobile ? "text-xs" : "text-xs")}
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (isMobile) {
-                                setDayServicesModal({
-                                  isOpen: true,
-                                  date: date,
-                                  services: dayServices
-                                });
+                              if (isMobile && onDayClick) {
+                                onDayClick(date, dayServices);
                               }
                             }}
                           >
@@ -1068,6 +1061,13 @@ export default function SchedulePage() {
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 isMobile={isMobile}
+                onDayClick={(date, services) => {
+                  setDayServicesModal({
+                    isOpen: true,
+                    date: date,
+                    services: services
+                  });
+                }}
               />
             )}
           </div>
