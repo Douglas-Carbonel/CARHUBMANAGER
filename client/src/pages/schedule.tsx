@@ -1073,6 +1073,72 @@ export default function SchedulePage() {
           </div>
         </main>
 
+        {/* Modal para mostrar todos os agendamentos do dia */}
+        <Dialog open={dayServicesModal.isOpen} onOpenChange={(open) => setDayServicesModal(prev => ({ ...prev, isOpen: open }))}>
+          <DialogContent className={cn("bg-gradient-to-br from-slate-50 to-blue-50/30", isMobile ? "max-w-[95vw] w-[95vw] h-auto max-h-[80vh] m-2 p-4" : "max-w-md")}>
+            <DialogHeader className="pb-4">
+              <DialogTitle className={cn("font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent", isMobile ? "text-lg" : "text-xl")}>
+                Agendamentos - {dayServicesModal.date?.toLocaleDateString('pt-BR')}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+              {dayServicesModal.services.map((service) => (
+                <div
+                  key={service.id}
+                  className={cn(
+                    "p-4 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-md",
+                    service.status === "scheduled" ? "bg-blue-50 border-blue-200 hover:bg-blue-100" :
+                    service.status === "in_progress" ? "bg-yellow-50 border-yellow-200 hover:bg-yellow-100" :
+                    service.status === "completed" ? "bg-green-50 border-green-200 hover:bg-green-100" :
+                    "bg-red-50 border-red-200 hover:bg-red-100"
+                  )}
+                  onClick={() => {
+                    setDayServicesModal({ isOpen: false, date: null, services: [] });
+                    handleEdit(service);
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-gray-800">
+                      {service.customer?.name || 'Cliente'}
+                    </h3>
+                    <Badge className={cn(
+                      "text-xs",
+                      service.status === "scheduled" ? "bg-blue-100 text-blue-800" :
+                      service.status === "in_progress" ? "bg-yellow-100 text-yellow-800" :
+                      service.status === "completed" ? "bg-green-100 text-green-800" :
+                      "bg-red-100 text-red-800"
+                    )}>
+                      {statusLabels[service.status as keyof typeof statusLabels]}
+                    </Badge>
+                  </div>
+                  <div className="space-y-1 text-sm text-gray-600">
+                    <div className="flex items-center">
+                      <Car className="h-4 w-4 mr-2 text-teal-600" />
+                      {service.vehicle?.brand} {service.vehicle?.model} - {service.vehicle?.licensePlate}
+                    </div>
+                    <div className="flex items-center">
+                      <Wrench className="h-4 w-4 mr-2 text-teal-600" />
+                      {service.serviceType?.name}
+                    </div>
+                    {service.scheduledTime && (
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 mr-2 text-teal-600" />
+                        {service.scheduledTime.slice(0, 5)}
+                      </div>
+                    )}
+                    {service.estimatedValue && (
+                      <div className="flex items-center">
+                        <Calculator className="h-4 w-4 mr-2 text-teal-600" />
+                        R$ {Number(service.estimatedValue).toFixed(2)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Dialog de confirmação para exclusões */}
         <ConfirmationDialog
           isOpen={confirmDialog.isOpen}
