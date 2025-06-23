@@ -202,7 +202,13 @@ export default function ServiceExtrasManagement() {
     e.preventDefault();
     
     try {
-      const validatedData = serviceExtraSchema.parse(formData);
+      // Converter vírgula para ponto no valor antes de validar
+      const formDataToSubmit = {
+        ...formData,
+        valorPadrao: formData.valorPadrao ? formData.valorPadrao.replace(',', '.') : undefined
+      };
+      
+      const validatedData = serviceExtraSchema.parse(formDataToSubmit);
       setErrors({});
 
       if (editingServiceExtra) {

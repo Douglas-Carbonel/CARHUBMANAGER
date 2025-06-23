@@ -125,6 +125,8 @@ This is a comprehensive automotive service management system built as a full-sta
 
 ```
 Changelog:
+- January 18, 2025. Added confirmation dialogs for deletion in admin panel (users, service types, service extras) with consistent UI matching other pages
+- January 18, 2025. Fixed currency formatting bug in admin panel - values with commas now convert to dots before database submission
 - June 21, 2025. Redesigned dashboard with minimalist professional style - clean cards, improved spacing, modern metrics display
 - June 21, 2025. Updated dashboard stats cards with currency formatting, percentage changes, and professional icons
 - June 21, 2025. Restructured dashboard layout to match professional design reference with better visual hierarchy

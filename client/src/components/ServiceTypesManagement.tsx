@@ -212,7 +212,13 @@ export default function ServiceTypesManagement() {
     e.preventDefault();
     
     try {
-      const validatedData = serviceTypeSchema.parse(formData);
+      // Converter vírgula para ponto no preço antes de validar
+      const formDataToSubmit = {
+        ...formData,
+        defaultPrice: formData.defaultPrice ? formData.defaultPrice.replace(',', '.') : undefined
+      };
+      
+      const validatedData = serviceTypeSchema.parse(formDataToSubmit);
       setErrors({});
 
       if (editingServiceType) {
