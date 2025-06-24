@@ -799,8 +799,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const analytics = await storage.getCustomerAnalytics();
       res.json(analytics);
-    } catch (error<previous_generation>```cpp
-) {
+    } catch (error: any) {
       console.error("Error getting customer analytics:", error);
       res.status(500).json({ message: "Failed to get customer analytics" });
     }
