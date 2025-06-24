@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Trash2 } from "lucide-react";
-import type { ServiceExtra, ServiceExtraItem } from "@shared/schema";
+import type { ServiceExtra, ServiceExtraItem, ServiceType } from "@shared/schema";
 
 // Utility functions for currency formatting
 const formatCurrency = (value: string): string => {
@@ -64,10 +64,24 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
   const [extras, setExtras] = useState<ServiceExtraRow[]>([]);
 
   // Load available service extras
-  const { data: availableExtras = [] } = useQuery<ServiceExtra[]>({
+  const { data: serviceExtras = [] } = useQuery<ServiceExtra[]>({
     queryKey: ["/api/service-extras"],
     queryFn: async () => {
       const res = await fetch("/api/service-extras", {
+        credentials: "include",
+      });
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${res.statusText}`);
+      }
+      return await res.json();
+    },
+  });
+
+  // Buscar service types disponíveis
+  const { data: serviceTypes = [] } = useQuery<ServiceType[]>({
+    queryKey: ["/api/service-types"],
+    queryFn: async () => {
+      const res = await fetch("/api/service-types", {
         credentials: "include",
       });
       if (!res.ok) {
@@ -231,10 +245,20 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
     createExtraItemMutation.mutate(data);
   };
 
+  // Usar service types como serviços disponíveis, filtrando os já selecionados
+  const availableServices = serviceTypes
+    .filter((service) => service.isActive)
+    .filter((service) => !extras.some((selected) => selected.serviceExtraId === service.id))
+    .map((service) => ({
+      id: service.id,
+      descricao: service.name,
+      preco: service.defaultPrice || "0.00"
+    }));
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Label className="text-sm font-medium text-gray-700">Adicionais do Serviço</Label>
+        <Label className="text-sm font-medium text-gray-700">Serviços</Label>
         <Button
           type="button"
           variant="outline"
@@ -253,18 +277,18 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
             <CardContent className="p-4">
               <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
                 <div className="md:col-span-4">
-                  <Label className="text-sm text-gray-600 font-medium">Adicional</Label>
+                  <Label className="text-sm text-gray-600 font-medium">Serviço</Label>
                   <Select
                     value={extra.serviceExtraId.toString()}
                     onValueChange={(value) => updateExtra(index, 'serviceExtraId', parseInt(value))}
                   >
                     <SelectTrigger className="h-12 text-base">
-                      <SelectValue placeholder="Selecione um adicional" />
+                      <SelectValue placeholder="Selecione um serviço" />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableExtras.map((availableExtra) => (
-                        <SelectItem key={availableExtra.id} value={availableExtra.id.toString()}>
-                          {availableExtra.name}
+                      {availableServices.map((availableService) => (
+                        <SelectItem key={availableService.id} value={availableService.id.toString()}>
+                          {availableService.descricao}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -327,7 +351,7 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
         {extras.length === 0 && (
           <Card className="border border-dashed border-gray-300">
             <CardContent className="p-6 text-center">
-              <p className="text-gray-500 text-sm">Sem adicionais até o momento. Clique em 'Adicionar' para cadastrar.</p>
+              <p className="text-gray-500 text-sm">Sem serviços até o momento. Clique em 'Adicionar' para cadastrar.</p>
             </CardContent>
           </Card>
         )}
