@@ -1582,21 +1582,15 @@ export default function Services() {
                     <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                       <div className="flex items-center mb-3">
                         <Plus className="h-5 w-5 text-purple-600 mr-2" />
-                        <span className="font-medium text-purple-800">Adicionais Inclusos</span>
+                        <span className="font-medium text-purple-800">Serviços Inclusos</span>
                       </div>
                       <div className="space-y-2">
                         {serviceExtras.map((extra, index) => (
                           <div key={index} className="flex justify-between items-center text-sm">
-                            <span className="text-purple-700">{extra.serviceExtra?.descricao || `Adicional ${index + 1}`}</span>
+                            <span className="text-purple-700">{extra.serviceExtra?.descricao || `Serviço ${index + 1}`}</span>
                             <span className="font-medium text-purple-800">R$ {Number(extra.valor || 0).toFixed(2)}</span>
                           </div>
                         ))}
-                        <div className="border-t border-purple-300 pt-2 mt-2">
-                          <div className="flex justify-between font-medium">
-                            <span className="text-purple-700">Subtotal Extras:</span>
-                            <span className="text-purple-800">R$ {calculateExtrasTotal()}</span>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   )}
