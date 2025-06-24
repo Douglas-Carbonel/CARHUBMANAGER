@@ -154,81 +154,76 @@ export class NotificationService {
     }
   }
 
-  // Send reminder notifications
+  // Send reminder notifications  
   async sendServiceReminders() {
     try {
       const now = new Date();
       
-      // Get pending reminders that should be sent now
-      const pendingReminders = await db.query.serviceReminders.findMany({
-        where: and(
-          eq(serviceReminders.notificationSent, false),
-          lte(serviceReminders.scheduledFor, now)
-        ),
-        with: {
-          service: {
-            with: {
-              customer: true,
-              vehicle: true,
-              technician: true,
-            }
+      // Check if tables exist before querying
+      const tableCheck = await db.execute(sql`
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'service_reminders'
+      `);
+      
+      if (tableCheck.rows.length === 0) {
+        console.log('service_reminders table does not exist yet');
+        return false;
+      }
+      
+      // Find reminders that should be sent now using raw SQL
+      const reminders = await db.execute(sql`
+        SELECT 
+          sr.*,
+          s.id as service_id,
+          s.customer_id,
+          s.vehicle_id,
+          s.service_type_id,
+          c.name as customer_name,
+          v.brand as vehicle_brand,
+          v.model as vehicle_model,
+          v.license_plate as vehicle_plate,
+          st.name as service_type_name
+        FROM service_reminders sr
+        JOIN services s ON sr.service_id = s.id
+        LEFT JOIN customers c ON s.customer_id = c.id
+        LEFT JOIN vehicles v ON s.vehicle_id = v.id
+        LEFT JOIN service_types st ON s.service_type_id = st.id
+        WHERE sr.scheduled_for <= ${now} AND sr.notification_sent = false
+      `);
+
+      console.log(`Found ${reminders.rows.length} reminders to send`);
+
+      for (const reminder of reminders.rows) {
+        const payload = {
+          title: 'Lembrete de Serviço - CarHub',
+          body: `${reminder.customer_name} - ${reminder.vehicle_brand} ${reminder.vehicle_model} (${reminder.vehicle_plate}) - ${reminder.service_type_name} em ${reminder.reminder_minutes} minutos`,
+          icon: '/icon-192x192.png',
+          badge: '/icon-192x192.png',
+          data: {
+            serviceId: reminder.service_id,
+            type: 'service-reminder'
           }
-        }
-      });
+        };
 
-      console.log(`Found ${pendingReminders.length} pending reminders to process`);
-
-      for (const reminder of pendingReminders) {
-        const service = reminder.service;
+        // Send to all admin users
+        const adminUsers = [1]; // Assuming admin user ID is 1
         
-        if (!service.customer || !service.vehicle) {
-          continue;
-        }
-
-        // Send notification to technician if assigned
-        if (service.technicianId) {
-          const payload = {
-            title: '🔔 Lembrete de Serviço',
-            body: `Serviço agendado em ${reminder.reminderMinutes} min: ${service.customer.name} - ${service.vehicle.brand} ${service.vehicle.model} (${service.vehicle.licensePlate})`,
-            data: {
-              serviceId: service.id,
-              type: 'service_reminder',
-              customerId: service.customerId,
-              vehicleId: service.vehicleId,
-            }
-          };
-
-          await this.sendNotificationToUser(service.technicianId, payload);
-        }
-
-        // Send notification to all admin users
-        const adminUsers = await db.query.users.findMany({
-          where: eq(users.role, 'admin')
-        });
-
-        for (const admin of adminUsers) {
-          const payload = {
-            title: '🔔 Lembrete de Serviço',
-            body: `Serviço agendado em ${reminder.reminderMinutes} min: ${service.customer.name} - ${service.vehicle.brand} ${service.vehicle.model} (${service.vehicle.licensePlate})`,
-            data: {
-              serviceId: service.id,
-              type: 'service_reminder',
-              customerId: service.customerId,
-              vehicleId: service.vehicleId,
-            }
-          };
-
-          await this.sendNotificationToUser(admin.id, payload);
+        for (const adminId of adminUsers) {
+          await this.sendNotificationToUser(adminId, payload);
         }
 
         // Mark reminder as sent
-        await db.update(serviceReminders)
-          .set({ notificationSent: true })
-          .where(eq(serviceReminders.id, reminder.id));
+        await db.execute(sql`
+          UPDATE service_reminders 
+          SET notification_sent = true 
+          WHERE id = ${reminder.id}
+        `);
 
-        console.log(`Processed reminder for service ${service.id}`);
+        console.log(`Reminder sent for service ${reminder.service_id}`);
       }
-
+      
       return true;
     } catch (error) {
       console.error('Error sending service reminders:', error);
