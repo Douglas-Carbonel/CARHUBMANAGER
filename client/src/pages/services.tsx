@@ -1548,35 +1548,6 @@ export default function Services() {
                     </div>
                   </div>
 
-                  {/* Service Type */}
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-                    <div className="flex items-center mb-3">
-                      <Wrench className="h-5 w-5 text-emerald-600 mr-2" />
-                      <span className="font-medium text-emerald-800">Tipo de Serviço</span>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <div className="font-medium text-emerald-700">
-                            {(() => {
-                              const selectedServiceTypeId = form.watch("serviceTypeId");
-                              const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
-                              return selectedServiceType?.name || "Nenhum tipo selecionado";
-                            })()}
-                          </div>
-                          <div className="text-sm text-emerald-600">
-                            {(() => {
-                              const selectedServiceTypeId = form.watch("serviceTypeId");
-                              const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
-                              return selectedServiceType?.description || "";
-                            })()}
-                          </div>
-                        </div>
-                        <span className="font-bold text-emerald-800">R$ {getServiceTypePrice()}</span>
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Service Extras */}
                   {serviceExtras.length > 0 && (
                     <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
