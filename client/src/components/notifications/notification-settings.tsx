@@ -74,7 +74,17 @@ export default function NotificationSettings() {
         )}
 
         {isSubscribed && (
-          <div className="pt-4 border-t">
+          <div className="pt-4 border-t space-y-3">
+            <div className="text-sm text-green-600 bg-green-50 p-3 rounded-md">
+              <div className="flex items-center gap-2">
+                <Bell className="h-4 w-4" />
+                <span>Notificações ativadas com sucesso!</span>
+              </div>
+              <p className="mt-1">
+                Você receberá lembretes antes dos serviços agendados.
+              </p>
+            </div>
+            
             <Button
               variant="outline"
               onClick={sendTestNotification}
@@ -83,6 +93,18 @@ export default function NotificationSettings() {
               <TestTube className="h-4 w-4 mr-2" />
               Enviar Notificação de Teste
             </Button>
+          </div>
+        )}
+
+        {permission === 'default' && !isSubscribed && (
+          <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded-md">
+            <div className="flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              <span>Clique no botão acima para ativar</span>
+            </div>
+            <p className="mt-1">
+              O navegador solicitará sua permissão para enviar notificações.
+            </p>
           </div>
         )}
 

@@ -9,47 +9,77 @@ export function useNotifications() {
   const { toast } = useToast();
 
   useEffect(() => {
-    checkSupport();
+    const initializeNotifications = async () => {
+      try {
+        const initialized = await notificationManager.initialize();
+        setIsSupported(initialized);
+
+        if (initialized) {
+          const subscribed = await notificationManager.isSubscribed();
+          setIsSubscribed(subscribed);
+          console.log('Notification status:', { initialized, subscribed });
+        }
+      } catch (error) {
+        console.error('Error initializing notifications:', error);
+        setIsSupported(false);
+      }
+    };
+
+    initializeNotifications();
   }, []);
 
-  const checkSupport = async () => {
-    const supported = await notificationManager.initialize();
-    setIsSupported(supported);
-
-    if (supported) {
-      const subscribed = await notificationManager.isSubscribed();
-      setIsSubscribed(subscribed);
-    }
-  };
-
   const requestPermission = async () => {
-    if (!isSupported) return;
-
     setIsLoading(true);
     try {
-      const permissionGranted = await notificationManager.requestPermission();
+      console.log('Requesting notification permission...');
 
-      if (permissionGranted) {
-        const subscribed = await notificationManager.subscribe();
-        setIsSubscribed(subscribed);
+      // First check if we already have permission
+      if (Notification.permission === 'granted') {
+        console.log('Permission already granted, subscribing...');
+        const success = await notificationManager.subscribe();
 
-        if (subscribed) {
+        if (success) {
+          setIsSubscribed(true);
           toast({
             title: "Notificações ativadas",
-            description: "Você receberá notificações sobre seus serviços.",
+            description: "Você receberá notificações de lembretes de serviços.",
           });
         } else {
           toast({
             variant: "destructive",
-            title: "Erro",
-            description: "Não foi possível ativar as notificações. Verifique se o service worker está funcionando.",
+            title: "Erro na inscrição",
+            description: "Não foi possível se inscrever nas notificações.",
+          });
+        }
+        return;
+      }
+
+      // Request permission
+      const hasPermission = await notificationManager.requestPermission();
+      console.log('Permission result:', hasPermission);
+
+      if (hasPermission) {
+        const success = await notificationManager.subscribe();
+        console.log('Subscription result:', success);
+
+        if (success) {
+          setIsSubscribed(true);
+          toast({
+            title: "Notificações ativadas",
+            description: "Você receberá notificações de lembretes de serviços.",
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Erro na inscrição",
+            description: "Não foi possível se inscrever nas notificações.",
           });
         }
       } else {
         toast({
           variant: "destructive",
           title: "Permissão negada",
-          description: "As notificações foram bloqueadas pelo usuário.",
+          description: "Permissão para notificações foi negada. Ative nas configurações do navegador.",
         });
       }
     } catch (error) {
