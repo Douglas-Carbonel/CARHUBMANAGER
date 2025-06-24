@@ -1090,13 +1090,15 @@ export default function Services() {
                               <div className="text-sm fontbold text-slate-800 mb-3">Serviços:</div>
                               <div className="space-y-2">
                                 {/* Serviço Base */}
-                                <div className="text-sm text-slate-700">
-                                  {(() => {
-                                    const selectedServiceTypeId = form.watch("serviceTypeId");
-                                    const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
-                                    return selectedServiceType?.description || "Nenhum serviço selecionado";
-                                  })()}
-                                </div>
+                                {(() => {
+                                  const selectedServiceTypeId = form.watch("serviceTypeId");
+                                  const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
+                                  return selectedServiceType?.description ? (
+                                    <div className="text-sm text-slate-700">
+                                      {selectedServiceType.description}
+                                    </div>
+                                  ) : null;
+                                })()}
 
                                 {/* Adicionais - listados separadamente */}
                                 {serviceExtras.length > 0 && serviceExtras.map((extra, index) => (
