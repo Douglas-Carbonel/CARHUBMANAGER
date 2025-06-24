@@ -1,6 +1,4 @@
-import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { notificationManager } from "@/lib/notifications";
+import { useNotifications } from "@/hooks/useNotifications";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -8,118 +6,22 @@ import { Label } from "@/components/ui/label";
 import { Bell, BellOff, TestTube } from "lucide-react";
 
 export default function NotificationSettings() {
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [permission, setPermission] = useState<NotificationPermission>('default');
-  const { toast } = useToast();
+  const {
+    isSupported,
+    isSubscribed,
+    isLoading,
+    requestPermission,
+    unsubscribe,
+    sendTestNotification,
+  } = useNotifications();
 
-  useEffect(() => {
-    checkNotificationStatus();
-  }, []);
-
-  const checkNotificationStatus = async () => {
-    try {
-      setPermission(Notification.permission);
-      
-      if (Notification.permission === 'granted') {
-        await notificationManager.initialize();
-        const subscribed = await notificationManager.isSubscribed();
-        setIsSubscribed(subscribed);
-      }
-    } catch (error) {
-      console.error('Error checking notification status:', error);
-    }
-  };
+  const permission = Notification.permission;
 
   const handleToggleNotifications = async () => {
-    setIsLoading(true);
-    
-    try {
-      if (isSubscribed) {
-        // Unsubscribe
-        const success = await notificationManager.unsubscribe();
-        if (success) {
-          setIsSubscribed(false);
-          toast({
-            title: "Notificações desativadas",
-            description: "Você não receberá mais notificações push.",
-          });
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Erro",
-            description: "Não foi possível desativar as notificações.",
-          });
-        }
-      } else {
-        // Request permission and subscribe
-        const permissionGranted = await notificationManager.requestPermission();
-        
-        if (!permissionGranted) {
-          toast({
-            variant: "destructive",
-            title: "Permissão negada",
-            description: "É necessário permitir notificações para usar este recurso.",
-          });
-          return;
-        }
-
-        await notificationManager.initialize();
-        const success = await notificationManager.subscribe();
-        
-        if (success) {
-          setIsSubscribed(true);
-          setPermission('granted');
-          toast({
-            title: "Notificações ativadas",
-            description: "Você receberá lembretes de serviços agendados.",
-          });
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Erro",
-            description: "Não foi possível ativar as notificações.",
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error toggling notifications:', error);
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Ocorreu um erro ao configurar as notificações.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleTestNotification = async () => {
-    try {
-      const success = await notificationManager.sendTestNotification(
-        "Teste do CarHub",
-        "Esta é uma notificação de teste. Se você recebeu esta mensagem, as notificações estão funcionando!"
-      );
-      
-      if (success) {
-        toast({
-          title: "Notificação de teste enviada",
-          description: "Verifique se recebeu a notificação no seu dispositivo.",
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Erro",
-          description: "Não foi possível enviar a notificação de teste.",
-        });
-      }
-    } catch (error) {
-      console.error('Error sending test notification:', error);
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Ocorreu um erro ao enviar a notificação de teste.",
-      });
+    if (isSubscribed) {
+      await unsubscribe();
+    } else {
+      await requestPermission();
     }
   };
 
@@ -159,16 +61,40 @@ export default function NotificationSettings() {
           </div>
         )}
 
+        {isSupported && !isSubscribed && permission === 'default' && (
+          <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded-md">
+            <div className="flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              <span>Ative as notificações para receber lembretes</span>
+            </div>
+            <p className="mt-1">
+              As notificações funcionam mesmo quando o navegador não está aberto.
+            </p>
+          </div>
+        )}
+
         {isSubscribed && (
           <div className="pt-4 border-t">
             <Button
               variant="outline"
-              onClick={handleTestNotification}
+              onClick={sendTestNotification}
               className="w-full"
             >
               <TestTube className="h-4 w-4 mr-2" />
               Enviar Notificação de Teste
             </Button>
+          </div>
+        )}
+
+        {!isSupported && (
+          <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-md">
+            <div className="flex items-center gap-2">
+              <BellOff className="h-4 w-4" />
+              <span>Notificações não suportadas</span>
+            </div>
+            <p className="mt-1">
+              Seu navegador não suporta notificações push. Use um navegador moderno como Chrome, Firefox ou Safari.
+            </p>
           </div>
         )}
 

@@ -26,27 +26,27 @@ export class NotificationService {
   // Subscribe user to push notifications
   async subscribe(userId: number, subscription: {
     endpoint: string;
-    keys: {
-      p256dh: string;
-      auth: string;
-    };
+    p256dh: string;
+    auth: string;
   }) {
     try {
-      // Remove existing subscription for this user
-      await db.delete(pushSubscriptions).where(eq(pushSubscriptions.userId, userId));
-
-      // Add new subscription
-      await db.insert(pushSubscriptions).values({
-        userId,
-        endpoint: subscription.endpoint,
-        p256dh: subscription.keys.p256dh,
-        auth: subscription.keys.auth,
-      });
-
-      console.log(`User ${userId} subscribed to push notifications`);
+      console.log('Subscribing user to push notifications:', userId);
+      
+      // Remove existing subscription for this user using raw SQL
+      await db.execute(sql`
+        DELETE FROM push_subscriptions WHERE user_id = ${userId}
+      `);
+      
+      // Add new subscription using raw SQL
+      await db.execute(sql`
+        INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth)
+        VALUES (${userId}, ${subscription.endpoint}, ${subscription.p256dh}, ${subscription.auth})
+      `);
+      
+      console.log('User subscribed successfully:', userId);
       return true;
     } catch (error) {
-      console.error('Error subscribing to push notifications:', error);
+      console.error('Error subscribing user:', error);
       return false;
     }
   }
@@ -54,7 +54,9 @@ export class NotificationService {
   // Unsubscribe user from push notifications
   async unsubscribe(userId: number) {
     try {
-      await db.delete(pushSubscriptions).where(eq(pushSubscriptions.userId, userId));
+      await db.execute(sql`
+        DELETE FROM push_subscriptions WHERE user_id = ${userId}
+      `);
       console.log(`User ${userId} unsubscribed from push notifications`);
       return true;
     } catch (error) {
@@ -86,12 +88,10 @@ export class NotificationService {
 
       // Only create reminder if it's in the future
       if (reminderTime > new Date()) {
-        await db.insert(serviceReminders).values({
-          serviceId,
-          reminderMinutes,
-          scheduledFor: reminderTime,
-          notificationSent: false,
-        });
+        await db.execute(sql`
+          INSERT INTO service_reminders (service_id, reminder_minutes, scheduled_for, notification_sent)
+          VALUES (${serviceId}, ${reminderMinutes}, ${reminderTime}, false)
+        `);
 
         console.log(`Service reminder created for service ${serviceId} at ${reminderTime}`);
         return true;
@@ -108,47 +108,48 @@ export class NotificationService {
   async sendNotificationToUser(userId: number, payload: {
     title: string;
     body: string;
+    icon?: string;
+    badge?: string;
     data?: any;
   }) {
     try {
-      const userSubscriptions = await db.query.pushSubscriptions.findMany({
-        where: eq(pushSubscriptions.userId, userId)
-      });
+      const userSubscriptions = await db.execute(sql`
+        SELECT * FROM push_subscriptions WHERE user_id = ${userId}
+      `);
 
-      if (userSubscriptions.length === 0) {
+      if (userSubscriptions.rows.length === 0) {
         console.log(`No push subscriptions found for user ${userId}`);
         return false;
       }
 
-      const promises = userSubscriptions.map(async (sub) => {
+      const promises = userSubscriptions.rows.map(async (subscription: any) => {
         try {
-          await webpush.sendNotification({
-            endpoint: sub.endpoint,
-            keys: {
-              p256dh: sub.p256dh,
-              auth: sub.auth,
-            }
-          }, JSON.stringify(payload));
-          
+          await webpush.sendNotification(
+            {
+              endpoint: subscription.endpoint,
+              keys: {
+                p256dh: subscription.p256dh,
+                auth: subscription.auth,
+              },
+            },
+            JSON.stringify(payload)
+          );
           console.log(`Notification sent to user ${userId}`);
-          return true;
-        } catch (error) {
-          console.error(`Failed to send notification to subscription ${sub.id}:`, error);
-          
+        } catch (error: any) {
+          console.error(`Failed to send notification to user ${userId}:`, error);
           // If subscription is invalid, remove it
-          if (error.statusCode === 410) {
-            await db.delete(pushSubscriptions).where(eq(pushSubscriptions.id, sub.id));
-            console.log(`Removed invalid subscription ${sub.id}`);
+          if (error.statusCode === 410 || error.statusCode === 404) {
+            await db.execute(sql`
+              DELETE FROM push_subscriptions WHERE id = ${subscription.id}
+            `);
           }
-          
-          return false;
         }
       });
 
-      const results = await Promise.all(promises);
-      return results.some(result => result);
+      await Promise.allSettled(promises);
+      return true;
     } catch (error) {
-      console.error('Error sending notification:', error);
+      console.error('Error sending notification to user:', error);
       return false;
     }
   }
@@ -247,7 +248,7 @@ export class NotificationService {
 
   // Get VAPID public key
   getVapidPublicKey() {
-    return vapidPublicKey;
+    return process.env.VAPID_PUBLIC_KEY || 'BHfIRCvKu3LHHrYf4MPaPuMgCjRTz-Ty0Dn17W0EyoEfEEWzglJb8daT8O7HlH9U5oi-FIJVJBLaBB6HAVCFFYY';
   }
 }
 

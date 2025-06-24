@@ -41,12 +41,15 @@ export class NotificationManager {
       }
 
       // Get VAPID public key from server
-      const { publicKey } = await apiRequest('/api/notifications/vapid-key');
+      const response = await fetch('/api/notifications/vapid-key');
+      const { publicKey } = await response.json();
       
       if (!publicKey) {
         console.error('No VAPID public key received');
         return false;
       }
+
+      console.log('Got VAPID public key, subscribing...');
 
       // Subscribe to push notifications
       this.subscription = await this.registration.pushManager.subscribe({
@@ -54,13 +57,28 @@ export class NotificationManager {
         applicationServerKey: this.urlBase64ToUint8Array(publicKey)
       });
 
+      console.log('Push subscription created:', this.subscription);
+
       // Send subscription to server
-      await apiRequest('/api/notifications/subscribe', {
+      const subscribeResponse = await fetch('/api/notifications/subscribe', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          subscription: this.subscription.toJSON()
+          endpoint: this.subscription.endpoint,
+          keys: {
+            p256dh: this.subscription.getKey('p256dh') ? btoa(String.fromCharCode(...new Uint8Array(this.subscription.getKey('p256dh')!))) : '',
+            auth: this.subscription.getKey('auth') ? btoa(String.fromCharCode(...new Uint8Array(this.subscription.getKey('auth')!))) : ''
+          }
         })
       });
+
+      if (!subscribeResponse.ok) {
+        const errorText = await subscribeResponse.text();
+        console.error('Server error:', errorText);
+        throw new Error(`Server returned ${subscribeResponse.status}: ${errorText}`);
+      }
 
       console.log('Successfully subscribed to push notifications');
       return true;
