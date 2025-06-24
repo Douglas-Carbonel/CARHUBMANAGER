@@ -3,11 +3,11 @@ import {
   customers,
   vehicles,
   services,
-  serviceTypes,
+
   payments,
   loyaltyTracking,
-  serviceExtras,
-  serviceExtrasItems,
+  unifiedServices,
+  serviceItems,
   // photos,
   type User,
   type InsertUser,
@@ -17,16 +17,14 @@ import {
   type InsertVehicle,
   type Service,
   type InsertService,
-  type ServiceType,
-  type InsertServiceType,
+  type UnifiedService,
+  type InsertUnifiedService,
+  type ServiceItem,
+  type InsertServiceItem,
   type Payment,
   type InsertPayment,
   type Photo,
   type InsertPhoto,
-  type ServiceExtra,
-  type InsertServiceExtra,
-  type ServiceExtraItem,
-  type InsertServiceExtraItem,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, gte, lte, lt, count, sum, sql, isNotNull, or, ne } from "drizzle-orm";
@@ -58,7 +56,7 @@ export interface IStorage {
   deleteVehicle(id: number): Promise<void>;
 
   // Service operations
-  getServices(): Promise<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]>;
+  getServices(): Promise<(Service & { customer: Customer; vehicle: Vehicle; unifiedService: UnifiedService })[]>;
   getService(id: number): Promise<Service | undefined>;
   getServicesByCustomer(customerId: number): Promise<Service[]>;
   getServicesByVehicle(vehicleId: number): Promise<Service[]>;
@@ -67,19 +65,13 @@ export interface IStorage {
   updateService(id: number, service: Partial<InsertService>): Promise<Service>;
   deleteService(id: number): Promise<void>;
 
-  // Service type operations
-  getServiceTypes(): Promise<ServiceType[]>;
-  getServiceType(id: number): Promise<ServiceType | undefined>;
-  createServiceType(serviceType: InsertServiceType): Promise<ServiceType>;
-  updateServiceType(id: number, serviceType: Partial<InsertServiceType>): Promise<ServiceType>;
-  deleteServiceType(id: number): Promise<void>;
+  // Unified service operations
+  getUnifiedServices(): Promise<UnifiedService[]>;
+  getUnifiedService(id: number): Promise<UnifiedService | undefined>;
+  createUnifiedService(service: InsertUnifiedService): Promise<UnifiedService>;
+  updateUnifiedService(id: number, service: Partial<InsertUnifiedService>): Promise<UnifiedService>;
+  deleteUnifiedService(id: number): Promise<void>;
 
-  // Service extras operations
-  getServiceExtras(): Promise<ServiceExtra[]>;
-  getServiceExtra(id: number): Promise<ServiceExtra | undefined>;
-  createServiceExtra(serviceExtra: InsertServiceExtra): Promise<ServiceExtra>;
-  updateServiceExtra(id: number, serviceExtra: Partial<InsertServiceExtra>): Promise<ServiceExtra>;
-  deleteServiceExtra(id: number): Promise<void>;
 
   // Payment operations
   getPaymentsByService(serviceId: number): Promise<Payment[]>;
@@ -168,19 +160,12 @@ export interface IStorage {
     weeklyEstimatedValue: number;
   }>;
 
-  // Service extras operations
-  getServiceExtras(): Promise<ServiceExtra[]>;
-  getServiceExtra(id: number): Promise<ServiceExtra | undefined>;
-  createServiceExtra(serviceExtra: InsertServiceExtra): Promise<ServiceExtra>;
-  updateServiceExtra(id: number, serviceExtra: Partial<InsertServiceExtra>): Promise<ServiceExtra>;
-  deleteServiceExtra(id: number): Promise<void>;
-
-  // Service extras items operations
-  getServiceExtraItems(serviceId: number): Promise<(ServiceExtraItem & { serviceExtra: ServiceExtra })[]>;
-  createServiceExtraItem(item: InsertServiceExtraItem): Promise<ServiceExtraItem>;
-  updateServiceExtraItem(id: number, item: Partial<InsertServiceExtraItem>): Promise<ServiceExtraItem>;
-  deleteServiceExtraItem(id: number): Promise<void>;
-  deleteServiceExtraItemsByServiceId(serviceId: number): Promise<void>;
+  // Service items operations
+  getServiceItemsWithServices(serviceId: number): Promise<(ServiceItem & { unifiedService: UnifiedService })[]>;
+  createServiceItem(item: InsertServiceItem): Promise<ServiceItem>;
+  updateServiceItem(id: number, item: Partial<InsertServiceItem>): Promise<ServiceItem>;
+  deleteServiceItem(id: number): Promise<void>;
+  deleteServiceItemsByServiceId(serviceId: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -393,26 +378,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Service operations
-  async getServices(): Promise<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]> {
+  async getServices(): Promise<(Service & { customer: Customer; vehicle: Vehicle; unifiedService: UnifiedService })[]> {
     try {
       const result = await db
         .select({
           service: services,
           customer: customers,
           vehicle: vehicles,
-          serviceType: serviceTypes,
+          unifiedService: unifiedServices,
         })
         .from(services)
         .leftJoin(customers, eq(services.customerId, customers.id))
         .leftJoin(vehicles, eq(services.vehicleId, vehicles.id))
-        .leftJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+        .leftJoin(unifiedServices, eq(services.unifiedServiceId, unifiedServices.id))
         .orderBy(desc(services.createdAt));
 
       return result.map(row => ({
         ...row.service,
         customer: row.customer!,
         vehicle: row.vehicle!,
-        serviceType: row.serviceType!,
+        unifiedService: row.unifiedService,
       }));
     } catch (error) {
       console.error('Error fetching services:', error);
@@ -485,9 +470,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Service type operations
-  async getServiceTypes(): Promise<ServiceType[]> {
+  async getServiceTypes(): Promise<UnifiedService[]> {
     try {
-      return await db.select().from(serviceTypes).orderBy(asc(serviceTypes.name));
+      return await db.select().from(unifiedServices).where(eq(unifiedServices.isActive, true)).orderBy(asc(unifiedServices.name));
     } catch (error) {
       console.error('Error fetching service types:', error);
       throw error;
@@ -522,33 +507,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(serviceTypes).where(eq(serviceTypes.id, id));
   }
 
-  // Service extras operations
-  async getServiceExtras(): Promise<ServiceExtra[]> {
-    return await db.select().from(serviceExtras).orderBy(asc(serviceExtras.descricao));
-  }
-
-  async getServiceExtra(id: number): Promise<ServiceExtra | undefined> {
-    const [serviceExtra] = await db.select().from(serviceExtras).where(eq(serviceExtras.id, id));
-    return serviceExtra;
-  }
-
-  async createServiceExtra(serviceExtra: InsertServiceExtra): Promise<ServiceExtra> {
-    const [newServiceExtra] = await db.insert(serviceExtras).values(serviceExtra).returning();
-    return newServiceExtra;
-  }
-
-  async updateServiceExtra(id: number, serviceExtra: Partial<InsertServiceExtra>): Promise<ServiceExtra> {
-    const [updatedServiceExtra] = await db
-      .update(serviceExtras)
-      .set(serviceExtra)
-      .where(eq(serviceExtras.id, id))
-      .returning();
-    return updatedServiceExtra;
-  }
-
-  async deleteServiceExtra(id: number): Promise<void> {
-    await db.delete(serviceExtras).where(eq(serviceExtras.id, id));
-  }
+  // Service extras operations (now redirects to unified services)
 
   // Payment operations
   async getPaymentsByService(serviceId: number): Promise<Payment[]> {
@@ -817,8 +776,8 @@ export class DatabaseStorage implements IStorage {
             THEN CAST(s.estimated_value AS NUMERIC)
             ELSE 0 
           END), 0) as revenue
-        FROM service_types st
-        LEFT JOIN services s ON st.id = s.service_type_id 
+        FROM unified_services st
+        LEFT JOIN services s ON st.id = s.unified_service_id 
         WHERE (s.id IS NULL OR s.status != 'cancelled')
       `;
 
@@ -908,65 +867,65 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Service extras items operations
-  async getServiceExtraItems(serviceId: number): Promise<(ServiceExtraItem & { serviceExtra: ServiceExtra })[]> {
+  async getServiceItemsWithServices(serviceId: number): Promise<(ServiceItem & { unifiedService: UnifiedService })[]> {
     try {
       const result = await db
         .select({
-          item: serviceExtrasItems,
-          serviceExtra: serviceExtras,
+          item: serviceItems,
+          unifiedService: unifiedServices,
         })
-        .from(serviceExtrasItems)
-        .innerJoin(serviceExtras, eq(serviceExtrasItems.serviceExtraId, serviceExtras.id))
-        .where(eq(serviceExtrasItems.serviceId, serviceId));
+        .from(serviceItems)
+        .innerJoin(unifiedServices, eq(serviceItems.unifiedServiceId, unifiedServices.id))
+        .where(eq(serviceItems.serviceId, serviceId));
 
       return result.map(row => ({
         ...row.item,
-        serviceExtra: row.serviceExtra,
+        unifiedService: row.unifiedService,
       }));
     } catch (error) {
-      console.error('Error fetching service extra items:', error);
+      console.error('Error fetching service items with services:', error);
       throw error;
     }
   }
 
-  async createServiceExtraItem(item: InsertServiceExtraItem): Promise<ServiceExtraItem> {
+  async createServiceItem(item: InsertServiceItem): Promise<ServiceItem> {
     try {
-      const [newItem] = await db.insert(serviceExtrasItems).values(item).returning();
+      const [newItem] = await db.insert(serviceItems).values(item).returning();
       return newItem;
     } catch (error) {
-      console.error('Error creating service extra item:', error);
+      console.error('Error creating service item:', error);
       throw error;
     }
   }
 
-  async updateServiceExtraItem(id: number, item: Partial<InsertServiceExtraItem>): Promise<ServiceExtraItem> {
+  async updateServiceItem(id: number, item: Partial<InsertServiceItem>): Promise<ServiceItem> {
     try {
       const [updatedItem] = await db
-        .update(serviceExtrasItems)
+        .update(serviceItems)
         .set(item)
-        .where(eq(serviceExtrasItems.id, id))
+        .where(eq(serviceItems.id, id))
         .returning();
       return updatedItem;
     } catch (error) {
-      console.error('Error updating service extra item:', error);
+      console.error('Error updating service item:', error);
       throw error;
     }
   }
 
-  async deleteServiceExtraItem(id: number): Promise<void> {
+  async deleteServiceItem(id: number): Promise<void> {
     try {
-      await db.delete(serviceExtrasItems).where(eq(serviceExtrasItems.id, id));
+      await db.delete(serviceItems).where(eq(serviceItems.id, id));
     } catch (error) {
-      console.error('Error deleting service extra item:', error);
+      console.error('Error deleting service item:', error);
       throw error;
     }
   }
 
-  async deleteServiceExtraItemsByServiceId(serviceId: number): Promise<void> {
+  async deleteServiceItemsByServiceId(serviceId: number): Promise<void> {
     try {
-      await db.delete(serviceExtrasItems).where(eq(serviceExtrasItems.serviceId, serviceId));
+      await db.delete(serviceItems).where(eq(serviceItems.serviceId, serviceId));
     } catch (error) {
-      console.error('Error deleting service extra items by service ID:', error);
+      console.error('Error deleting service items by service ID:', error);
       throw error;
     }
   }
@@ -1645,18 +1604,18 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getServices(userId?: number): Promise<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]> {
+  async getServices(userId?: number): Promise<(Service & { customer: Customer; vehicle: Vehicle; unifiedService: UnifiedService })[]> {
     let query = db
       .select({
         service: services,
         customer: customers,
         vehicle: vehicles,
-        serviceType: serviceTypes,
+        unifiedService: unifiedServices,
       })
       .from(services)
       .leftJoin(customers, eq(services.customerId, customers.id))
       .leftJoin(vehicles, eq(services.vehicleId, vehicles.id))
-      .leftJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id));
+      .leftJoin(unifiedServices, eq(services.unifiedServiceId, unifiedServices.id));
 
     if (userId) {
       query = query.where(eq(services.technicianId, userId));
@@ -1668,23 +1627,23 @@ export class DatabaseStorage implements IStorage {
       ...row.service,
       customer: row.customer!,
       vehicle: row.vehicle!,
-      serviceType: row.serviceType!,
+      unifiedService: row.unifiedService,
     }));
   }
 
-  async getServiceById(serviceId: number, userId?: number): Promise<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType }) | undefined> {
+  async getServiceById(serviceId: number, userId?: number): Promise<(Service & { customer: Customer; vehicle: Vehicle; unifiedService: UnifiedService }) | undefined> {
     try {
       const [service] = await db
         .select({
           service: services,
           customer: customers,
           vehicle: vehicles,
-          serviceType: serviceTypes,
+          unifiedService: unifiedServices,
         })
         .from(services)
         .leftJoin(customers, eq(services.customerId, customers.id))
         .leftJoin(vehicles, eq(services.vehicleId, vehicles.id))
-        .leftJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+        .leftJoin(unifiedServices, eq(services.unifiedServiceId, unifiedServices.id))
         .where(eq(services.id, serviceId));
 
       if (!service) {

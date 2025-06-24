@@ -134,6 +134,9 @@ Changelog:
 - June 21, 2025. Updated dashboard stats cards with currency formatting, percentage changes, and professional icons
 - June 21, 2025. Restructured dashboard layout to match professional design reference with better visual hierarchy
 - June 20, 2025. Improved mobile schedule page layout - moved counter next to "Hoje" for mobile devices
+- June 24, 2025. Completed major architectural consolidation: merged service_types and service_extras into unified_services table
+- June 24, 2025. Updated all APIs and database queries to use unified service management approach
+- June 24, 2025. Maintained backward compatibility for existing frontend code during transition
 - June 20, 2025. Removed loyalty/fidelization functionality from the system
 - June 20, 2025. Added payment status filters to services page (Pagos, Pendentes, Parcial)
 - June 20, 2025. Fixed photo deletion preventing form submission with proper event handling
