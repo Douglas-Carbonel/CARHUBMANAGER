@@ -55,7 +55,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Link } from "wouter";
 import ServiceTypesManagement from "@/components/ServiceTypesManagement";
-import ServiceExtrasManagement from "@/components/ServiceExtrasManagement";
+
 import {
   Tabs,
   TabsContent,
@@ -341,7 +341,7 @@ export default function AdminPage() {
 
         {/* Admin Tabs */}
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="users" className="flex items-center gap-2 text-xs sm:text-sm">
               <Users className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Usuários</span>
@@ -351,11 +351,6 @@ export default function AdminPage() {
               <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Tipos de Serviços</span>
               <span className="sm:hidden">Tipos</span>
-            </TabsTrigger>
-            <TabsTrigger value="service-extras" className="flex items-center gap-2 text-xs sm:text-sm">
-              <Wrench className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Adicionais</span>
-              <span className="sm:hidden">Extras</span>
             </TabsTrigger>
           </TabsList>
 
@@ -715,10 +710,6 @@ export default function AdminPage() {
 
           <TabsContent value="service-types">
             <ServiceTypesManagement />
-          </TabsContent>
-
-          <TabsContent value="service-extras">
-            <ServiceExtrasManagement />
           </TabsContent>
         </Tabs>
 
