@@ -143,8 +143,7 @@ Changelog:
 - January 18, 2025. Fixed photo management issues - photos now refresh properly in cards after camera capture and deletion doesn't close edit modal
 - January 18, 2025. Fixed vehicles page data loading issue - added missing queryFn to useQuery hooks
 - January 18, 2025. Fixed React Select component empty value error in vehicles page
-- January 27, 2025. Migration from Replit Agent to standard Replit completed successfully
-- January 27, 2025. Fixed JSX syntax error in services.tsx preventing application startup
+- January 18, 2025. Migration from Replit Agent to standard Replit completed successfully
 - June 19, 2025. Added photo category selection during capture and upload (Vehicle, Damage, Before, After, Other)
 - June 19, 2025. Enhanced temporary photos display with category labels for new vehicle creation
 - June 19, 2025. Implemented automatic image compression for all photo uploads (camera and file upload)

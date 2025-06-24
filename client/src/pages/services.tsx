@@ -838,9 +838,7 @@ export default function Services() {
                   <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent">
                     {editingService ? "Editar Serviço" : "Novo Serviço"}
                   </DialogTitle>
-                </DialogHeader>
-                
-                <Form {...form}>
+                </DialogHeader>                <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     <div className="grid grid-cols-2 gap-6">
                       <FormField
@@ -1550,10 +1548,52 @@ export default function Services() {
                     </div>
                   </div>
 
-                  
-                  
-                    
-                  
+                  {/* Service Type */}
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                    <div className="flex items-center mb-3">
+                      <Wrench className="h-5 w-5 text-emerald-600 mr-2" />
+                      <span className="font-medium text-emerald-800">Tipo de Serviço</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-medium text-emerald-700">
+                            {(() => {
+                              const selectedServiceTypeId = form.watch("serviceTypeId");
+                              const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
+                              return selectedServiceType?.name || "Nenhum tipo selecionado";
+                            })()}
+                          </div>
+                          <div className="text-sm text-emerald-600">
+                            {(() => {
+                              const selectedServiceTypeId = form.watch("serviceTypeId");
+                              const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
+                              return selectedServiceType?.description || "";
+                            })()}
+                          </div>
+                        </div>
+                        <span className="font-bold text-emerald-800">R$ {getServiceTypePrice()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Service Extras */}
+                  {serviceExtras.length > 0 && (
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                      <div className="flex items-center mb-3">
+                        <Plus className="h-5 w-5 text-purple-600 mr-2" />
+                        <span className="font-medium text-purple-800">Serviços Inclusos</span>
+                      </div>
+                      <div className="space-y-2">
+                        {serviceExtras.map((extra, index) => (
+                          <div key={index} className="flex justify-between items-center text-sm">
+                            <span className="text-purple-700">{extra.serviceExtra?.descricao || `Serviço ${index + 1}`}</span>
+                            <span className="font-medium text-purple-800">R$ {Number(extra.valor || 0).toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Financial Summary */}
                   <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-lg p-4">
