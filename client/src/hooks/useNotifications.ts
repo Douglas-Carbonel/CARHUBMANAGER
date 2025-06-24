@@ -15,7 +15,7 @@ export function useNotifications() {
   const checkSupport = async () => {
     const supported = await notificationManager.initialize();
     setIsSupported(supported);
-    
+
     if (supported) {
       const subscribed = await notificationManager.isSubscribed();
       setIsSubscribed(subscribed);
@@ -23,32 +23,33 @@ export function useNotifications() {
   };
 
   const requestPermission = async () => {
+    if (!isSupported) return;
+
     setIsLoading(true);
-    
     try {
-      const granted = await notificationManager.requestPermission();
-      
-      if (granted) {
-        const success = await notificationManager.subscribe();
-        
-        if (success) {
-          setIsSubscribed(true);
+      const permissionGranted = await notificationManager.requestPermission();
+
+      if (permissionGranted) {
+        const subscribed = await notificationManager.subscribe();
+        setIsSubscribed(subscribed);
+
+        if (subscribed) {
           toast({
             title: "Notificações ativadas",
-            description: "Você receberá lembretes de serviços agendados.",
+            description: "Você receberá notificações sobre seus serviços.",
           });
         } else {
           toast({
             variant: "destructive",
             title: "Erro",
-            description: "Não foi possível ativar as notificações.",
+            description: "Não foi possível ativar as notificações. Verifique se o service worker está funcionando.",
           });
         }
       } else {
         toast({
           variant: "destructive",
           title: "Permissão negada",
-          description: "É necessário permitir notificações para usar este recurso.",
+          description: "As notificações foram bloqueadas pelo usuário.",
         });
       }
     } catch (error) {
@@ -56,7 +57,7 @@ export function useNotifications() {
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Ocorreu um erro ao configurar as notificações.",
+        description: "Ocorreu um erro ao solicitar permissão para notificações.",
       });
     } finally {
       setIsLoading(false);
@@ -65,10 +66,10 @@ export function useNotifications() {
 
   const unsubscribe = async () => {
     setIsLoading(true);
-    
+
     try {
       const success = await notificationManager.unsubscribe();
-      
+
       if (success) {
         setIsSubscribed(false);
         toast({
@@ -97,7 +98,7 @@ export function useNotifications() {
   const sendTestNotification = async () => {
     try {
       const success = await notificationManager.sendTestNotification();
-      
+
       if (success) {
         toast({
           title: "Notificação de teste enviada",

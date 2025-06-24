@@ -1343,7 +1343,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
   // Service extra items routes
   app.get("/api/services/:serviceId/extras", requireAuth, async (req, res) => {
     try {
-      const items = await storage.getServiceExtraItems(parseInt(req.params.serviceId));
+      const items = await storage.getServiceItemsWithServices(parseInt(req.params.serviceId));
       res.json(items);
     } catch (error) {
       console.error("Error fetching service extra items:", error);

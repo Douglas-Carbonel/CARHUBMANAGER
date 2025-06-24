@@ -41,13 +41,39 @@ export class NotificationManager {
       }
 
       // Get VAPID public key from server
-      const response = await fetch('/api/notifications/vapid-key');
-      const { publicKey } = await response.json();
+      const response = await apiRequest('/api/notifications/vapid-key');
+      const { publicKey } = response;
       
       if (!publicKey) {
         console.error('No VAPID public key received');
         return false;
       }
+
+      // Subscribe to push notifications
+      this.subscription = await this.registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: this.urlBase64ToUint8Array(publicKey)
+      });
+
+      // Send subscription to server
+      const subscriptionData = {
+        endpoint: this.subscription.endpoint,
+        p256dh: btoa(String.fromCharCode(...new Uint8Array(this.subscription.getKey('p256dh')!))),
+        auth: btoa(String.fromCharCode(...new Uint8Array(this.subscription.getKey('auth')!)))
+      };
+
+      await apiRequest('/api/notifications/subscribe', {
+        method: 'POST',
+        body: JSON.stringify(subscriptionData)
+      });
+
+      console.log('Successfully subscribed to push notifications');
+      return true;
+    } catch (error) {
+      console.error('Error subscribing to push notifications:', error);
+      return false;
+    }
+  }
 
       console.log('Got VAPID public key, subscribing...');
 
@@ -141,6 +167,15 @@ export class NotificationManager {
     const base64 = (base64String + padding)
       .replace(/-/g, '+')
       .replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  }
 
     const rawData = window.atob(base64);
     const outputArray = new Uint8Array(rawData.length);
