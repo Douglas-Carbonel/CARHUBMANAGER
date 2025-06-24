@@ -211,10 +211,15 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
 
     // If changing the service extra, update the default value
     if (field === 'serviceExtraId') {
-      const selectedExtra = availableExtras.find(e => e.id === value);
-      if (selectedExtra) {
-        newExtras[index].valor = selectedExtra.defaultPrice || "0.00";
-        newExtras[index].serviceExtra = selectedExtra;
+      const selectedService = availableServices.find(e => e.id === value);
+      if (selectedService) {
+        newExtras[index].valor = selectedService.preco || "0.00";
+        // Create a serviceExtra object from the service type for compatibility
+        newExtras[index].serviceExtra = {
+          id: selectedService.id,
+          descricao: selectedService.descricao,
+          defaultPrice: selectedService.preco
+        };
       }
     }
 
