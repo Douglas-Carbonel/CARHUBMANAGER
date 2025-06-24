@@ -435,7 +435,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Creating service with data:', JSON.stringify(serviceData, null, 2));
       const service = await storage.createService(serviceData);
       console.log('Service created successfully:', service);
-      
+
       // Create reminder if enabled
       if (serviceData.reminderEnabled && service.id) {
         const reminderMinutes = serviceData.reminderMinutes || 30;
@@ -799,7 +799,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const analytics = await storage.getCustomerAnalytics();
       res.json(analytics);
-    } catch (error) {
+    } catch (error<previous_generation>```cpp
+) {
       console.error("Error getting customer analytics:", error);
       res.status(500).json({ message: "Failed to get customer analytics" });
     }
@@ -1517,17 +1518,23 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     res.json({ publicKey: vapidKey });
   });
 
-  app.post("/api/notifications/subscribe", requireAuth, async (req, res) => {
+app.post("/api/notifications/subscribe", requireAuth, async (req, res) => {
     try {
-      const { subscription } = req.body;
       const userId = (req.user as User).id;
-      
-      if (!subscription || !subscription.endpoint || !subscription.keys) {
+      const { endpoint, p256dh, auth } = req.body;
+
+      if (!endpoint || !p256dh || !auth) {
         return res.status(400).json({ message: "Invalid subscription data" });
       }
 
+      const subscription = {
+        endpoint,
+        p256dh,
+        auth,
+      };
+
       const success = await notificationService.subscribe(userId, subscription);
-      
+
       if (success) {
         res.json({ message: "Successfully subscribed to push notifications" });
       } else {
@@ -1543,7 +1550,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     try {
       const userId = (req.user as User).id;
       const success = await notificationService.unsubscribe(userId);
-      
+
       if (success) {
         res.json({ message: "Successfully unsubscribed from push notifications" });
       } else {
@@ -1559,13 +1566,13 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     try {
       const userId = (req.user as User).id;
       const { title, body } = req.body;
-      
+
       const success = await notificationService.sendNotificationToUser(userId, {
         title: title || "Teste de Notificação",
         body: body || "Esta é uma notificação de teste do CarHub!",
         data: { type: "test" }
       });
-      
+
       if (success) {
         res.json({ message: "Test notification sent successfully" });
       } else {

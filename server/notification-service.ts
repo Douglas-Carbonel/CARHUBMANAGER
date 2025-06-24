@@ -5,13 +5,11 @@ import { serviceReminders, services, customers, vehicles, pushSubscriptions, use
 import { eq, and, lte, sql } from 'drizzle-orm';
 
 // Configure web-push
-const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || '';
-const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || '';
+const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || 'BHfIRCvKu3LHHrYf4MPaPuMgCjRTz-Ty0Dn17W0EyoEfEEWzglJb8daT8O7HlH9U5oi-FIJVJBLaBB6HAVCFFYY';
+const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || 'NJj1kWXl9XOm7KHQZ7FGFZYfbz6zZ_oRh7A2-3eJqvE';
 const vapidEmail = process.env.VAPID_EMAIL || 'mailto:admin@carhub.com';
 
-if (vapidPublicKey && vapidPrivateKey) {
-  webpush.setVapidDetails(vapidEmail, vapidPublicKey, vapidPrivateKey);
-}
+webpush.setVapidDetails(vapidEmail, vapidPublicKey, vapidPrivateKey);
 
 export class NotificationService {
   constructor() {
@@ -243,7 +241,7 @@ export class NotificationService {
 
   // Get VAPID public key
   getVapidPublicKey() {
-    return process.env.VAPID_PUBLIC_KEY || 'BHfIRCvKu3LHHrYf4MPaPuMgCjRTz-Ty0Dn17W0EyoEfEEWzglJb8daT8O7HlH9U5oi-FIJVJBLaBB6HAVCFFYY';
+    return vapidPublicKey;
   }
 }
 

@@ -60,6 +60,9 @@ export class NotificationManager {
       console.log('Push subscription created:', this.subscription);
 
       // Send subscription to server
+      const p256dhKey = this.subscription.getKey('p256dh');
+      const authKey = this.subscription.getKey('auth');
+      
       const subscribeResponse = await fetch('/api/notifications/subscribe', {
         method: 'POST',
         headers: {
@@ -67,10 +70,8 @@ export class NotificationManager {
         },
         body: JSON.stringify({
           endpoint: this.subscription.endpoint,
-          keys: {
-            p256dh: this.subscription.getKey('p256dh') ? btoa(String.fromCharCode(...new Uint8Array(this.subscription.getKey('p256dh')!))) : '',
-            auth: this.subscription.getKey('auth') ? btoa(String.fromCharCode(...new Uint8Array(this.subscription.getKey('auth')!))) : ''
-          }
+          p256dh: p256dhKey ? btoa(String.fromCharCode(...new Uint8Array(p256dhKey))) : '',
+          auth: authKey ? btoa(String.fromCharCode(...new Uint8Array(authKey))) : ''
         })
       });
 
