@@ -15,6 +15,7 @@ import {
   LogOut,
   Menu,
   X,
+  Bell,
 
 } from "lucide-react";
 
@@ -44,6 +45,11 @@ const getNavigation = (userRole: string | null) => {
       name: "Agenda",
       href: "/schedule",
       icon: Calendar,
+    },
+    {
+      name: "Notificações",
+      href: "/notifications",
+      icon: Bell,
     },
   ];
 

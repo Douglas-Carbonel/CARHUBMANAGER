@@ -130,6 +130,8 @@ export const payments = pgTable("payments", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Loyalty tracking table temporarily disabled due to service type consolidation
+/*
 export const loyaltyTracking = pgTable("loyalty_tracking", {
   id: serial("id").primaryKey(),
   customerId: integer("customer_id").references(() => customers.id).notNull(),
@@ -145,6 +147,7 @@ export const loyaltyTracking = pgTable("loyalty_tracking", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+*/
 
 export const photos = pgTable("photos", {
   id: serial("id").primaryKey(),
@@ -170,6 +173,26 @@ export const serviceItems = pgTable("service_items", {
   unifiedServiceId: integer("unified_service_id").references(() => unifiedServices.id).notNull(),
   valor: decimal("valor", { precision: 10, scale: 2 }).notNull(),
   observacao: text("observacao"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Push subscriptions table for notifications
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  endpoint: text("endpoint").notNull(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Service reminders table
+export const serviceReminders = pgTable("service_reminders", {
+  id: serial("id").primaryKey(),
+  serviceId: integer("service_id").references(() => services.id, { onDelete: "cascade" }).notNull(),
+  reminderMinutes: integer("reminder_minutes").notNull().default(30), // 15, 30, 60, etc.
+  notificationSent: boolean("notification_sent").default(false),
+  scheduledFor: timestamp("scheduled_for").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -224,6 +247,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   services: many(services),
 }));
 
+// Loyalty tracking relations temporarily disabled
+/*
 export const loyaltyTrackingRelations = relations(loyaltyTracking, ({ one }) => ({
   customer: one(customers, {
     fields: [loyaltyTracking.customerId],
@@ -234,6 +259,7 @@ export const loyaltyTrackingRelations = relations(loyaltyTracking, ({ one }) => 
     references: [vehicles.id],
   }),
 }));
+*/
 
 export const photosRelations = relations(photos, ({ one }) => ({
   uploader: one(users, {
@@ -250,6 +276,20 @@ export const serviceItemsRelations = relations(serviceItems, ({ one }) => ({
   unifiedService: one(unifiedServices, {
     fields: [serviceItems.unifiedServiceId],
     references: [unifiedServices.id],
+  }),
+}));
+
+export const pushSubscriptionsRelations = relations(pushSubscriptions, ({ one }) => ({
+  user: one(users, {
+    fields: [pushSubscriptions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const serviceRemindersRelations = relations(serviceReminders, ({ one }) => ({
+  service: one(services, {
+    fields: [serviceReminders.serviceId],
+    references: [services.id],
   }),
 }));
 
@@ -276,8 +316,20 @@ export const insertServiceSchema = createInsertSchema(services).extend({
   dinheiroPago: z.string().optional(),
   chequePago: z.string().optional(),
   cartaoPago: z.string().optional(),
+  reminderEnabled: z.boolean().optional(),
+  reminderMinutes: z.number().optional(),
 }).omit({
   serviceTypeId: true, // Remove a obrigatoriedade do serviceTypeId
+});
+
+export const insertPushSubscriptionSchema = createInsertSchema(pushSubscriptions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertServiceReminderSchema = createInsertSchema(serviceReminders).omit({
+  id: true,
+  createdAt: true,
 });
 
 export const insertUnifiedServiceSchema = createInsertSchema(unifiedServices).omit({
@@ -337,4 +389,8 @@ export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type Payment = typeof payments.$inferSelect;
 export type InsertPhoto = z.infer<typeof insertPhotoSchema>;
 export type Photo = typeof photos.$inferSelect;
+export type InsertPushSubscription = z.infer<typeof insertPushSubscriptionSchema>;
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+export type InsertServiceReminder = z.infer<typeof insertServiceReminderSchema>;
+export type ServiceReminder = typeof serviceReminders.$inferSelect;
 // Loyalty tracking types temporarily removed

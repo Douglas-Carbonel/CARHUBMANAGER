@@ -12,8 +12,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, DollarSign, MoreHorizontal, Plus, Search, Edit, Trash2, Clock, User, Car, Wrench, CheckCircle, XCircle, Timer, BarChart3, FileText, Camera, Coins, Calculator, Smartphone, Banknote, CreditCard, Receipt } from "lucide-react";
+import { Calendar, DollarSign, MoreHorizontal, Plus, Search, Edit, Trash2, Clock, User, Car, Wrench, CheckCircle, XCircle, Timer, BarChart3, FileText, Camera, Coins, Calculator, Smartphone, Banknote, CreditCard, Receipt, Bell } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertServiceSchema, type Service, type Customer, type Vehicle, type ServiceType, type Photo } from "@shared/schema";
@@ -93,11 +94,18 @@ const serviceFormSchema = insertServiceSchema.extend({
   scheduledTime: z.string().optional(),
   status: z.enum(["scheduled", "in_progress", "completed", "cancelled"]).optional(),
   notes: z.string().optional(),
-  valorPago: z.string().optional(), // Campo de valor pago
+  valorPago: z.string().optional(),
   pixPago: z.string().optional(),
   dinheiroPago: z.string().optional(),
   chequePago: z.string().optional(),
   cartaoPago: z.string().optional(),
+  reminderEnabled: z.boolean().optional(),
+  reminderMinutes: z.number().optional(),
+  serviceExtras: z.array(z.object({
+    unifiedServiceId: z.number(),
+    valor: z.string(),
+    observacao: z.string().optional(),
+  })).optional(),
 });
 
 export default function Services() {
@@ -467,13 +475,15 @@ export default function Services() {
 
     const serviceData = {
       ...data,
-      estimatedValue: String(totalValue), // Converte para string como esperado pelo schema
-      valorPago: totalFromPaymentMethods, // Usar total calculado das formas de pagamento
+      estimatedValue: String(totalValue),
+      valorPago: totalFromPaymentMethods,
       pixPago: paymentMethods.pix || "0.00",
       dinheiroPago: paymentMethods.dinheiro || "0.00",
       chequePago: paymentMethods.cheque || "0.00",
       cartaoPago: paymentMethods.cartao || "0.00",
-      serviceExtras: serviceExtras, // Inclui os adicionais selecionados
+      reminderEnabled: data.reminderEnabled || false,
+      reminderMinutes: data.reminderMinutes || 30,
+      serviceExtras: serviceExtras,
     };
 
     console.log('Service data being submitted:', serviceData);
@@ -1203,6 +1213,63 @@ export default function Services() {
                               </FormItem>
                             )}
                           />
+                        </div>
+
+                        {/* Reminder Section */}
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                          <div className="flex items-center mb-3">
+                            <Bell className="h-5 w-5 text-yellow-600 mr-2" />
+                            <span className="font-medium text-yellow-800">Lembrete de Serviço</span>
+                          </div>
+                          
+                          <FormField
+                            control={form.control}
+                            name="reminderEnabled"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-center justify-between rounded-lg border border-yellow-300 p-3 shadow-sm">
+                                <div className="space-y-0.5">
+                                  <FormLabel className="text-sm font-medium">
+                                    Ativar lembrete de notificação
+                                  </FormLabel>
+                                  <div className="text-xs text-yellow-700">
+                                    Receba uma notificação antes do horário do serviço
+                                  </div>
+                                </div>
+                                <FormControl>
+                                  <Switch
+                                    checked={field.value || false}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+
+                          {form.watch("reminderEnabled") && (
+                            <FormField
+                              control={form.control}
+                              name="reminderMinutes"
+                              render={({ field }) => (
+                                <FormItem className="mt-3">
+                                  <FormLabel>Enviar lembrete (minutos antes)</FormLabel>
+                                  <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value?.toString() || "30"}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Selecione quando enviar o lembrete" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="15">15 minutos antes</SelectItem>
+                                      <SelectItem value="30">30 minutos antes</SelectItem>
+                                      <SelectItem value="60">1 hora antes</SelectItem>
+                                      <SelectItem value="120">2 horas antes</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          )}
                         </div>
 
                         <div className="flex justify-center">

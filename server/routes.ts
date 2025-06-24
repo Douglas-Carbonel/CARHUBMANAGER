@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import passport from "passport";
 import { storage } from "./storage";
 import { photosStorage } from "./photos-storage.js";
+import { notificationService } from "./notification-service.js";
 import type { User } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -434,6 +435,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Creating service with data:', JSON.stringify(serviceData, null, 2));
       const service = await storage.createService(serviceData);
       console.log('Service created successfully:', service);
+      
+      // Create reminder if enabled
+      if (serviceData.reminderEnabled && service.id) {
+        const reminderMinutes = serviceData.reminderMinutes || 30;
+        await notificationService.createServiceReminder(service.id, reminderMinutes);
+        console.log(`Service reminder created for service ${service.id} - ${reminderMinutes} minutes before`);
+      }
 
       // Process service extras if they exist
       if (req.body.serviceExtras && Array.isArray(req.body.serviceExtras) && req.body.serviceExtras.length > 0) {
@@ -1497,6 +1505,75 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     } catch (error) {
       console.error("Error handling vehicle photo:", error);
       res.status(500).json({ message: "Failed to handle vehicle photo" });
+    }
+  });
+
+  // Push notification routes
+  app.get("/api/notifications/vapid-key", requireAuth, (req, res) => {
+    const vapidKey = notificationService.getVapidPublicKey();
+    if (!vapidKey) {
+      return res.status(500).json({ message: "VAPID keys not configured" });
+    }
+    res.json({ publicKey: vapidKey });
+  });
+
+  app.post("/api/notifications/subscribe", requireAuth, async (req, res) => {
+    try {
+      const { subscription } = req.body;
+      const userId = (req.user as User).id;
+      
+      if (!subscription || !subscription.endpoint || !subscription.keys) {
+        return res.status(400).json({ message: "Invalid subscription data" });
+      }
+
+      const success = await notificationService.subscribe(userId, subscription);
+      
+      if (success) {
+        res.json({ message: "Successfully subscribed to push notifications" });
+      } else {
+        res.status(500).json({ message: "Failed to subscribe to push notifications" });
+      }
+    } catch (error) {
+      console.error("Error subscribing to push notifications:", error);
+      res.status(500).json({ message: "Failed to subscribe to push notifications" });
+    }
+  });
+
+  app.post("/api/notifications/unsubscribe", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.user as User).id;
+      const success = await notificationService.unsubscribe(userId);
+      
+      if (success) {
+        res.json({ message: "Successfully unsubscribed from push notifications" });
+      } else {
+        res.status(500).json({ message: "Failed to unsubscribe from push notifications" });
+      }
+    } catch (error) {
+      console.error("Error unsubscribing from push notifications:", error);
+      res.status(500).json({ message: "Failed to unsubscribe from push notifications" });
+    }
+  });
+
+  app.post("/api/notifications/test", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.user as User).id;
+      const { title, body } = req.body;
+      
+      const success = await notificationService.sendNotificationToUser(userId, {
+        title: title || "Teste de Notificação",
+        body: body || "Esta é uma notificação de teste do CarHub!",
+        data: { type: "test" }
+      });
+      
+      if (success) {
+        res.json({ message: "Test notification sent successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to send test notification" });
+      }
+    } catch (error) {
+      console.error("Error sending test notification:", error);
+      res.status(500).json({ message: "Failed to send test notification" });
     }
   });
 
