@@ -335,4 +335,3 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
     </div>
   );
 }
-```
