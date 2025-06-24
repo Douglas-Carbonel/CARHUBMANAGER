@@ -406,9 +406,36 @@ export default function Services() {
     },
   });
 
+  // Get service type price
+  const getServiceTypePrice = () => {
+    const selectedServiceTypeId = form.watch("serviceTypeId");
+    const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
+    return selectedServiceType?.defaultPrice ? Number(selectedServiceType.defaultPrice).toFixed(2) : "0.00";
+  };
+
+  // Calculate extras total
+  const calculateExtrasTotal = () => {
+    let total = 0;
+    serviceExtras.forEach(extra => {
+      if (extra.valor && !isNaN(Number(extra.valor))) {
+        total += Number(extra.valor);
+      }
+    });
+    return total.toFixed(2);
+  };
+
   // Calculate total value from services
   const calculateTotalValue = () => {
     let total = 0;
+
+    // Add service type base price
+    const selectedServiceTypeId = form.watch("serviceTypeId");
+    if (selectedServiceTypeId && serviceTypes) {
+      const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
+      if (selectedServiceType?.defaultPrice) {
+        total += Number(selectedServiceType.defaultPrice);
+      }
+    }
 
     // Add all selected services values
     serviceExtras.forEach(extra => {
