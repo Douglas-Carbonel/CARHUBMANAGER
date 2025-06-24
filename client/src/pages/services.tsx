@@ -838,7 +838,9 @@ export default function Services() {
                   <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent">
                     {editingService ? "Editar Serviço" : "Novo Serviço"}
                   </DialogTitle>
-                </DialogHeader>                <Form {...form>
+                </DialogHeader>
+                
+                <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     <div className="grid grid-cols-2 gap-6">
                       <FormField
