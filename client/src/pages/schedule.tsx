@@ -719,7 +719,8 @@ export default function SchedulePage() {
                             name="technicianId"
                             render={({ field }) => (
                               <FormItem className="space-y-2">
-                                <FormLabel className={cn("font-semibold text-slate-700 flex items-center", isMobile ? "text-sm" : "text-sm")                                  <User className="h-4 w-4 mr-2 text-teal-600" />
+                                <FormLabel className={cn("font-semibold text-slate-700 flex items-center", isMobile ? "text-sm" : "text-sm")}>
+                                  <User className="h-4 w-4 mr-2 text-teal-600" />
                                   Técnico Responsável
                                 </FormLabel>
                                 <Select 
