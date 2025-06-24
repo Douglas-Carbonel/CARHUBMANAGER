@@ -568,7 +568,7 @@ export default function Services() {
       chequePago: service.chequePago || "0.00",
       cartaoPago: service.cartaoPago || "0.00",
     };
-    
+
     setFormInitialValues(editValues);
     form.reset(editValues);
     fetchServicePhotos(service.id);
@@ -793,27 +793,27 @@ export default function Services() {
                         chequePago: "0.00",
                         cartaoPago: "0.00",
                       };
-                      
+
                       // Check URL params to pre-select values
                       const urlParams2 = new URLSearchParams(window.location.search);
                       const customerIdFromUrl2 = urlParams2.get('customerId');
                       const vehicleIdFromUrl2 = urlParams2.get('vehicleId');
-                      
+
                       if (customerIdFromUrl2) {
                         const customerId = parseInt(customerIdFromUrl2);
                         console.log('Services: Pre-selecting customer from URL:', customerId);
                         defaultValues.customerId = customerId;
                       }
-                      
+
                       if (vehicleIdFromUrl2) {
                         const vehicleId = parseInt(vehicleIdFromUrl2);
                         console.log('Services: Pre-selecting vehicle from URL:', vehicleId);
                         defaultValues.vehicleId = vehicleId;
                       }
-                      
+
                       // Reset form with correct values FIRST
                       form.reset(defaultValues);
-                      
+
                       // THEN set initial values for comparison
                       setTimeout(() => {
                         setFormInitialValues(defaultValues);
@@ -838,9 +838,7 @@ export default function Services() {
                   <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent">
                     {editingService ? "Editar Serviço" : "Novo Serviço"}
                   </DialogTitle>
-                </DialogHeader>
-
-                <Form {...form}>
+                </DialogHeader>                <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     <div className="grid grid-cols-2 gap-6">
                       <FormField
@@ -1944,7 +1942,7 @@ export default function Services() {
                       });
                       return;
                     }
-                    
+
                     if (!open) {
                       setIsDialogOpen(false);
                       setFormInitialValues(null);
