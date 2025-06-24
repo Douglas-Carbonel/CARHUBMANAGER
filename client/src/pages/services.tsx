@@ -87,7 +87,7 @@ interface PaymentMethods {
 const serviceFormSchema = insertServiceSchema.extend({
   customerId: z.number().min(1, "Cliente é obrigatório"),
   vehicleId: z.number().min(1, "Veículo é obrigatório"),
-  serviceTypeId: z.number().min(1, "Tipo de serviço é obrigatório"),
+  serviceTypeId: z.number().optional(),
   technicianId: z.number().min(1, "Técnico é obrigatório"),
   scheduledDate: z.string().optional(),
   scheduledTime: z.string().optional(),
@@ -163,7 +163,7 @@ export default function Services() {
     defaultValues: {
       customerId: 0,
       vehicleId: 0,
-      serviceTypeId: 0,
+      serviceTypeId: undefined,
       technicianId: 0,
       scheduledDate: "",
       scheduledTime: "",
@@ -423,6 +423,7 @@ export default function Services() {
   // Get service type price
   const getServiceTypePrice = () => {
     const selectedServiceTypeId = form.watch("serviceTypeId");
+    if (!selectedServiceTypeId) return "0.00";
     const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
     return selectedServiceType?.defaultPrice ? Number(selectedServiceType.defaultPrice).toFixed(2) : "0.00";
   };
@@ -441,15 +442,6 @@ export default function Services() {
   // Calculate total value from services
   const calculateTotalValue = () => {
     let total = 0;
-
-    // Add service type base price
-    const selectedServiceTypeId = form.watch("serviceTypeId");
-    if (selectedServiceTypeId && serviceTypes) {
-      const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
-      if (selectedServiceType?.defaultPrice) {
-        total += Number(selectedServiceType.defaultPrice);
-      }
-    }
 
     // Add all selected services values
     serviceExtras.forEach(extra => {
@@ -568,7 +560,7 @@ export default function Services() {
     const editValues = {
       customerId: service.customerId,
       vehicleId: service.vehicleId,
-      serviceTypeId: service.serviceTypeId,
+      serviceTypeId: service.serviceTypeId || undefined,
       technicianId: service.technicianId || 0,
       scheduledDate: service.scheduledDate || "",
       scheduledTime: service.scheduledTime || "",
@@ -793,7 +785,7 @@ export default function Services() {
                       const defaultValues = {
                         customerId: 0,
                         vehicleId: 0,
-                        serviceTypeId: 0,
+                        serviceTypeId: undefined,
                         technicianId: 0,
                         scheduledDate: "",
                         scheduledTime: "",
@@ -927,69 +919,36 @@ export default function Services() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-6">
-                      <FormField
-                        control={form.control}
-                        name="serviceTypeId"
-                        render={({ field }) => (
-                          <FormItem className="space-y-2">
-                            <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
-                              <Wrench className="h-4 w-4 mr-2 text-teal-600" />
-                              Tipo de Serviço
-                            </FormLabel>
-                            <Select 
-                              onValueChange={(value) => field.onChange(Number(value))} 
-                              value={field.value > 0 ? field.value.toString() : ""}
-                            >
-                              <FormControl>
-                                <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
-                                  <SelectValue placeholder="Selecione o tipo de serviço" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {serviceTypes.map((serviceType: ServiceType) => (
-                                  <SelectItem key={serviceType.id} value={serviceType.id.toString()}>
-                                    {serviceType.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="technicianId"
-                        render={({ field }) => (
-                          <FormItem className="space-y-2">
-                            <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
-                              <User className="h-4 w-4 mr-2 text-teal-600" />
-                              Técnico Responsável
-                            </FormLabel>
-                            <Select 
-                              onValueChange={(value) => field.onChange(Number(value))} 
-                              value={field.value > 0 ? field.value.toString() : ""}
-                            >
-                              <FormControl>
-                                <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
-                                  <SelectValue placeholder="Selecione o técnico" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {users.map((technician: any) => (
-                                  <SelectItem key={technician.id} value={technician.id.toString()}>
-                                    {technician.firstName} {technician.lastName} ({technician.username})
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="technicianId"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                            <User className="h-4 w-4 mr-2 text-teal-600" />
+                            Técnico Responsável
+                          </FormLabel>
+                          <Select 
+                            onValueChange={(value) => field.onChange(Number(value))} 
+                            value={field.value > 0 ? field.value.toString() : ""}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
+                                <SelectValue placeholder="Selecione o técnico" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {users.map((technician: any) => (
+                                <SelectItem key={technician.id} value={technician.id.toString()}>
+                                  {technician.firstName} {technician.lastName} ({technician.username})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     <FormField
                       control={form.control}
@@ -1101,23 +1060,16 @@ export default function Services() {
                             <div className="bg-white border border-slate-200 rounded-lg p-3">
                               <div className="text-sm fontbold text-slate-800 mb-3">Serviços:</div>
                               <div className="space-y-2">
-                                {/* Serviço Base */}
-                                {(() => {
-                                  const selectedServiceTypeId = form.watch("serviceTypeId");
-                                  const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
-                                  return selectedServiceType?.description ? (
-                                    <div className="text-sm text-slate-700">
-                                      {selectedServiceType.description}
-                                    </div>
-                                  ) : null;
-                                })()}
-
-                                {/* Adicionais - listados separadamente */}
-                                {serviceExtras.length > 0 && serviceExtras.map((extra, index) => (
+                                {/* Serviços selecionados */}
+                                {serviceExtras.length > 0 ? serviceExtras.map((extra, index) => (
                                   <div key={index} className="text-sm text-slate-700">
                                     {extra.serviceExtra?.descricao}
                                   </div>
-                                ))}
+                                )) : (
+                                  <div className="text-sm text-slate-500 italic">
+                                    Nenhum serviço selecionado
+                                  </div>
+                                )}
                               </div>
                             </div>
 
@@ -1455,7 +1407,7 @@ export default function Services() {
                       <Button 
                         type="submit" 
                         className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-2 font-semibold"
-                        disabled={createMutation.isPending || updateMutation.isPending || serviceExtras.length === 0}
+                        disabled={createMutation.isPending || updateMutation.isPending}
                       >
                         {editingService ? "Atualizar Serviço" : "Criar Serviço"}
                       </Button>
