@@ -1764,8 +1764,9 @@ export default function Services() {
           </div>
 
           {/* Search and Filter */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
+          <div className="space-y-4 mb-6">
+            {/* Search Input - Full width on mobile */}
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-500 h-4 w-4" />
               <Input
                 placeholder="Buscar por cliente, veículo, tipo de serviço..."
@@ -1774,49 +1775,70 @@ export default function Services() {
                 className="pl-10 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm"
               />
             </div>
-            <div className="relative">
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className={`w-48 h-12 border-2 ${filterStatus !== 'all' ? 'border-blue-400 bg-blue-50' : 'border-teal-200'} focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm`}>
-                  <SelectValue placeholder="Filtrar por status" />
+
+            {/* Filters Row - Responsive layout */}
+            <div className={cn("grid gap-3", isMobile ? "grid-cols-2" : "flex flex-row gap-4")}>
+              {/* Status Filter */}
+              <div className="relative">
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className={cn(
+                    "h-12 border-2 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm",
+                    filterStatus !== 'all' ? 'border-blue-400 bg-blue-50' : 'border-teal-200',
+                    isMobile ? "w-full" : "w-48"
+                  )}>
+                    <SelectValue placeholder="Todos os status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os status</SelectItem>
+                    <SelectItem value="scheduled">Agendado</SelectItem>
+                    <SelectItem value="in_progress">Em Andamento</SelectItem>
+                    <SelectItem value="completed">Concluído</SelectItem>
+                    <SelectItem value="cancelled">Cancelado</SelectItem>
+                  </SelectContent>
+                </Select>
+                {filterStatus !== 'all' && (
+                  <div className="absolute -top-2 -right-2 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                    <span className="text-xs text-white font-bold">!</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Payment Filter */}
+              <Select value={filterPayment} onValueChange={setFilterPayment}>
+                <SelectTrigger className={cn(
+                  "h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm",
+                  isMobile ? "w-full" : "w-48"
+                )}>
+                  <SelectValue placeholder="Todos os pagamentos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos os status</SelectItem>
-                  <SelectItem value="scheduled">Agendado</SelectItem>
-                  <SelectItem value="in_progress">Em Andamento</SelectItem>
-                  <SelectItem value="completed">Concluído</SelectItem>
-                  <SelectItem value="cancelled">Cancelado</SelectItem>
+                  <SelectItem value="all">Todos os pagamentos</SelectItem>
+                  <SelectItem value="pagos">Pagos</SelectItem>
+                  <SelectItem value="pendentes">Pendentes</SelectItem>
+                  <SelectItem value="parcial">Parcial</SelectItem>
                 </SelectContent>
               </Select>
-              {filterStatus !== 'all' && statusFilter !== 'all' && (
-                <div className="absolute -top-2 -right-2 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-xs text-white font-bold">!</span>
-                </div>
-              )}
             </div>
 
-            <Select value={filterPayment} onValueChange={setFilterPayment}>
-              <SelectTrigger className="w-48 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm">
-                <SelectValue placeholder="Filtrar por pagamento" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os pagamentos</SelectItem>
-                <SelectItem value="pagos">Pagos</SelectItem>
-                <SelectItem value="pendentes">Pendentes</SelectItem>
-                <SelectItem value="parcial">Parcial</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <div className="flex items-center gap-4">
+            {/* Reports and Counter Row - Optimized for mobile */}
+            <div className={cn("flex items-center", isMobile ? "justify-between" : "justify-end gap-4")}>
               <Button
                 variant="outline"
                 onClick={() => setIsAnalyticsModalOpen(true)}
-                className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                className={cn(
+                  "border-emerald-200 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2",
+                  isMobile ? "px-3 py-2 text-sm" : "px-4 py-2"
+                )}
               >
-                📊 Ver Relatórios
+                <BarChart3 className={cn("h-4 w-4", isMobile && "h-3 w-3")} />
+                <span className={isMobile ? "text-xs" : "text-sm"}>Ver Relatórios</span>
               </Button>
-              <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-4 py-2 rounded-lg shadow-md">
+              <div className={cn(
+                "bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg shadow-md flex items-center",
+                isMobile ? "px-3 py-2 text-sm" : "px-4 py-2"
+              )}>
                 <span className="font-semibold">{filteredServices.length}</span>
-                <span className="ml-1 text-sm">serviços</span>
+                <span className={cn("ml-1", isMobile ? "text-xs" : "text-sm")}>serviços</span>
               </div>
             </div>
           </div>
