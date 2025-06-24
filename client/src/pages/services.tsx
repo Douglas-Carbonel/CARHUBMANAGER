@@ -75,6 +75,7 @@ interface PaymentMethods {
 const serviceFormSchema = insertServiceSchema.extend({
   customerId: z.number().min(1, "Cliente é obrigatório"),
   vehicleId: z.number().min(1, "Veículo é obrigatório"),
+  serviceTypeId: z.number().min(1, "Tipo de serviço é obrigatório"),
   technicianId: z.number().min(1, "Técnico é obrigatório"),
   scheduledDate: z.string().optional(),
   scheduledTime: z.string().optional(),
@@ -150,6 +151,7 @@ export default function Services() {
     defaultValues: {
       customerId: 0,
       vehicleId: 0,
+      serviceTypeId: 0,
       technicianId: 0,
       scheduledDate: "",
       scheduledTime: "",
@@ -916,6 +918,37 @@ export default function Services() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="serviceTypeId"
+                        render={({ field }) => (
+                          <FormItem className="space-y-2">
+                            <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                              <Wrench className="h-4 w-4 mr-2 text-teal-600" />
+                              Tipo de Serviço
+                            </FormLabel>
+                            <Select 
+                              onValueChange={(value) => field.onChange(Number(value))} 
+                              value={field.value > 0 ? field.value.toString() : ""}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
+                                  <SelectValue placeholder="Selecione o tipo de serviço" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {serviceTypes.map((serviceType: ServiceType) => (
+                                  <SelectItem key={serviceType.id} value={serviceType.id.toString()}>
+                                    {serviceType.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
                       <FormField
                         control={form.control}
                         name="technicianId"

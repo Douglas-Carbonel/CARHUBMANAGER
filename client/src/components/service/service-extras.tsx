@@ -49,7 +49,11 @@ interface ServiceExtraRow {
   serviceExtraId: number;
   valor: string;
   observacao: string;
-  serviceExtra?: ServiceExtra;
+  serviceExtra?: {
+    id: number;
+    descricao: string;
+    defaultPrice?: string;
+  };
 }
 
 interface ServiceExtrasProps {
@@ -62,20 +66,6 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [extras, setExtras] = useState<ServiceExtraRow[]>([]);
-
-  // Load available service extras
-  const { data: serviceExtras = [] } = useQuery<ServiceExtra[]>({
-    queryKey: ["/api/service-extras"],
-    queryFn: async () => {
-      const res = await fetch("/api/service-extras", {
-        credentials: "include",
-      });
-      if (!res.ok) {
-        throw new Error(`${res.status}: ${res.statusText}`);
-      }
-      return await res.json();
-    },
-  });
 
   // Buscar service types disponíveis
   const { data: serviceTypes = [] } = useQuery<ServiceType[]>({
@@ -211,14 +201,14 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
 
     // If changing the service extra, update the default value
     if (field === 'serviceExtraId') {
-      const selectedService = availableServices.find(e => e.id === value);
-      if (selectedService) {
-        newExtras[index].valor = selectedService.preco || "0.00";
+      const selectedServiceType = serviceTypes.find(st => st.id === value);
+      if (selectedServiceType) {
+        newExtras[index].valor = selectedServiceType.defaultPrice || "0.00";
         // Create a serviceExtra object from the service type for compatibility
         newExtras[index].serviceExtra = {
-          id: selectedService.id,
-          descricao: selectedService.descricao,
-          defaultPrice: selectedService.preco
+          id: selectedServiceType.id,
+          descricao: selectedServiceType.name,
+          defaultPrice: selectedServiceType.defaultPrice
         };
       }
     }
@@ -252,13 +242,17 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
 
   // Usar service types como serviços disponíveis, filtrando os já selecionados
   const availableServices = serviceTypes
-    .filter((service) => service.isActive)
-    .filter((service) => !extras.some((selected) => selected.serviceExtraId === service.id))
-    .map((service) => ({
-      id: service.id,
-      descricao: service.name,
-      preco: service.defaultPrice || "0.00"
+    .filter((serviceType) => serviceType.isActive)
+    .map((serviceType) => ({
+      id: serviceType.id,
+      descricao: serviceType.name,
+      preco: serviceType.defaultPrice || "0.00"
     }));
+
+  // Get available services excluding already selected ones for the dropdown
+  const availableServicesForDropdown = availableServices.filter(
+    (service) => !extras.some((selected) => selected.serviceExtraId === service.id)
+  );
 
   return (
     <div className="space-y-4">
@@ -284,14 +278,25 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
                 <div className="md:col-span-4">
                   <Label className="text-sm text-gray-600 font-medium">Serviço</Label>
                   <Select
-                    value={extra.serviceExtraId.toString()}
+                    value={extra.serviceExtraId > 0 ? extra.serviceExtraId.toString() : ""}
                     onValueChange={(value) => updateExtra(index, 'serviceExtraId', parseInt(value))}
                   >
                     <SelectTrigger className="h-12 text-base">
-                      <SelectValue placeholder="Selecione um serviço" />
+                      <SelectValue placeholder="Selecione um serviço">
+                        {extra.serviceExtraId > 0 ? (
+                          availableServices.find(s => s.id === extra.serviceExtraId)?.descricao || "Serviço selecionado"
+                        ) : "Selecione um serviço"}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {availableServices.map((availableService) => (
+                      {/* Show currently selected service if it exists */}
+                      {extra.serviceExtraId > 0 && (
+                        <SelectItem key={extra.serviceExtraId} value={extra.serviceExtraId.toString()}>
+                          {availableServices.find(s => s.id === extra.serviceExtraId)?.descricao || "Serviço atual"}
+                        </SelectItem>
+                      )}
+                      {/* Show other available services */}
+                      {availableServicesForDropdown.map((availableService) => (
                         <SelectItem key={availableService.id} value={availableService.id.toString()}>
                           {availableService.descricao}
                         </SelectItem>
