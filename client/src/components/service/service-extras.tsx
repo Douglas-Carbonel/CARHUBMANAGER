@@ -46,6 +46,7 @@ const parseCurrency = (formattedValue: string): string => {
 
 interface ServiceExtraRow {
   id?: number;
+  tempId: string; // Temporary unique identifier for tracking
   serviceExtraId: number;
   valor: string;
   observacao: string;
@@ -102,6 +103,7 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
     if (initialExtras.length > 0) {
       const mappedExtras = initialExtras.map(item => ({
         id: item.id,
+        tempId: `existing_${item.id}`,
         serviceExtraId: item.serviceExtraId,
         valor: item.valor || "0.00",
         observacao: item.observacao || "",
@@ -111,6 +113,7 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
     } else if (existingExtras.length > 0) {
       const mappedExtras = existingExtras.map(item => ({
         id: item.id,
+        tempId: `existing_${item.id}`,
         serviceExtraId: item.serviceExtraId,
         valor: item.valor || "0.00",
         observacao: item.observacao || "",
@@ -177,6 +180,7 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
 
   const addExtra = () => {
     const newExtra: ServiceExtraRow = {
+      tempId: `new_${Date.now()}_${Math.random()}`, // Unique identifier
       serviceExtraId: 0,
       valor: "0.00",
       observacao: "",
@@ -184,19 +188,23 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
     setExtras([newExtra, ...extras]);
   };
 
-  const removeExtra = (index: number) => {
-    const extra = extras[index];
-    if (extra.id && serviceId) {
+  const removeExtra = (tempId: string) => {
+    const extra = extras.find(e => e.tempId === tempId);
+    if (extra?.id && serviceId) {
       // Delete from database if it exists
       deleteExtraItemMutation.mutate(extra.id);
     }
-    // Remove from local state
-    const newExtras = extras.filter((_, i) => i !== index);
+    // Remove from local state using tempId
+    const newExtras = extras.filter(e => e.tempId !== tempId);
     setExtras(newExtras);
   };
 
-  const updateExtra = (index: number, field: keyof ServiceExtraRow, value: any) => {
+  const updateExtra = (tempId: string, field: keyof ServiceExtraRow, value: any) => {
     const newExtras = [...extras];
+    const index = newExtras.findIndex(e => e.tempId === tempId);
+    
+    if (index === -1) return; // Item not found
+    
     newExtras[index] = { ...newExtras[index], [field]: value };
 
     // If changing the service extra, update the default value
@@ -230,9 +238,9 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
     }
   };
 
-  const saveExtra = (index: number) => {
-    const extra = extras[index];
-    if (!serviceId || extra.serviceExtraId === 0) return;
+  const saveExtra = (tempId: string) => {
+    const extra = extras.find(e => e.tempId === tempId);
+    if (!serviceId || !extra || extra.serviceExtraId === 0) return;
 
     const data = {
       serviceId,
@@ -254,13 +262,14 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
     }));
 
   // Get available services for each dropdown (excluding already selected ones, but including the current selection)
-  const getAvailableServicesForDropdown = (currentIndex: number) => {
-    const currentServiceId = extras[currentIndex]?.serviceExtraId;
+  const getAvailableServicesForDropdown = (currentTempId: string) => {
+    const currentExtra = extras.find(e => e.tempId === currentTempId);
+    const currentServiceId = currentExtra?.serviceExtraId;
     return availableServices.filter(
       (service) => {
         // Include if it's not selected by any other dropdown OR if it's the current selection
-        const isSelectedElsewhere = extras.some((selected, idx) => 
-          idx !== currentIndex && selected.serviceExtraId === service.id
+        const isSelectedElsewhere = extras.some((selected) => 
+          selected.tempId !== currentTempId && selected.serviceExtraId === service.id
         );
         return !isSelectedElsewhere;
       }
@@ -284,22 +293,22 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
       </div>
 
       <div className="space-y-3">
-        {extras.map((extra, index) => (
-          <Card key={index} className="border border-gray-200">
+        {extras.map((extra) => (
+          <Card key={extra.tempId} className="border border-gray-200">
             <CardContent className="p-4">
               <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
                 <div className="md:col-span-4">
                   <Label className="text-sm text-gray-600 font-medium">Serviço</Label>
                   <Select
                     value={extra.serviceExtraId > 0 ? extra.serviceExtraId.toString() : ""}
-                    onValueChange={(value) => updateExtra(index, 'serviceExtraId', parseInt(value))}
+                    onValueChange={(value) => updateExtra(extra.tempId, 'serviceExtraId', parseInt(value))}
                   >
                     <SelectTrigger className="h-12 text-base">
                       <SelectValue placeholder="Selecione um serviço" />
                     </SelectTrigger>
                     <SelectContent>
                       {/* Show all available services for this specific dropdown */}
-                      {getAvailableServicesForDropdown(index).map((availableService) => (
+                      {getAvailableServicesForDropdown(extra.tempId).map((availableService) => (
                         <SelectItem key={availableService.id} value={availableService.id.toString()}>
                           {availableService.descricao}
                         </SelectItem>
@@ -316,7 +325,7 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
                     value={formatCurrency(extra.valor)}
                     onChange={(e) => {
                       const rawValue = parseCurrency(e.target.value);
-                      updateExtra(index, 'valor', rawValue);
+                      updateExtra(extra.tempId, 'valor', rawValue);
                     }}
                     className="h-14 text-lg font-bold text-center bg-green-50 border-2 border-green-200 focus:border-green-400 rounded-lg"
                   />
@@ -327,7 +336,7 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
                   <Textarea
                     placeholder="Observações sobre este adicional..."
                     value={extra.observacao}
-                    onChange={(e) => updateExtra(index, 'observacao', e.target.value)}
+                    onChange={(e) => updateExtra(extra.tempId, 'observacao', e.target.value)}
                     className="h-12 min-h-[48px] resize-none text-base"
                     rows={1}
                   />
@@ -339,7 +348,7 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => saveExtra(index)}
+                      onClick={() => saveExtra(extra.tempId)}
                       className="h-12 px-4 text-base font-medium"
                       disabled={createExtraItemMutation.isPending}
                     >
@@ -350,7 +359,7 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => removeExtra(index)}
+                    onClick={() => removeExtra(extra.tempId)}
                     className="h-12 px-4 text-red-600 hover:text-red-700 hover:bg-red-50"
                   >
                     <Trash2 className="h-4 w-4" />
