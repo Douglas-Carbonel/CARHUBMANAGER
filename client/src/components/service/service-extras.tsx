@@ -181,7 +181,7 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
       valor: "0.00",
       observacao: "",
     };
-    setExtras([newExtra, ...extras]);
+    setExtras([...extras, newExtra]);
   };
 
   const removeExtra = (index: number) => {
@@ -202,7 +202,7 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
     // If changing the service extra, update the default value
     if (field === 'serviceExtraId') {
       const selectedServiceType = serviceTypes.find(st => st.id === value);
-      if (selectedServiceType) {
+      if (selectedServiceType && value > 0) {
         newExtras[index].valor = selectedServiceType.defaultPrice || "0.00";
         // Create a serviceExtra object from the service type for compatibility
         newExtras[index].serviceExtra = {
@@ -210,13 +210,17 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
           descricao: selectedServiceType.name,
           defaultPrice: selectedServiceType.defaultPrice
         };
+      } else if (value === 0) {
+        // Reset values when no service is selected
+        newExtras[index].valor = "0.00";
+        newExtras[index].serviceExtra = undefined;
       }
     }
 
     setExtras(newExtras);
 
     // Save to database if service exists and extra has an ID
-    if (serviceId && newExtras[index].id) {
+    if (serviceId && newExtras[index].id && field !== 'serviceExtraId') {
       const updateData = {
         serviceExtraId: newExtras[index].serviceExtraId,
         valor: newExtras[index].valor,
@@ -249,10 +253,19 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
       preco: serviceType.defaultPrice || "0.00"
     }));
 
-  // Get available services excluding already selected ones for the dropdown
-  const availableServicesForDropdown = availableServices.filter(
-    (service) => !extras.some((selected) => selected.serviceExtraId === service.id)
-  );
+  // Get available services for each dropdown (excluding already selected ones, but including the current selection)
+  const getAvailableServicesForDropdown = (currentIndex: number) => {
+    const currentServiceId = extras[currentIndex]?.serviceExtraId;
+    return availableServices.filter(
+      (service) => {
+        // Include if it's not selected by any other dropdown OR if it's the current selection
+        const isSelectedElsewhere = extras.some((selected, idx) => 
+          idx !== currentIndex && selected.serviceExtraId === service.id
+        );
+        return !isSelectedElsewhere;
+      }
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -282,21 +295,11 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
                     onValueChange={(value) => updateExtra(index, 'serviceExtraId', parseInt(value))}
                   >
                     <SelectTrigger className="h-12 text-base">
-                      <SelectValue placeholder="Selecione um serviço">
-                        {extra.serviceExtraId > 0 ? (
-                          availableServices.find(s => s.id === extra.serviceExtraId)?.descricao || "Serviço selecionado"
-                        ) : "Selecione um serviço"}
-                      </SelectValue>
+                      <SelectValue placeholder="Selecione um serviço" />
                     </SelectTrigger>
                     <SelectContent>
-                      {/* Show currently selected service if it exists */}
-                      {extra.serviceExtraId > 0 && (
-                        <SelectItem key={extra.serviceExtraId} value={extra.serviceExtraId.toString()}>
-                          {availableServices.find(s => s.id === extra.serviceExtraId)?.descricao || "Serviço atual"}
-                        </SelectItem>
-                      )}
-                      {/* Show other available services */}
-                      {availableServicesForDropdown.map((availableService) => (
+                      {/* Show all available services for this specific dropdown */}
+                      {getAvailableServicesForDropdown(index).map((availableService) => (
                         <SelectItem key={availableService.id} value={availableService.id.toString()}>
                           {availableService.descricao}
                         </SelectItem>
