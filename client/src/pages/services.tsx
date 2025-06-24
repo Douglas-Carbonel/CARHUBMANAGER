@@ -1764,8 +1764,9 @@ export default function Services() {
           </div>
 
           {/* Search and Filter */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
+          <div className="space-y-4 mb-6">
+            {/* Search Bar */}
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-500 h-4 w-4" />
               <Input
                 placeholder="Buscar por cliente, veículo, tipo de serviço..."
@@ -1774,49 +1775,80 @@ export default function Services() {
                 className="pl-10 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm"
               />
             </div>
-            <div className="relative">
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className={`w-48 h-12 border-2 ${filterStatus !== 'all' ? 'border-blue-400 bg-blue-50' : 'border-teal-200'} focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm`}>
-                  <SelectValue placeholder="Filtrar por status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os status</SelectItem>
-                  <SelectItem value="scheduled">Agendado</SelectItem>
-                  <SelectItem value="in_progress">Em Andamento</SelectItem>
-                  <SelectItem value="completed">Concluído</SelectItem>
-                  <SelectItem value="cancelled">Cancelado</SelectItem>
-                </SelectContent>
-              </Select>
-              {filterStatus !== 'all' && statusFilter !== 'all' && (
-                <div className="absolute -top-2 -right-2 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-xs text-white font-bold">!</span>
+
+            {/* Filters and Actions Row */}
+            <div className={cn(
+              "flex gap-2",
+              isMobile ? "flex-col space-y-2" : "flex-row items-center"
+            )}>
+              {/* Filter Row for Mobile / Inline for Desktop */}
+              <div className={cn(
+                "flex gap-2",
+                isMobile ? "flex-col space-y-2" : "flex-row"
+              )}>
+                <div className="relative">
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger className={cn(
+                      `h-10 border-2 ${filterStatus !== 'all' ? 'border-blue-400 bg-blue-50' : 'border-teal-200'} focus:border-emerald-400 rounded-lg shadow-sm bg-white/90 backdrop-blur-sm`,
+                      isMobile ? "w-full" : "w-40"
+                    )}>
+                      <SelectValue placeholder="Todos os status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os status</SelectItem>
+                      <SelectItem value="scheduled">Agendado</SelectItem>
+                      <SelectItem value="in_progress">Em Andamento</SelectItem>
+                      <SelectItem value="completed">Concluído</SelectItem>
+                      <SelectItem value="cancelled">Cancelado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {filterStatus !== 'all' && statusFilter !== 'all' && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
+                      <span className="text-xs text-white font-bold">!</span>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            <Select value={filterPayment} onValueChange={setFilterPayment}>
-              <SelectTrigger className="w-48 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm">
-                <SelectValue placeholder="Filtrar por pagamento" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os pagamentos</SelectItem>
-                <SelectItem value="pagos">Pagos</SelectItem>
-                <SelectItem value="pendentes">Pendentes</SelectItem>
-                <SelectItem value="parcial">Parcial</SelectItem>
-              </SelectContent>
-            </Select>
+                <Select value={filterPayment} onValueChange={setFilterPayment}>
+                  <SelectTrigger className={cn(
+                    "h-10 border-2 border-teal-200 focus:border-emerald-400 rounded-lg shadow-sm bg-white/90 backdrop-blur-sm",
+                    isMobile ? "w-full" : "w-40"
+                  )}>
+                    <SelectValue placeholder="Todos os pagamentos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os pagamentos</SelectItem>
+                    <SelectItem value="pagos">Pagos</SelectItem>
+                    <SelectItem value="pendentes">Pendentes</SelectItem>
+                    <SelectItem value="parcial">Parcial</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                onClick={() => setIsAnalyticsModalOpen(true)}
-                className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-              >
-                📊 Ver Relatórios
-              </Button>
-              <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-4 py-2 rounded-lg shadow-md">
-                <span className="font-semibold">{filteredServices.length}</span>
-                <span className="ml-1 text-sm">serviços</span>
+              {/* Actions Row - Optimized for Mobile */}
+              <div className={cn(
+                "flex gap-2",
+                isMobile ? "justify-between items-center" : "items-center ml-auto"
+              )}>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsAnalyticsModalOpen(true)}
+                  className={cn(
+                    "border-emerald-200 text-emerald-700 hover:bg-emerald-50",
+                    isMobile ? "h-10 px-3 text-sm flex-1" : "h-10 px-4"
+                  )}
+                >
+                  📊 {isMobile ? "Relatórios" : "Ver Relatórios"}
+                </Button>
+                <div className={cn(
+                  "bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg shadow-md flex items-center",
+                  isMobile ? "h-10 px-3" : "h-10 px-4"
+                )}>
+                  <span className="font-semibold text-sm">{filteredServices.length}</span>
+                  <span className={cn("ml-1", isMobile ? "text-xs" : "text-sm")}>
+                    {isMobile ? "serv." : "serviços"}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
