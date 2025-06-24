@@ -4,10 +4,23 @@ import { db } from './db.js';
 import { serviceReminders, services, customers, vehicles, pushSubscriptions, users } from '../shared/schema.js';
 import { eq, and, lte, sql } from 'drizzle-orm';
 
-// Configure web-push
-const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || 'BHfIRCvKu3LHHrYf4MPaPuMgCjRTz-Ty0Dn17W0EyoEfEEWzglJb8daT8O7HlH9U5oi-FIJVJBLaBB6HAVCFFYY';
-const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || 'NJj1kWXl9XOm7KHQZ7FGFZYfbz6zZ_oRh7A2-3eJqvE';
+// Generate or use VAPID keys
+let vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
+let vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
 const vapidEmail = process.env.VAPID_EMAIL || 'mailto:admin@carhub.com';
+
+// Generate new VAPID keys if not provided
+if (!vapidPublicKey || !vapidPrivateKey) {
+  console.log('Generating new VAPID keys...');
+  const vapidKeys = webpush.generateVAPIDKeys();
+  vapidPublicKey = vapidKeys.publicKey;
+  vapidPrivateKey = vapidKeys.privateKey;
+  
+  console.log('Generated VAPID keys:');
+  console.log('Public Key:', vapidPublicKey);
+  console.log('Private Key:', vapidPrivateKey);
+  console.log('Add these to your environment variables for production');
+}
 
 webpush.setVapidDetails(vapidEmail, vapidPublicKey, vapidPrivateKey);
 
@@ -111,6 +124,9 @@ export class NotificationService {
     data?: any;
   }) {
     try {
+      console.log(`Attempting to send notification to user ${userId}`);
+      console.log('Payload:', payload);
+      
       const userSubscriptions = await db.execute(sql`
         SELECT * FROM push_subscriptions WHERE user_id = ${userId}
       `);
@@ -120,9 +136,13 @@ export class NotificationService {
         return false;
       }
 
+      console.log(`Found ${userSubscriptions.rows.length} subscriptions for user ${userId}`);
+      
       const promises = userSubscriptions.rows.map(async (subscription: any) => {
         try {
-          await webpush.sendNotification(
+          console.log('Sending to endpoint:', subscription.endpoint.substring(0, 50) + '...');
+          
+          const result = await webpush.sendNotification(
             {
               endpoint: subscription.endpoint,
               keys: {
@@ -132,20 +152,33 @@ export class NotificationService {
             },
             JSON.stringify(payload)
           );
-          console.log(`Notification sent to user ${userId}`);
+          
+          console.log(`✅ Notification sent successfully to user ${userId}`, result);
+          return true;
         } catch (error: any) {
-          console.error(`Failed to send notification to user ${userId}:`, error);
+          console.error(`❌ Failed to send notification to user ${userId}:`, {
+            statusCode: error.statusCode,
+            body: error.body,
+            endpoint: subscription.endpoint.substring(0, 50) + '...'
+          });
+          
           // If subscription is invalid, remove it
           if (error.statusCode === 410 || error.statusCode === 404) {
+            console.log(`Removing invalid subscription for user ${userId}`);
             await db.execute(sql`
               DELETE FROM push_subscriptions WHERE id = ${subscription.id}
             `);
           }
+          
+          return false;
         }
       });
 
-      await Promise.allSettled(promises);
-      return true;
+      const results = await Promise.allSettled(promises);
+      const successful = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
+      
+      console.log(`Notification sending complete: ${successful}/${results.length} successful`);
+      return successful > 0;
     } catch (error) {
       console.error('Error sending notification to user:', error);
       return false;
