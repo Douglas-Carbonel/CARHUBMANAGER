@@ -151,6 +151,50 @@ export function useNotifications() {
     }
   };
 
+  const subscribe = async () => {
+    setIsLoading(true);
+    try {
+      const hasPermission = await notificationManager.requestPermission();
+
+      if (!hasPermission) {
+        toast({
+          variant: "destructive",
+          title: "Permissão negada",
+          description: "Não foi possível obter permissão para notificações.",
+        });
+        return;
+      }
+
+      const success = await notificationManager.subscribe();
+
+      if (success) {
+        setIsSubscribed(true);
+        toast({
+          title: "Notificações ativadas",
+          description: "Você receberá lembretes antes dos serviços agendados.",
+        });
+
+        // Force refresh subscription status
+        //await checkSubscriptionStatus();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Não foi possível ativar as notificações. Tente novamente.",
+        });
+      }
+    } catch (error) {
+      console.error('Error subscribing:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Ocorreu um erro ao ativar as notificações.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     isSupported,
     isSubscribed,
@@ -158,5 +202,6 @@ export function useNotifications() {
     requestPermission,
     unsubscribe,
     sendTestNotification,
+    subscribe
   };
 }

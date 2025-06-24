@@ -40,6 +40,13 @@ export class NotificationManager {
         return false;
       }
 
+      // First, unsubscribe from any existing subscription to avoid VAPID conflicts
+      const existingSubscription = await this.registration.pushManager.getSubscription();
+      if (existingSubscription) {
+        console.log('Removing existing subscription to refresh VAPID keys...');
+        await existingSubscription.unsubscribe();
+      }
+
       // Get VAPID public key from server
       const response = await fetch('/api/notifications/vapid-key');
       if (!response.ok) {
@@ -55,7 +62,7 @@ export class NotificationManager {
 
       console.log('Got VAPID public key, subscribing...');
 
-      // Subscribe to push notifications
+      // Subscribe to push notifications with new VAPID key
       this.subscription = await this.registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: this.urlBase64ToUint8Array(publicKey)
