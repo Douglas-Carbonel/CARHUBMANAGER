@@ -51,6 +51,18 @@ const formatCurrency = (value: string): string => {
   });
 };
 
+// Utility function to translate status from English to Portuguese
+const translateStatus = (status: string): string => {
+  const statusTranslations: Record<string, string> = {
+    'scheduled': 'Agendado',
+    'in_progress': 'Em Andamento',
+    'completed': 'Concluído',
+    'cancelled': 'Cancelado'
+  };
+  
+  return statusTranslations[status] || status;
+};
+
 const parseCurrency = (formattedValue: string): string => {
   if (!formattedValue) return '0.00';
 
@@ -1533,7 +1545,7 @@ export default function Services() {
                       </div>
                       <div>
                         <span className="text-slate-600">Status:</span>
-                        <span className="ml-2 font-medium capitalize">{form.watch("status") || "agendado"}</span>
+                        <span className="ml-2 font-medium">{translateStatus(form.watch("status") || "scheduled")}</span>
                       </div>
                       <div>
                         <span className="text-slate-600">Técnico:</span>
