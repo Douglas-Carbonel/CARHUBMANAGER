@@ -291,15 +291,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   const calculateTotalValue = () => {
     let total = 0;
 
-    // Add service type value
-    if (selectedServiceTypeId && serviceTypes) {
-      const selectedServiceType = serviceTypes.find((st: ServiceType) => st.id === selectedServiceTypeId);
-      if (selectedServiceType?.defaultPrice) {
-        total += Number(selectedServiceType.defaultPrice);
-      }
-    }
-
-    // Add service extras values
+    // Add service extras values (now all services)
     serviceExtras.forEach(extra => {
       if (extra.valor && !isNaN(Number(extra.valor))) {
         total += Number(extra.valor);
@@ -413,46 +405,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                 />
               </div>
 
-              <FormField
-                control={form.control}
-                name="serviceTypeId"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
-                      <Wrench className="h-4 w-4 mr-2 text-teal-600" />
-                      Tipo de Serviço
-                    </FormLabel>
-                    <Select 
-                      onValueChange={(value) => {
-                        const numValue = parseInt(value);
-                        field.onChange(numValue);
-                        setServiceExtras([]);
-                      }}
-                      value={field.value ? field.value.toString() : ""}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
-                          <SelectValue placeholder="Selecione o tipo de serviço" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {loadingServiceTypes ? (
-                          <SelectItem value="loading" disabled>Carregando...</SelectItem>
-                        ) : serviceTypes && serviceTypes.length > 0 ? (
-                          serviceTypes.map((serviceType: ServiceType) => (
-                            <SelectItem key={serviceType.id} value={serviceType.id.toString()}>
-                              {serviceType.name} - R$ {Number(serviceType.defaultPrice || 0).toFixed(2)}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="empty" disabled>Nenhum tipo de serviço encontrado</SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              
 
               <FormField
                 control={form.control}
@@ -560,71 +513,48 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                 )}
               />
 
-              {/* Service Extras Section */}
+              {/* Services Section */}
               <div>
                 <Card className="border border-gray-200">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-gray-700">Adicionais do Serviço</CardTitle>
+                    <CardTitle className="text-sm font-medium text-gray-700">Serviços</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {selectedServiceTypeId ? (
-                      <ServiceExtras
-                        onChange={(extras) => {
-                          setServiceExtras(extras);
-                        }}
-                        initialExtras={[]}
-                      />
-                    ) : (
-                      <div className="text-center py-6 text-gray-500">
-                        <p className="text-sm">Selecione um tipo de serviço primeiro para adicionar extras</p>
-                      </div>
-                    )}
+                    <ServiceExtras
+                      onChange={(extras) => {
+                        setServiceExtras(extras);
+                      }}
+                      initialExtras={[]}
+                    />
                   </CardContent>
                 </Card>
               </div>
 
               {/* Service Summary */}
-              {selectedServiceTypeId && (
+              {serviceExtras.length > 0 && (
                 <Card className="border border-emerald-200 bg-emerald-50">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium text-emerald-800">Resumo do Serviço</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-emerald-700">Tipo de serviço:</span>
-                        <span className="text-sm font-medium text-emerald-700">
-                          {selectedServiceType?.name}
-                        </span>
+                      <div className="text-xs font-medium text-emerald-800 mb-1">Serviços Selecionados:</div>
+                      {serviceExtras.map((extra, index) => (
+                        <div key={index} className="flex justify-between items-center text-xs">
+                          <span className="text-emerald-700">{extra.serviceExtra?.name || extra.descricao}:</span>
+                          <span className="font-medium text-emerald-700">
+                            R$ {Number(extra.valor || 0).toFixed(2)}
+                          </span>
+                        </div>
+                      ))}
+                      <div className="border-t border-emerald-400 mt-2 pt-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-bold text-emerald-800">Valor Total:</span>
+                          <span className="text-sm font-bold text-emerald-800">
+                            R$ {calculateTotalValue()}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-emerald-700">Valor base:</span>
-                        <span className="text-sm font-medium text-emerald-700">
-                          R$ {Number(selectedServiceType?.defaultPrice || 0).toFixed(2)}
-                        </span>
-                      </div>
-                      {serviceExtras.length > 0 && (
-                        <>
-                          <div className="border-t border-emerald-300 my-2"></div>
-                          <div className="text-xs font-medium text-emerald-800 mb-1">Adicionais:</div>
-                          {serviceExtras.map((extra, index) => (
-                            <div key={index} className="flex justify-between items-center text-xs">
-                              <span className="text-emerald-700">{extra.descricao}:</span>
-                              <span className="font-medium text-emerald-700">
-                                R$ {Number(extra.valor || 0).toFixed(2)}
-                              </span>
-                            </div>
-                          ))}
-                          <div className="border-t border-emerald-400 mt-2 pt-2">
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm font-bold text-emerald-800">Valor Total:</span>
-                              <span className="text-sm font-bold text-emerald-800">
-                                R$ {calculateTotalValue()}
-                              </span>
-                            </div>
-                          </div>
-                        </>
-                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -641,7 +571,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                 <Button 
                   type="submit"
                   className="bg-primary hover:bg-primary/90"
-                  disabled={createMutation.isPending || !selectedServiceTypeId}
+                  disabled={createMutation.isPending || serviceExtras.length === 0}
                 >
                   {createMutation.isPending ? "Criando..." : "Criar Serviço"}
                 </Button>

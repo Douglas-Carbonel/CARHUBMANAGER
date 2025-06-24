@@ -13,16 +13,16 @@ import type { ServiceExtra, ServiceExtraItem } from "@shared/schema";
 // Utility functions for currency formatting
 const formatCurrency = (value: string): string => {
   if (!value) return '';
-  
+
   // Remove tudo que não for número
   let numericValue = value.replace(/[^\d]/g, '');
-  
+
   // Se for vazio, retorna vazio
   if (!numericValue) return '';
-  
+
   // Converte para número e divide por 100 para ter centavos
   const numberValue = parseInt(numericValue) / 100;
-  
+
   // Formata para moeda brasileira
   return numberValue.toLocaleString('pt-BR', {
     minimumFractionDigits: 2,
@@ -32,15 +32,15 @@ const formatCurrency = (value: string): string => {
 
 const parseCurrency = (formattedValue: string): string => {
   if (!formattedValue) return '0.00';
-  
+
   // Remove tudo que não for número
   const numericValue = formattedValue.replace(/[^\d]/g, '');
-  
+
   if (!numericValue) return '0.00';
-  
+
   // Converte para formato decimal americano
   const numberValue = parseInt(numericValue) / 100;
-  
+
   return numberValue.toFixed(2);
 };
 
@@ -199,7 +199,7 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
     if (field === 'serviceExtraId') {
       const selectedExtra = availableExtras.find(e => e.id === value);
       if (selectedExtra) {
-        newExtras[index].valor = selectedExtra.valorPadrao || "0.00";
+        newExtras[index].valor = selectedExtra.defaultPrice || "0.00";
         newExtras[index].serviceExtra = selectedExtra;
       }
     }
@@ -264,7 +264,7 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
                     <SelectContent>
                       {availableExtras.map((availableExtra) => (
                         <SelectItem key={availableExtra.id} value={availableExtra.id.toString()}>
-                          {availableExtra.descricao}
+                          {availableExtra.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -335,3 +335,4 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
     </div>
   );
 }
+```

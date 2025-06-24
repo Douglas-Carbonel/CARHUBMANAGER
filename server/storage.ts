@@ -809,10 +809,10 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Service extras operations
-  async getServiceExtras(): Promise<ServiceExtra[]> {
+  // Service extras operations (now redirected to unified services)
+  async getServiceExtras(): Promise<any[]> {
     try {
-      return await db.select().from(serviceExtras).where(eq(serviceExtras.isActive, true)).orderBy(serviceExtras.descricao);
+      return await this.getUnifiedServices();
     } catch (error) {
       console.error('Error fetching service extras:', error);
       throw error;

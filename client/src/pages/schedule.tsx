@@ -43,7 +43,6 @@ async function apiRequest(method: string, url: string, data?: any): Promise<Resp
 const serviceFormSchema = insertServiceSchema.extend({
   customerId: z.number().min(1, "Cliente é obrigatório"),
   vehicleId: z.number().min(1, "Veículo é obrigatório"),
-  serviceTypeId: z.number().min(1, "Tipo de serviço é obrigatório"),
   technicianId: z.number().optional(),
 });
 
@@ -73,7 +72,7 @@ function CalendarView({ services, isLoading, onEdit, onDelete, isMobile, onDayCl
   onDayClick?: (date: Date, services: Service[]) => void;
 }) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  
+
   // Get current month data
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -81,33 +80,33 @@ function CalendarView({ services, isLoading, onEdit, onDelete, isMobile, onDayCl
   const lastDayOfMonth = new Date(year, month + 1, 0);
   const firstDayOfWeek = firstDayOfMonth.getDay();
   const daysInMonth = lastDayOfMonth.getDate();
-  
+
   // Get services by date
   const getServicesForDate = (date: Date) => {
     const dateString = date.toISOString().split('T')[0];
     return services.filter(service => service.scheduledDate === dateString);
   };
-  
+
   // Generate calendar days
   const days = [];
-  
+
   // Add empty cells for days before the first day of the month
   for (let i = 0; i < firstDayOfWeek; i++) {
     days.push(null);
   }
-  
+
   // Add days of the month
   for (let day = 1; day <= daysInMonth; day++) {
     days.push(new Date(year, month, day));
   }
-  
+
   const monthNames = [
     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
   ];
-  
+
   const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-  
+
   if (isLoading) {
     return (
       <Card className="bg-white/80 backdrop-blur-sm border border-teal-200">
@@ -124,7 +123,7 @@ function CalendarView({ services, isLoading, onEdit, onDelete, isMobile, onDayCl
       </Card>
     );
   }
-  
+
   return (
     <Card className="bg-white/95 backdrop-blur-sm border border-teal-200/50 shadow-lg">
       <CardHeader className="border-b border-teal-100">
@@ -171,17 +170,17 @@ function CalendarView({ services, isLoading, onEdit, onDelete, isMobile, onDayCl
               </div>
             ))}
           </div>
-          
+
           {/* Calendar days */}
           <div className={cn("grid grid-cols-7 gap-2", isMobile ? "gap-1" : "gap-2")}>
             {days.map((date, index) => {
               if (!date) {
                 return <div key={index} className={cn("", isMobile ? "h-16" : "h-24")}></div>;
               }
-              
+
               const dayServices = getServicesForDate(date);
               const isToday = date.toDateString() === new Date().toDateString();
-              
+
               return (
                 <div
                   key={index}
@@ -213,7 +212,7 @@ function CalendarView({ services, isLoading, onEdit, onDelete, isMobile, onDayCl
                       </span>
                     )}
                   </div>
-                  
+
                   <div className="space-y-1 overflow-y-auto" style={{ maxHeight: isMobile ? "60px" : "80px" }}>
                     {dayServices.length > 0 ? (
                       <>
@@ -322,7 +321,6 @@ export default function SchedulePage() {
     defaultValues: {
       customerId: 0,
       vehicleId: 0,
-      serviceTypeId: 0,
       technicianId: 0,
       status: "scheduled",
       scheduledDate: "",
@@ -439,13 +437,12 @@ export default function SchedulePage() {
     form.reset({
       customerId: service.customerId,
       vehicleId: service.vehicleId,
-      serviceTypeId: service.serviceTypeId,
       technicianId: service.technicianId || 0,
       status: service.status as "scheduled" | "in_progress" | "completed" | "cancelled",
       scheduledDate: service.scheduledDate ? new Date(service.scheduledDate).toISOString().slice(0, 10) : "",
       estimatedValue: service.estimatedValue || undefined,
       finalValue: service.finalValue || undefined,
-      notes: service.notes || "",
+      notes: "",
     });
     setIsModalOpen(true);
   };
@@ -462,7 +459,7 @@ export default function SchedulePage() {
     });
   };
 
-  
+
 
   // Filter services for schedule view
   const getDateRange = (period: string) => {
@@ -548,7 +545,7 @@ export default function SchedulePage() {
                   />
                 </div>
               </div>
-              
+
               <div className={cn("flex gap-3", isMobile ? "flex-col" : "flex-row min-w-max")}>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className={cn("bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-xl shadow-sm focus:shadow-md transition-all duration-200", isMobile ? "w-full h-11" : "w-48")}>
@@ -622,7 +619,6 @@ export default function SchedulePage() {
                         form.reset({
                           customerId: 0,
                           vehicleId: 0,
-                          serviceTypeId: 0,
                           technicianId: user?.role === 'technician' ? user.id : 0,
                           status: "scheduled",
                           scheduledDate: (() => {
@@ -720,42 +716,10 @@ export default function SchedulePage() {
                         <div className="grid gap-4 grid-cols-1">
                           <FormField
                             control={form.control}
-                            name="serviceTypeId"
-                            render={({ field }) => (
-                              <FormItem className="space-y-2">
-                                <FormLabel className={cn("font-semibold text-slate-700 flex items-center", isMobile ? "text-sm" : "text-sm")}>
-                                  <Wrench className="h-4 w-4 mr-2 text-teal-600" />
-                                  Tipo de Serviço
-                                </FormLabel>
-                                <Select 
-                                  onValueChange={(value) => field.onChange(Number(value))} 
-                                  value={field.value > 0 ? field.value.toString() : ""}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger className={cn("border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md", isMobile ? "h-12 text-base" : "h-11")}>
-                                      <SelectValue placeholder="Selecione um tipo" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    {serviceTypes.map((type: ServiceType) => (
-                                      <SelectItem key={type.id} value={type.id.toString()}>
-                                        {type.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
                             name="technicianId"
                             render={({ field }) => (
                               <FormItem className="space-y-2">
-                                <FormLabel className={cn("font-semibold text-slate-700 flex items-center", isMobile ? "text-sm" : "text-sm")}>
-                                  <User className="h-4 w-4 mr-2 text-teal-600" />
+                                <FormLabel className={cn("font-semibold text-slate-700 flex items-center", isMobile ? "text-sm" : "text-sm")                                  <User className="h-4 w-4 mr-2 text-teal-600" />
                                   Técnico Responsável
                                 </FormLabel>
                                 <Select 

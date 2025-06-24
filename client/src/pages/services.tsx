@@ -75,7 +75,6 @@ interface PaymentMethods {
 const serviceFormSchema = insertServiceSchema.extend({
   customerId: z.number().min(1, "Cliente é obrigatório"),
   vehicleId: z.number().min(1, "Veículo é obrigatório"),
-  serviceTypeId: z.number().min(1, "Tipo de serviço é obrigatório"),
   technicianId: z.number().min(1, "Técnico é obrigatório"),
   scheduledDate: z.string().optional(),
   scheduledTime: z.string().optional(),
@@ -151,7 +150,6 @@ export default function Services() {
     defaultValues: {
       customerId: 0,
       vehicleId: 0,
-      serviceTypeId: 0,
       technicianId: 0,
       scheduledDate: "",
       scheduledTime: "",
@@ -408,41 +406,11 @@ export default function Services() {
     },
   });
 
-  // Get service type price
-  const getServiceTypePrice = () => {
-    const selectedServiceTypeId = form.watch("serviceTypeId");
-    if (selectedServiceTypeId && serviceTypes) {
-      const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
-      return Number(selectedServiceType?.defaultPrice || 0).toFixed(2);
-    }
-    return "0.00";
-  };
-
-  // Calculate extras total
-  const calculateExtrasTotal = () => {
-    let extrasTotal = 0;
-    serviceExtras.forEach(extra => {
-      if (extra.valor && !isNaN(Number(extra.valor))) {
-        extrasTotal += Number(extra.valor);
-      }
-    });
-    return extrasTotal.toFixed(2);
-  };
-
-  // Calculate total value
+  // Calculate total value from services
   const calculateTotalValue = () => {
     let total = 0;
 
-    // Add service type value
-    const selectedServiceTypeId = form.watch("serviceTypeId");
-    if (selectedServiceTypeId && serviceTypes) {
-      const selectedServiceType = serviceTypes.find(st => st.id === selectedServiceTypeId);
-      if (selectedServiceType?.defaultPrice) {
-        total += Number(selectedServiceType.defaultPrice);
-      }
-    }
-
-    // Add service extras values
+    // Add all selected services values
     serviceExtras.forEach(extra => {
       if (extra.valor && !isNaN(Number(extra.valor))) {
         total += Number(extra.valor);
@@ -923,37 +891,6 @@ export default function Services() {
                     <div className="grid grid-cols-2 gap-6">
                       <FormField
                         control={form.control}
-                        name="serviceTypeId"
-                        render={({ field }) => (
-                          <FormItem className="space-y-2">
-                            <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
-                              <Wrench className="h-4 w-4 mr-2 text-teal-600" />
-                              Tipo de Serviço
-                            </FormLabel>
-                            <Select 
-                              onValueChange={(value) => field.onChange(Number(value))} 
-                              value={field.value > 0 ? field.value.toString() : ""}
-                            >
-                              <FormControl>
-                                <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
-                                  <SelectValue placeholder="Selecione um tipo" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {serviceTypes.map((type: ServiceType) => (
-                                  <SelectItem key={type.id} value={type.id.toString()}>
-                                    {type.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
                         name="technicianId"
                         render={({ field }) => (
                           <FormItem className="space-y-2">
@@ -1068,8 +1005,12 @@ export default function Services() {
                       )}
                     />
 
-                    {/* Service Extras Section */}
+                    {/* Services Section */}
                     <div className="col-span-2 border-t pt-4">
+                      <h4 className="text-lg font-semibold text-slate-700 mb-4 flex items-center">
+                        <Wrench className="h-5 w-5 mr-2 text-teal-600" />
+                        Serviços
+                      </h4>
                       <ServiceExtras
                         serviceId={editingService?.id}
                         onChange={setServiceExtras}
@@ -1442,7 +1383,7 @@ export default function Services() {
                       <Button 
                         type="submit" 
                         className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-2 font-semibold"
-                        disabled={createMutation.isPending || updateMutation.isPending}
+                        disabled={createMutation.isPending || updateMutation.isPending || serviceExtras.length === 0}
                       >
                         {editingService ? "Atualizar Serviço" : "Criar Serviço"}
                       </Button>

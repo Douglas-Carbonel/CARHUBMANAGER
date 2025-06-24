@@ -276,6 +276,8 @@ export const insertServiceSchema = createInsertSchema(services).extend({
   dinheiroPago: z.string().optional(),
   chequePago: z.string().optional(),
   cartaoPago: z.string().optional(),
+}).omit({
+  serviceTypeId: true, // Remove a obrigatoriedade do serviceTypeId
 });
 
 export const insertUnifiedServiceSchema = createInsertSchema(unifiedServices).omit({
