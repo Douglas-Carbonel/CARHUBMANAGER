@@ -147,6 +147,7 @@ Changelog:
 - January 2025. Fixed JSX syntax errors and cleaned up service resume modal interface
 - January 2025. Added Portuguese status translation in service resume modal for better localization
 - January 2025. Removed service extras/adicionais tab from admin panel and fixed storage errors to reflect unified service architecture
+- January 2025. Optimized mobile view for service extras grid - compact 2-line layout with observation modal for better mobile UX
 - June 19, 2025. Added photo category selection during capture and upload (Vehicle, Damage, Before, After, Other)
 - June 19, 2025. Enhanced temporary photos display with category labels for new vehicle creation
 - June 19, 2025. Implemented automatic image compression for all photo uploads (camera and file upload)

@@ -7,7 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Plus, Trash2, FileText } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { ServiceExtra, ServiceExtraItem, ServiceType } from "@shared/schema";
 
 // Utility functions for currency formatting
@@ -276,6 +278,22 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
     );
   };
 
+  const isMobile = useIsMobile();
+  const [observationModal, setObservationModal] = useState<{ isOpen: boolean; tempId: string; observation: string }>({
+    isOpen: false,
+    tempId: '',
+    observation: ''
+  });
+
+  const openObservationModal = (tempId: string, observation: string) => {
+    setObservationModal({ isOpen: true, tempId, observation });
+  };
+
+  const saveObservation = () => {
+    updateExtra(observationModal.tempId, 'observacao', observationModal.observation);
+    setObservationModal({ isOpen: false, tempId: '', observation: '' });
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -295,77 +313,152 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
       <div className="space-y-3">
         {extras.map((extra) => (
           <Card key={extra.tempId} className="border border-gray-200">
-            <CardContent className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-                <div className="md:col-span-4">
-                  <Label className="text-sm text-gray-600 font-medium">Serviço</Label>
-                  <Select
-                    value={extra.serviceExtraId > 0 ? extra.serviceExtraId.toString() : ""}
-                    onValueChange={(value) => updateExtra(extra.tempId, 'serviceExtraId', parseInt(value))}
-                  >
-                    <SelectTrigger className="h-12 text-base">
-                      <SelectValue placeholder="Selecione um serviço" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {/* Show all available services for this specific dropdown */}
-                      {getAvailableServicesForDropdown(extra.tempId).map((availableService) => (
-                        <SelectItem key={availableService.id} value={availableService.id.toString()}>
-                          {availableService.descricao}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="md:col-span-3">
-                  <Label className="text-sm text-gray-600 font-medium">Valor (R$)</Label>
-                  <Input
-                    type="text"
-                    placeholder="0,00"
-                    value={formatCurrency(extra.valor)}
-                    onChange={(e) => {
-                      const rawValue = parseCurrency(e.target.value);
-                      updateExtra(extra.tempId, 'valor', rawValue);
-                    }}
-                    className="h-14 text-lg font-bold text-center bg-green-50 border-2 border-green-200 focus:border-green-400 rounded-lg"
-                  />
-                </div>
-
-                <div className="md:col-span-4">
-                  <Label className="text-sm text-gray-600 font-medium">Observação</Label>
-                  <Textarea
-                    placeholder="Observações sobre este adicional..."
-                    value={extra.observacao}
-                    onChange={(e) => updateExtra(extra.tempId, 'observacao', e.target.value)}
-                    className="h-12 min-h-[48px] resize-none text-base"
-                    rows={1}
-                  />
-                </div>
-
-                <div className="md:col-span-1 flex gap-2 justify-center md:justify-end mt-2 md:mt-0">
-                  {!extra.id && serviceId && extra.serviceExtraId > 0 && (
+            <CardContent className={isMobile ? "p-3" : "p-4"}>
+              {isMobile ? (
+                // Mobile compact layout - maximum 2 lines
+                <div className="space-y-2">
+                  {/* First line: Service selector + delete button */}
+                  <div className="flex gap-2 items-center">
+                    <div className="flex-1">
+                      <Select
+                        value={extra.serviceExtraId > 0 ? extra.serviceExtraId.toString() : ""}
+                        onValueChange={(value) => updateExtra(extra.tempId, 'serviceExtraId', parseInt(value))}
+                      >
+                        <SelectTrigger className="h-10 text-sm">
+                          <SelectValue placeholder="Selecione um serviço" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getAvailableServicesForDropdown(extra.tempId).map((availableService) => (
+                            <SelectItem key={availableService.id} value={availableService.id.toString()}>
+                              {availableService.descricao}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => saveExtra(extra.tempId)}
-                      className="h-12 px-4 text-base font-medium"
-                      disabled={createExtraItemMutation.isPending}
+                      onClick={() => removeExtra(extra.tempId)}
+                      className="h-10 w-10 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
                     >
-                      ✓
+                      <Trash2 className="h-4 w-4" />
                     </Button>
-                  )}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeExtra(extra.tempId)}
-                    className="h-12 px-4 text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  </div>
+
+                  {/* Second line: Value + observation button + save button */}
+                  <div className="flex gap-2 items-center">
+                    <div className="flex-1">
+                      <Input
+                        type="text"
+                        placeholder="0,00"
+                        value={formatCurrency(extra.valor)}
+                        onChange={(e) => {
+                          const rawValue = parseCurrency(e.target.value);
+                          updateExtra(extra.tempId, 'valor', rawValue);
+                        }}
+                        className="h-10 text-sm font-semibold text-center bg-green-50 border-green-200 focus:border-green-400"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openObservationModal(extra.tempId, extra.observacao)}
+                      className="h-10 px-3 flex-shrink-0 flex items-center gap-1"
+                    >
+                      <FileText className="h-3 w-3" />
+                      <span className="text-xs">
+                        {extra.observacao ? extra.observacao.substring(0, 3) + '...' : 'Obs'}
+                      </span>
+                    </Button>
+                    {!extra.id && serviceId && extra.serviceExtraId > 0 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => saveExtra(extra.tempId)}
+                        className="h-10 px-3 text-sm font-medium flex-shrink-0"
+                        disabled={createExtraItemMutation.isPending}
+                      >
+                        ✓
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                // Desktop layout - original grid
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                  <div className="md:col-span-4">
+                    <Label className="text-sm text-gray-600 font-medium">Serviço</Label>
+                    <Select
+                      value={extra.serviceExtraId > 0 ? extra.serviceExtraId.toString() : ""}
+                      onValueChange={(value) => updateExtra(extra.tempId, 'serviceExtraId', parseInt(value))}
+                    >
+                      <SelectTrigger className="h-12 text-base">
+                        <SelectValue placeholder="Selecione um serviço" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getAvailableServicesForDropdown(extra.tempId).map((availableService) => (
+                          <SelectItem key={availableService.id} value={availableService.id.toString()}>
+                            {availableService.descricao}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="md:col-span-3">
+                    <Label className="text-sm text-gray-600 font-medium">Valor (R$)</Label>
+                    <Input
+                      type="text"
+                      placeholder="0,00"
+                      value={formatCurrency(extra.valor)}
+                      onChange={(e) => {
+                        const rawValue = parseCurrency(e.target.value);
+                        updateExtra(extra.tempId, 'valor', rawValue);
+                      }}
+                      className="h-14 text-lg font-bold text-center bg-green-50 border-2 border-green-200 focus:border-green-400 rounded-lg"
+                    />
+                  </div>
+
+                  <div className="md:col-span-4">
+                    <Label className="text-sm text-gray-600 font-medium">Observação</Label>
+                    <Textarea
+                      placeholder="Observações sobre este adicional..."
+                      value={extra.observacao}
+                      onChange={(e) => updateExtra(extra.tempId, 'observacao', e.target.value)}
+                      className="h-12 min-h-[48px] resize-none text-base"
+                      rows={1}
+                    />
+                  </div>
+
+                  <div className="md:col-span-1 flex gap-2 justify-center md:justify-end mt-2 md:mt-0">
+                    {!extra.id && serviceId && extra.serviceExtraId > 0 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => saveExtra(extra.tempId)}
+                        className="h-12 px-4 text-base font-medium"
+                        disabled={createExtraItemMutation.isPending}
+                      >
+                        ✓
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeExtra(extra.tempId)}
+                      className="h-12 px-4 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -378,6 +471,35 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
           </Card>
         )}
       </div>
+
+      {/* Observation Modal */}
+      <Dialog open={observationModal.isOpen} onOpenChange={(open) => !open && setObservationModal({ isOpen: false, tempId: '', observation: '' })}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Observações do Serviço</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Textarea
+              placeholder="Digite as observações sobre este serviço..."
+              value={observationModal.observation}
+              onChange={(e) => setObservationModal(prev => ({ ...prev, observation: e.target.value }))}
+              className="min-h-[120px] resize-none"
+              rows={5}
+            />
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setObservationModal({ isOpen: false, tempId: '', observation: '' })}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={saveObservation} className="bg-teal-600 hover:bg-teal-700">
+                Salvar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
