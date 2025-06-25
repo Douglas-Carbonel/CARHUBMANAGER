@@ -96,7 +96,7 @@ export const services = pgTable("services", {
   id: serial("id").primaryKey(),
   customerId: integer("customer_id").references(() => customers.id).notNull(),
   vehicleId: integer("vehicle_id").references(() => vehicles.id).notNull(),
-  serviceTypeId: integer("service_type_id"), // Keep for backward compatibility during migration
+  serviceTypeId: integer("service_type_id"), // Keep for backward compatibility during migration - now optional
   unifiedServiceId: integer("unified_service_id").references(() => unifiedServices.id), // New reference
   technicianId: integer("technician_id").references(() => users.id),
   status: varchar("status", { 

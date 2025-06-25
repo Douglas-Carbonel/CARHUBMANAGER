@@ -374,12 +374,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         customerId: Number(req.body.customerId),
         vehicleId: Number(req.body.vehicleId),
-        serviceTypeId: Number(req.body.serviceTypeId),
         estimatedValue: req.body.estimatedValue && req.body.estimatedValue !== "" ? String(req.body.estimatedValue) : undefined,
         valorPago: req.body.valorPago && req.body.valorPago !== "" ? String(req.body.valorPago) : "0.00",
         notes: req.body.notes || undefined,
         scheduledTime: req.body.scheduledTime || undefined,
       };
+
+      // If we have service extras but no unifiedServiceId, use the first service extra as the main service
+      if (req.body.serviceExtras && Array.isArray(req.body.serviceExtras) && req.body.serviceExtras.length > 0 && !cleanedData.unifiedServiceId) {
+        cleanedData.unifiedServiceId = Number(req.body.serviceExtras[0].serviceExtraId);
+      }
 
       const serviceData = insertServiceSchema.parse(cleanedData);
       console.log('Parsed service data:', JSON.stringify(serviceData, null, 2));
@@ -447,16 +451,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.body.serviceExtras && Array.isArray(req.body.serviceExtras) && req.body.serviceExtras.length > 0) {
         console.log('Processing service extras:', req.body.serviceExtras);
 
-        for (const extra of req.body.serviceExtras) {
+        // If the first service extra was used as the main service, start from index 1
+        // Otherwise, process all service extras
+        const startIndex = (serviceData.unifiedServiceId === Number(req.body.serviceExtras[0].serviceExtraId)) ? 1 : 0;
+
+        for (let i = startIndex; i < req.body.serviceExtras.length; i++) {
+          const extra = req.body.serviceExtras[i];
           const extraItem = {
             serviceId: service.id,
-            serviceExtraId: extra.serviceExtraId,
+            unifiedServiceId: extra.serviceExtraId,
             valor: extra.valor || "0.00",
             observacao: extra.observacao || "",
           };
 
-          console.log('Creating service extra item:', extraItem);
-          await storage.createServiceExtraItem(extraItem);
+          console.log('Creating service item:', extraItem);
+          await storage.createServiceItem(extraItem);
         }
 
         console.log('All service extras processed successfully');
