@@ -345,9 +345,9 @@ export default function Services() {
 
         if (serviceData.serviceItems && serviceData.serviceItems.length > 0) {
           // Convert service_items to the format expected by ServiceItems component
-          const mappedExtras = serviceData.serviceItems.map((item: any) => ({
+          const mappedExtras = serviceData.serviceItems.map((item: any, index: number) => ({
             id: item.id,
-            tempId: `existing_${item.id}_${Date.now()}`,
+            tempId: `existing_${item.id}_${Date.now()}_${index}`,
             serviceTypeId: item.serviceTypeId || item.service_type_id,
             quantity: item.quantity || 1,
             unitPrice: item.unitPrice || item.unit_price || "0.00",
@@ -362,13 +362,17 @@ export default function Services() {
 
           console.log('Mapped service items to ServiceItems format:', mappedExtras);
           
-          // Set the service extras immediately - no setTimeout needed
-          setServiceExtras(mappedExtras);
-          setInitialServiceExtras(mappedExtras);
+          // Use a small delay to ensure state updates don't conflict
+          setTimeout(() => {
+            setServiceExtras(mappedExtras);
+            setInitialServiceExtras(mappedExtras);
+          }, 50);
         } else {
           console.log('No service items found for this service');
-          setServiceExtras([]);
-          setInitialServiceExtras([]);
+          setTimeout(() => {
+            setServiceExtras([]);
+            setInitialServiceExtras([]);
+          }, 50);
         }
       } else {
         console.error('Failed to fetch service data:', response.status);
@@ -622,8 +626,13 @@ export default function Services() {
 
     setFormInitialValues(editValues);
     form.reset(editValues);
+    
+    // Clear service extras first
+    setServiceExtras([]);
+    setInitialServiceExtras([]);
+    
+    // Then load photos and service items
     fetchServicePhotos(service.id);
-    // Load existing service extras
     fetchServiceExtras(service.id);
 
     // Load existing payment methods from specific fields
@@ -805,6 +814,7 @@ export default function Services() {
                   setFormInitialValues(null);
                   setCurrentServicePhotos([]);
                   setServiceExtras([]);
+                  setInitialServiceExtras([]);
                   setEditingService(null);
                   form.reset();
                   setTemporaryPhotos([]);
@@ -826,7 +836,6 @@ export default function Services() {
                     onClick={async () => {
                       setEditingService(null);
                       setCurrentServicePhotos([]);
-                      setServiceExtras([]);
                       setTemporaryPhotos([]);
 
                       const defaultValues = {
@@ -864,6 +873,10 @@ export default function Services() {
 
                       // Reset form with correct values FIRST
                       form.reset(defaultValues);
+
+                      // Clear service extras immediately for new service
+                      setServiceExtras([]);
+                      setInitialServiceExtras([]);
 
                       // THEN set initial values for comparison
                       setTimeout(() => {

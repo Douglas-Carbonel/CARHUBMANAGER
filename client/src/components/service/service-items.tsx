@@ -87,24 +87,23 @@ export default function ServiceItems({ serviceId, onChange, initialItems = [] }:
       initialItems: initialItems 
     });
 
+    // Always update items when initialItems changes, regardless of initialization state
     if (initialItems.length > 0) {
-      console.log('ServiceItems - Initializing with data:', initialItems);
+      console.log('ServiceItems - Setting items from initialItems:', initialItems);
       setItems(initialItems);
-      setIsInitialized(true);
+      if (!isInitialized) {
+        setIsInitialized(true);
+      }
     } else if (isInitialized && initialItems.length === 0) {
-      // Only clear if we're already initialized and receive empty array
+      // Only clear items if we were previously initialized and now have no items
       console.log('ServiceItems - Clearing items due to empty initialItems');
       setItems([]);
     } else if (!isInitialized) {
-      // First time initialization - set as initialized
-      console.log('ServiceItems - First time initialization');
+      // First time initialization without items
+      console.log('ServiceItems - First time initialization without items');
       setIsInitialized(true);
-      // If we have initial items on first load, use them
-      if (initialItems.length > 0) {
-        setItems(initialItems);
-      }
     }
-  }, [initialItems, isInitialized]);
+  }, [initialItems]);
 
   // Notify parent component of changes
   useEffect(() => {
@@ -133,7 +132,7 @@ export default function ServiceItems({ serviceId, onChange, initialItems = [] }:
   const updateItem = (tempId: string, field: keyof ServiceItemRow, value: any) => {
     const newItems = [...items];
     const index = newItems.findIndex(item => item.tempId === tempId);
-    
+
     if (index === -1) return;
 
     newItems[index] = { ...newItems[index], [field]: value };
@@ -172,7 +171,7 @@ export default function ServiceItems({ serviceId, onChange, initialItems = [] }:
     const selectedServiceIds = items
       .filter(item => item.tempId !== currentTempId && item.serviceTypeId > 0)
       .map(item => item.serviceTypeId);
-    
+
     return serviceTypes.filter(serviceType => 
       serviceType.isActive !== false && !selectedServiceIds.includes(serviceType.id)
     );
