@@ -381,7 +381,7 @@ export class DatabaseStorage implements IStorage {
   async getServices(technicianId?: number): Promise<any[]> {
     try {
       console.log('Storage: Getting services...', technicianId ? `for technician ${technicianId}` : 'for all');
-      
+
       // Use raw SQL to avoid Drizzle ordering issues
       const technicianCondition = technicianId 
         ? sql`WHERE s.technician_id = ${technicianId}` 
@@ -432,7 +432,7 @@ export class DatabaseStorage implements IStorage {
       `);
 
       console.log('Storage: Found services:', result.rows.length);
-      
+
       const servicesData = result.rows.map(row => ({
         id: row.id,
         customerId: row.customerId,
@@ -1598,11 +1598,14 @@ export class DatabaseStorage implements IStorage {
         return undefined;
       }
 
+      const serviceItemsResult = await db.select().from(serviceItems).where(eq(serviceItems.serviceId, serviceId));
+
       return {
         ...service.service,
         customer: service.customer!,
         vehicle: service.vehicle!,
         serviceType: service.serviceType!,
+        serviceItems: serviceItemsResult,
       };
     } catch (error) {
       console.error('Error fetching service:', error);

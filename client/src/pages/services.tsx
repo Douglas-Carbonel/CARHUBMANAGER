@@ -2023,7 +2023,11 @@ export default function Services() {
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <CardTitle className="text-lg font-bold text-teal-800 mb-1">
-                          {service.serviceType?.name || 'Tipo não especificado'}
+                          {service.serviceItems && service.serviceItems.length > 0 
+                            ? service.serviceItems.length === 1 
+                              ? service.serviceItems[0].serviceTypeName || 'Serviço'
+                              : `${service.serviceItems.length} serviços`
+                            : 'Serviço'}
                         </CardTitle>
                         <div className="flex items-center text-sm text-gray-600 mb-2">
                           <User className="h-4 w-4 mr-1" />
