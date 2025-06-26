@@ -348,13 +348,14 @@ export default function Services() {
           const mappedExtras = serviceData.serviceItems.map((item: any) => ({
             id: item.id,
             tempId: `existing_${item.id}_${Date.now()}`,
-            serviceExtraId: item.serviceTypeId, // This is the key field needed for the grid
             serviceTypeId: item.serviceTypeId,
-            valor: item.totalPrice || item.unitPrice || "0.00",
-            observacao: item.notes || "",
-            serviceExtra: {
+            quantity: item.quantity || 1,
+            unitPrice: item.unitPrice || "0.00",
+            totalPrice: item.totalPrice || "0.00",
+            notes: item.notes || "",
+            serviceType: {
               id: item.serviceTypeId,
-              descricao: item.serviceTypeName || "Serviço",
+              name: item.serviceTypeName || "Serviço",
               defaultPrice: item.serviceTypeDefaultPrice || "0.00"
             },
           }));
@@ -471,7 +472,9 @@ export default function Services() {
 
     // Add all selected services values
     serviceExtras.forEach(extra => {
-      if (extra.valor && !isNaN(Number(extra.valor))) {
+      if (extra.totalPrice && !isNaN(Number(extra.totalPrice))) {
+        total += Number(extra.totalPrice);
+      } else if (extra.valor && !isNaN(Number(extra.valor))) {
         total += Number(extra.valor);
       }
     });
@@ -494,10 +497,10 @@ export default function Services() {
     // Convert serviceExtras to serviceItems format
     const serviceItemsData = serviceExtras.map((extra: any) => ({
       serviceTypeId: extra.serviceTypeId || extra.serviceExtra?.id,
-      quantity: 1,
-      unitPrice: extra.valor,
-      totalPrice: extra.valor,
-      notes: extra.observacao || null,
+      quantity: extra.quantity || 1,
+      unitPrice: extra.unitPrice || extra.valor || "0.00",
+      totalPrice: extra.totalPrice || extra.valor || "0.00",
+      notes: extra.notes || extra.observacao || null,
     }));
 
     const serviceData = {
@@ -1079,7 +1082,10 @@ export default function Services() {
                       </h4>
                       <ServiceItems
                         serviceId={editingService?.id}
-                        onChange={setServiceExtras}
+                        onChange={(items) => {
+                          console.log('Services page - Received items from ServiceItems:', items);
+                          setServiceExtras(items);
+                        }}
                         initialItems={serviceExtras}
                       />
                     </div>

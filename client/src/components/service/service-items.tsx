@@ -93,6 +93,7 @@ export default function ServiceItems({ serviceId, onChange, initialItems = [] }:
   // Notify parent component of changes
   useEffect(() => {
     if (onChange) {
+      console.log('ServiceItems - Notifying parent with items:', items);
       onChange(items);
     }
   }, [items, onChange]);

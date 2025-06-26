@@ -445,12 +445,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Handle serviceItems format (from services page)
       if (req.body.serviceItems && Array.isArray(req.body.serviceItems)) {
         req.body.serviceItems.forEach((item: any) => {
-          if (item.serviceTypeId > 0 && Number(item.unitPrice) > 0) {
+          if (item.serviceTypeId > 0) {
             serviceItems.push({
               serviceTypeId: Number(item.serviceTypeId),
               quantity: Number(item.quantity) || 1,
-              unitPrice: String(item.unitPrice),
-              totalPrice: String(item.totalPrice),
+              unitPrice: String(item.unitPrice || "0.00"),
+              totalPrice: String(item.totalPrice || "0.00"),
               notes: item.notes || undefined,
             });
           }
