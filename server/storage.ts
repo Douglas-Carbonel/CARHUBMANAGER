@@ -663,6 +663,7 @@ export class DatabaseStorage implements IStorage {
       console.log('Storage: Service created successfully:', newService);
 
       // Create service items if they exist
+      console.log('Storage: Checking service items - inputServiceItems:', inputServiceItems);
       if (inputServiceItems && inputServiceItems.length > 0) {
         const serviceItemsData = inputServiceItems.map(item => ({
           serviceId: newService.id,
@@ -676,6 +677,8 @@ export class DatabaseStorage implements IStorage {
         console.log('Storage: Inserting service items data:', serviceItemsData);
         await db.insert(serviceItems).values(serviceItemsData);
         console.log('Storage: Service items created successfully:', serviceItemsData.length, 'items');
+      } else {
+        console.log('Storage: No service items to create - inputServiceItems is empty or null');
       }
 
       return newService;
