@@ -877,7 +877,7 @@ export default function Services() {
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-slate-50 to-blue-50/30">
                 <DialogHeader className="pb-6">
                   <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent">
-                    {editingService ? "Editar Serviço" : "Novo Serviço"}
+                    {editingService ? "Editar Ordem de Serviço" : "Nova Ordem de Serviço"}
                   </DialogTitle>
                 </DialogHeader>                <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

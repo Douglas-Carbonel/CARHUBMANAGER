@@ -286,7 +286,7 @@ export const insertServiceSchema = createInsertSchema(services).extend({
     quantity: z.number().default(1),
     unitPrice: z.string(),
     totalPrice: z.string(),
-    notes: z.string().optional(),
+    notes: z.string().nullable().optional(),
   })).optional(),
 });
 
