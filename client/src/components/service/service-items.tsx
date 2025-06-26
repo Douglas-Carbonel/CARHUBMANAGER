@@ -87,22 +87,17 @@ export default function ServiceItems({ serviceId, onChange, initialItems = [] }:
       initialItems: initialItems 
     });
 
-    // Always update items when initialItems changes, regardless of initialization state
+    // Always update items when initialItems changes
     if (initialItems.length > 0) {
       console.log('ServiceItems - Setting items from initialItems:', initialItems);
       setItems(initialItems);
-      if (!isInitialized) {
-        setIsInitialized(true);
-      }
-    } else if (isInitialized && initialItems.length === 0) {
-      // Only clear items if we were previously initialized and now have no items
-      console.log('ServiceItems - Clearing items due to empty initialItems');
-      setItems([]);
+      setIsInitialized(true);
     } else if (!isInitialized) {
       // First time initialization without items
       console.log('ServiceItems - First time initialization without items');
       setIsInitialized(true);
     }
+    // Don't clear items when initialItems becomes empty during editing
   }, [initialItems]);
 
   // Notify parent component of changes

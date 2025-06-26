@@ -362,17 +362,13 @@ export default function Services() {
 
           console.log('Mapped service items to ServiceItems format:', mappedExtras);
           
-          // Use a small delay to ensure state updates don't conflict
-          setTimeout(() => {
-            setServiceExtras(mappedExtras);
-            setInitialServiceExtras(mappedExtras);
-          }, 50);
+          // Set service items immediately without delay
+          setServiceExtras(mappedExtras);
+          setInitialServiceExtras(mappedExtras);
         } else {
           console.log('No service items found for this service');
-          setTimeout(() => {
-            setServiceExtras([]);
-            setInitialServiceExtras([]);
-          }, 50);
+          setServiceExtras([]);
+          setInitialServiceExtras([]);
         }
       } else {
         console.error('Failed to fetch service data:', response.status);
@@ -627,11 +623,7 @@ export default function Services() {
     setFormInitialValues(editValues);
     form.reset(editValues);
     
-    // Clear service extras first
-    setServiceExtras([]);
-    setInitialServiceExtras([]);
-    
-    // Then load photos and service items
+    // Load photos and service items in parallel - don't clear service extras first
     fetchServicePhotos(service.id);
     fetchServiceExtras(service.id);
 
