@@ -11,6 +11,8 @@ import path from "path";
 import fs from "fs";
 import sharp from "sharp";
 import { fileURLToPath } from "url";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 
 // Configure multer for file uploads
 const uploadsDir = path.join(process.cwd(), 'uploads');
@@ -183,6 +185,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Create initial service types if they don't exist
   await createInitialServiceTypes();
+
+  // Diagnostic route to check database structure
+  app.get("/api/debug/database-tables", requireAuth, async (req, res) => {
+    try {
+      const result = await db.execute(sql`
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name LIKE '%service%'
+        ORDER BY table_name
+      `);
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error checking database tables:", error);
+      res.status(500).json({ message: "Failed to check database structure" });
+    }
+  });
 
   // Customer routes
   app.get("/api/customers", requireAuth, async (req, res) => {
