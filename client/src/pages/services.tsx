@@ -1636,7 +1636,7 @@ export default function Services() {
                       </div>
                       <div>
                         <span className="text-slate-600">Hora:</span>
-                        <span className="ml-2 font-medium{form.watch("scheduledTime") || "Não definida"}</span>
+                        <span className="ml-2 font-medium">{form.watch("scheduledTime") || "Não definida"}</span>
                       </div>
                       <div>
                         <span className="text-slate-600">Status:</span>
