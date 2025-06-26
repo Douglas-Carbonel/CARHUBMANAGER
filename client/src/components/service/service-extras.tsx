@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Trash2, FileText } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import type { ServiceExtra, ServiceExtraItem, ServiceType } from "@shared/schema";
+import type { ServiceType } from "@shared/schema";
 
 // Utility functions for currency formatting
 const formatCurrency = (value: string): string => {
@@ -62,7 +62,7 @@ interface ServiceExtraRow {
 interface ServiceExtrasProps {
   serviceId?: number;
   onChange?: (extras: ServiceExtraRow[]) => void;
-  initialExtras?: (ServiceExtraItem & { serviceExtra: ServiceExtra })[];
+  initialExtras?: ServiceExtraRow[];
 }
 
 export default function ServiceExtras({ serviceId, onChange, initialExtras = [] }: ServiceExtrasProps) {
@@ -94,46 +94,15 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
     refetchOnWindowFocus: true,
   });
 
-  // Load existing extras for this service
-  const { data: existingExtras = [] } = useQuery<(ServiceExtraItem & { serviceExtra: ServiceExtra })[]>({
-    queryKey: [`/api/services/${serviceId}/extras`],
-    queryFn: async () => {
-      if (!serviceId) return [];
-      const res = await fetch(`/api/services/${serviceId}/extras`, {
-        credentials: "include",
-      });
-      if (!res.ok) {
-        throw new Error(`${res.status}: ${res.statusText}`);
-      }
-      return await res.json();
-    },
-    enabled: !!serviceId,
-  });
+  // No longer need to load existing extras since we pass them via initialExtras
 
-  // Initialize extras from existing data or initial data
+  // Initialize extras from initial data (service items)
   useEffect(() => {
     if (initialExtras.length > 0) {
-      const mappedExtras = initialExtras.map(item => ({
-        id: item.id,
-        tempId: `existing_${item.id}`,
-        serviceExtraId: item.serviceExtraId,
-        valor: item.valor || "0.00",
-        observacao: item.observacao || "",
-        serviceExtra: item.serviceExtra,
-      }));
-      setExtras(mappedExtras);
-    } else if (existingExtras.length > 0) {
-      const mappedExtras = existingExtras.map(item => ({
-        id: item.id,
-        tempId: `existing_${item.id}`,
-        serviceExtraId: item.serviceExtraId,
-        valor: item.valor || "0.00",
-        observacao: item.observacao || "",
-        serviceExtra: item.serviceExtra,
-      }));
-      setExtras(mappedExtras);
+      console.log('ServiceExtras - Initializing with data:', initialExtras);
+      setExtras(initialExtras);
     }
-  }, [initialExtras, existingExtras]);
+  }, [initialExtras]);
 
   // Notify parent component of changes
   useEffect(() => {
@@ -142,53 +111,8 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
     }
   }, [extras, onChange]);
 
-  const createExtraItemMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await fetch("/api/service-extra-items", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
-      return await res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/services/${serviceId}/extras`] });
-      toast({ title: "Adicional criado com sucesso!" });
-    },
-  });
-
-  const updateExtraItemMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: any }) => {
-      const res = await fetch(`/api/service-extra-items/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
-      return await res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/services/${serviceId}/extras`] });
-      toast({ title: "Adicional atualizado com sucesso!" });
-    },
-  });
-
-  const deleteExtraItemMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await fetch(`/api/service-extra-items/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/services/${serviceId}/extras`] });
-      toast({ title: "Adicional removido com sucesso!" });
-    },
-  });
+  // No longer need mutations for individual service items
+  // All changes will be handled by the parent component when saving the service
 
   const addExtra = () => {
     const newExtra: ServiceExtraRow = {
@@ -201,11 +125,6 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
   };
 
   const removeExtra = (tempId: string) => {
-    const extra = extras.find(e => e.tempId === tempId);
-    if (extra?.id && serviceId) {
-      // Delete from database if it exists
-      deleteExtraItemMutation.mutate(extra.id);
-    }
     // Remove from local state using tempId
     const newExtras = extras.filter(e => e.tempId !== tempId);
     setExtras(newExtras);
@@ -239,30 +158,10 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
 
     setExtras(newExtras);
 
-    // Save to database if service exists and extra has an ID
-    if (serviceId && newExtras[index].id && field !== 'serviceExtraId') {
-      const updateData = {
-        serviceExtraId: newExtras[index].serviceExtraId,
-        valor: newExtras[index].valor,
-        observacao: newExtras[index].observacao,
-      };
-      updateExtraItemMutation.mutate({ id: newExtras[index].id!, data: updateData });
-    }
+    // Changes will be saved when the service is saved
   };
 
-  const saveExtra = (tempId: string) => {
-    const extra = extras.find(e => e.tempId === tempId);
-    if (!serviceId || !extra || extra.serviceExtraId === 0) return;
-
-    const data = {
-      serviceId,
-      serviceExtraId: extra.serviceExtraId,
-      valor: extra.valor,
-      observacao: extra.observacao,
-    };
-
-    createExtraItemMutation.mutate(data);
-  };
+  // All saves are handled by the parent component when the service is saved
 
   // Usar service types como serviços disponíveis, filtrando os já selecionados
   const availableServices = serviceTypes
@@ -469,18 +368,7 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
                   </div>
 
                   <div className="md:col-span-1 flex gap-2 justify-center md:justify-end mt-2 md:mt-0">
-                    {!extra.id && serviceId && extra.serviceExtraId > 0 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => saveExtra(extra.tempId)}
-                        className="h-12 px-4 text-base font-medium"
-                        disabled={createExtraItemMutation.isPending}
-                      >
-                        ✓
-                      </Button>
-                    )}
+                    {/* Save button removed - all saves handled by parent component */}
                     <Button
                       type="button"
                       variant="outline"
