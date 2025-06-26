@@ -1,4 +1,8 @@
 import { neon } from '@neondatabase/serverless';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 async function migrateExistingServices() {
   try {
