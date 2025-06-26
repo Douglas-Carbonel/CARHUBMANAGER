@@ -54,7 +54,7 @@ const formatCurrency = (value: string): string => {
 
 // Utility function to translate status from English to Portuguese
 const translateStatus = (status: string): string => {
-  const statusTranslations: Record<string, string] = {
+  const statusTranslations: Record<string, string> = {
     'scheduled': 'Agendado',
     'in_progress': 'Em Andamento',
     'completed': 'Concluído',
