@@ -347,13 +347,15 @@ export default function Services() {
           // Convert service_items to the format expected by serviceExtras state
           const mappedExtras = serviceData.serviceItems.map((item: any) => ({
             id: item.id,
+            tempId: `existing_${item.id}_${Date.now()}`,
+            serviceExtraId: item.serviceTypeId, // This is the key field needed for the grid
             serviceTypeId: item.serviceTypeId,
             valor: item.totalPrice || item.unitPrice || "0.00",
             observacao: item.notes || "",
             serviceExtra: {
               id: item.serviceTypeId,
-              descricao: item.serviceTypeName || item.serviceType?.name || "Serviço",
-              valorPadrao: item.serviceType?.defaultPrice || "0.00"
+              descricao: item.serviceTypeName || "Serviço",
+              defaultPrice: item.serviceTypeDefaultPrice || "0.00"
             },
           }));
 
@@ -1078,6 +1080,7 @@ export default function Services() {
                       <ServiceExtras
                         serviceId={editingService?.id}
                         onChange={setServiceExtras}
+                        initialExtras={serviceExtras}
                       />
                     </div>
 
