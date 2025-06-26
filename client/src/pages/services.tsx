@@ -1077,10 +1077,10 @@ export default function Services() {
                         <Wrench className="h-5 w-5 mr-2 text-teal-600" />
                         Serviços
                       </h4>
-                      <ServiceExtras
+                      <ServiceItems
                         serviceId={editingService?.id}
                         onChange={setServiceExtras}
-                        initialExtras={serviceExtras}
+                        initialItems={serviceExtras}
                       />
                     </div>
 
