@@ -433,6 +433,53 @@ export class DatabaseStorage implements IStorage {
 
       console.log('Storage: Found services:', result.rows.length);
 
+      // Get service items for all services at once
+      const serviceIds = result.rows.map(row => row.id);
+      let serviceItemsMap: { [key: number]: any[] } = {};
+
+      if (serviceIds.length > 0) {
+        const serviceItemsResult = await db.execute(sql`
+          SELECT 
+            si.service_id,
+            si.id,
+            si.service_type_id,
+            si.quantity,
+            si.unit_price,
+            si.total_price,
+            si.notes,
+            st.name as service_type_name,
+            st.description as service_type_description,
+            st.default_price as service_type_default_price
+          FROM service_items si
+          LEFT JOIN service_types st ON si.service_type_id = st.id
+          WHERE si.service_id = ANY(${serviceIds})
+          ORDER BY si.created_at ASC
+        `);
+
+        // Group service items by service_id
+        serviceItemsResult.rows.forEach((item: any) => {
+          if (!serviceItemsMap[item.service_id]) {
+            serviceItemsMap[item.service_id] = [];
+          }
+          serviceItemsMap[item.service_id].push({
+            id: item.id,
+            serviceId: item.service_id,
+            serviceTypeId: item.service_type_id,
+            quantity: item.quantity,
+            unitPrice: item.unit_price,
+            totalPrice: item.total_price,
+            notes: item.notes,
+            serviceTypeName: item.service_type_name,
+            serviceType: {
+              id: item.service_type_id,
+              name: item.service_type_name,
+              description: item.service_type_description,
+              defaultPrice: item.service_type_default_price
+            }
+          });
+        });
+      }
+
       const servicesData = result.rows.map(row => ({
         id: row.id,
         customerId: row.customerId,
@@ -463,10 +510,10 @@ export class DatabaseStorage implements IStorage {
         customer: row.customer,
         vehicle: row.vehicle,
         serviceType: row.serviceType,
-        serviceItems: [] // Temporariamente vazio para evitar o erro de performance
+        serviceItems: serviceItemsMap[row.id] || []
       }));
 
-      console.log('Storage: Returning services data');
+      console.log('Storage: Returning services data with service items');
       return servicesData;
 
     } catch (error) {
@@ -551,12 +598,49 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateService(id: number, service: Partial<InsertService>): Promise<Service> {
-    const [updatedService] = await db
-      .update(services)
-      .set({ ...service, updatedAt: new Date() })
-      .where(eq(services.id, id))
-      .returning();
-    return updatedService;
+    try {
+      console.log('Storage: Updating service with data:', JSON.stringify(service, null, 2));
+
+      // Separate service items from service data
+      const inputServiceItems = service.serviceItems;
+      const serviceData = { ...service };
+      delete serviceData.serviceItems;
+
+      // Update the service
+      const [updatedService] = await db
+        .update(services)
+        .set({ ...serviceData, updatedAt: new Date() })
+        .where(eq(services.id, id))
+        .returning();
+
+      console.log('Storage: Service updated successfully:', updatedService);
+
+      // Update service items if they exist
+      if (inputServiceItems && inputServiceItems.length > 0) {
+        // Delete existing service items
+        await db.delete(serviceItems).where(eq(serviceItems.serviceId, id));
+        console.log('Storage: Deleted existing service items');
+
+        // Insert new service items
+        const serviceItemsData = inputServiceItems.map(item => ({
+          serviceId: id,
+          serviceTypeId: item.serviceTypeId,
+          quantity: item.quantity || 1,
+          unitPrice: item.unitPrice,
+          totalPrice: item.totalPrice,
+          notes: item.notes || null,
+        }));
+
+        console.log('Storage: Inserting updated service items data:', serviceItemsData);
+        await db.insert(serviceItems).values(serviceItemsData);
+        console.log('Storage: Service items updated successfully:', serviceItemsData.length, 'items');
+      }
+
+      return updatedService;
+    } catch (error) {
+      console.error('Storage: Error updating service:', error);
+      throw error;
+    }
   }
 
   async deleteService(id: number): Promise<void> {

@@ -332,27 +332,43 @@ export default function Services() {
 
   const fetchServiceExtras = async (serviceId: number) => {
     try {
-      const response = await fetch(`/api/services/${serviceId}/extras`, {
+      console.log('Fetching service items for service:', serviceId);
+      
+      // Buscar service_items do serviço
+      const response = await fetch(`/api/services/${serviceId}`, {
         credentials: "include",
       });
+      
       if (response.ok) {
-        const existingExtras = await response.json();
-        console.log('Loaded existing service extras:', existingExtras);
+        const serviceData = await response.json();
+        console.log('Loaded service data:', serviceData);
 
-        // Convert existing extras to the format expected by serviceExtras state
-        const mappedExtras = existingExtras.map((item: any) => ({
-          id: item.id, // Incluir o ID para manter consistência
-          serviceExtraId: item.serviceExtraId,
-          valor: item.valor || "0.00",
-          observacao: item.observacao || "",
-          serviceExtra: item.serviceExtra,
-        }));
+        if (serviceData.serviceItems && serviceData.serviceItems.length > 0) {
+          // Convert service_items to the format expected by serviceExtras state
+          const mappedExtras = serviceData.serviceItems.map((item: any) => ({
+            id: item.id,
+            serviceTypeId: item.serviceTypeId,
+            valor: item.totalPrice || item.unitPrice || "0.00",
+            observacao: item.notes || "",
+            serviceExtra: {
+              id: item.serviceTypeId,
+              descricao: item.serviceTypeName || item.serviceType?.name || "Serviço",
+              valorPadrao: item.serviceType?.defaultPrice || "0.00"
+            },
+          }));
 
-        setServiceExtras(mappedExtras);
-        setInitialServiceExtras(mappedExtras); // Define os service extras iniciais
+          console.log('Mapped service items to extras format:', mappedExtras);
+          setServiceExtras(mappedExtras);
+          setInitialServiceExtras(mappedExtras);
+        } else {
+          setServiceExtras([]);
+          setInitialServiceExtras([]);
+        }
       }
     } catch (error) {
-      console.error("Error fetching service extras:", error);
+      console.error("Error fetching service items:", error);
+      setServiceExtras([]);
+      setInitialServiceExtras([]);
     }
   };
 
@@ -473,6 +489,15 @@ export default function Services() {
       Number(paymentMethods.cartao || 0)
     ).toFixed(2);
 
+    // Convert serviceExtras to serviceItems format
+    const serviceItemsData = serviceExtras.map((extra: any) => ({
+      serviceTypeId: extra.serviceTypeId || extra.serviceExtra?.id,
+      quantity: 1,
+      unitPrice: extra.valor,
+      totalPrice: extra.valor,
+      notes: extra.observacao || null,
+    }));
+
     const serviceData = {
       ...data,
       estimatedValue: String(totalValue),
@@ -483,7 +508,7 @@ export default function Services() {
       cartaoPago: paymentMethods.cartao || "0.00",
       reminderEnabled: data.reminderEnabled || false,
       reminderMinutes: data.reminderMinutes || 30,
-      serviceExtras: serviceExtras,
+      serviceItems: serviceItemsData,
     };
 
     console.log('Service data being submitted:', serviceData);
