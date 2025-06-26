@@ -462,36 +462,11 @@ export class DatabaseStorage implements IStorage {
         technicianName: row.technicianName,
         customer: row.customer,
         vehicle: row.vehicle,
-        serviceType: row.serviceType
+        serviceType: row.serviceType,
+        serviceItems: [] // Temporariamente vazio para evitar o erro de performance
       }));
 
-      // Get service items for each service
-      for (const service of servicesData) {
-        try {
-          const items = await db
-            .select({
-              id: serviceItems.id,
-              serviceId: serviceItems.serviceId,
-              serviceTypeId: serviceItems.serviceTypeId,
-              quantity: serviceItems.quantity,
-              unitPrice: serviceItems.unitPrice,
-              totalPrice: serviceItems.totalPrice,
-              notes: serviceItems.notes,
-              serviceTypeName: serviceTypes.name,
-              serviceTypeDescription: serviceTypes.description,
-            })
-            .from(serviceItems)
-            .leftJoin(serviceTypes, eq(serviceItems.serviceTypeId, serviceTypes.id))
-            .where(eq(serviceItems.serviceId, service.id));
-
-          service.serviceItems = items;
-        } catch (itemsError) {
-          console.error(`Error fetching items for service ${service.id}:`, itemsError);
-          service.serviceItems = [];
-        }
-      }
-
-      console.log('Storage: Returning services data with items');
+      console.log('Storage: Returning services data');
       return servicesData;
 
     } catch (error) {

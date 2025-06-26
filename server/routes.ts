@@ -335,7 +335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = req.user!;
       const { status } = req.query;
-      
+
       // Use the existing getServices method that returns services with joined data
       let services;
       if (user.role === 'admin') {
@@ -510,8 +510,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Service type routes
-  app.get("/api/service-types", requireAuth, async (req, res) => {
+  // Service extras endpoint (legacy compatibility - returns empty array)
+  app.get("/api/services/:serviceId/extras", requireAuth, async (req, res) => {
+    try {
+      // Legacy endpoint - service extras are now handled through service_items
+      res.json([]);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch service extras" });
+    }
+  });
+
+  // Service Type management routes
+  app.get("/api/admin/service-types", requireAdmin, async (req, res) => {
     try {
       const serviceTypes = await storage.getServiceTypes();
       console.log("Service types retornados:", serviceTypes.length, serviceTypes);
