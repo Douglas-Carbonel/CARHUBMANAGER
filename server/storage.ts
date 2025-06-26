@@ -452,7 +452,7 @@ export class DatabaseStorage implements IStorage {
             st.default_price as service_type_default_price
           FROM service_items si
           LEFT JOIN service_types st ON si.service_type_id = st.id
-          WHERE si.service_id = ANY(${serviceIds})
+          WHERE si.service_id IN (${sql.join(serviceIds.map(id => sql`${id}`), sql`, `)})
           ORDER BY si.created_at ASC
         `);
 
@@ -1067,18 +1067,26 @@ export class DatabaseStorage implements IStorage {
         .from(services)
         .where(gte(services.scheduledDate, lastMonth.toISOString().split('T')[0]));
 
-      // Most scheduled services
-      const topServiceTypes = await db
-        .select({
-          serviceTypeId: services.serviceTypeId,
-          serviceTypeName: serviceTypes.name,
-          serviceCount: sql<number>`count(*)`
-        })
-        .from(services)
-        .innerJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
-        .groupBy(services.serviceTypeId, serviceTypes.name)
-        .orderBy(sql`count(*) desc`)
-        .limit(5);
+      // Most scheduled services - get from service_items table  
+      const topServiceTypesResult = await db.execute(sql`
+        SELECT 
+          st.id as service_type_id,
+          st.name as service_type_name,
+          COUNT(si.id) as service_count
+        FROM service_types st
+        INNER JOIN service_items si ON st.id = si.service_type_id
+        INNER JOIN services s ON si.service_id = s.id
+        WHERE s.status != 'cancelled'
+        GROUP BY st.id, st.name
+        ORDER BY COUNT(si.id) DESC
+        LIMIT 5
+      `);
+
+      const topServiceTypes = topServiceTypesResult.rows.map(row => ({
+        serviceTypeId: row.service_type_id,
+        serviceTypeName: row.service_type_name,
+        serviceCount: Number(row.service_count)
+      }));
 
       // Average service value (considering both finalValue and estimatedValue)
       const allServices = await db
