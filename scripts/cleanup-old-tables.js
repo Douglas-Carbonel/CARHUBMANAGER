@@ -1,6 +1,6 @@
 
 import { sql } from 'drizzle-orm';
-import { db } from '../server/db.js';
+import { db } from '../server/db.ts';
 
 async function cleanupOldTables() {
   try {
