@@ -362,18 +362,14 @@ export default function Services() {
 
           console.log('Mapped service items to ServiceItems format:', mappedExtras);
           
-          // Set service items with a small delay to ensure component is ready
-          setTimeout(() => {
-            setServiceExtras(mappedExtras);
-            setInitialServiceExtras(mappedExtras);
-          }, 100);
+          // Set service items immediately for editing
+          setServiceExtras(mappedExtras);
+          setInitialServiceExtras(mappedExtras);
         } else {
           console.log('No service items found for this service');
-          // For services without items, set empty array but only after a delay
-          setTimeout(() => {
-            setServiceExtras([]);
-            setInitialServiceExtras([]);
-          }, 100);
+          // For services without items, set empty array immediately
+          setServiceExtras([]);
+          setInitialServiceExtras([]);
         }
       } else {
         console.error('Failed to fetch service data:', response.status);
@@ -871,14 +867,12 @@ export default function Services() {
                       // Reset form with correct values FIRST
                       form.reset(defaultValues);
 
-                      // Clear service extras immediately for new service
+                      // Clear service extras immediately for new service and reset the component
                       setServiceExtras([]);
                       setInitialServiceExtras([]);
 
                       // THEN set initial values for comparison
-                      setTimeout(() => {
-                        setFormInitialValues(defaultValues);
-                      }, 100);
+                      setFormInitialValues(defaultValues);
 
                       // Reset payment methods when creating new service
                       setPaymentMethods({

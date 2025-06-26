@@ -84,31 +84,38 @@ export default function ServiceItems({ serviceId, onChange, initialItems = [] }:
     console.log('ServiceItems - useEffect triggered with initialItems:', {
       length: initialItems.length,
       initialItems: initialItems,
-      isInitialized: isInitialized
+      isInitialized: isInitialized,
+      serviceId: serviceId
     });
 
-    // Only update items when we have actual data or it's the first initialization
+    // If we have initial items (editing existing service), use them
     if (initialItems.length > 0) {
       console.log('ServiceItems - Setting items from initialItems:', initialItems);
       setItems(initialItems);
       setIsInitialized(true);
-    } else if (!isInitialized) {
-      // First time initialization - add one empty row
-      console.log('ServiceItems - First time initialization - adding empty row');
-      const emptyItem: ServiceItemRow = {
-        tempId: `new_${Date.now()}_${Math.random()}`,
-        serviceTypeId: 0,
-        unitPrice: "0.00",
-        totalPrice: "0.00",
-        quantity: 1,
-        notes: "",
-      };
-      setItems([emptyItem]);
+    } 
+    // If we don't have initial items and haven't initialized yet
+    else if (!isInitialized) {
+      // For new services (no serviceId), start with one empty row
+      if (!serviceId) {
+        console.log('ServiceItems - New service - adding empty row');
+        const emptyItem: ServiceItemRow = {
+          tempId: `new_${Date.now()}_${Math.random()}`,
+          serviceTypeId: 0,
+          unitPrice: "0.00",
+          totalPrice: "0.00",
+          quantity: 1,
+          notes: "",
+        };
+        setItems([emptyItem]);
+      } else {
+        // For existing services with no items, start empty (they can add manually)
+        console.log('ServiceItems - Existing service with no items - starting empty');
+        setItems([]);
+      }
       setIsInitialized(true);
     }
-    // Important: Don't clear items when initialItems is empty but we're already initialized
-    // This prevents the service items from disappearing during editing
-  }, [initialItems, isInitialized]);
+  }, [initialItems, isInitialized, serviceId]);
 
   // Notify parent component of changes, but avoid onChange triggering re-renders
   useEffect(() => {
