@@ -572,6 +572,12 @@ export class DatabaseStorage implements IStorage {
         serviceTypeName: item.service_type_name,
         serviceTypeDescription: item.service_type_description,
         serviceTypeDefaultPrice: item.service_type_default_price,
+        // Include both formats for compatibility
+        service_type_id: item.service_type_id,
+        unit_price: item.unit_price,
+        total_price: item.total_price,
+        service_type_name: item.service_type_name,
+        service_type_default_price: item.service_type_default_price,
       }));
 
       const service = {

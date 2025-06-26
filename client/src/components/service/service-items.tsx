@@ -81,6 +81,12 @@ export default function ServiceItems({ serviceId, onChange, initialItems = [] }:
 
   // Initialize items from props
   useEffect(() => {
+    console.log('ServiceItems - useEffect triggered:', { 
+      initialItemsLength: initialItems.length, 
+      isInitialized,
+      initialItems: initialItems 
+    });
+
     if (initialItems.length > 0) {
       console.log('ServiceItems - Initializing with data:', initialItems);
       setItems(initialItems);
@@ -91,7 +97,12 @@ export default function ServiceItems({ serviceId, onChange, initialItems = [] }:
       setItems([]);
     } else if (!isInitialized) {
       // First time initialization - set as initialized
+      console.log('ServiceItems - First time initialization');
       setIsInitialized(true);
+      // If we have initial items on first load, use them
+      if (initialItems.length > 0) {
+        setItems(initialItems);
+      }
     }
   }, [initialItems, isInitialized]);
 

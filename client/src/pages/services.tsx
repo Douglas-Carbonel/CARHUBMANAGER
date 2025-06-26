@@ -344,42 +344,41 @@ export default function Services() {
         console.log('Loaded service data:', serviceData);
 
         if (serviceData.serviceItems && serviceData.serviceItems.length > 0) {
-          // Convert service_items to the format expected by serviceExtras state
+          // Convert service_items to the format expected by ServiceItems component
           const mappedExtras = serviceData.serviceItems.map((item: any) => ({
             id: item.id,
             tempId: `existing_${item.id}_${Date.now()}`,
-            serviceTypeId: item.serviceTypeId,
+            serviceTypeId: item.serviceTypeId || item.service_type_id,
             quantity: item.quantity || 1,
-            unitPrice: item.unitPrice || "0.00",
-            totalPrice: item.totalPrice || "0.00",
+            unitPrice: item.unitPrice || item.unit_price || "0.00",
+            totalPrice: item.totalPrice || item.total_price || "0.00",
             notes: item.notes || "",
             serviceType: {
-              id: item.serviceTypeId,
-              name: item.serviceTypeName || "Serviço",
-              defaultPrice: item.serviceTypeDefaultPrice || "0.00"
+              id: item.serviceTypeId || item.service_type_id,
+              name: item.serviceTypeName || item.service_type_name || "Serviço",
+              defaultPrice: item.serviceTypeDefaultPrice || item.service_type_default_price || "0.00"
             },
           }));
 
-          console.log('Mapped service items to extras format:', mappedExtras);
+          console.log('Mapped service items to ServiceItems format:', mappedExtras);
           
-          // Use setTimeout to prevent flickering during state updates
-          setTimeout(() => {
-            setServiceExtras(mappedExtras);
-            setInitialServiceExtras(mappedExtras);
-          }, 0);
+          // Set the service extras immediately - no setTimeout needed
+          setServiceExtras(mappedExtras);
+          setInitialServiceExtras(mappedExtras);
         } else {
-          setTimeout(() => {
-            setServiceExtras([]);
-            setInitialServiceExtras([]);
-          }, 0);
+          console.log('No service items found for this service');
+          setServiceExtras([]);
+          setInitialServiceExtras([]);
         }
+      } else {
+        console.error('Failed to fetch service data:', response.status);
+        setServiceExtras([]);
+        setInitialServiceExtras([]);
       }
     } catch (error) {
       console.error("Error fetching service items:", error);
-      setTimeout(() => {
-        setServiceExtras([]);
-        setInitialServiceExtras([]);
-      }, 0);
+      setServiceExtras([]);
+      setInitialServiceExtras([]);
     }
   };
 
