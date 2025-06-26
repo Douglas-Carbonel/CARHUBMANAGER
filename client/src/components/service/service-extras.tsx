@@ -101,6 +101,15 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
     if (initialExtras.length > 0) {
       console.log('ServiceExtras - Initializing with data:', initialExtras);
       setExtras(initialExtras);
+    } else {
+      // Always start with at least one empty grid
+      console.log('ServiceExtras - No initial data, adding empty grid');
+      setExtras([{
+        tempId: `new_${Date.now()}_${Math.random()}`,
+        serviceExtraId: 0,
+        valor: "0.00",
+        observacao: "",
+      }]);
     }
   }, [initialExtras]);
 

@@ -144,8 +144,11 @@ Changelog:
 - June 26, 2025. Fixed service creation validation error by supporting both serviceExtras and serviceItems formats
 - June 26, 2025. Fixed service_items query errors after architecture centralization to service_types table
 - June 26, 2025. Simplified service extras endpoint to return empty array for backward compatibility
-- June 26, 2025. Restored original responsive layout for service extras grid after user feedback
+- June 26, 2025. Restored original responsive layout for service extras grid after user feedback  
 - June 26, 2025. Fixed ServiceExtras component to work with centralized service_types table instead of removed service_extras table
+- June 26, 2025. Fixed titles to show "Nova Ordem de Serviço" and "Editar Ordem de Serviço" 
+- June 26, 2025. Fixed ZodError validation where notes field was null but schema expected string
+- June 26, 2025. Restored service extras grid that disappeared - now always shows at least one empty grid on form load
 - June 24, 2025. Completed major architectural consolidation: centralized all service logic in service_types table
 - June 24, 2025. Updated all APIs and database queries to use centralized service management approach
 - June 24, 2025. Maintained backward compatibility for existing frontend code during transition
