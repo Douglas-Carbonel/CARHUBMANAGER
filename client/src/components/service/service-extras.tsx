@@ -70,8 +70,13 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
   const queryClient = useQueryClient();
   const [extras, setExtras] = useState<ServiceExtraRow[]>([]);
 
-  // Buscar service types disponíveis
-  const { data: serviceTypes = [] } = useQuery<ServiceType[]>({
+  // Force invalidate service-types cache on mount to ensure fresh data
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ["/api/service-types"] });
+  }, [queryClient]);
+
+  // Buscar service types disponíveis com queryFn explícita
+  const { data: serviceTypes = [], isLoading: serviceTypesLoading, error: serviceTypesError } = useQuery<ServiceType[]>({
     queryKey: ["/api/service-types"],
     queryFn: async () => {
       const res = await fetch("/api/service-types", {
@@ -80,8 +85,13 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
       if (!res.ok) {
         throw new Error(`${res.status}: ${res.statusText}`);
       }
-      return await res.json();
+      const data = await res.json();
+      console.log('ServiceExtras - Fresh API data received:', data);
+      return data;
     },
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   // Load existing extras for this service
@@ -264,9 +274,23 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
     }));
 
   // Debug: Log service types data
+  console.log('ServiceExtras - Query state:', { 
+    loading: serviceTypesLoading, 
+    error: serviceTypesError, 
+    serviceTypesLength: serviceTypes?.length 
+  });
   console.log('ServiceExtras - Total serviceTypes:', serviceTypes.length);
   console.log('ServiceExtras - Available services after filter:', availableServices.length);
   console.log('ServiceExtras - ServiceTypes data:', serviceTypes);
+  
+  if (serviceTypesError) {
+    console.error('ServiceExtras - Query error:', serviceTypesError);
+  }
+  
+  // Show loading state
+  if (serviceTypesLoading) {
+    console.log('ServiceExtras - Still loading service types...');
+  }
 
   // Get available services for each dropdown (excluding already selected ones, but including the current selection)
   const getAvailableServicesForDropdown = (currentTempId: string) => {
