@@ -535,9 +535,10 @@ export class DatabaseStorage implements IStorage {
           quantity: item.quantity || 1,
           unitPrice: item.unitPrice,
           totalPrice: item.totalPrice,
-          notes: item.notes,
+          notes: item.notes || null,
         }));
 
+        console.log('Storage: Inserting service items data:', serviceItemsData);
         await db.insert(serviceItems).values(serviceItemsData);
         console.log('Storage: Service items created successfully:', serviceItemsData.length, 'items');
       }

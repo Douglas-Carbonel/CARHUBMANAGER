@@ -46,6 +46,42 @@ import { getFixedDashboardStats } from "./storage-dashboard-fix";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
 
+// Function to ensure service_items table exists
+async function ensureServiceItemsTable() {
+  try {
+    console.log('Ensuring service_items table exists...');
+    
+    // Drop existing table if it has wrong structure
+    await db.execute(sql`DROP TABLE IF EXISTS service_items CASCADE`);
+    
+    // Create fresh table with correct structure
+    await db.execute(sql`
+      CREATE TABLE service_items (
+        id SERIAL PRIMARY KEY,
+        service_id INTEGER NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+        service_type_id INTEGER NOT NULL REFERENCES service_types(id),
+        quantity INTEGER DEFAULT 1,
+        unit_price DECIMAL(10,2),
+        total_price DECIMAL(10,2),
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Create indexes safely
+    await db.execute(sql`
+      CREATE INDEX idx_service_items_service_id ON service_items(service_id)
+    `);
+    await db.execute(sql`
+      CREATE INDEX idx_service_items_service_type_id ON service_items(service_type_id)
+    `);
+    
+    console.log('service_items table created successfully');
+  } catch (error) {
+    console.error('Error ensuring service_items table:', error);
+  }
+}
+
 // Function to create initial service types
 async function createInitialServiceTypes() {
   try {
@@ -180,6 +216,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Create initial admin user
   await createInitialAdmin();
+
+  // Ensure service_items table exists
+  await ensureServiceItemsTable();
 
   // Create initial service types if they don't exist
   await createInitialServiceTypes();
