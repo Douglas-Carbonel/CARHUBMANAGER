@@ -380,49 +380,94 @@ export class DatabaseStorage implements IStorage {
   // Service operations
   async getServices(technicianId?: number): Promise<any[]> {
     try {
-          let query = db
-          .select({
-            id: services.id,
-            customerId: services.customerId,
-            vehicleId: services.vehicleId,
-            serviceTypeId: services.serviceTypeId,
-            technicianId: services.technicianId,
-            status: services.status,
-            scheduledDate: services.scheduledDate,
-            scheduledTime: services.scheduledTime,
-            startedAt: services.startedAt,
-            completedAt: services.completedAt,
-            estimatedValue: services.estimatedValue,
-            finalValue: services.finalValue,
-            valorPago: services.valorPago,
-            pixPago: services.pixPago,
-            dinheiroPago: services.dinheiroPago,
-            chequePago: services.chequePago,
-            cartaoPago: services.cartaoPago,
-            notes: services.notes,
-            createdAt: services.createdAt,
-            updatedAt: services.updatedAt,
-            customerName: customers.name,
-            vehicleBrand: vehicles.brand,
-            vehicleModel: vehicles.model,
-            vehicleLicensePlate: vehicles.licensePlate,
-            serviceTypeName: serviceTypes.name,
-            technicianName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`.as('technician_name'),
-          })
-          .from(services)
-          .leftJoin(customers, eq(services.customerId, customers.id))
-          .leftJoin(vehicles, eq(services.vehicleId, vehicles.id))
-          .leftJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
-          .leftJoin(users, eq(services.technicianId, users.id))
-          .orderBy(desc(services.createdAt));
-  
-        if (technicianId) {
-          query = query.where(eq(services.technicianId, technicianId));
-        }
-  
-        const servicesData = await query;
-  
-        for (const service of servicesData) {
+      console.log('Storage: Getting services...', technicianId ? `for technician ${technicianId}` : 'for all');
+      
+      // Use raw SQL to avoid Drizzle ordering issues
+      const technicianCondition = technicianId 
+        ? sql`WHERE s.technician_id = ${technicianId}` 
+        : sql`WHERE 1=1`;
+
+      const result = await db.execute(sql`
+        SELECT 
+          s.id,
+          s.customer_id as "customerId",
+          s.vehicle_id as "vehicleId", 
+          s.service_type_id as "serviceTypeId",
+          s.technician_id as "technicianId",
+          s.status,
+          s.scheduled_date as "scheduledDate",
+          s.scheduled_time as "scheduledTime",
+          s.started_at as "startedAt",
+          s.completed_at as "completedAt",
+          s.estimated_value as "estimatedValue",
+          s.final_value as "finalValue",
+          s.valor_pago as "valorPago",
+          s.pix_pago as "pixPago",
+          s.dinheiro_pago as "dinheiroPago", 
+          s.cheque_pago as "chequePago",
+          s.cartao_pago as "cartaoPago",
+          s.notes,
+          s.created_at as "createdAt",
+          s.updated_at as "updatedAt",
+          c.name as "customerName",
+          v.brand as "vehicleBrand",
+          v.model as "vehicleModel", 
+          v.license_plate as "vehicleLicensePlate",
+          st.name as "serviceTypeName",
+          CASE 
+            WHEN u.first_name IS NOT NULL THEN CONCAT(u.first_name, ' ', u.last_name)
+            ELSE NULL 
+          END as "technicianName",
+          -- Include full objects for compatibility
+          row_to_json(c.*) as customer,
+          row_to_json(v.*) as vehicle,
+          row_to_json(st.*) as "serviceType"
+        FROM services s
+        LEFT JOIN customers c ON s.customer_id = c.id
+        LEFT JOIN vehicles v ON s.vehicle_id = v.id  
+        LEFT JOIN service_types st ON s.service_type_id = st.id
+        LEFT JOIN users u ON s.technician_id = u.id
+        ${technicianCondition}
+        ORDER BY s.created_at DESC
+      `);
+
+      console.log('Storage: Found services:', result.rows.length);
+      
+      const servicesData = result.rows.map(row => ({
+        id: row.id,
+        customerId: row.customerId,
+        vehicleId: row.vehicleId,
+        serviceTypeId: row.serviceTypeId,
+        technicianId: row.technicianId,
+        status: row.status,
+        scheduledDate: row.scheduledDate,
+        scheduledTime: row.scheduledTime,
+        startedAt: row.startedAt,
+        completedAt: row.completedAt,
+        estimatedValue: row.estimatedValue,
+        finalValue: row.finalValue,
+        valorPago: row.valorPago,
+        pixPago: row.pixPago,
+        dinheiroPago: row.dinheiroPago,
+        chequePago: row.chequePago,
+        cartaoPago: row.cartaoPago,
+        notes: row.notes,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+        customerName: row.customerName,
+        vehicleBrand: row.vehicleBrand,
+        vehicleModel: row.vehicleModel,
+        vehicleLicensePlate: row.vehicleLicensePlate,
+        serviceTypeName: row.serviceTypeName,
+        technicianName: row.technicianName,
+        customer: row.customer,
+        vehicle: row.vehicle,
+        serviceType: row.serviceType
+      }));
+
+      // Get service items for each service
+      for (const service of servicesData) {
+        try {
           const items = await db
             .select({
               id: serviceItems.id,
@@ -438,15 +483,21 @@ export class DatabaseStorage implements IStorage {
             .from(serviceItems)
             .leftJoin(serviceTypes, eq(serviceItems.serviceTypeId, serviceTypes.id))
             .where(eq(serviceItems.serviceId, service.id));
-  
-            service.serviceItems = items;
-        }
-        return servicesData;
 
-      } catch (error) {
-          console.error('Error fetching services:', error);
-          throw error;
+          service.serviceItems = items;
+        } catch (itemsError) {
+          console.error(`Error fetching items for service ${service.id}:`, itemsError);
+          service.serviceItems = [];
+        }
       }
+
+      console.log('Storage: Returning services data with items');
+      return servicesData;
+
+    } catch (error) {
+      console.error('Error fetching services:', error);
+      return []; // Return empty array instead of throwing to prevent crashes
+    }
   }
 
   async getService(id: number): Promise<Service | undefined> {
@@ -828,7 +879,11 @@ export class DatabaseStorage implements IStorage {
     console.log("Storage: Getting top services...", technicianId ? `for technician ${technicianId}` : "for admin");
 
     try {
-      let query = sql`
+      const technicianCondition = technicianId 
+        ? sql`AND s.technician_id = ${technicianId}` 
+        : sql``;
+
+      const result = await db.execute(sql`
         SELECT 
           st.name,
           COUNT(s.id) as count,
@@ -850,20 +905,12 @@ export class DatabaseStorage implements IStorage {
         FROM service_types st
         LEFT JOIN services s ON st.id = s.service_type_id 
         WHERE (s.id IS NULL OR s.status != 'cancelled')
-      `;
-
-      if (technicianId) {
-        query = sql`${query} AND s.technician_id = ${technicianId}`;
-      }
-
-      query = sql`${query}
+        ${technicianCondition}
         GROUP BY st.id, st.name
         HAVING COUNT(s.id) > 0
         ORDER BY count DESC, revenue DESC
         LIMIT 5
-      `;
-
-      const result = await db.execute(query);
+      `);
 
       console.log("Storage: Found", result.rows.length, "top services");
       const topServices = result.rows.map(row => ({
