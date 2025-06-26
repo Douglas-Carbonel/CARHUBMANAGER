@@ -565,17 +565,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Service extras endpoint (now returns service items)
-  app.get("/api/services/:serviceId/extras", requireAuth, async (req, res) => {
+  // Service items endpoint - returns items for a specific service
+  app.get("/api/services/:serviceId/items", requireAuth, async (req, res) => {
     try {
       const serviceId = parseInt(req.params.serviceId);
+      console.log('API: Getting service items for service:', serviceId);
       
-      // Com a nova arquitetura centralizada, retornamos apenas o serviço principal
-      // A lógica de múltiplos serviços foi simplificada para usar apenas service_types
-      res.json([]);
+      const result = await db.execute(sql`
+        SELECT 
+          si.id,
+          si.service_id,
+          si.service_type_id,
+          si.quantity,
+          si.unit_price,
+          si.total_price,
+          si.notes,
+          si.created_at,
+          st.name as service_type_name,
+          st.description as service_type_description,
+          st.default_price as service_type_default_price
+        FROM service_items si
+        INNER JOIN service_types st ON si.service_type_id = st.id
+        WHERE si.service_id = ${serviceId}
+        ORDER BY si.created_at ASC
+      `);
+
+      const serviceItems = result.rows.map((item: any) => ({
+        id: item.id,
+        serviceId: item.service_id,
+        serviceTypeId: item.service_type_id,
+        quantity: item.quantity,
+        unitPrice: item.unit_price,
+        totalPrice: item.total_price,
+        notes: item.notes,
+        serviceTypeName: item.service_type_name,
+        serviceTypeDescription: item.service_type_description,
+        serviceTypeDefaultPrice: item.service_type_default_price,
+        createdAt: item.created_at
+      }));
+
+      console.log('API: Found', serviceItems.length, 'service items');
+      res.json(serviceItems);
     } catch (error) {
       console.error("Error fetching service items:", error);
-      res.status(500).json({ message: "Failed to fetch service extras" });
+      res.status(500).json({ message: "Failed to fetch service items" });
     }
   });
 

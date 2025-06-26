@@ -54,13 +54,13 @@ const formatCurrency = (value: string): string => {
 
 // Utility function to translate status from English to Portuguese
 const translateStatus = (status: string): string => {
-  const statusTranslations: Record<string, string> = {
+  const statusTranslations: Record<string, string] = {
     'scheduled': 'Agendado',
     'in_progress': 'Em Andamento',
     'completed': 'Concluído',
     'cancelled': 'Cancelado'
   };
-  
+
   return statusTranslations[status] || status;
 };
 
@@ -333,35 +333,31 @@ export default function Services() {
   const fetchServiceExtras = async (serviceId: number) => {
     try {
       console.log('Fetching service items for service:', serviceId);
-      
+
       // Buscar service_items do serviço
       const response = await fetch(`/api/services/${serviceId}`, {
         credentials: "include",
       });
-      
+
       if (response.ok) {
         const serviceData = await response.json();
         console.log('Loaded service data:', serviceData);
+        // Map service items to ServiceItems format
+        console.log('Service data received:', serviceData);
+        console.log('Service items from API:', serviceData.serviceItems);
 
         if (serviceData.serviceItems && serviceData.serviceItems.length > 0) {
-          // Convert service_items to the format expected by ServiceItems component
           const mappedExtras = serviceData.serviceItems.map((item: any, index: number) => ({
-            id: item.id,
-            tempId: `existing_${item.id}_${Date.now()}_${index}`,
-            serviceTypeId: item.serviceTypeId || item.service_type_id,
-            quantity: item.quantity || 1,
-            unitPrice: item.unitPrice || item.unit_price || "0.00",
-            totalPrice: item.totalPrice || item.total_price || "0.00",
+            tempId: `existing_${item.id || index}`,
+            serviceTypeId: Number(item.serviceTypeId || item.service_type_id),
+            unitPrice: String(item.unitPrice || item.unit_price || "0.00"),
+            totalPrice: String(item.totalPrice || item.total_price || "0.00"),
+            quantity: Number(item.quantity) || 1,
             notes: item.notes || "",
-            serviceType: {
-              id: item.serviceTypeId || item.service_type_id,
-              name: item.serviceTypeName || item.service_type_name || "Serviço",
-              defaultPrice: item.serviceTypeDefaultPrice || item.service_type_default_price || "0.00"
-            },
           }));
 
           console.log('Mapped service items to ServiceItems format:', mappedExtras);
-          
+
           // Set service items immediately for editing
           setServiceExtras(mappedExtras);
           setInitialServiceExtras(mappedExtras);
@@ -623,7 +619,7 @@ export default function Services() {
 
     setFormInitialValues(editValues);
     form.reset(editValues);
-    
+
     // Load existing payment methods from specific fields
     console.log('Loading service payment data:', {
       pixPago: service.pixPago,
@@ -1266,7 +1262,7 @@ export default function Services() {
                             <Bell className="h-5 w-5 text-yellow-600 mr-2" />
                             <span className="font-medium text-yellow-800">Lembrete de Serviço</span>
                           </div>
-                          
+
                           <FormField
                             control={form.control}
                             name="reminderEnabled"
@@ -1635,8 +1631,7 @@ export default function Services() {
                         {serviceExtras.map((extra, index) => (
                           <div key={index} className="flex justify-between items-center text-sm">
                             <span className="text-purple-700">{extra.serviceExtra?.descricao || `Serviço ${index + 1}`}</span>
-                            <span className="font-medium text-purple-800">R$ {Number(extra.valor || 0).toFixed(2)}</span>
-                          </div>
+                            <span className="font-medium text-purple-800">R$ {Number(extra.valor || 0).toFixed(2)}</span>                          </div>
                         ))}
                       </div>
                     </div>

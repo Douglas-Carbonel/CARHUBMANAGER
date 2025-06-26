@@ -88,31 +88,30 @@ export default function ServiceItems({ serviceId, onChange, initialItems = [] }:
       serviceId: serviceId
     });
 
-    // If we have initial items (editing existing service), use them
+    // Always update if we have initialItems, regardless of initialization state
     if (initialItems.length > 0) {
       console.log('ServiceItems - Setting items from initialItems:', initialItems);
       setItems(initialItems);
       setIsInitialized(true);
     } 
-    // If we don't have initial items and haven't initialized yet
-    else if (!isInitialized) {
-      // For new services (no serviceId), start with one empty row
-      if (!serviceId) {
-        console.log('ServiceItems - New service - adding empty row');
-        const emptyItem: ServiceItemRow = {
-          tempId: `new_${Date.now()}_${Math.random()}`,
-          serviceTypeId: 0,
-          unitPrice: "0.00",
-          totalPrice: "0.00",
-          quantity: 1,
-          notes: "",
-        };
-        setItems([emptyItem]);
-      } else {
-        // For existing services with no items, start empty (they can add manually)
-        console.log('ServiceItems - Existing service with no items - starting empty');
-        setItems([]);
-      }
+    // Only add empty row for new services (no serviceId) and only if not initialized
+    else if (!isInitialized && !serviceId) {
+      console.log('ServiceItems - New service - adding empty row');
+      const emptyItem: ServiceItemRow = {
+        tempId: `new_${Date.now()}_${Math.random()}`,
+        serviceTypeId: 0,
+        unitPrice: "0.00",
+        totalPrice: "0.00",
+        quantity: 1,
+        notes: "",
+      };
+      setItems([emptyItem]);
+      setIsInitialized(true);
+    }
+    // For existing services with no items, start empty
+    else if (!isInitialized && serviceId && initialItems.length === 0) {
+      console.log('ServiceItems - Existing service with no items - starting empty');
+      setItems([]);
       setIsInitialized(true);
     }
   }, [initialItems, isInitialized, serviceId]);
