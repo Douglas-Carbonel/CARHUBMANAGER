@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 // Utility functions for currency formatting
 const formatCurrency = (value: string): string => {
@@ -198,7 +199,7 @@ export default function Services() {
     message: "Você tem alterações não salvas no cadastro do serviço. Deseja realmente sair?"
   });
 
-  const { data: services = [] } = useQuery<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]>({
+  const { data: services = [], isLoading: servicesLoading } = useQuery<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]>({
     queryKey: ["/api/services"],
     queryFn: async () => {
       const res = await fetch("/api/services", {
@@ -211,7 +212,7 @@ export default function Services() {
     },
   });
 
-  const { data: customers = [] } = useQuery<Customer[]>({
+  const { data: customers = [], isLoading: customersLoading } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
     queryFn: async () => {
       const res = await fetch("/api/customers", {
@@ -224,7 +225,7 @@ export default function Services() {
     },
   });
 
-  const { data: vehicles = [] } = useQuery<(Vehicle & { customer: Customer })[]>({
+  const { data: vehicles = [], isLoading: vehiclesLoading } = useQuery<(Vehicle & { customer: Customer })[]>({
     queryKey: ["/api/vehicles"],
     queryFn: async () => {
       const res = await fetch("/api/vehicles", {
@@ -250,7 +251,7 @@ export default function Services() {
     },
   });
 
-  const { data: users = [] } = useQuery<any[]>({
+  const { data: users = [], isLoading: techniciansLoading } = useQuery<any[]>({
     queryKey: ["/api/admin/users"],
     queryFn: async () => {
       const res = await fetch("/api/admin/users", {
@@ -761,6 +762,14 @@ export default function Services() {
     }
   };
 
+  if (servicesLoading || customersLoading || vehiclesLoading || techniciansLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50">
+        <LoadingSpinner size="lg" text="Carregando dados do sistema..." />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-emerald-50">
       <Sidebar />
@@ -825,7 +834,7 @@ export default function Services() {
                     onClick={async () => {
                       setEditingService(null);
                       setCurrentServicePhotos([]);
-                      setTemporaryPhotos([]);
+                      Applying loading spinner to multiple sections of the services page for better user experience.                      setTemporaryPhotos([]);
 
                       const defaultValues = {
                         customerId: 0,
@@ -901,26 +910,32 @@ export default function Services() {
                               <User className="h-4 w-4 mr-2 text-teal-600" />
                               Cliente
                             </FormLabel>
-                            <Select 
-                              onValueChange={(value) => {
-                                field.onChange(Number(value));
-                                form.setValue("vehicleId", 0); // Reset vehicle when customer changes
-                              }} 
-                              value={field.value > 0 ? field.value.toString() : ""}
-                            >
-                              <FormControl>
-                                <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
-                                  <SelectValue placeholder="Selecione um cliente" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {customers.map((customer: Customer) => (
-                                  <SelectItem key={customer.id} value={customer.id.toString()}>
-                                    {customer.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            {customersLoading ? (
+                              <div className="py-8">
+                                <LoadingSpinner size="md" text="Carregando clientes..." />
+                              </div>
+                            ) : (
+                              <Select 
+                                onValueChange={(value) => {
+                                  field.onChange(Number(value));
+                                  form.setValue("vehicleId", 0); // Reset vehicle when customer changes
+                                }} 
+                                value={field.value > 0 ? field.value.toString() : ""}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
+                                    <SelectValue placeholder="Selecione um cliente" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {customers.map((customer: Customer) => (
+                                    <SelectItem key={customer.id} value={customer.id.toString()}>
+                                      {customer.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
                             <FormMessage />
                           </FormItem>
                         )}
@@ -941,24 +956,30 @@ export default function Services() {
                                 <Car className="h-4 w-4 mr-2 text-teal-600" />
                                 Veículo
                               </FormLabel>
-                              <Select 
-                                onValueChange={(value) => field.onChange(Number(value))} 
-                                value={field.value > 0 ? field.value.toString() : ""}
-                                disabled={!selectedCustomerId}
-                              >
-                                <FormControl>
-                                  <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md disabled:opacity-50">
-                                    <SelectValue placeholder={selectedCustomerId ? "Selecione um veículo" : "Primeiro selecione um cliente"} />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {availableVehicles.map((vehicle) => (
-                                    <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                                      {vehicle.licensePlate} - {vehicle.brand} {vehicle.model}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              {vehiclesLoading ? (
+                                <div className="py-8">
+                                  <LoadingSpinner size="md" text="Carregando veículos..." />
+                                </div>
+                              ) : (
+                                <Select 
+                                  onValueChange={(value) => field.onChange(Number(value))} 
+                                  value={field.value > 0 ? field.value.toString() : ""}
+                                  disabled={!selectedCustomerId}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md disabled:opacity-50">
+                                      <SelectValue placeholder={selectedCustomerId ? "Selecione um veículo" : "Primeiro selecione um cliente"} />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {availableVehicles.map((vehicle) => (
+                                      <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                                        {vehicle.licensePlate} - {vehicle.brand} {vehicle.model}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              )}
                               <FormMessage />
                             </FormItem>
                           );
@@ -975,23 +996,29 @@ export default function Services() {
                             <User className="h-4 w-4 mr-2 text-teal-600" />
                             Técnico Responsável
                           </FormLabel>
-                          <Select 
-                            onValueChange={(value) => field.onChange(Number(value))} 
-                            value={field.value > 0 ? field.value.toString() : ""}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
-                                <SelectValue placeholder="Selecione o técnico" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {users.map((technician: any) => (
-                                <SelectItem key={technician.id} value={technician.id.toString()}>
-                                  {technician.firstName} {technician.lastName} ({technician.username})
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          {techniciansLoading ? (
+                            <div className="py-8">
+                              <LoadingSpinner size="md" text="Carregando técnicos..." />
+                            </div>
+                          ) : (
+                            <Select 
+                              onValueChange={(value) => field.onChange(Number(value))} 
+                              value={field.value > 0 ? field.value.toString() : ""}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
+                                  <SelectValue placeholder="Selecione o técnico" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {users.map((technician: any) => (
+                                  <SelectItem key={technician.id} value={technician.id.toString()}>
+                                    {technician.firstName} {technician.lastName} ({technician.username})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -1117,7 +1144,7 @@ export default function Services() {
                                   const serviceType = serviceTypes.find(st => st.id === extra.serviceTypeId);
                                   const serviceName = serviceType?.name || `Serviço ${index + 1}`;
                                   const servicePrice = extra.totalPrice || extra.unitPrice || "0.00";
-                                  
+
                                   return (
                                     <div key={extra.tempId || index} className="flex justify-between items-center text-sm">
                                       <span className="text-slate-700">{serviceName}</span>
@@ -1609,7 +1636,7 @@ export default function Services() {
                       </div>
                       <div>
                         <span className="text-slate-600">Hora:</span>
-                        <span className="ml-2 font-medium">{form.watch("scheduledTime") || "Não definida"}</span>
+                        <span className="ml-2 font-medium{form.watch("scheduledTime") || "Não definida"}</span>
                       </div>
                       <div>
                         <span className="text-slate-600">Status:</span>
@@ -1911,24 +1938,25 @@ export default function Services() {
           </div>
 
           {/* Services Grid */}
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <Card key={i} className="animate-pulse bg-white/80 backdrop-blur-sm border border-teal-200">
-                  <CardHeader>
-                    <div className="h-5 bg-teal-200 rounded w-3/4"></div>
-                    <div className="h-4 bg-teal-200 rounded w-1/2"></div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="h-4 bg-teal-200 rounded"></div>
-                      <div className="h-4 bg-teal-200 rounded w-2/3"></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : filteredServices.length === 0 && vehicleIdFilter ? (
+          {servicesLoading ? (
+              <div className="grid grid-cols-1 gap-6">
+                {[...Array(3)].map((_, i) => (
+                  <Card key={i} className="animate-pulse border-0 shadow-lg">
+                    <CardHeader className="pb-3">
+                      <div className="h-6 bg-gradient-to-r from-teal-200 to-teal-300 rounded-lg w-3/4"></div>
+                      <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-1/2"></div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded"></div>
+                        <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-2/3"></div>
+                        <div className="h-8 bg-gradient-to-r from-teal-100 to-teal-200 rounded-lg w-full"></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : filteredServices.length === 0 ? (
               // Specific case: vehicle has no services
               <div className="flex flex-col items-center justify-center py-12">
                 <div className="bg-gradient-to-br from-blue-100 to-indigo-100 p-6 rounded-full mb-6 w-24 h-24 flex items-center justify-center">

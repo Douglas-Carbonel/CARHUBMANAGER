@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Trash2, MessageSquare } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface ServiceType {
   id: number;
@@ -201,7 +202,13 @@ export default function ServiceItems({ serviceId, onChange, initialItems = [] }:
   };
 
   if (serviceTypesLoading) {
-    return <div>Carregando tipos de serviço...</div>;
+    return (
+      <Card>
+        <CardContent>
+          <div className="text-center py-4"><LoadingSpinner /></div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
