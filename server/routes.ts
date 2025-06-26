@@ -524,6 +524,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Service Type routes
+  app.get("/api/service-types", requireAuth, async (req, res) => {
+    try {
+      const serviceTypes = await storage.getServiceTypes();
+      console.log("Service types retornados para usuário autenticado:", serviceTypes.length, serviceTypes);
+      res.json(serviceTypes);
+    } catch (error) {
+      console.error("Erro ao buscar tipos de serviço:", error);
+      res.status(500).json({ message: "Failed to fetch service types" });
+    }
+  });
+
   // Service Type management routes
   app.get("/api/admin/service-types", requireAdmin, async (req, res) => {
     try {

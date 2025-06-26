@@ -292,6 +292,11 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
     console.log('ServiceExtras - Still loading service types...');
   }
 
+  // Add success log
+  if (!serviceTypesLoading && serviceTypes.length > 0) {
+    console.log('ServiceExtras - SUCCESS: Service types loaded successfully!', serviceTypes.length, 'types');
+  }
+
   // Get available services for each dropdown (excluding already selected ones, but including the current selection)
   const getAvailableServicesForDropdown = (currentTempId: string) => {
     const currentExtra = extras.find(e => e.tempId === currentTempId);
