@@ -1109,14 +1109,22 @@ export default function Services() {
                           <div className="space-y-3">
                             {/* Services Summary */}
                             <div className="bg-white border border-slate-200 rounded-lg p-3">
-                              <div className="text-sm fontbold text-slate-800 mb-3">Serviços:</div>
+                              <div className="text-sm font-bold text-slate-800 mb-3">Serviços:</div>
                               <div className="space-y-2">
                                 {/* Serviços selecionados */}
-                                {serviceExtras.length > 0 ? serviceExtras.map((extra, index) => (
-                                  <div key={index} className="text-sm text-slate-700">
-                                    {extra.serviceExtra?.descricao}
-                                  </div>
-                                )) : (
+                                {serviceExtras.length > 0 ? serviceExtras.map((extra, index) => {
+                                  // Buscar o nome do tipo de serviço no array serviceTypes
+                                  const serviceType = serviceTypes.find(st => st.id === extra.serviceTypeId);
+                                  const serviceName = serviceType?.name || `Serviço ${index + 1}`;
+                                  const servicePrice = extra.totalPrice || extra.unitPrice || "0.00";
+                                  
+                                  return (
+                                    <div key={extra.tempId || index} className="flex justify-between items-center text-sm">
+                                      <span className="text-slate-700">{serviceName}</span>
+                                      <span className="font-medium text-slate-800">R$ {Number(servicePrice).toFixed(2)}</span>
+                                    </div>
+                                  );
+                                }) : (
                                   <div className="text-sm text-slate-500 italic">
                                     Nenhum serviço selecionado
                                   </div>
