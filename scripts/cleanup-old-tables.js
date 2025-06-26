@@ -1,6 +1,21 @@
 
+
 import { sql } from 'drizzle-orm';
-import { db } from '../server/db.ts';
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
+
+// Configuração da conexão com o banco
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || "postgresql://postgres.loegpeghzieljlsrjbvi:Dy4hvAawS1m6WIm4@aws-0-sa-east-1.pooler.supabase.com:6543/postgres",
+  ssl: {
+    rejectUnauthorized: false
+  },
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
+
+const db = drizzle(pool);
 
 async function cleanupOldTables() {
   try {
@@ -94,6 +109,8 @@ async function cleanupOldTables() {
   } catch (error) {
     console.error('❌ Erro durante a limpeza:', error);
     throw error;
+  } finally {
+    await pool.end();
   }
 }
 
@@ -111,3 +128,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 }
 
 export { cleanupOldTables };
+
