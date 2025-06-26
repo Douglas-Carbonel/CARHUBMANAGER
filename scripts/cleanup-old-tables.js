@@ -1,6 +1,6 @@
 
-const { sql } = require('drizzle-orm');
-const { db } = require('../server/db');
+import { sql } from 'drizzle-orm';
+import { db } from '../server/db.js';
 
 async function cleanupOldTables() {
   try {
@@ -98,7 +98,7 @@ async function cleanupOldTables() {
 }
 
 // Executar se chamado diretamente
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   cleanupOldTables()
     .then(() => {
       console.log('✅ Script de limpeza executado com sucesso');
@@ -110,4 +110,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { cleanupOldTables };
+export { cleanupOldTables };
