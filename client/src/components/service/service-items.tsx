@@ -79,17 +79,36 @@ export default function ServiceItems({ serviceId, onChange, initialItems = [] }:
     },
   });
 
-  // Initialize items from props only once when component mounts or when significant changes occur
+  // Effect to handle initial items changes
   useEffect(() => {
-    if (initialItems.length > 0 && !isInitialized) {
+    console.log('ServiceItems - useEffect triggered with initialItems:', {
+      length: initialItems.length,
+      initialItems: initialItems,
+      isInitialized: isInitialized
+    });
+
+    // Only update items when we have actual data or it's the first initialization
+    if (initialItems.length > 0) {
       console.log('ServiceItems - Setting items from initialItems:', initialItems);
       setItems(initialItems);
       setIsInitialized(true);
-    } else if (initialItems.length === 0 && !isInitialized) {
-      console.log('ServiceItems - First time initialization without items');
+    } else if (!isInitialized) {
+      // First time initialization - add one empty row
+      console.log('ServiceItems - First time initialization - adding empty row');
+      const emptyItem: ServiceItemRow = {
+        tempId: `new_${Date.now()}_${Math.random()}`,
+        serviceTypeId: 0,
+        unitPrice: "0.00",
+        totalPrice: "0.00",
+        quantity: 1,
+        notes: "",
+      };
+      setItems([emptyItem]);
       setIsInitialized(true);
     }
-  }, [initialItems.length, isInitialized]);
+    // Important: Don't clear items when initialItems is empty but we're already initialized
+    // This prevents the service items from disappearing during editing
+  }, [initialItems, isInitialized]);
 
   // Notify parent component of changes, but avoid onChange triggering re-renders
   useEffect(() => {

@@ -362,13 +362,18 @@ export default function Services() {
 
           console.log('Mapped service items to ServiceItems format:', mappedExtras);
           
-          // Set service items immediately without delay
-          setServiceExtras(mappedExtras);
-          setInitialServiceExtras(mappedExtras);
+          // Set service items with a small delay to ensure component is ready
+          setTimeout(() => {
+            setServiceExtras(mappedExtras);
+            setInitialServiceExtras(mappedExtras);
+          }, 100);
         } else {
           console.log('No service items found for this service');
-          setServiceExtras([]);
-          setInitialServiceExtras([]);
+          // For services without items, set empty array but only after a delay
+          setTimeout(() => {
+            setServiceExtras([]);
+            setInitialServiceExtras([]);
+          }, 100);
         }
       } else {
         console.error('Failed to fetch service data:', response.status);
@@ -623,10 +628,6 @@ export default function Services() {
     setFormInitialValues(editValues);
     form.reset(editValues);
     
-    // Load photos and service items in parallel - don't clear service extras first
-    fetchServicePhotos(service.id);
-    fetchServiceExtras(service.id);
-
     // Load existing payment methods from specific fields
     console.log('Loading service payment data:', {
       pixPago: service.pixPago,
@@ -641,6 +642,10 @@ export default function Services() {
       cheque: service.chequePago || "0.00",
       cartao: service.cartaoPago || "0.00"
     });
+
+    // Load photos and service items - fetch service items first to ensure they load properly
+    fetchServicePhotos(service.id);
+    fetchServiceExtras(service.id);
 
     setIsDialogOpen(true);
   };
