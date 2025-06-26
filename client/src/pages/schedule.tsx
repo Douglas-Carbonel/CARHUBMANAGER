@@ -445,7 +445,6 @@ export default function SchedulePage() {
       estimatedValue: service.estimatedValue || undefined,
       finalValue: service.finalValue || undefined,
       notes: "",
-      serviceTypeId: service.serviceTypeId || 0,
     });
     setIsModalOpen(true);
   };
