@@ -147,7 +147,7 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
         newExtras[index].serviceExtra = {
           id: selectedServiceType.id,
           descricao: selectedServiceType.name,
-          defaultPrice: selectedServiceType.defaultPrice
+          defaultPrice: selectedServiceType.defaultPrice ?? undefined
         };
       } else if (value === 0) {
         // Reset values when no service is selected
@@ -306,18 +306,7 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
                         {extra.observacao ? extra.observacao.substring(0, 3) + '...' : 'Obs'}
                       </span>
                     </Button>
-                    {!extra.id && serviceId && extra.serviceExtraId > 0 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => saveExtra(extra.tempId)}
-                        className="h-10 px-3 text-sm font-medium flex-shrink-0"
-                        disabled={createExtraItemMutation.isPending}
-                      >
-                        ✓
-                      </Button>
-                    )}
+                    {/* Save button removed - saves handled by parent component */}
                   </div>
                 </div>
               ) : (
