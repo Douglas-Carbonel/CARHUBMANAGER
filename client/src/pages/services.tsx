@@ -834,7 +834,7 @@ export default function Services() {
                     onClick={async () => {
                       setEditingService(null);
                       setCurrentServicePhotos([]);
-                      Applying loading spinner to multiple sections of the services page for better user experience.                      setTemporaryPhotos([]);
+                      setTemporaryPhotos([]);
 
                       const defaultValues = {
                         customerId: 0,
