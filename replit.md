@@ -47,9 +47,12 @@ This is a comprehensive automotive service management system built as a full-sta
 - **Service History**: Complete service record tracking per vehicle
 
 ### Service Management
-- **Service Types**: Configurable service categories with pricing
-- **Scheduling**: Date and time-based appointment system
+- **Unified Architecture**: Centralized service management through service_types table
+- **Service Items**: Multiple service types per order through service_items junction table
+- **Service Types**: Configurable service categories with pricing and descriptions
+- **Scheduling**: Date and time-based appointment system with multiple service support
 - **Status Tracking**: Complete service lifecycle management
+- **Flexible Pricing**: Individual pricing per service item with quantity support
 
 
 
@@ -125,6 +128,9 @@ This is a comprehensive automotive service management system built as a full-sta
 
 ```
 Changelog:
+- January 27, 2025. Documented service architecture consolidation and removed legacy service_extras table
+- January 27, 2025. Created comprehensive migration documentation for service management system
+- January 27, 2025. Cleaned up legacy tables and verified data integrity of consolidated architecture
 - January 18, 2025. Added dedicated modal for multiple appointments per day - mobile users can now tap calendar days to see all appointments in a clean interface
 - January 18, 2025. Improved mobile calendar experience - period filters only apply to cards view, better multiple appointments display with enhanced modal
 - January 18, 2025. Made admin panel fully responsive for mobile devices - card view for small screens, table view for desktop
