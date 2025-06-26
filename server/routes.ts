@@ -384,6 +384,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Service type is required" });
       }
 
+      // Convert serviceTypeId to number
+      cleanedData.serviceTypeId = Number(cleanedData.serviceTypeId);
+
       const serviceData = insertServiceSchema.parse(cleanedData);
       console.log('Parsed service data:', JSON.stringify(serviceData, null, 2));
 

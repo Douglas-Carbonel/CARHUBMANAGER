@@ -15,7 +15,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Edit, Trash2, Calendar, Clock, User, Car, Wrench, Calculator, Grid3X3, CalendarDays } from "lucide-react";
-import ServiceExtras from "@/components/service/service-extras";
 import { cn } from "@/lib/utils";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useForm } from "react-hook-form";
@@ -44,6 +43,7 @@ const serviceFormSchema = insertServiceSchema.extend({
   customerId: z.number().min(1, "Cliente é obrigatório"),
   vehicleId: z.number().min(1, "Veículo é obrigatório"),
   technicianId: z.number().optional(),
+  serviceTypeId: z.number().min(1, "Tipo de serviço é obrigatório"),
 });
 
 type ServiceFormData = z.infer<typeof serviceFormSchema>;
@@ -294,7 +294,6 @@ export default function SchedulePage() {
   const [viewMode, setViewMode] = useState<"cards" | "calendar">("cards");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
-  const [serviceExtras, setServiceExtras] = useState<any[]>([]);
   const [dayServicesModal, setDayServicesModal] = useState<{
     isOpen: boolean;
     date: Date | null;
@@ -327,6 +326,7 @@ export default function SchedulePage() {
       estimatedValue: undefined,
       finalValue: undefined,
       notes: "",
+      serviceTypeId: 0,
     },
   });
 
@@ -425,10 +425,11 @@ export default function SchedulePage() {
   });
 
   const onSubmit = (data: ServiceFormData) => {
+    const formData = data;
     if (editingService) {
-      updateMutation.mutate({ id: editingService.id, data });
+      updateMutation.mutate({ id: editingService.id, data: formData });
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(formData);
     }
   };
 
@@ -437,12 +438,14 @@ export default function SchedulePage() {
     form.reset({
       customerId: service.customerId,
       vehicleId: service.vehicleId,
+      serviceTypeId: service.serviceTypeId || 0,
       technicianId: service.technicianId || 0,
       status: service.status as "scheduled" | "in_progress" | "completed" | "cancelled",
       scheduledDate: service.scheduledDate ? new Date(service.scheduledDate).toISOString().slice(0, 10) : "",
       estimatedValue: service.estimatedValue || undefined,
       finalValue: service.finalValue || undefined,
       notes: "",
+      serviceTypeId: service.serviceTypeId || 0,
     });
     setIsModalOpen(true);
   };
@@ -629,6 +632,7 @@ export default function SchedulePage() {
                           estimatedValue: undefined,
                           finalValue: undefined,
                           notes: "",
+                          serviceTypeId: 0,
                         });
                       }}
                     >
@@ -719,7 +723,8 @@ export default function SchedulePage() {
                             name="technicianId"
                             render={({ field }) => (
                               <FormItem className="space-y-2">
-                                <FormLabel className={cn("font-semibold text-slate-700 flex items-center", isMobile ? "text-sm" : "text-sm")}>
+                                <FormLabel```python
+ className={cn("font-semibold text-slate-700 flex items-center", isMobile ? "text-sm" : "text-sm")}>
                                   <User className="h-4 w-4 mr-2 text-teal-600" />
                                   Técnico Responsável
                                 </FormLabel>
@@ -840,19 +845,38 @@ export default function SchedulePage() {
                             </FormItem>
                           )}
                         />
-
-                        {/* Service Extras Section */}
-                        <div className="border-t pt-4">
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <Label className={cn("font-medium text-gray-700", isMobile ? "text-sm" : "text-sm")}>Adicionais do Serviço</Label>
-                            </div>
-                            <ServiceExtras
-                              serviceId={editingService?.id}
-                              onChange={setServiceExtras}
-                            />
-                          </div>
-                        </div>
+                        <FormField
+                            control={form.control}
+                            name="serviceTypeId"
+                            render={({ field }) => (
+                              <FormItem className="space-y-2">
+                                <FormLabel className={cn("font-semibold text-slate-700 flex items-center", isMobile ? "text-sm" : "text-sm")}>
+                                  <Wrench className="h-4 w-4 mr-2 text-teal-600" />
+                                  Tipo de Serviço
+                                </FormLabel>
+                                <Select 
+                                  onValueChange={(value) => {
+                                    field.onChange(Number(value));
+                                  }} 
+                                  value={field.value > 0 ? field.value.toString() : ""}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger className={cn("border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md", isMobile ? "h-12 text-base" : "h-11")}>
+                                      <SelectValue placeholder="Selecione um tipo de serviço" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {serviceTypes.map((serviceType) => (
+                                      <SelectItem key={serviceType.id} value={serviceType.id.toString()}>
+                                        {serviceType.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
 
                         {/* Service Budget Section */}
                         <div className={cn("border-t", isMobile ? "pt-4" : "pt-6")}>
@@ -873,11 +897,6 @@ export default function SchedulePage() {
                                         return selectedServiceType?.description || "Nenhum serviço selecionado";
                                       })()}
                                     </div>
-                                    {serviceExtras.length > 0 && serviceExtras.map((extra, index) => (
-                                      <div key={index} className={cn("text-slate-700", isMobile ? "text-sm" : "text-sm")}>
-                                        {extra.serviceExtra?.descricao}
-                                      </div>
-                                    ))}
                                   </div>
                                 </div>
                                 <div className="border-t border-slate-300 pt-2 mt-2">
@@ -893,11 +912,6 @@ export default function SchedulePage() {
                                             total += Number(selectedServiceType.defaultPrice);
                                           }
                                         }
-                                        serviceExtras.forEach(extra => {
-                                          if (extra.valor && !isNaN(Number(extra.valor))) {
-                                            total += Number(extra.valor);
-                                          }
-                                        });
                                         return total.toFixed(2);
                                       })()}
                                     </span>
