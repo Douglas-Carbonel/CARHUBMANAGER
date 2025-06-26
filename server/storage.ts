@@ -519,7 +519,7 @@ export class DatabaseStorage implements IStorage {
       console.log('Storage: Creating service with data:', JSON.stringify(service, null, 2));
 
       // Separate service items from service data
-      const serviceItems = service.serviceItems;
+      const inputServiceItems = service.serviceItems;
       const serviceData = { ...service };
       delete serviceData.serviceItems;
 
@@ -528,8 +528,8 @@ export class DatabaseStorage implements IStorage {
       console.log('Storage: Service created successfully:', newService);
 
       // Create service items if they exist
-      if (serviceItems && serviceItems.length > 0) {
-        const serviceItemsData = serviceItems.map(item => ({
+      if (inputServiceItems && inputServiceItems.length > 0) {
+        const serviceItemsData = inputServiceItems.map(item => ({
           serviceId: newService.id,
           serviceTypeId: item.serviceTypeId,
           quantity: item.quantity || 1,
