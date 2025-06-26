@@ -550,6 +550,7 @@ export class DatabaseStorage implements IStorage {
       const serviceRow = result.rows[0];
 
       // Get service items for this service
+      console.log('Storage: Querying service_items for service ID:', id);
       const serviceItemsResult = await db.execute(sql`
         SELECT 
           si.*,
@@ -561,6 +562,7 @@ export class DatabaseStorage implements IStorage {
         WHERE si.service_id = ${id}
         ORDER BY si.created_at ASC
       `);
+      console.log('Storage: Found', serviceItemsResult.rows.length, 'service items for service', id);
 
       const serviceItems = serviceItemsResult.rows.map((item: any) => ({
         id: item.id,
