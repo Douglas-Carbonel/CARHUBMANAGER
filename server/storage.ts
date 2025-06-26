@@ -60,7 +60,7 @@ export interface IStorage {
   deleteVehicle(id: number): Promise<void>;
 
   // Service operations
-  getServices(): Promise<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]>;
+  getServices(technicianId?: number): Promise<any[]>;
   getService(id: number): Promise<Service | undefined>;
   getServicesByCustomer(customerId: number): Promise<Service[]>;
   getServicesByVehicle(vehicleId: number): Promise<Service[]>;
@@ -68,6 +68,7 @@ export interface IStorage {
   createService(service: InsertService): Promise<Service>;
   updateService(id: number, service: Partial<InsertService>): Promise<Service>;
   deleteService(id: number): Promise<void>;
+  getServiceById(serviceId: number, userId?: number): Promise<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType }) | undefined>;
 
   // Service type operations
   getServiceTypes(): Promise<ServiceType[]>;
@@ -377,31 +378,75 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Service operations
-  async getServices(): Promise<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]> {
+  async getServices(technicianId?: number): Promise<any[]> {
     try {
-      const result = await db
-        .select({
-          service: services,
-          customer: customers,
-          vehicle: vehicles,
-          serviceType: serviceTypes,
-        })
-        .from(services)
-        .leftJoin(customers, eq(services.customerId, customers.id))
-        .leftJoin(vehicles, eq(services.vehicleId, vehicles.id))
-        .leftJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
-        .orderBy(desc(services.createdAt));
+          let query = db
+          .select({
+            id: services.id,
+            customerId: services.customerId,
+            vehicleId: services.vehicleId,
+            serviceTypeId: services.serviceTypeId,
+            technicianId: services.technicianId,
+            status: services.status,
+            scheduledDate: services.scheduledDate,
+            scheduledTime: services.scheduledTime,
+            startedAt: services.startedAt,
+            completedAt: services.completedAt,
+            estimatedValue: services.estimatedValue,
+            finalValue: services.finalValue,
+            valorPago: services.valorPago,
+            pixPago: services.pixPago,
+            dinheiroPago: services.dinheiroPago,
+            chequePago: services.chequePago,
+            cartaoPago: services.cartaoPago,
+            notes: services.notes,
+            createdAt: services.createdAt,
+            updatedAt: services.updatedAt,
+            customerName: customers.name,
+            vehicleBrand: vehicles.brand,
+            vehicleModel: vehicles.model,
+            vehicleLicensePlate: vehicles.licensePlate,
+            serviceTypeName: serviceTypes.name,
+            technicianName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`.as('technician_name'),
+          })
+          .from(services)
+          .leftJoin(customers, eq(services.customerId, customers.id))
+          .leftJoin(vehicles, eq(services.vehicleId, vehicles.id))
+          .leftJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+          .leftJoin(users, eq(services.technicianId, users.id))
+          .orderBy(desc(services.createdAt));
+  
+        if (technicianId) {
+          query = query.where(eq(services.technicianId, technicianId));
+        }
+  
+        const servicesData = await query;
+  
+        for (const service of servicesData) {
+          const items = await db
+            .select({
+              id: serviceItems.id,
+              serviceId: serviceItems.serviceId,
+              serviceTypeId: serviceItems.serviceTypeId,
+              quantity: serviceItems.quantity,
+              unitPrice: serviceItems.unitPrice,
+              totalPrice: serviceItems.totalPrice,
+              notes: serviceItems.notes,
+              serviceTypeName: serviceTypes.name,
+              serviceTypeDescription: serviceTypes.description,
+            })
+            .from(serviceItems)
+            .leftJoin(serviceTypes, eq(serviceItems.serviceTypeId, serviceTypes.id))
+            .where(eq(serviceItems.serviceId, service.id));
+  
+            service.serviceItems = items;
+        }
+        return servicesData;
 
-      return result.map(row => ({
-        ...row.service,
-        customer: row.customer!,
-        vehicle: row.vehicle!,
-        serviceType: row.serviceType!,
-      }));
-    } catch (error) {
-      console.error('Error fetching services:', error);
-      throw error;
-    }
+      } catch (error) {
+          console.error('Error fetching services:', error);
+          throw error;
+      }
   }
 
   async getService(id: number): Promise<Service | undefined> {
@@ -446,8 +491,31 @@ export class DatabaseStorage implements IStorage {
   async createService(service: InsertService): Promise<Service> {
     try {
       console.log('Storage: Creating service with data:', JSON.stringify(service, null, 2));
-      const [newService] = await db.insert(services).values(service).returning();
+
+      // Separate service items from service data
+      const serviceItems = service.serviceItems;
+      const serviceData = { ...service };
+      delete serviceData.serviceItems;
+
+      // Create the service first
+      const [newService] = await db.insert(services).values(serviceData).returning();
       console.log('Storage: Service created successfully:', newService);
+
+      // Create service items if they exist
+      if (serviceItems && serviceItems.length > 0) {
+        const serviceItemsData = serviceItems.map(item => ({
+          serviceId: newService.id,
+          serviceTypeId: item.serviceTypeId,
+          quantity: item.quantity || 1,
+          unitPrice: item.unitPrice,
+          totalPrice: item.totalPrice,
+          notes: item.notes,
+        }));
+
+        await db.insert(serviceItems).values(serviceItemsData);
+        console.log('Storage: Service items created successfully:', serviceItemsData.length, 'items');
+      }
+
       return newService;
     } catch (error) {
       console.error('Storage: Error creating service:', error);
@@ -1488,71 +1556,6 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getServices(technicianId?: number): Promise<any[]> {
-    let query = this.db
-      .select({
-        id: services.id,
-        customerId: services.customerId,
-        vehicleId: services.vehicleId,
-        serviceTypeId: services.serviceTypeId,
-        technicianId: services.technicianId,
-        status: services.status,
-        scheduledDate: services.scheduledDate,
-        scheduledTime: services.scheduledTime,
-        startedAt: services.startedAt,
-        completedAt: services.completedAt,
-        estimatedValue: services.estimatedValue,
-        finalValue: services.finalValue,
-        valorPago: services.valorPago,
-        pixPago: services.pixPago,
-        dinheiroPago: services.dinheiroPago,
-        chequePago: services.chequePago,
-        cartaoPago: services.cartaoPago,
-        notes: services.notes,
-        createdAt: services.createdAt,
-        updatedAt: services.updatedAt,
-        customerName: customers.name,
-        vehicleBrand: vehicles.brand,
-        vehicleModel: vehicles.model,
-        vehicleLicensePlate: vehicles.licensePlate,
-        serviceTypeName: serviceTypes.name,
-        technicianName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`.as('technician_name'),
-      })
-      .from(services)
-      .leftJoin(customers, eq(services.customerId, customers.id))
-      .leftJoin(vehicles, eq(services.vehicleId, vehicles.id))
-      .leftJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
-      .leftJoin(users, eq(services.technicianId, users.id))
-      .orderBy(desc(services.createdAt));
-
-    if (technicianId) {
-      query = query.where(eq(services.technicianId, technicianId));
-    }
-
-    const servicesData = await query;
-
-    // Get service items for each service
-    for (const service of servicesData) {
-      const items = await this.db
-        .select({
-          id: serviceItems.id,
-          serviceTypeId: serviceItems.serviceTypeId,
-          quantity: serviceItems.quantity,
-          unitPrice: serviceItems.unitPrice,
-          totalPrice: serviceItems.totalPrice,
-          notes: serviceItems.notes,
-          serviceTypeName: serviceTypes.name,
-          serviceTypeDescription: serviceTypes.description,
-        })
-        .from(serviceItems)
-        .leftJoin(serviceTypes, eq(serviceItems.serviceTypeId, serviceTypes.id))
-        .where(eq(serviceItems.serviceId, service.id));
-
-      service.serviceItems = items;
-    }
-
-    return servicesData;
-  }
 
   async getServiceById(serviceId: number, userId?: number): Promise<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType }) | undefined> {
     try {
@@ -1581,18 +1584,6 @@ export class DatabaseStorage implements IStorage {
       };
     } catch (error) {
       console.error('Error fetching service:', error);
-      throw error;
-    }
-  }
-
-  async createService(service: InsertService): Promise<Service> {
-    try {
-      console.log('Storage: Creating service with data:', JSON.stringify(service, null, 2));
-      const [newService] = await db.insert(services).values(service).returning();
-      console.log('Storage: Service created successfully:', newService);
-      return newService;
-    } catch (error) {
-      console.error('Storage: Error creating service:', error);
       throw error;
     }
   }

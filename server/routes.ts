@@ -335,7 +335,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = req.user!;
       const { status } = req.query;
-      let services = await storage.getServices(user.role === 'admin' ? undefined : user.id);
+      
+      // Use the existing getServices method that returns services with joined data
+      let services;
+      if (user.role === 'admin') {
+        services = await storage.getServices();
+      } else {
+        services = await storage.getServices(user.id);
+      }
 
       // Filter by status if provided
       if (status && typeof status === 'string') {
