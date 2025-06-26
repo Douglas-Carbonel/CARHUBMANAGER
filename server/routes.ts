@@ -49,14 +49,26 @@ import { sql } from "drizzle-orm";
 // Function to ensure service_items table exists
 async function ensureServiceItemsTable() {
   try {
-    console.log('Ensuring service_items table exists...');
+    console.log('Checking if service_items table exists...');
     
-    // Drop existing table if it has wrong structure
-    await db.execute(sql`DROP TABLE IF EXISTS service_items CASCADE`);
+    // Check if table exists first
+    const tableExists = await db.execute(sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'service_items'
+      )
+    `);
     
-    // Create fresh table with correct structure
+    if (tableExists.rows[0]?.exists) {
+      console.log('service_items table already exists - skipping creation');
+      return;
+    }
+    
+    console.log('Creating service_items table...');
+    
+    // Create table only if it doesn't exist
     await db.execute(sql`
-      CREATE TABLE service_items (
+      CREATE TABLE IF NOT EXISTS service_items (
         id SERIAL PRIMARY KEY,
         service_id INTEGER NOT NULL REFERENCES services(id) ON DELETE CASCADE,
         service_type_id INTEGER NOT NULL REFERENCES service_types(id),
@@ -70,10 +82,10 @@ async function ensureServiceItemsTable() {
 
     // Create indexes safely
     await db.execute(sql`
-      CREATE INDEX idx_service_items_service_id ON service_items(service_id)
+      CREATE INDEX IF NOT EXISTS idx_service_items_service_id ON service_items(service_id)
     `);
     await db.execute(sql`
-      CREATE INDEX idx_service_items_service_type_id ON service_items(service_type_id)
+      CREATE INDEX IF NOT EXISTS idx_service_items_service_type_id ON service_items(service_type_id)
     `);
     
     console.log('service_items table created successfully');
