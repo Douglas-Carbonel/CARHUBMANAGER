@@ -78,7 +78,7 @@ export const vehicles = pgTable("vehicles", {
 });
 
 // Unified services table (replaces both service_types and service_extras)
-export const unifiedServices = pgTable("unified_services", {
+export const serviceTypes = pgTable("service_types", {
   id: serial("id").primaryKey(),
   name: varchar("name").notNull(),
   description: text("description"),
@@ -96,8 +96,7 @@ export const services = pgTable("services", {
   id: serial("id").primaryKey(),
   customerId: integer("customer_id").references(() => customers.id).notNull(),
   vehicleId: integer("vehicle_id").references(() => vehicles.id).notNull(),
-  serviceTypeId: integer("service_type_id"), // Keep for backward compatibility during migration - now optional
-  unifiedServiceId: integer("unified_service_id").references(() => unifiedServices.id), // New reference
+  serviceTypeId: integer("service_type_id").references(() => serviceTypes.id).notNull(), // Keep for backward compatibility during migration - now optional
   technicianId: integer("technician_id").references(() => users.id),
   status: varchar("status", { 
     enum: ["scheduled", "in_progress", "completed", "cancelled"] 
@@ -166,16 +165,6 @@ export const photos = pgTable("photos", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// New service items table to handle multiple services per appointment
-export const serviceItems = pgTable("service_items", {
-  id: serial("id").primaryKey(),
-  serviceId: integer("service_id").references(() => services.id, { onDelete: "cascade" }).notNull(),
-  unifiedServiceId: integer("unified_service_id").references(() => unifiedServices.id).notNull(),
-  valor: decimal("valor", { precision: 10, scale: 2 }).notNull(),
-  observacao: text("observacao"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
 // Push subscriptions table for notifications
 export const pushSubscriptions = pgTable("push_subscriptions", {
   id: serial("id").primaryKey(),
@@ -219,21 +208,19 @@ export const servicesRelations = relations(services, ({ one, many }) => ({
     fields: [services.vehicleId],
     references: [vehicles.id],
   }),
-  unifiedService: one(unifiedServices, {
-    fields: [services.unifiedServiceId],
-    references: [unifiedServices.id],
+  serviceType: one(serviceTypes, {
+    fields: [services.serviceTypeId],
+    references: [serviceTypes.id],
   }),
   technician: one(users, {
     fields: [services.technicianId],
     references: [users.id],
   }),
   payments: many(payments),
-  serviceItems: many(serviceItems),
 }));
 
-export const unifiedServicesRelations = relations(unifiedServices, ({ many }) => ({
+export const serviceTypesRelations = relations(serviceTypes, ({ many }) => ({
   services: many(services),
-  serviceItems: many(serviceItems),
 }));
 
 export const paymentsRelations = relations(payments, ({ one }) => ({
@@ -265,17 +252,6 @@ export const photosRelations = relations(photos, ({ one }) => ({
   uploader: one(users, {
     fields: [photos.uploadedBy],
     references: [users.id],
-  }),
-}));
-
-export const serviceItemsRelations = relations(serviceItems, ({ one }) => ({
-  service: one(services, {
-    fields: [serviceItems.serviceId],
-    references: [services.id],
-  }),
-  unifiedService: one(unifiedServices, {
-    fields: [serviceItems.unifiedServiceId],
-    references: [unifiedServices.id],
   }),
 }));
 
@@ -318,8 +294,6 @@ export const insertServiceSchema = createInsertSchema(services).extend({
   cartaoPago: z.string().optional(),
   reminderEnabled: z.boolean().optional(),
   reminderMinutes: z.number().optional(),
-}).omit({
-  serviceTypeId: true, // Remove a obrigatoriedade do serviceTypeId
 });
 
 export const insertPushSubscriptionSchema = createInsertSchema(pushSubscriptions).omit({
@@ -332,15 +306,10 @@ export const insertServiceReminderSchema = createInsertSchema(serviceReminders).
   createdAt: true,
 });
 
-export const insertUnifiedServiceSchema = createInsertSchema(unifiedServices).omit({
+export const insertServiceTypeSchema = createInsertSchema(serviceTypes).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
-
-export const insertServiceItemSchema = createInsertSchema(serviceItems).omit({
-  id: true,
-  createdAt: true,
 });
 
 export const insertPaymentSchema = createInsertSchema(payments).omit({
@@ -362,11 +331,6 @@ export const insertPhotoSchema = createInsertSchema(photos).omit({
 // Loyalty tracking schema temporarily removed
 
 export const updateServiceSchema = insertServiceSchema.partial().extend({
-  serviceItems: z.array(z.object({
-    unifiedServiceId: z.number(),
-    valor: z.string(),
-    observacao: z.string().optional(),
-  })).optional(),
   pixPago: z.string().optional(),
   dinheiroPago: z.string().optional(),
   chequePago: z.string().optional(),
@@ -381,10 +345,8 @@ export type InsertVehicle = z.infer<typeof insertVehicleSchema>;
 export type Vehicle = typeof vehicles.$inferSelect;
 export type InsertService = z.infer<typeof insertServiceSchema>;
 export type Service = typeof services.$inferSelect;
-export type InsertUnifiedService = z.infer<typeof insertUnifiedServiceSchema>;
-export type UnifiedService = typeof unifiedServices.$inferSelect;
-export type InsertServiceItem = z.infer<typeof insertServiceItemSchema>;
-export type ServiceItem = typeof serviceItems.$inferSelect;
+export type InsertServiceType = z.infer<typeof insertServiceTypeSchema>;
+export type ServiceType = typeof serviceTypes.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type Payment = typeof payments.$inferSelect;
 export type InsertPhoto = z.infer<typeof insertPhotoSchema>;

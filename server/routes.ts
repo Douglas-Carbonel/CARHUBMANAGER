@@ -147,8 +147,7 @@ import {
   insertCustomerSchema,
   insertVehicleSchema,
   insertServiceSchema,
-  insertUnifiedServiceSchema,
-  insertServiceItemSchema,
+  insertServiceTypeSchema,
   insertPaymentSchema,
   insertUserSchema
 } from "@shared/schema";
@@ -380,9 +379,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         scheduledTime: req.body.scheduledTime || undefined,
       };
 
-      // If we have service extras but no unifiedServiceId, use the first service extra as the main service
-      if (req.body.serviceExtras && Array.isArray(req.body.serviceExtras) && req.body.serviceExtras.length > 0 && !cleanedData.unifiedServiceId) {
-        cleanedData.unifiedServiceId = Number(req.body.serviceExtras[0].serviceExtraId);
+      // Ensure serviceTypeId is provided
+      if (!cleanedData.serviceTypeId) {
+        return res.status(400).json({ message: "Service type is required" });
       }
 
       const serviceData = insertServiceSchema.parse(cleanedData);
@@ -447,29 +446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Service reminder created for service ${service.id} - ${reminderMinutes} minutes before`);
       }
 
-      // Process service extras if they exist
-      if (req.body.serviceExtras && Array.isArray(req.body.serviceExtras) && req.body.serviceExtras.length > 0) {
-        console.log('Processing service extras:', req.body.serviceExtras);
-
-        // If the first service extra was used as the main service, start from index 1
-        // Otherwise, process all service extras
-        const startIndex = (serviceData.unifiedServiceId === Number(req.body.serviceExtras[0].serviceExtraId)) ? 1 : 0;
-
-        for (let i = startIndex; i < req.body.serviceExtras.length; i++) {
-          const extra = req.body.serviceExtras[i];
-          const extraItem = {
-            serviceId: service.id,
-            unifiedServiceId: extra.serviceExtraId,
-            valor: extra.valor || "0.00",
-            observacao: extra.observacao || "",
-          };
-
-          console.log('Creating service item:', extraItem);
-          await storage.createServiceItem(extraItem);
-        }
-
-        console.log('All service extras processed successfully');
-      }
+      
 
       res.status(201).json(service);
     } catch (error: any) {
@@ -488,29 +465,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const serviceData = insertServiceSchema.partial().parse(req.body);
       const service = await storage.updateService(serviceId, serviceData);
 
-      // Process service extras if they exist
-      if (req.body.serviceExtras && Array.isArray(req.body.serviceExtras)) {
-        console.log('Updating service extras for service ID:', serviceId);
-        console.log('Service extras data:', req.body.serviceExtras);
-
-        // First, remove existing service extras for this service
-        await storage.deleteServiceExtraItemsByServiceId(serviceId);
-
-        // Then add the new ones
-        for (const extra of req.body.serviceExtras) {
-          const extraItem = {
-            serviceId: serviceId,
-            serviceExtraId: extra.serviceExtraId,
-            valor: extra.valor || "0.00",
-            observacao: extra.observacao || "",
-          };
-
-          console.log('Creating updated service extra item:', extraItem);
-          await storage.createServiceExtraItem(extraItem);
-        }
-
-        console.log('Service extras updated successfully');
-      }
+      
 
       res.json(service);
     } catch (error: any) {
@@ -991,54 +946,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     }
   });
 
-  // Service Extras management routes
-  app.get("/api/admin/service-extras", requireAdmin, async (req, res) => {
-    try {
-      const serviceExtras = await storage.getServiceExtras();
-      res.json(serviceExtras);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch service extras" });
-    }
-  });
-
-  app.post("/api/admin/service-extras", requireAdmin, async (req, res) => {
-    try {
-      const serviceExtraData = insertServiceExtraSchema.parse(req.body);
-      const serviceExtra = await storage.createServiceExtra(serviceExtraData);
-      res.json(serviceExtra);
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        res.status(400).json({ message: "Invalid service extra data", errors: error.errors });
-      } else {
-        res.status(500).json({ message: "Failed to create service extra" });
-      }
-    }
-  });
-
-  app.put("/api/admin/service-extras/:id", requireAdmin, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const serviceExtraData = insertServiceExtraSchema.partial().parse(req.body);
-      const serviceExtra = await storage.updateServiceExtra(id, serviceExtraData);
-      res.json(serviceExtra);
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        res.status(400).json({ message: "Invalid service extra data", errors: error.errors });
-      } else {
-        res.status(500).json({ message: "Failed to update service extra" });
-      }
-    }
-  });
-
-  app.delete("/api/admin/service-extras/:id", requireAdmin, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      await storage.deleteServiceExtra(id);
-      res.json({ message: "Service extra deleted successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete service extra" });
-    }
-  });
+  
 
 
 
@@ -1303,97 +1211,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     }
   });
 
-  // Service extras routes
-  app.get("/api/service-extras", requireAuth, async (req, res) => {
-    try {
-      const serviceExtras = await storage.getServiceExtras();
-      res.json(serviceExtras);
-    } catch (error) {
-      console.error("Error fetching service extras:", error);
-      res.status(500).json({ message: "Failed to fetch service extras" });
-    }
-  });
-
-  app.post("/api/service-extras", requireAuth, async (req, res) => {
-    try {
-      const serviceExtraData = insertServiceExtraSchema.parse(req.body);
-      const serviceExtra = await storage.createServiceExtra(serviceExtraData);
-      res.status(201).json(serviceExtra);
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to create service extra" });
-    }
-  });
-
-  app.put("/api/service-extras/:id", requireAuth, async (req, res) => {
-    try {
-      const serviceExtraData = insertServiceExtraSchema.partial().parse(req.body);
-      const serviceExtra = await storage.updateServiceExtra(parseInt(req.params.id), serviceExtraData);
-      res.json(serviceExtra);
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to update service extra" });
-    }
-  });
-
-  app.delete("/api/service-extras/:id", requireAuth, async (req, res) => {
-    try {
-      await storage.deleteServiceExtra(parseInt(req.params.id));
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete service extra" });
-    }
-  });
-
-  // Service extra items routes
-  app.get("/api/services/:serviceId/extras", requireAuth, async (req, res) => {
-    try {
-      const items = await storage.getServiceItemsWithServices(parseInt(req.params.serviceId));
-      res.json(items);
-    } catch (error) {
-      console.error("Error fetching service extra items:", error);
-      res.status(500).json({ message: "Failed to fetch service extra items" });
-    }
-  });
-
-  app.post("/api/service-extra-items", requireAuth, async (req, res) => {
-    try {
-      const itemData = insertServiceExtraItemSchema.parse(req.body);
-      const item = await storage.createServiceExtraItem(itemData);
-      res.status(201).json(item);
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to create service extra item" });
-    }
-  });
-
-  app.put("/api/service-extra-items/:id", requireAuth, async (req, res) => {
-    try {
-      const itemData = insertServiceExtraItemSchema.partial().parse(req.body);
-      const item = await storage.updateServiceExtraItem(parseInt(req.params.id), itemData);
-      res.json(item);
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to update service extra item" });
-    }
-  });
-
-  app.delete("/api/service-extra-items/:id", requireAuth, async (req, res) => {
-    try {
-      await storage.deleteServiceExtraItem(parseInt(req.params.id));
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete service extra item" });
-    }
-  });
+  
 
   // Vehicle photos routes
   app.get("/api/vehicles/:vehicleId/photos", requireAuth, async (req, res) => {
