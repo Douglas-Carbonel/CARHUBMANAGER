@@ -425,8 +425,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         scheduledTime: req.body.scheduledTime || undefined,
       };
 
-      // Convert serviceExtras to serviceItems format
+      // Handle both serviceExtras (legacy) and serviceItems formats
       const serviceItems: any[] = [];
+      
+      // Handle serviceExtras format (from service creation form)
       if (req.body.serviceExtras && Array.isArray(req.body.serviceExtras)) {
         req.body.serviceExtras.forEach((extra: any) => {
           if (extra.serviceExtraId > 0 && Number(extra.valor) > 0) {
@@ -436,6 +438,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
               unitPrice: String(extra.valor),
               totalPrice: String(extra.valor),
               notes: extra.observacao || undefined,
+            });
+          }
+        });
+      }
+      
+      // Handle serviceItems format (from services page)
+      if (req.body.serviceItems && Array.isArray(req.body.serviceItems)) {
+        req.body.serviceItems.forEach((item: any) => {
+          if (item.serviceTypeId > 0 && Number(item.unitPrice) > 0) {
+            serviceItems.push({
+              serviceTypeId: Number(item.serviceTypeId),
+              quantity: Number(item.quantity) || 1,
+              unitPrice: String(item.unitPrice),
+              totalPrice: String(item.totalPrice),
+              notes: item.notes || undefined,
             });
           }
         });
