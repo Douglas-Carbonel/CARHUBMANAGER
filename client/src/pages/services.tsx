@@ -24,7 +24,7 @@ import ServiceAnalytics from "@/components/dashboard/service-analytics";
 import { useLocation } from "wouter";
 import PhotoUpload from "@/components/photos/photo-upload";
 import CameraCapture from "@/components/camera/camera-capture";
-import ServiceExtras from "@/components/service/service-extras";
+import ServiceItems from "@/components/service/service-items";
 import PaymentManager from "@/components/service/payment-manager";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";

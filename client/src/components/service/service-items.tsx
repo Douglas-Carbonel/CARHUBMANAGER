@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Trash2, MessageSquare } from "lucide-react";
 
 interface ServiceType {
@@ -32,10 +32,10 @@ interface ServiceItemRow {
   };
 }
 
-interface ServiceExtrasProps {
+interface ServiceItemsProps {
   serviceId?: number;
   onChange?: (items: ServiceItemRow[]) => void;
-  initialExtras?: ServiceItemRow[];
+  initialItems?: ServiceItemRow[];
 }
 
 // Format currency for display
@@ -55,9 +55,8 @@ const parseCurrency = (value: string) => {
   return numericValue.toFixed(2);
 };
 
-export default function ServiceExtras({ serviceId, onChange, initialExtras = [] }: ServiceExtrasProps) {
+export default function ServiceItems({ serviceId, onChange, initialItems = [] }: ServiceItemsProps) {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [items, setItems] = useState<ServiceItemRow[]>([]);
   const [observationModalOpen, setObservationModalOpen] = useState(false);
   const [editingObservation, setEditingObservation] = useState<{ tempId: string; notes: string } | null>(null);
@@ -81,24 +80,17 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
 
   // Initialize items from props
   useEffect(() => {
-    if (initialExtras.length > 0) {
-      console.log('ServiceExtras - Initializing with data:', initialExtras);
-      setItems(initialExtras);
+    if (initialItems.length > 0) {
+      console.log('ServiceItems - Initializing with data:', initialItems);
+      setItems(initialItems);
     } else {
-      // Always start with at least one empty item
-      console.log('ServiceExtras - No initial data, adding empty item');
-      setItems([{
-        tempId: `new_${Date.now()}_${Math.random()}`,
-        serviceTypeId: 0,
-        unitPrice: "0.00",
-        totalPrice: "0.00",
-        quantity: 1,
-        notes: "",
-      }]);
+      // Start completely empty for new service orders
+      console.log('ServiceItems - No initial data, starting empty');
+      setItems([]);
     }
-  }, [initialExtras]);
+  }, [initialItems]);
 
-  // Notify parent of changes
+  // Notify parent component of changes
   useEffect(() => {
     if (onChange) {
       onChange(items);
@@ -118,14 +110,6 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
   };
 
   const removeItem = (tempId: string) => {
-    if (items.length === 1) {
-      toast({
-        title: "Atenção",
-        description: "Deve haver pelo menos um serviço na lista.",
-        variant: "destructive",
-      });
-      return;
-    }
     setItems(items.filter(item => item.tempId !== tempId));
   };
 
@@ -211,20 +195,92 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
       </div>
 
       <div className="space-y-3">
-        {items.map((item) => (
-          <Card key={item.tempId} className="border border-gray-200">
-            <CardContent className={isMobile ? "p-3" : "p-4"}>
-              {isMobile ? (
-                // Mobile compact layout
-                <div className="space-y-2">
-                  {/* First line: Service selector + delete button */}
-                  <div className="flex gap-2 items-center">
-                    <div className="flex-1">
+        {items.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <Plus className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+            <p className="text-sm">Nenhum serviço adicionado</p>
+            <p className="text-xs">Use o botão "Adicionar Serviço" para incluir serviços na ordem</p>
+          </div>
+        ) : (
+          items.map((item) => (
+            <Card key={item.tempId} className="border border-gray-200">
+              <CardContent className={isMobile ? "p-3" : "p-4"}>
+                {isMobile ? (
+                  // Mobile compact layout
+                  <div className="space-y-2">
+                    {/* First line: Service selector + delete button */}
+                    <div className="flex gap-2 items-center">
+                      <div className="flex-1">
+                        <Select
+                          value={item.serviceTypeId > 0 ? item.serviceTypeId.toString() : ""}
+                          onValueChange={(value) => updateItem(item.tempId, 'serviceTypeId', parseInt(value))}
+                        >
+                          <SelectTrigger className="h-10 text-sm">
+                            <SelectValue placeholder="Selecione um serviço" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {getAvailableServices(item.tempId).map((serviceType) => (
+                              <SelectItem key={serviceType.id} value={serviceType.id.toString()}>
+                                {serviceType.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => removeItem(item.tempId)}
+                        className="px-2"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    {/* Second line: Quantity, price and observation button */}
+                    <div className="flex gap-2 items-center">
+                      <div className="w-16">
+                        <Input
+                          type="number"
+                          min="1"
+                          value={item.quantity}
+                          onChange={(e) => updateItem(item.tempId, 'quantity', parseInt(e.target.value) || 1)}
+                          className="h-8 text-xs text-center"
+                          placeholder="Qtd"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <Input
+                          value={formatCurrency(item.unitPrice)}
+                          onChange={(e) => updateItem(item.tempId, 'unitPrice', e.target.value)}
+                          className="h-8 text-xs"
+                          placeholder="Valor unitário"
+                        />
+                      </div>
+                      <div className="w-20 text-xs text-center font-medium text-gray-700">
+                        R$ {Number(item.totalPrice).toFixed(2)}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openObservationModal(item.tempId, item.notes)}
+                        className={`px-2 ${item.notes ? 'bg-blue-50 border-blue-300' : ''}`}
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  // Desktop layout
+                  <div className="grid grid-cols-6 gap-4 items-center">
+                    <div className="col-span-2">
                       <Select
                         value={item.serviceTypeId > 0 ? item.serviceTypeId.toString() : ""}
                         onValueChange={(value) => updateItem(item.tempId, 'serviceTypeId', parseInt(value))}
                       >
-                        <SelectTrigger className="h-10 text-sm">
+                        <SelectTrigger>
                           <SelectValue placeholder="Selecione um serviço" />
                         </SelectTrigger>
                         <SelectContent>
@@ -236,115 +292,51 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
                         </SelectContent>
                       </Select>
                     </div>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => removeItem(item.tempId)}
-                      className="px-2"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  {/* Second line: Quantity, price and observation button */}
-                  <div className="flex gap-2 items-center">
-                    <div className="w-16">
+                    <div>
                       <Input
                         type="number"
                         min="1"
                         value={item.quantity}
                         onChange={(e) => updateItem(item.tempId, 'quantity', parseInt(e.target.value) || 1)}
-                        className="h-8 text-xs text-center"
+                        className="text-center"
                         placeholder="Qtd"
                       />
                     </div>
-                    <div className="flex-1">
+                    <div>
                       <Input
                         value={formatCurrency(item.unitPrice)}
                         onChange={(e) => updateItem(item.tempId, 'unitPrice', e.target.value)}
-                        className="h-8 text-xs"
                         placeholder="Valor unitário"
                       />
                     </div>
-                    <div className="w-20 text-xs text-center font-medium text-gray-700">
+                    <div className="text-center font-medium text-gray-700">
                       R$ {Number(item.totalPrice).toFixed(2)}
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openObservationModal(item.tempId, item.notes)}
-                      className={`px-2 ${item.notes ? 'bg-blue-50 border-blue-300' : ''}`}
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openObservationModal(item.tempId, item.notes)}
+                        className={`px-2 ${item.notes ? 'bg-blue-50 border-blue-300' : ''}`}
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => removeItem(item.tempId)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                // Desktop layout
-                <div className="grid grid-cols-6 gap-4 items-center">
-                  <div className="col-span-2">
-                    <Select
-                      value={item.serviceTypeId > 0 ? item.serviceTypeId.toString() : ""}
-                      onValueChange={(value) => updateItem(item.tempId, 'serviceTypeId', parseInt(value))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um serviço" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getAvailableServices(item.tempId).map((serviceType) => (
-                          <SelectItem key={serviceType.id} value={serviceType.id.toString()}>
-                            {serviceType.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) => updateItem(item.tempId, 'quantity', parseInt(e.target.value) || 1)}
-                      className="text-center"
-                      placeholder="Qtd"
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      value={formatCurrency(item.unitPrice)}
-                      onChange={(e) => updateItem(item.tempId, 'unitPrice', e.target.value)}
-                      placeholder="Valor unitário"
-                    />
-                  </div>
-                  <div className="text-center font-medium text-gray-700">
-                    R$ {Number(item.totalPrice).toFixed(2)}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openObservationModal(item.tempId, item.notes)}
-                      className={item.notes ? 'bg-blue-50 border-blue-300' : ''}
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => removeItem(item.tempId)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+                )}
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       {/* Observation Modal */}

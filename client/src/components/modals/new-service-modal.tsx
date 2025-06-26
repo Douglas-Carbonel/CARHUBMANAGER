@@ -17,7 +17,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertServiceSchema, type Customer, type Vehicle, type ServiceType } from "@shared/schema";
 import { z } from "zod";
 import { User, Car, Wrench, Calendar, Clock } from "lucide-react";
-import ServiceExtras from "@/components/service/service-extras";
+import ServiceItems from "@/components/service/service-items";
 
 interface NewServiceModalProps {
   isOpen: boolean;
@@ -526,11 +526,11 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                     <CardTitle className="text-sm font-medium text-gray-700">Serviços</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ServiceExtras
-                      onChange={(extras) => {
-                        setServiceExtras(extras);
+                    <ServiceItems
+                      onChange={(items) => {
+                        setServiceExtras(items);
                       }}
-                      initialExtras={[]}
+                      initialItems={[]}
                     />
                   </CardContent>
                 </Card>
