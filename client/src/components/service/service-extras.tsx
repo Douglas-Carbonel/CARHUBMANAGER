@@ -1,82 +1,72 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import React, { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Trash2, FileText } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
-import type { ServiceType } from "@shared/schema";
+import { Plus, Trash2, MessageSquare } from "lucide-react";
 
-// Utility functions for currency formatting
-const formatCurrency = (value: string): string => {
-  if (!value) return '';
+interface ServiceType {
+  id: number;
+  name: string;
+  description?: string;
+  defaultPrice?: string;
+  isActive?: boolean;
+}
 
-  // Remove tudo que não for número
-  let numericValue = value.replace(/[^\d]/g, '');
-
-  // Se for vazio, retorna vazio
-  if (!numericValue) return '';
-
-  // Converte para número e divide por 100 para ter centavos
-  const numberValue = parseInt(numericValue) / 100;
-
-  // Formata para moeda brasileira
-  return numberValue.toLocaleString('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-};
-
-const parseCurrency = (formattedValue: string): string => {
-  if (!formattedValue) return '0.00';
-
-  // Remove tudo que não for número
-  const numericValue = formattedValue.replace(/[^\d]/g, '');
-
-  if (!numericValue) return '0.00';
-
-  // Converte para formato decimal americano
-  const numberValue = parseInt(numericValue) / 100;
-
-  return numberValue.toFixed(2);
-};
-
-interface ServiceExtraRow {
+interface ServiceItemRow {
   id?: number;
-  tempId: string; // Temporary unique identifier for tracking
-  serviceExtraId: number;
-  valor: string;
-  observacao: string;
-  serviceExtra?: {
+  tempId: string;
+  serviceTypeId: number;
+  unitPrice: string;
+  totalPrice: string;
+  quantity: number;
+  notes: string;
+  serviceType?: {
     id: number;
-    descricao: string;
+    name: string;
     defaultPrice?: string;
   };
 }
 
 interface ServiceExtrasProps {
   serviceId?: number;
-  onChange?: (extras: ServiceExtraRow[]) => void;
-  initialExtras?: ServiceExtraRow[];
+  onChange?: (items: ServiceItemRow[]) => void;
+  initialExtras?: ServiceItemRow[];
 }
+
+// Format currency for display
+const formatCurrency = (value: string) => {
+  if (!value) return "";
+  const numericValue = parseFloat(value.replace(/[^\d]/g, '')) / 100;
+  return numericValue.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
+// Parse currency input back to decimal
+const parseCurrency = (value: string) => {
+  const cleaned = value.replace(/[^\d]/g, '');
+  const numericValue = parseFloat(cleaned) / 100;
+  return numericValue.toFixed(2);
+};
 
 export default function ServiceExtras({ serviceId, onChange, initialExtras = [] }: ServiceExtrasProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [extras, setExtras] = useState<ServiceExtraRow[]>([]);
+  const [items, setItems] = useState<ServiceItemRow[]>([]);
+  const [observationModalOpen, setObservationModalOpen] = useState(false);
+  const [editingObservation, setEditingObservation] = useState<{ tempId: string; notes: string } | null>(null);
 
-  // Force invalidate service-types cache on mount to ensure fresh data
-  useEffect(() => {
-    queryClient.invalidateQueries({ queryKey: ["/api/service-types"] });
-  }, [queryClient]);
+  // Check if mobile
+  const isMobile = window.innerWidth < 768;
 
-  // Buscar service types disponíveis com queryFn explícita
-  const { data: serviceTypes = [], isLoading: serviceTypesLoading, error: serviceTypesError } = useQuery<ServiceType[]>({
+  // Load service types
+  const { data: serviceTypes = [], isLoading: serviceTypesLoading } = useQuery<ServiceType[]>({
     queryKey: ["/api/service-types"],
     queryFn: async () => {
       const res = await fetch("/api/service-types", {
@@ -85,194 +75,162 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
       if (!res.ok) {
         throw new Error(`${res.status}: ${res.statusText}`);
       }
-      const data = await res.json();
-      console.log('ServiceExtras - Fresh API data received:', data);
-      return data;
+      return res.json();
     },
-    staleTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
   });
 
-  // No longer need to load existing extras since we pass them via initialExtras
-
-  // Initialize extras from initial data (service items)
+  // Initialize items from props
   useEffect(() => {
     if (initialExtras.length > 0) {
       console.log('ServiceExtras - Initializing with data:', initialExtras);
-      setExtras(initialExtras);
+      setItems(initialExtras);
     } else {
-      // Always start with at least one empty grid
-      console.log('ServiceExtras - No initial data, adding empty grid');
-      setExtras([{
+      // Always start with at least one empty item
+      console.log('ServiceExtras - No initial data, adding empty item');
+      setItems([{
         tempId: `new_${Date.now()}_${Math.random()}`,
-        serviceExtraId: 0,
-        valor: "0.00",
-        observacao: "",
+        serviceTypeId: 0,
+        unitPrice: "0.00",
+        totalPrice: "0.00",
+        quantity: 1,
+        notes: "",
       }]);
     }
   }, [initialExtras]);
 
-  // Notify parent component of changes
+  // Notify parent of changes
   useEffect(() => {
     if (onChange) {
-      onChange(extras);
+      onChange(items);
     }
-  }, [extras, onChange]);
+  }, [items, onChange]);
 
-  // No longer need mutations for individual service items
-  // All changes will be handled by the parent component when saving the service
-
-  const addExtra = () => {
-    const newExtra: ServiceExtraRow = {
-      tempId: `new_${Date.now()}_${Math.random()}`, // Unique identifier
-      serviceExtraId: 0,
-      valor: "0.00",
-      observacao: "",
+  const addItem = () => {
+    const newItem: ServiceItemRow = {
+      tempId: `new_${Date.now()}_${Math.random()}`,
+      serviceTypeId: 0,
+      unitPrice: "0.00",
+      totalPrice: "0.00",
+      quantity: 1,
+      notes: "",
     };
-    setExtras([newExtra, ...extras]);
+    setItems([...items, newItem]);
   };
 
-  const removeExtra = (tempId: string) => {
-    // Remove from local state using tempId
-    const newExtras = extras.filter(e => e.tempId !== tempId);
-    setExtras(newExtras);
+  const removeItem = (tempId: string) => {
+    if (items.length === 1) {
+      toast({
+        title: "Atenção",
+        description: "Deve haver pelo menos um serviço na lista.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setItems(items.filter(item => item.tempId !== tempId));
   };
 
-  const updateExtra = (tempId: string, field: keyof ServiceExtraRow, value: any) => {
-    const newExtras = [...extras];
-    const index = newExtras.findIndex(e => e.tempId === tempId);
+  const updateItem = (tempId: string, field: keyof ServiceItemRow, value: any) => {
+    const newItems = [...items];
+    const index = newItems.findIndex(item => item.tempId === tempId);
     
-    if (index === -1) return; // Item not found
-    
-    newExtras[index] = { ...newExtras[index], [field]: value };
+    if (index === -1) return;
 
-    // If changing the service extra, update the default value
-    if (field === 'serviceExtraId') {
+    newItems[index] = { ...newItems[index], [field]: value };
+
+    // Auto-update related fields based on changes
+    if (field === 'serviceTypeId') {
       const selectedServiceType = serviceTypes.find(st => st.id === value);
       if (selectedServiceType && value > 0) {
-        newExtras[index].valor = selectedServiceType.defaultPrice || "0.00";
-        // Create a serviceExtra object from the service type for compatibility
-        newExtras[index].serviceExtra = {
+        newItems[index].unitPrice = selectedServiceType.defaultPrice || "0.00";
+        newItems[index].serviceType = {
           id: selectedServiceType.id,
-          descricao: selectedServiceType.name,
-          defaultPrice: selectedServiceType.defaultPrice ?? undefined
+          name: selectedServiceType.name,
+          defaultPrice: selectedServiceType.defaultPrice
         };
+        // Recalculate total price
+        const quantity = newItems[index].quantity || 1;
+        const unitPrice = parseFloat(selectedServiceType.defaultPrice || "0");
+        newItems[index].totalPrice = (quantity * unitPrice).toFixed(2);
       } else if (value === 0) {
-        // Reset values when no service is selected
-        newExtras[index].valor = "0.00";
-        newExtras[index].serviceExtra = undefined;
+        newItems[index].unitPrice = "0.00";
+        newItems[index].totalPrice = "0.00";
+        newItems[index].serviceType = undefined;
       }
     }
 
-    setExtras(newExtras);
+    if (field === 'quantity' || field === 'unitPrice') {
+      const quantity = field === 'quantity' ? value : newItems[index].quantity;
+      const unitPrice = field === 'unitPrice' ? parseFloat(parseCurrency(value)) : parseFloat(newItems[index].unitPrice);
+      newItems[index].totalPrice = (quantity * unitPrice).toFixed(2);
+    }
 
-    // Changes will be saved when the service is saved
+    setItems(newItems);
   };
 
-  // All saves are handled by the parent component when the service is saved
-
-  // Usar service types como serviços disponíveis, filtrando os já selecionados
-  const availableServices = serviceTypes
-    .filter((serviceType) => serviceType.isActive !== false) // Include undefined/null as active
-    .map((serviceType) => ({
-      id: serviceType.id,
-      descricao: serviceType.name,
-      preco: serviceType.defaultPrice || "0.00"
-    }));
-
-  // Debug: Log service types data
-  console.log('ServiceExtras - Query state:', { 
-    loading: serviceTypesLoading, 
-    error: serviceTypesError, 
-    serviceTypesLength: serviceTypes?.length 
-  });
-  console.log('ServiceExtras - Total serviceTypes:', serviceTypes.length);
-  console.log('ServiceExtras - Available services after filter:', availableServices.length);
-  console.log('ServiceExtras - ServiceTypes data:', serviceTypes);
-  
-  if (serviceTypesError) {
-    console.error('ServiceExtras - Query error:', serviceTypesError);
-  }
-  
-  // Show loading state
-  if (serviceTypesLoading) {
-    console.log('ServiceExtras - Still loading service types...');
-  }
-
-  // Add success log
-  if (!serviceTypesLoading && serviceTypes.length > 0) {
-    console.log('ServiceExtras - SUCCESS: Service types loaded successfully!', serviceTypes.length, 'types');
-  }
-
-  // Get available services for each dropdown (excluding already selected ones, but including the current selection)
-  const getAvailableServicesForDropdown = (currentTempId: string) => {
-    const currentExtra = extras.find(e => e.tempId === currentTempId);
-    const currentServiceId = currentExtra?.serviceExtraId;
-    return availableServices.filter(
-      (service) => {
-        // Include if it's not selected by any other dropdown OR if it's the current selection
-        const isSelectedElsewhere = extras.some((selected) => 
-          selected.tempId !== currentTempId && selected.serviceExtraId === service.id
-        );
-        return !isSelectedElsewhere;
-      }
+  const getAvailableServices = (currentTempId: string) => {
+    const selectedServiceIds = items
+      .filter(item => item.tempId !== currentTempId && item.serviceTypeId > 0)
+      .map(item => item.serviceTypeId);
+    
+    return serviceTypes.filter(serviceType => 
+      serviceType.isActive !== false && !selectedServiceIds.includes(serviceType.id)
     );
   };
 
-  const isMobile = useIsMobile();
-  const [observationModal, setObservationModal] = useState<{ isOpen: boolean; tempId: string; observation: string }>({
-    isOpen: false,
-    tempId: '',
-    observation: ''
-  });
-
-  const openObservationModal = (tempId: string, observation: string) => {
-    setObservationModal({ isOpen: true, tempId, observation });
+  const openObservationModal = (tempId: string, currentNotes: string) => {
+    setEditingObservation({ tempId, notes: currentNotes });
+    setObservationModalOpen(true);
   };
 
   const saveObservation = () => {
-    updateExtra(observationModal.tempId, 'observacao', observationModal.observation);
-    setObservationModal({ isOpen: false, tempId: '', observation: '' });
+    if (editingObservation) {
+      updateItem(editingObservation.tempId, 'notes', editingObservation.notes);
+      setObservationModalOpen(false);
+      setEditingObservation(null);
+    }
   };
+
+  if (serviceTypesLoading) {
+    return <div>Carregando tipos de serviço...</div>;
+  }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Label className="text-sm font-medium text-gray-700">Serviços</Label>
+      <div className="flex justify-between items-center">
+        <h4 className="text-sm font-medium text-gray-700">Serviços da Ordem</h4>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          onClick={addExtra}
+          onClick={addItem}
           className="flex items-center gap-2"
         >
           <Plus className="h-4 w-4" />
-          Adicionar
+          Adicionar Serviço
         </Button>
       </div>
 
       <div className="space-y-3">
-        {extras.map((extra) => (
-          <Card key={extra.tempId} className="border border-gray-200">
+        {items.map((item) => (
+          <Card key={item.tempId} className="border border-gray-200">
             <CardContent className={isMobile ? "p-3" : "p-4"}>
               {isMobile ? (
-                // Mobile compact layout - maximum 2 lines
+                // Mobile compact layout
                 <div className="space-y-2">
                   {/* First line: Service selector + delete button */}
                   <div className="flex gap-2 items-center">
                     <div className="flex-1">
                       <Select
-                        value={extra.serviceExtraId > 0 ? extra.serviceExtraId.toString() : ""}
-                        onValueChange={(value) => updateExtra(extra.tempId, 'serviceExtraId', parseInt(value))}
+                        value={item.serviceTypeId > 0 ? item.serviceTypeId.toString() : ""}
+                        onValueChange={(value) => updateItem(item.tempId, 'serviceTypeId', parseInt(value))}
                       >
                         <SelectTrigger className="h-10 text-sm">
                           <SelectValue placeholder="Selecione um serviço" />
                         </SelectTrigger>
                         <SelectContent>
-                          {getAvailableServicesForDropdown(extra.tempId).map((availableService) => (
-                            <SelectItem key={availableService.id} value={availableService.id.toString()}>
-                              {availableService.descricao}
+                          {getAvailableServices(item.tempId).map((serviceType) => (
+                            <SelectItem key={serviceType.id} value={serviceType.id.toString()}>
+                              {serviceType.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -280,99 +238,104 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
                     </div>
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="destructive"
                       size="sm"
-                      onClick={() => removeExtra(extra.tempId)}
-                      className="h-10 w-10 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                      onClick={() => removeItem(item.tempId)}
+                      className="px-2"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
 
-                  {/* Second line: Value + observation button + save button */}
+                  {/* Second line: Quantity, price and observation button */}
                   <div className="flex gap-2 items-center">
+                    <div className="w-16">
+                      <Input
+                        type="number"
+                        min="1"
+                        value={item.quantity}
+                        onChange={(e) => updateItem(item.tempId, 'quantity', parseInt(e.target.value) || 1)}
+                        className="h-8 text-xs text-center"
+                        placeholder="Qtd"
+                      />
+                    </div>
                     <div className="flex-1">
                       <Input
-                        type="text"
-                        placeholder="0,00"
-                        value={formatCurrency(extra.valor)}
-                        onChange={(e) => {
-                          const rawValue = parseCurrency(e.target.value);
-                          updateExtra(extra.tempId, 'valor', rawValue);
-                        }}
-                        className="h-10 text-sm font-semibold text-center bg-green-50 border-green-200 focus:border-green-400"
+                        value={formatCurrency(item.unitPrice)}
+                        onChange={(e) => updateItem(item.tempId, 'unitPrice', e.target.value)}
+                        className="h-8 text-xs"
+                        placeholder="Valor unitário"
                       />
+                    </div>
+                    <div className="w-20 text-xs text-center font-medium text-gray-700">
+                      R$ {Number(item.totalPrice).toFixed(2)}
                     </div>
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => openObservationModal(extra.tempId, extra.observacao)}
-                      className="h-10 px-3 flex-shrink-0 flex items-center gap-1"
+                      onClick={() => openObservationModal(item.tempId, item.notes)}
+                      className={`px-2 ${item.notes ? 'bg-blue-50 border-blue-300' : ''}`}
                     >
-                      <FileText className="h-3 w-3" />
-                      <span className="text-xs">
-                        {extra.observacao ? extra.observacao.substring(0, 3) + '...' : 'Obs'}
-                      </span>
+                      <MessageSquare className="h-4 w-4" />
                     </Button>
-                    {/* Save button removed - saves handled by parent component */}
                   </div>
                 </div>
               ) : (
-                // Desktop layout - original grid
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-                  <div className="md:col-span-4">
-                    <Label className="text-sm text-gray-600 font-medium">Serviço</Label>
+                // Desktop layout
+                <div className="grid grid-cols-6 gap-4 items-center">
+                  <div className="col-span-2">
                     <Select
-                      value={extra.serviceExtraId > 0 ? extra.serviceExtraId.toString() : ""}
-                      onValueChange={(value) => updateExtra(extra.tempId, 'serviceExtraId', parseInt(value))}
+                      value={item.serviceTypeId > 0 ? item.serviceTypeId.toString() : ""}
+                      onValueChange={(value) => updateItem(item.tempId, 'serviceTypeId', parseInt(value))}
                     >
-                      <SelectTrigger className="h-12 text-base">
+                      <SelectTrigger>
                         <SelectValue placeholder="Selecione um serviço" />
                       </SelectTrigger>
                       <SelectContent>
-                        {getAvailableServicesForDropdown(extra.tempId).map((availableService) => (
-                          <SelectItem key={availableService.id} value={availableService.id.toString()}>
-                            {availableService.descricao}
+                        {getAvailableServices(item.tempId).map((serviceType) => (
+                          <SelectItem key={serviceType.id} value={serviceType.id.toString()}>
+                            {serviceType.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-
-                  <div className="md:col-span-3">
-                    <Label className="text-sm text-gray-600 font-medium">Valor (R$)</Label>
+                  <div>
                     <Input
-                      type="text"
-                      placeholder="0,00"
-                      value={formatCurrency(extra.valor)}
-                      onChange={(e) => {
-                        const rawValue = parseCurrency(e.target.value);
-                        updateExtra(extra.tempId, 'valor', rawValue);
-                      }}
-                      className="h-14 text-lg font-bold text-center bg-green-50 border-2 border-green-200 focus:border-green-400 rounded-lg"
+                      type="number"
+                      min="1"
+                      value={item.quantity}
+                      onChange={(e) => updateItem(item.tempId, 'quantity', parseInt(e.target.value) || 1)}
+                      className="text-center"
+                      placeholder="Qtd"
                     />
                   </div>
-
-                  <div className="md:col-span-4">
-                    <Label className="text-sm text-gray-600 font-medium">Observação</Label>
-                    <Textarea
-                      placeholder="Observações sobre este adicional..."
-                      value={extra.observacao}
-                      onChange={(e) => updateExtra(extra.tempId, 'observacao', e.target.value)}
-                      className="h-12 min-h-[48px] resize-none text-base"
-                      rows={1}
+                  <div>
+                    <Input
+                      value={formatCurrency(item.unitPrice)}
+                      onChange={(e) => updateItem(item.tempId, 'unitPrice', e.target.value)}
+                      placeholder="Valor unitário"
                     />
                   </div>
-
-                  <div className="md:col-span-1 flex gap-2 justify-center md:justify-end mt-2 md:mt-0">
-                    {/* Save button removed - all saves handled by parent component */}
+                  <div className="text-center font-medium text-gray-700">
+                    R$ {Number(item.totalPrice).toFixed(2)}
+                  </div>
+                  <div className="flex gap-2">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => removeExtra(extra.tempId)}
-                      className="h-12 px-4 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => openObservationModal(item.tempId, item.notes)}
+                      className={item.notes ? 'bg-blue-50 border-blue-300' : ''}
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => removeItem(item.tempId)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -382,38 +345,31 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
             </CardContent>
           </Card>
         ))}
-
-        {extras.length === 0 && (
-          <Card className="border border-dashed border-gray-300">
-            <CardContent className="p-6 text-center">
-              <p className="text-gray-500 text-sm">Sem serviços até o momento. Clique em 'Adicionar' para cadastrar.</p>
-            </CardContent>
-          </Card>
-        )}
       </div>
 
       {/* Observation Modal */}
-      <Dialog open={observationModal.isOpen} onOpenChange={(open) => !open && setObservationModal({ isOpen: false, tempId: '', observation: '' })}>
-        <DialogContent className="max-w-md">
+      <Dialog open={observationModalOpen} onOpenChange={setObservationModalOpen}>
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Observações do Serviço</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <Textarea
-              placeholder="Digite as observações sobre este serviço..."
-              value={observationModal.observation}
-              onChange={(e) => setObservationModal(prev => ({ ...prev, observation: e.target.value }))}
-              className="min-h-[120px] resize-none"
-              rows={5}
+              value={editingObservation?.notes || ""}
+              onChange={(e) => setEditingObservation(prev => 
+                prev ? { ...prev, notes: e.target.value } : null
+              )}
+              placeholder="Digite observações sobre este serviço..."
+              rows={4}
             />
-            <div className="flex gap-2 justify-end">
+            <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
-                onClick={() => setObservationModal({ isOpen: false, tempId: '', observation: '' })}
+                onClick={() => setObservationModalOpen(false)}
               >
                 Cancelar
               </Button>
-              <Button onClick={saveObservation} className="bg-teal-600 hover:bg-teal-700">
+              <Button onClick={saveObservation}>
                 Salvar
               </Button>
             </div>
