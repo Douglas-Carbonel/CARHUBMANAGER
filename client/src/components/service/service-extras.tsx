@@ -256,12 +256,17 @@ export default function ServiceExtras({ serviceId, onChange, initialExtras = [] 
 
   // Usar service types como serviços disponíveis, filtrando os já selecionados
   const availableServices = serviceTypes
-    .filter((serviceType) => serviceType.isActive)
+    .filter((serviceType) => serviceType.isActive !== false) // Include undefined/null as active
     .map((serviceType) => ({
       id: serviceType.id,
       descricao: serviceType.name,
       preco: serviceType.defaultPrice || "0.00"
     }));
+
+  // Debug: Log service types data
+  console.log('ServiceExtras - Total serviceTypes:', serviceTypes.length);
+  console.log('ServiceExtras - Available services after filter:', availableServices.length);
+  console.log('ServiceExtras - ServiceTypes data:', serviceTypes);
 
   // Get available services for each dropdown (excluding already selected ones, but including the current selection)
   const getAvailableServicesForDropdown = (currentTempId: string) => {
