@@ -361,17 +361,25 @@ export default function Services() {
           }));
 
           console.log('Mapped service items to extras format:', mappedExtras);
-          setServiceExtras(mappedExtras);
-          setInitialServiceExtras(mappedExtras);
+          
+          // Use setTimeout to prevent flickering during state updates
+          setTimeout(() => {
+            setServiceExtras(mappedExtras);
+            setInitialServiceExtras(mappedExtras);
+          }, 0);
         } else {
-          setServiceExtras([]);
-          setInitialServiceExtras([]);
+          setTimeout(() => {
+            setServiceExtras([]);
+            setInitialServiceExtras([]);
+          }, 0);
         }
       }
     } catch (error) {
       console.error("Error fetching service items:", error);
-      setServiceExtras([]);
-      setInitialServiceExtras([]);
+      setTimeout(() => {
+        setServiceExtras([]);
+        setInitialServiceExtras([]);
+      }, 0);
     }
   };
 

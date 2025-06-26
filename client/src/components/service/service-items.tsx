@@ -60,6 +60,7 @@ export default function ServiceItems({ serviceId, onChange, initialItems = [] }:
   const [items, setItems] = useState<ServiceItemRow[]>([]);
   const [observationModalOpen, setObservationModalOpen] = useState(false);
   const [editingObservation, setEditingObservation] = useState<{ tempId: string; notes: string } | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Check if mobile
   const isMobile = window.innerWidth < 768;
@@ -83,12 +84,16 @@ export default function ServiceItems({ serviceId, onChange, initialItems = [] }:
     if (initialItems.length > 0) {
       console.log('ServiceItems - Initializing with data:', initialItems);
       setItems(initialItems);
-    } else {
-      // Start completely empty for new service orders
-      console.log('ServiceItems - No initial data, starting empty');
+      setIsInitialized(true);
+    } else if (isInitialized && initialItems.length === 0) {
+      // Only clear if we're already initialized and receive empty array
+      console.log('ServiceItems - Clearing items due to empty initialItems');
       setItems([]);
+    } else if (!isInitialized) {
+      // First time initialization - set as initialized
+      setIsInitialized(true);
     }
-  }, [initialItems]);
+  }, [initialItems, isInitialized]);
 
   // Notify parent component of changes
   useEffect(() => {
