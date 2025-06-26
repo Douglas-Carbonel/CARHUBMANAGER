@@ -524,10 +524,90 @@ export class DatabaseStorage implements IStorage {
 
   async getService(id: number): Promise<Service | undefined> {
     try {
-      const [service] = await db.select().from(services).where(eq(services.id, id));
+      console.log('Storage: Getting service with ID:', id);
+      
+      const result = await db.execute(sql`
+        SELECT 
+          s.*,
+          c.name as customer_name,
+          v.brand as vehicle_brand,
+          v.model as vehicle_model,
+          v.license_plate as vehicle_license_plate,
+          u.first_name as technician_first_name,
+          u.last_name as technician_last_name
+        FROM services s
+        LEFT JOIN customers c ON s.customer_id = c.id
+        LEFT JOIN vehicles v ON s.vehicle_id = v.id
+        LEFT JOIN users u ON s.technician_id = u.id
+        WHERE s.id = ${id}
+      `);
+
+      if (result.rows.length === 0) {
+        console.log('Storage: Service not found');
+        return undefined;
+      }
+
+      const serviceRow = result.rows[0];
+
+      // Get service items for this service
+      const serviceItemsResult = await db.execute(sql`
+        SELECT 
+          si.*,
+          st.name as service_type_name,
+          st.description as service_type_description,
+          st.default_price as service_type_default_price
+        FROM service_items si
+        LEFT JOIN service_types st ON si.service_type_id = st.id
+        WHERE si.service_id = ${id}
+        ORDER BY si.created_at ASC
+      `);
+
+      const serviceItems = serviceItemsResult.rows.map((item: any) => ({
+        id: item.id,
+        serviceTypeId: item.service_type_id,
+        quantity: item.quantity,
+        unitPrice: item.unit_price,
+        totalPrice: item.total_price,
+        notes: item.notes,
+        serviceTypeName: item.service_type_name,
+        serviceTypeDescription: item.service_type_description,
+        serviceTypeDefaultPrice: item.service_type_default_price,
+      }));
+
+      const service = {
+        id: Number(serviceRow.id),
+        customerId: Number(serviceRow.customer_id),
+        vehicleId: Number(serviceRow.vehicle_id),
+        technicianId: serviceRow.technician_id ? Number(serviceRow.technician_id) : null,
+        status: serviceRow.status,
+        scheduledDate: serviceRow.scheduled_date,
+        scheduledTime: serviceRow.scheduled_time,
+        startedAt: serviceRow.started_at,
+        completedAt: serviceRow.completed_at,
+        estimatedValue: serviceRow.estimated_value,
+        finalValue: serviceRow.final_value,
+        valorPago: serviceRow.valor_pago,
+        pixPago: serviceRow.pix_pago,
+        dinheiroPago: serviceRow.dinheiro_pago,
+        chequePago: serviceRow.cheque_pago,
+        cartaoPago: serviceRow.cartao_pago,
+        notes: serviceRow.notes,
+        createdAt: serviceRow.created_at,
+        updatedAt: serviceRow.updated_at,
+        customerName: serviceRow.customer_name,
+        vehicleBrand: serviceRow.vehicle_brand,
+        vehicleModel: serviceRow.vehicle_model,
+        vehicleLicensePlate: serviceRow.vehicle_license_plate,
+        technicianName: serviceRow.technician_first_name && serviceRow.technician_last_name 
+          ? `${serviceRow.technician_first_name} ${serviceRow.technician_last_name}` 
+          : null,
+        serviceItems: serviceItems
+      } as any;
+
+      console.log('Storage: Service found with', serviceItems.length, 'service items');
       return service;
     } catch (error) {
-      console.error('Error fetching service:', error);
+      console.error('Storage: Error fetching service:', error);
       throw error;
     }
   }

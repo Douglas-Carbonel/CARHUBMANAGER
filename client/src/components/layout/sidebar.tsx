@@ -37,7 +37,7 @@ const getNavigation = (userRole: string | null) => {
       icon: Car,
     },
     {
-      name: "Serviços",
+      name: "Ordens de Serviço",
       href: "/services",
       icon: Wrench,
     },
