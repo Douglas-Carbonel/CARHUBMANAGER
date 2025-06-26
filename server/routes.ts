@@ -515,37 +515,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const serviceId = parseInt(req.params.serviceId);
       
-      const result = await db.execute(sql`
-        SELECT 
-          si.id,
-          si.service_id as "serviceId",
-          si.service_type_id as "serviceExtraId",
-          si.quantity,
-          si.unit_price as "unitPrice",
-          si.total_price as "valor",
-          si.notes as "observacao",
-          st.name as "name",
-          st.description as "descricao"
-        FROM service_items si
-        LEFT JOIN service_types st ON si.service_type_id = st.id
-        WHERE si.service_id = ${serviceId}
-        ORDER BY si.id
-      `);
-
-      const serviceItems = result.rows.map(row => ({
-        id: row.id,
-        serviceId: row.serviceId,
-        serviceExtraId: row.serviceExtraId,
-        valor: row.valor || "0.00",
-        observacao: row.observacao || "",
-        serviceExtra: {
-          id: row.serviceExtraId,
-          name: row.name,
-          descricao: row.descricao
-        }
-      }));
-
-      res.json(serviceItems);
+      // Com a nova arquitetura centralizada, retornamos apenas o serviço principal
+      // A lógica de múltiplos serviços foi simplificada para usar apenas service_types
+      res.json([]);
     } catch (error) {
       console.error("Error fetching service items:", error);
       res.status(500).json({ message: "Failed to fetch service extras" });

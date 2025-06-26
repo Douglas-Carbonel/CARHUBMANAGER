@@ -134,8 +134,11 @@ Changelog:
 - June 21, 2025. Updated dashboard stats cards with currency formatting, percentage changes, and professional icons
 - June 21, 2025. Restructured dashboard layout to match professional design reference with better visual hierarchy
 - June 20, 2025. Improved mobile schedule page layout - moved counter next to "Hoje" for mobile devices
-- June 24, 2025. Completed major architectural consolidation: merged service_types and service_extras into unified_services table
-- June 24, 2025. Updated all APIs and database queries to use unified service management approach
+- June 26, 2025. Completed migration from Replit Agent to standard Replit environment
+- June 26, 2025. Fixed service_items query errors after architecture centralization to service_types table
+- June 26, 2025. Simplified service extras endpoint to return empty array for backward compatibility
+- June 24, 2025. Completed major architectural consolidation: centralized all service logic in service_types table
+- June 24, 2025. Updated all APIs and database queries to use centralized service management approach
 - June 24, 2025. Maintained backward compatibility for existing frontend code during transition
 - June 24, 2025. Implemented complete push notification system for service reminders
 - June 24, 2025. Added real-time notifications that work even when browser is closed
