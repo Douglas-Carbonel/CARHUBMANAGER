@@ -1,3 +1,4 @@
+
 import {
   pgTable,
   text,
@@ -77,7 +78,7 @@ export const vehicles = pgTable("vehicles", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Unified services table (replaces both service_types and service_extras)
+// Centralized service types table
 export const serviceTypes = pgTable("service_types", {
   id: serial("id").primaryKey(),
   name: varchar("name").notNull(),
@@ -96,7 +97,6 @@ export const services = pgTable("services", {
   id: serial("id").primaryKey(),
   customerId: integer("customer_id").references(() => customers.id).notNull(),
   vehicleId: integer("vehicle_id").references(() => vehicles.id).notNull(),
-  serviceTypeId: integer("service_type_id").references(() => serviceTypes.id).notNull(), // Keep for backward compatibility during migration - now optional
   technicianId: integer("technician_id").references(() => users.id),
   status: varchar("status", { 
     enum: ["scheduled", "in_progress", "completed", "cancelled"] 
@@ -117,6 +117,18 @@ export const services = pgTable("services", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Junction table for services and multiple service types
+export const serviceItems = pgTable("service_items", {
+  id: serial("id").primaryKey(),
+  serviceId: integer("service_id").references(() => services.id, { onDelete: "cascade" }).notNull(),
+  serviceTypeId: integer("service_type_id").references(() => serviceTypes.id).notNull(),
+  quantity: integer("quantity").default(1),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }),
+  totalPrice: decimal("total_price", { precision: 10, scale: 2 }),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const payments = pgTable("payments", {
   id: serial("id").primaryKey(),
   serviceId: integer("service_id").references(() => services.id).notNull(),
@@ -128,25 +140,6 @@ export const payments = pgTable("payments", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });
-
-// Loyalty tracking table temporarily disabled due to service type consolidation
-/*
-export const loyaltyTracking = pgTable("loyalty_tracking", {
-  id: serial("id").primaryKey(),
-  customerId: integer("customer_id").references(() => customers.id).notNull(),
-  vehicleId: integer("vehicle_id").references(() => vehicles.id).notNull(),
-  serviceTypeId: integer("service_type_id").references(() => serviceTypes.id).notNull(),
-  lastServiceDate: date("last_service_date").notNull(),
-  nextDueDate: date("next_due_date").notNull(),
-  status: varchar("status", { 
-    enum: ["active", "overdue", "completed"] 
-  }).default("active"),
-  points: integer("points").default(0),
-  notificationSent: boolean("notification_sent").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-*/
 
 export const photos = pgTable("photos", {
   id: serial("id").primaryKey(),
@@ -208,19 +201,27 @@ export const servicesRelations = relations(services, ({ one, many }) => ({
     fields: [services.vehicleId],
     references: [vehicles.id],
   }),
-  serviceType: one(serviceTypes, {
-    fields: [services.serviceTypeId],
-    references: [serviceTypes.id],
-  }),
   technician: one(users, {
     fields: [services.technicianId],
     references: [users.id],
   }),
   payments: many(payments),
+  serviceItems: many(serviceItems),
 }));
 
 export const serviceTypesRelations = relations(serviceTypes, ({ many }) => ({
-  services: many(services),
+  serviceItems: many(serviceItems),
+}));
+
+export const serviceItemsRelations = relations(serviceItems, ({ one }) => ({
+  service: one(services, {
+    fields: [serviceItems.serviceId],
+    references: [services.id],
+  }),
+  serviceType: one(serviceTypes, {
+    fields: [serviceItems.serviceTypeId],
+    references: [serviceTypes.id],
+  }),
 }));
 
 export const paymentsRelations = relations(payments, ({ one }) => ({
@@ -233,20 +234,6 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
 export const usersRelations = relations(users, ({ many }) => ({
   services: many(services),
 }));
-
-// Loyalty tracking relations temporarily disabled
-/*
-export const loyaltyTrackingRelations = relations(loyaltyTracking, ({ one }) => ({
-  customer: one(customers, {
-    fields: [loyaltyTracking.customerId],
-    references: [customers.id],
-  }),
-  vehicle: one(vehicles, {
-    fields: [loyaltyTracking.vehicleId],
-    references: [vehicles.id],
-  }),
-}));
-*/
 
 export const photosRelations = relations(photos, ({ one }) => ({
   uploader: one(users, {
@@ -294,6 +281,18 @@ export const insertServiceSchema = createInsertSchema(services).extend({
   cartaoPago: z.string().optional(),
   reminderEnabled: z.boolean().optional(),
   reminderMinutes: z.number().optional(),
+  serviceItems: z.array(z.object({
+    serviceTypeId: z.number(),
+    quantity: z.number().default(1),
+    unitPrice: z.string(),
+    totalPrice: z.string(),
+    notes: z.string().optional(),
+  })).optional(),
+});
+
+export const insertServiceItemSchema = createInsertSchema(serviceItems).omit({
+  id: true,
+  createdAt: true,
 });
 
 export const insertPushSubscriptionSchema = createInsertSchema(pushSubscriptions).omit({
@@ -328,8 +327,6 @@ export const insertPhotoSchema = createInsertSchema(photos).omit({
   createdAt: true,
 });
 
-// Loyalty tracking schema temporarily removed
-
 export const updateServiceSchema = insertServiceSchema.partial().extend({
   pixPago: z.string().optional(),
   dinheiroPago: z.string().optional(),
@@ -347,6 +344,8 @@ export type InsertService = z.infer<typeof insertServiceSchema>;
 export type Service = typeof services.$inferSelect;
 export type InsertServiceType = z.infer<typeof insertServiceTypeSchema>;
 export type ServiceType = typeof serviceTypes.$inferSelect;
+export type InsertServiceItem = z.infer<typeof insertServiceItemSchema>;
+export type ServiceItem = typeof serviceItems.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type Payment = typeof payments.$inferSelect;
 export type InsertPhoto = z.infer<typeof insertPhotoSchema>;
@@ -355,4 +354,3 @@ export type InsertPushSubscription = z.infer<typeof insertPushSubscriptionSchema
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 export type InsertServiceReminder = z.infer<typeof insertServiceReminderSchema>;
 export type ServiceReminder = typeof serviceReminders.$inferSelect;
-// Loyalty tracking types temporarily removed

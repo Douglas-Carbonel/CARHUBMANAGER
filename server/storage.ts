@@ -4,22 +4,31 @@ import {
   vehicles,
   services,
   serviceTypes,
+  serviceItems,
   payments,
   photos,
-  type User,
-  type InsertUser,
-  type Customer,
+  pushSubscriptions,
+  serviceReminders,
   type InsertCustomer,
-  type Vehicle,
   type InsertVehicle,
-  type Service,
   type InsertService,
-  type ServiceType,
   type InsertServiceType,
-  type Payment,
+  type InsertServiceItem,
   type InsertPayment,
-  type Photo,
+  type InsertUser,
   type InsertPhoto,
+  type Customer,
+  type Vehicle,
+  type Service,
+  type ServiceType,
+  type ServiceItem,
+  type Payment,
+  type User,
+  type Photo,
+  type InsertPushSubscription,
+  type PushSubscription,
+  type InsertServiceReminder,
+  type ServiceReminder,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, gte, lte, lt, count, sum, sql, isNotNull, or, ne } from "drizzle-orm";
@@ -155,7 +164,7 @@ export interface IStorage {
     weeklyEstimatedValue: number;
   }>;
 
-  
+
 }
 
 export class DatabaseStorage implements IStorage {
@@ -803,7 +812,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  
+
 
   // Customer analytics
   async getCustomerAnalytics() {
@@ -1479,31 +1488,70 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getServices(userId?: number): Promise<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]> {
-    let query = db
+  async getServices(technicianId?: number): Promise<any[]> {
+    let query = this.db
       .select({
-        service: services,
-        customer: customers,
-        vehicle: vehicles,
-        serviceType: serviceTypes,
+        id: services.id,
+        customerId: services.customerId,
+        vehicleId: services.vehicleId,
+        serviceTypeId: services.serviceTypeId,
+        technicianId: services.technicianId,
+        status: services.status,
+        scheduledDate: services.scheduledDate,
+        scheduledTime: services.scheduledTime,
+        startedAt: services.startedAt,
+        completedAt: services.completedAt,
+        estimatedValue: services.estimatedValue,
+        finalValue: services.finalValue,
+        valorPago: services.valorPago,
+        pixPago: services.pixPago,
+        dinheiroPago: services.dinheiroPago,
+        chequePago: services.chequePago,
+        cartaoPago: services.cartaoPago,
+        notes: services.notes,
+        createdAt: services.createdAt,
+        updatedAt: services.updatedAt,
+        customerName: customers.name,
+        vehicleBrand: vehicles.brand,
+        vehicleModel: vehicles.model,
+        vehicleLicensePlate: vehicles.licensePlate,
+        serviceTypeName: serviceTypes.name,
+        technicianName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`.as('technician_name'),
       })
       .from(services)
       .leftJoin(customers, eq(services.customerId, customers.id))
       .leftJoin(vehicles, eq(services.vehicleId, vehicles.id))
-      .leftJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id));
+      .leftJoin(serviceTypes, eq(services.serviceTypeId, serviceTypes.id))
+      .leftJoin(users, eq(services.technicianId, users.id))
+      .orderBy(desc(services.createdAt));
 
-    if (userId) {
-      query = query.where(eq(services.technicianId, userId));
+    if (technicianId) {
+      query = query.where(eq(services.technicianId, technicianId));
     }
 
-    const result = await query.orderBy(desc(services.createdAt));
+    const servicesData = await query;
 
-    return result.map(row => ({
-      ...row.service,
-      customer: row.customer!,
-      vehicle: row.vehicle!,
-      serviceType: row.serviceType!,
-    }));
+    // Get service items for each service
+    for (const service of servicesData) {
+      const items = await this.db
+        .select({
+          id: serviceItems.id,
+          serviceTypeId: serviceItems.serviceTypeId,
+          quantity: serviceItems.quantity,
+          unitPrice: serviceItems.unitPrice,
+          totalPrice: serviceItems.totalPrice,
+          notes: serviceItems.notes,
+          serviceTypeName: serviceTypes.name,
+          serviceTypeDescription: serviceTypes.description,
+        })
+        .from(serviceItems)
+        .leftJoin(serviceTypes, eq(serviceItems.serviceTypeId, serviceTypes.id))
+        .where(eq(serviceItems.serviceId, service.id));
+
+      service.serviceItems = items;
+    }
+
+    return servicesData;
   }
 
   async getServiceById(serviceId: number, userId?: number): Promise<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType }) | undefined> {
@@ -1534,6 +1582,56 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error fetching service:', error);
       throw error;
+    }
+  }
+
+  async createService(service: InsertService): Promise<Service> {
+    try {
+      console.log('Storage: Creating service with data:', JSON.stringify(service, null, 2));
+      const [newService] = await db.insert(services).values(service).returning();
+      console.log('Storage: Service created successfully:', newService);
+      return newService;
+    } catch (error) {
+      console.error('Storage: Error creating service:', error);
+      throw error;
+    }
+  }
+
+  async createServiceWithItems(data: InsertService): Promise<Service> {
+    // const client = await this.pool.connect();
+
+    try {
+      // await client.query('BEGIN');
+
+      // Create the service first
+      const serviceData = { ...data };
+      delete serviceData.serviceItems; // Remove serviceItems from service data
+
+      const [service] = await db.insert(services).values(serviceData).returning();
+      // const service = serviceResult[0];
+
+      // Create service items if they exist
+      if (data.serviceItems && data.serviceItems.length > 0) {
+        const serviceItemsData = data.serviceItems.map(item => ({
+          serviceId: service.id,
+          serviceTypeId: item.serviceTypeId,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          totalPrice: item.totalPrice,
+          notes: item.notes,
+        }));
+
+        await db.insert(serviceItems).values(serviceItemsData).returning();
+      }
+
+      // await client.query('COMMIT');
+      return service;
+    } catch (error) {
+      // await client.query('ROLLBACK');
+      console.error('Storage: Error creating service with items:', error);
+      throw error;
+    } finally {
+      // client.release();
     }
   }
 }

@@ -379,13 +379,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         scheduledTime: req.body.scheduledTime || undefined,
       };
 
-      // Ensure serviceTypeId is provided
-      if (!cleanedData.serviceTypeId) {
-        return res.status(400).json({ message: "Service type is required" });
+      // Convert serviceExtras to serviceItems format
+      const serviceItems: any[] = [];
+      if (req.body.serviceExtras && Array.isArray(req.body.serviceExtras)) {
+        req.body.serviceExtras.forEach((extra: any) => {
+          if (extra.serviceExtraId > 0 && Number(extra.valor) > 0) {
+            serviceItems.push({
+              serviceTypeId: Number(extra.serviceExtraId),
+              quantity: 1,
+              unitPrice: String(extra.valor),
+              totalPrice: String(extra.valor),
+              notes: extra.observacao || undefined,
+            });
+          }
+        });
       }
 
-      // Convert serviceTypeId to number
-      cleanedData.serviceTypeId = Number(cleanedData.serviceTypeId);
+      if (serviceItems.length === 0) {
+        return res.status(400).json({ message: "É necessário selecionar pelo menos um serviço" });
+      }
+
+      cleanedData.serviceItems = serviceItems;
 
       const serviceData = insertServiceSchema.parse(cleanedData);
       console.log('Parsed service data:', JSON.stringify(serviceData, null, 2));
@@ -449,7 +463,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Service reminder created for service ${service.id} - ${reminderMinutes} minutes before`);
       }
 
-      
+
 
       res.status(201).json(service);
     } catch (error: any) {
@@ -468,7 +482,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const serviceData = insertServiceSchema.partial().parse(req.body);
       const service = await storage.updateService(serviceId, serviceData);
 
-      
+
 
       res.json(service);
     } catch (error: any) {
@@ -789,8 +803,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
   app.get("/api/dashboard/schedule-stats", requireAuth, async (req, res) => {
     try {
       const user = req.user!;
-      const technicianId = user.role === 'admin' ? null : user.id;
-      const stats = await storage.getScheduleStats(technicianId);
+      const technicianId = user.role === 'admin' ? null : user.id;      const stats = await storage.getScheduleStats(technicianId);
       res.json(stats);
     } catch (error) {
       console.error('Error getting schedule stats:', error);
@@ -949,7 +962,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     }
   });
 
-  
+
 
 
 
@@ -1214,7 +1227,7 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
     }
   });
 
-  
+
 
   // Vehicle photos routes
   app.get("/api/vehicles/:vehicleId/photos", requireAuth, async (req, res) => {

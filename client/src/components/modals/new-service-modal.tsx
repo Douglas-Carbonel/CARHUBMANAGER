@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -54,7 +53,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
   // Check for changes when form values change
   useEffect(() => {
     const initialState = initialFormStateRef.current;
-    
+
     if (!isOpen || !initialState) {
       console.log('NewServiceModal - Skipping change check:', { isOpen, hasInitialState: !!initialState });
       return;
@@ -73,7 +72,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
     };
 
     const hasChanges = Object.values(changes).some(changed => changed);
-    
+
     console.log('NewServiceModal - Detailed change check:', {
       hasChanges,
       changes,
@@ -172,7 +171,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
       console.log('NewServiceModal: Setting form with values:', defaultValues);
       form.reset(defaultValues);
       setServiceExtras([]);
-      
+
       // Set initial state in ref immediately
       initialFormStateRef.current = { ...defaultValues };
       console.log('NewServiceModal: Initial form state set in ref:', defaultValues);
@@ -275,7 +274,14 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
 
   const onSubmit = (data: z.infer<typeof serviceSchemaWithoutEstimated>) => {
     console.log('New Service Modal - Submitting data:', data);
-    createMutation.mutate(data);
+    console.log('Service extras:', serviceExtras);
+
+    const submitData = {
+      ...data,
+      serviceExtras: serviceExtras
+    };
+
+    createMutation.mutate(submitData);
   };
 
   const getCustomerVehicles = (customerId: number) => {
@@ -405,7 +411,7 @@ export default function NewServiceModal({ isOpen, onClose }: NewServiceModalProp
                 />
               </div>
 
-              
+
 
               <FormField
                 control={form.control}
