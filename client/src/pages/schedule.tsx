@@ -365,60 +365,12 @@ export default function SchedulePage() {
     }
   };
 
-  // Open modal for editing service with complete data loading
+  // Open modal for editing service with optimized parallel loading
   const openEditModal = async (service: Service) => {
+    // Immediately set service and open modal for faster UX
     setEditingService(service);
     
-    // Load service photos
-    try {
-      const response = await fetch(`/api/photos?entityType=service&entityId=${service.id}`, {
-        credentials: 'include'
-      });
-      if (response.ok) {
-        const photos = await response.json();
-        setCurrentServicePhotos(photos);
-      }
-    } catch (error) {
-      console.error('Error loading service photos:', error);
-    }
-
-    // Load service items
-    try {
-      console.log('Loading service items for service:', service.id);
-      const response = await fetch(`/api/services/${service.id}`, {
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const serviceData = await response.json();
-        console.log('Service data loaded:', serviceData);
-
-        if (serviceData.serviceItems && serviceData.serviceItems.length > 0) {
-          const mappedExtras = serviceData.serviceItems.map((item: any, index: number) => ({
-            tempId: `existing_${item.id || index}`,
-            serviceTypeId: Number(item.serviceTypeId || item.service_type_id),
-            unitPrice: String(item.unitPrice || item.unit_price || "0.00"),
-            totalPrice: String(item.totalPrice || item.total_price || "0.00"),
-            quantity: Number(item.quantity) || 1,
-            notes: item.notes || "",
-          }));
-
-          console.log('Service items loaded and mapped:', mappedExtras);
-          setServiceExtras(mappedExtras);
-          setInitialServiceExtras(mappedExtras);
-        } else {
-          console.log('No service items found for this service');
-          setServiceExtras([]);
-          setInitialServiceExtras([]);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading service items:', error);
-      setServiceExtras([]);
-      setInitialServiceExtras([]);
-    }
-
-    // Populate form with service data
+    // Populate form with service data immediately
     const formData = {
       customerId: service.customerId,
       vehicleId: service.vehicleId,
@@ -438,7 +390,7 @@ export default function SchedulePage() {
     form.reset(formData);
     setFormInitialValues(formData);
 
-    // Load payment methods
+    // Load payment methods immediately
     setPaymentMethods({
       pix: service.pixPago || "",
       dinheiro: service.dinheiroPago || "",
@@ -446,7 +398,54 @@ export default function SchedulePage() {
       cartao: service.cartaoPago || "",
     });
 
+    // Open modal immediately for fast response
     setIsDialogOpen(true);
+
+    // Load additional data in parallel after modal is open
+    try {
+      const [photosResponse, serviceResponse] = await Promise.all([
+        fetch(`/api/photos?entityType=service&entityId=${service.id}`, {
+          credentials: 'include'
+        }),
+        fetch(`/api/services/${service.id}`, {
+          credentials: "include",
+        })
+      ]);
+
+      // Handle photos
+      if (photosResponse.ok) {
+        const photos = await photosResponse.json();
+        setCurrentServicePhotos(photos);
+      }
+
+      // Handle service items
+      if (serviceResponse.ok) {
+        const serviceData = await serviceResponse.json();
+        
+        if (serviceData.serviceItems && serviceData.serviceItems.length > 0) {
+          const mappedExtras = serviceData.serviceItems.map((item: any, index: number) => ({
+            tempId: `existing_${item.id || index}`,
+            serviceTypeId: Number(item.serviceTypeId || item.service_type_id),
+            unitPrice: String(item.unitPrice || item.unit_price || "0.00"),
+            totalPrice: String(item.totalPrice || item.total_price || "0.00"),
+            quantity: Number(item.quantity) || 1,
+            notes: item.notes || "",
+          }));
+
+          setServiceExtras(mappedExtras);
+          setInitialServiceExtras(mappedExtras);
+        } else {
+          setServiceExtras([]);
+          setInitialServiceExtras([]);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading additional service data:', error);
+      // Continue with empty data - don't block the user
+      setCurrentServicePhotos([]);
+      setServiceExtras([]);
+      setInitialServiceExtras([]);
+    }
   };
 
   const fetchServiceExtras = async (serviceId: number) => {
