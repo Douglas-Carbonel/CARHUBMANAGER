@@ -671,7 +671,7 @@ export default function SchedulePage() {
   const getDateRange = (period: string) => {
     const today = new Date();
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    
+
     switch (period) {
       case "hoje":
         return {
@@ -751,15 +751,15 @@ export default function SchedulePage() {
     // Sort by date first, then by time for proper chronological order
     const dateA = a.scheduledDate || '';
     const dateB = b.scheduledDate || '';
-    
+
     if (dateA !== dateB) {
       return dateA.localeCompare(dateB);
     }
-    
+
     // If same date, sort by time
     const timeA = a.scheduledTime || '';
     const timeB = b.scheduledTime || '';
-    
+
     return timeA.localeCompare(timeB);
   });
 
@@ -842,7 +842,7 @@ export default function SchedulePage() {
                 Agenda
               </h1>
               <p className="text-teal-700 mt-2 font-medium">Controle completo de agendamentos</p>
-              
+
               {/* Filtros de Período */}
               <div className="flex items-center mt-4 space-x-2">
                 <div className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm rounded-lg p-2 border border-teal-200">
@@ -871,7 +871,7 @@ export default function SchedulePage() {
                     </Button>
                   ))}
                 </div>
-                
+
                 {/* Botão do Calendário */}
                 <Button
                   variant="outline"
@@ -1635,7 +1635,7 @@ export default function SchedulePage() {
                               pix: "",
                               dinheiro: "",
                               cheque: "",
-                              cartao: ""
+                              cartao""
                             });
                           }
                         }}
@@ -1969,7 +1969,7 @@ export default function SchedulePage() {
                   <X className="h-4 w-4" />
                 </Button>
               </div>
-              
+
               <div className={cn(
                 "grid grid-cols-7 gap-1 text-center text-sm font-medium text-teal-700 mb-3",
                 isMobile ? "text-xs" : "text-sm"
@@ -1982,7 +1982,7 @@ export default function SchedulePage() {
                 <div>Sex</div>
                 <div>Sáb</div>
               </div>
-              
+
               <div className="grid grid-cols-7 gap-1">
                 {Array.from({ length: 42 }, (_, index) => {
                   const today = new Date();
@@ -1991,18 +1991,18 @@ export default function SchedulePage() {
                   const firstDay = new Date(currentYear, currentMonth, 1);
                   const startDate = new Date(firstDay);
                   startDate.setDate(startDate.getDate() - firstDay.getDay());
-                  
+
                   const date = new Date(startDate);
                   date.setDate(startDate.getDate() + index);
-                  
+
                   const isCurrentMonth = date.getMonth() === currentMonth;
                   const isToday = date.toDateString() === today.toDateString();
                   const dateString = date.toISOString().split('T')[0];
-                  
+
                   const dayServices = services.filter(service => 
                     service.scheduledDate === dateString
                   );
-                  
+
                   return (
                     <button
                       key={index}
@@ -2302,7 +2302,7 @@ export default function SchedulePage() {
                         {servicesForDate.length} {servicesForDate.length === 1 ? 'agendamento' : 'agendamentos'}
                       </span>
                     </div>
-                    
+
                     <div className={cn(
                       "grid gap-4",
                       isMobile 
@@ -2375,10 +2375,10 @@ export default function SchedulePage() {
                   <CardContent className="pt-4">
                     <div className="space-y-3">
                       {service.scheduledDate && (
-                        <div className="flex items-center text-sm text-gray-600">
+                        <div className="flex items-center text-sm text-gray-600 mb-2">
                           <Calendar className="h-4 w-4 mr-2 text-gray-500" />
                           <span className="font-medium">
-                            {service.scheduledDate && new Date(service.scheduledDate).toLocaleDateString('pt-BR', {
+                            {service.scheduledDate && new Date(service.scheduledDate + 'T00:00:00').toLocaleDateString('pt-BR', {
                               day: '2-digit',
                               month: '2-digit',
                               year: 'numeric',
