@@ -837,25 +837,48 @@ export default function SchedulePage() {
           subtitle="Gerencie os agendamentos da sua oficina"
         />
 
-        <main className="flex-1 p-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-700 via-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
+        <main className={cn(
+          "flex-1",
+          isMobile ? "p-4" : "p-8"
+        )}>
+          <div className={cn(
+            "mb-6",
+            isMobile ? "space-y-4" : "flex justify-between items-center mb-8"
+          )}>
+            <div className={cn(isMobile ? "text-center" : "")}>
+              <h1 className={cn(
+                "font-bold bg-gradient-to-r from-teal-700 via-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight",
+                isMobile ? "text-2xl" : "text-3xl"
+              )}>
                 Agenda
               </h1>
-              <p className="text-teal-700 mt-2 font-medium">Controle completo de agendamentos</p>
+              <p className={cn(
+                "text-teal-700 mt-2 font-medium",
+                isMobile ? "text-sm" : ""
+              )}>
+                Controle completo de agendamentos
+              </p>
 
-              {/* Filtros de Período */}
-              <div className="flex items-center mt-4 space-x-2">
-                <div className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm rounded-lg p-2 border border-teal-200">
+              {/* Filtros de Período - Mobile Responsivo */}
+              <div className={cn(
+                "mt-4",
+                isMobile ? "space-y-3" : "flex items-center space-x-2"
+              )}>
+                <div className={cn(
+                  "bg-white/80 backdrop-blur-sm rounded-lg p-2 border border-teal-200",
+                  isMobile 
+                    ? "grid grid-cols-2 gap-2" 
+                    : "flex items-center space-x-2"
+                )}>
                   {["hoje", "semana", "mes", "todos"].map((period) => (
                     <Button
                       key={period}
                       variant={periodFilter === period ? "default" : "ghost"}
-                      size="sm"
+                      size={isMobile ? "sm" : "sm"}
                       onClick={() => setPeriodFilter(period)}
                       className={cn(
-                        "text-xs font-medium transition-all duration-200",
+                        "font-medium transition-all duration-200",
+                        isMobile ? "text-xs px-3 py-2" : "text-xs",
                         periodFilter === period
                           ? "bg-teal-600 text-white hover:bg-teal-700"
                           : "text-teal-700 hover:bg-teal-100"
@@ -866,7 +889,10 @@ export default function SchedulePage() {
                       {period === "mes" && "Mês"}
                       {period === "todos" && "Todos"}
                       {period === "hoje" && (
-                        <span className="ml-1 text-xs opacity-75">
+                        <span className={cn(
+                          "opacity-75",
+                          isMobile ? "ml-1 text-[10px]" : "ml-1 text-xs"
+                        )}>
                           ({services.filter(s => isDateInRange(s.scheduledDate || "", getDateRange("hoje"))).length})
                         </span>
                       )}
@@ -874,15 +900,21 @@ export default function SchedulePage() {
                   ))}
                 </div>
 
-                {/* Botão do Calendário */}
+                {/* Botão do Calendário - Mobile Responsivo */}
                 <Button
                   variant="outline"
-                  size="sm"
+                  size={isMobile ? "default" : "sm"}
                   onClick={() => setShowCalendar(!showCalendar)}
-                  className="bg-white/80 backdrop-blur-sm border-teal-200 text-teal-700 hover:bg-teal-50"
+                  className={cn(
+                    "bg-white/80 backdrop-blur-sm border-teal-200 text-teal-700 hover:bg-teal-50",
+                    isMobile ? "w-full flex items-center justify-center" : ""
+                  )}
                 >
-                  <Calendar className="h-4 w-4 mr-1" />
-                  {showCalendar ? "Ocultar" : "Calendário"}
+                  <Calendar className={cn(
+                    "mr-2",
+                    isMobile ? "h-5 w-5" : "h-4 w-4 mr-1"
+                  )} />
+                  {showCalendar ? "Ocultar Calendário" : "Mostrar Calendário"}
                 </Button>
               </div>
             </div>
@@ -996,7 +1028,8 @@ export default function SchedulePage() {
                   <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent">
                     {editingService ? "Editar Agendamento" : "Novo Agendamento"}
                   </DialogTitle>
-                </DialogHeader>                <Form {...form}>
+                </DialogHeader>
+                <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     <div className="grid grid-cols-2 gap-6">
                       <FormField
@@ -2339,109 +2372,243 @@ export default function SchedulePage() {
                        const paymentStatus = getPaymentStatus(service.valorPago || "0", totalValue);
 
                       return (
-                      <Card key={service.id} className="bg-white/95 backdrop-blur-sm border-0 shadow-md hover:shadow-xl transition-all duration-300 rounded-xl overflow-hidden">
-                  {/* Header com horário e status */}
-                  <div className="bg-gradient-to-r from-teal-500 to-emerald-500 text-white p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2">
-                          <Clock className="h-5 w-5 text-white" />
+                      <Card 
+                        key={service.id} 
+                        className={cn(
+                          "bg-white/95 backdrop-blur-sm border-0 shadow-md hover:shadow-xl transition-all duration-300 rounded-xl overflow-hidden cursor-pointer active:scale-[0.98]",
+                          isMobile ? "mx-2" : ""
+                        )}
+                        onClick={() => {
+                          setEditingService(service);
+                          
+                          // Carregar dados do serviço no formulário
+                          form.reset({
+                            customerId: service.customerId,
+                            vehicleId: service.vehicleId,
+                            technicianId: service.technicianId || 0,
+                            scheduledDate: service.scheduledDate || '',
+                            scheduledTime: service.scheduledTime || '',
+                            status: service.status || 'scheduled',
+                            notes: service.notes || '',
+                            estimatedValue: service.estimatedValue || '0.00',
+                            valorPago: service.valorPago || '0.00',
+                            pixPago: service.pixPago || '0.00',
+                            dinheiroPago: service.dinheiroPago || '0.00',
+                            chequePago: service.chequePago || '0.00',
+                            cartaoPago: service.cartaoPago || '0.00'
+                          });
+                          
+                          setIsDialogOpen(true);
+                        }}
+                      >
+                  {/* Header com horário e status - Mobile Responsivo */}
+                  <div className={cn(
+                    "bg-gradient-to-r from-teal-500 to-emerald-500 text-white",
+                    isMobile ? "p-3" : "p-4"
+                  )}>
+                    <div className={cn(
+                      "flex items-center justify-between",
+                      isMobile ? "space-x-2" : ""
+                    )}>
+                      <div className={cn(
+                        "flex items-center",
+                        isMobile ? "space-x-2" : "space-x-3"
+                      )}>
+                        <div className={cn(
+                          "bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center",
+                          isMobile ? "p-1.5" : "p-2"
+                        )}>
+                          <Clock className={cn(
+                            "text-white",
+                            isMobile ? "h-4 w-4" : "h-5 w-5"
+                          )} />
                         </div>
                         <div>
-                          <div className="text-lg font-bold">
+                          <div className={cn(
+                            "font-bold",
+                            isMobile ? "text-base" : "text-lg"
+                          )}>
                             {service.scheduledTime ? service.scheduledTime.slice(0, 5) : '--:--'}
                           </div>
-                          <div className="text-xs opacity-90">
-                            {service.scheduledDate && new Date(service.scheduledDate + 'T00:00:00').toLocaleDateString('pt-BR', {
-                              weekday: 'short',
-                              day: '2-digit',
-                              month: '2-digit',
-                              timeZone: 'America/Sao_Paulo'
-                            })}
-                          </div>
+                          {!isMobile && (
+                            <div className="text-xs opacity-90">
+                              {service.scheduledDate && new Date(service.scheduledDate + 'T00:00:00').toLocaleDateString('pt-BR', {
+                                weekday: 'short',
+                                day: '2-digit',
+                                month: '2-digit',
+                                timeZone: 'America/Sao_Paulo'
+                              })}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Badge className={cn(
-                          "text-xs font-medium border-0 shadow-sm",
+                          "font-medium border-0 shadow-sm",
+                          isMobile ? "text-[10px] px-1.5 py-0.5" : "text-xs",
                           service.status === 'scheduled' && 'bg-blue-500 text-white',
                           service.status === 'in_progress' && 'bg-orange-500 text-white',
                           service.status === 'completed' && 'bg-green-600 text-white',
                           service.status === 'cancelled' && 'bg-red-500 text-white'
                         )}>
-                          {service.status === 'scheduled' && 'Agendado'}
-                          {service.status === 'in_progress' && 'Em Andamento'}
-                          {service.status === 'completed' && 'Concluído'}
-                          {service.status === 'cancelled' && 'Cancelado'}
+                          {service.status === 'scheduled' && (isMobile ? 'Ag.' : 'Agendado')}
+                          {service.status === 'in_progress' && (isMobile ? 'Exec.' : 'Em Andamento')}
+                          {service.status === 'completed' && (isMobile ? 'Ok' : 'Concluído')}
+                          {service.status === 'cancelled' && (isMobile ? 'Canc.' : 'Cancelado')}
                         </Badge>
                       </div>
                     </div>
                   </div>
 
-                  <CardContent className="p-4">
-                    {/* Cliente e Veículo */}
-                    <div className="space-y-3 mb-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
-                          <User className="h-5 w-5 text-blue-600" />
+                  <CardContent className={cn(
+                    isMobile ? "p-3" : "p-4"
+                  )}>
+                    {/* Cliente e Veículo - Mobile Responsivo */}
+                    <div className={cn(
+                      "mb-4",
+                      isMobile ? "space-y-2" : "space-y-3"
+                    )}>
+                      <div className={cn(
+                        "flex items-center",
+                        isMobile ? "space-x-2" : "space-x-3"
+                      )}>
+                        <div className={cn(
+                          "bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center",
+                          isMobile ? "w-8 h-8" : "w-10 h-10"
+                        )}>
+                          <User className={cn(
+                            "text-blue-600",
+                            isMobile ? "h-4 w-4" : "h-5 w-5"
+                          )} />
                         </div>
-                        <div className="flex-1">
-                          <div className="font-semibold text-gray-800 truncate">
+                        <div className="flex-1 min-w-0">
+                          <div className={cn(
+                            "font-semibold text-gray-800 truncate",
+                            isMobile ? "text-sm" : ""
+                          )}>
                             {service.customer?.name || 'Cliente não encontrado'}
                           </div>
-                          <div className="text-sm text-gray-500">Cliente</div>
+                          <div className={cn(
+                            "text-gray-500",
+                            isMobile ? "text-xs" : "text-sm"
+                          )}>
+                            Cliente
+                          </div>
                         </div>
                       </div>
                       
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg flex items-center justify-center">
-                          <Car className="h-5 w-5 text-purple-600" />
+                      <div className={cn(
+                        "flex items-center",
+                        isMobile ? "space-x-2" : "space-x-3"
+                      )}>
+                        <div className={cn(
+                          "bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg flex items-center justify-center",
+                          isMobile ? "w-8 h-8" : "w-10 h-10"
+                        )}>
+                          <Car className={cn(
+                            "text-purple-600",
+                            isMobile ? "h-4 w-4" : "h-5 w-5"
+                          )} />
                         </div>
-                        <div className="flex-1">
-                          <div className="font-semibold text-gray-800">
-                            {service.vehicle?.licensePlate || service.vehicle?.license_plate || 'Placa não informada'}
+                        <div className="flex-1 min-w-0">
+                          <div className={cn(
+                            "font-semibold text-gray-800",
+                            isMobile ? "text-sm" : ""
+                          )}>
+                            {service.vehicle?.licensePlate || 'Placa não informada'}
                           </div>
-                          <div className="text-sm text-gray-500 truncate">
+                          <div className={cn(
+                            "text-gray-500 truncate",
+                            isMobile ? "text-xs" : "text-sm"
+                          )}>
                             {service.vehicle?.brand} {service.vehicle?.model}
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Serviços */}
-                    <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Wrench className="h-4 w-4 text-gray-600" />
-                        <span className="text-sm font-medium text-gray-700">Serviços</span>
+                    {/* Serviços - Mobile Responsivo */}
+                    <div className={cn(
+                      "bg-gray-50 rounded-lg mb-4",
+                      isMobile ? "p-2" : "p-3"
+                    )}>
+                      <div className={cn(
+                        "flex items-center mb-2",
+                        isMobile ? "space-x-1.5" : "space-x-2"
+                      )}>
+                        <Wrench className={cn(
+                          "text-gray-600",
+                          isMobile ? "h-3.5 w-3.5" : "h-4 w-4"
+                        )} />
+                        <span className={cn(
+                          "font-medium text-gray-700",
+                          isMobile ? "text-xs" : "text-sm"
+                        )}>
+                          Serviços
+                        </span>
                       </div>
-                      <div className="text-sm text-gray-800">
-                        {service.serviceItems && service.serviceItems.length > 0 
-                          ? service.serviceItems.length === 1 
-                            ? service.serviceItems[0].serviceTypeName || 'Serviço não especificado'
-                            : `${service.serviceItems.length} serviços agendados`
-                          : 'Serviços não especificados'}
+                      <div className={cn(
+                        "text-gray-800",
+                        isMobile ? "text-xs" : "text-sm"
+                      )}>
+                        Serviços não especificados
                       </div>
                     </div>
 
-                    {/* Valor e Status do Pagamento */}
+                    {/* Valor e Status do Pagamento - Mobile Responsivo */}
                     {service.estimatedValue && (
-                      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 mb-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center space-x-2">
-                            <DollarSign className="h-4 w-4 text-emerald-600" />
-                            <span className="text-sm font-medium text-emerald-700">Valor Total</span>
+                      <div className={cn(
+                        "bg-emerald-50 border border-emerald-200 rounded-lg mb-4",
+                        isMobile ? "p-2" : "p-3"
+                      )}>
+                        <div className={cn(
+                          "flex items-center justify-between",
+                          isMobile ? "mb-1" : "mb-2"
+                        )}>
+                          <div className={cn(
+                            "flex items-center",
+                            isMobile ? "space-x-1.5" : "space-x-2"
+                          )}>
+                            <DollarSign className={cn(
+                              "text-emerald-600",
+                              isMobile ? "h-3.5 w-3.5" : "h-4 w-4"
+                            )} />
+                            <span className={cn(
+                              "font-medium text-emerald-700",
+                              isMobile ? "text-xs" : "text-sm"
+                            )}>
+                              Valor Total
+                            </span>
                           </div>
-                          <span className="text-lg font-bold text-emerald-700">
+                          <span className={cn(
+                            "font-bold text-emerald-700",
+                            isMobile ? "text-sm" : "text-lg"
+                          )}>
                             R$ {Number(service.estimatedValue).toFixed(2)}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-emerald-600">
+                        <div className={cn(
+                          "flex items-center",
+                          isMobile ? "justify-between" : "justify-between"
+                        )}>
+                          <span className={cn(
+                            "text-emerald-600",
+                            isMobile ? "text-[10px]" : "text-xs"
+                          )}>
                             Pago: R$ {Number(service.valorPago || 0).toFixed(2)}
                           </span>
-                          <div className={`px-2 py-1 rounded-full flex items-center space-x-1 ${paymentStatus.bgColor} border ${paymentStatus.borderColor}`}>
-                            <div className={`w-1.5 h-1.5 rounded-full ${paymentStatus.dotColor}`}></div>
-                            <span className={`text-xs font-medium ${paymentStatus.color}`}>
+                          <div className={cn(
+                            `rounded-full flex items-center ${paymentStatus.bgColor} border ${paymentStatus.borderColor}`,
+                            isMobile ? "px-1.5 py-0.5 space-x-0.5" : "px-2 py-1 space-x-1"
+                          )}>
+                            <div className={cn(
+                              `rounded-full ${paymentStatus.dotColor}`,
+                              isMobile ? "w-1 h-1" : "w-1.5 h-1.5"
+                            )}></div>
+                            <span className={cn(
+                              `font-medium ${paymentStatus.color}`,
+                              isMobile ? "text-[9px]" : "text-xs"
+                            )}>
                               {paymentStatus.label}
                             </span>
                           </div>
@@ -2449,48 +2616,97 @@ export default function SchedulePage() {
                       </div>
                     )}
 
-                    {/* Observações */}
+                    {/* Observações - Mobile Responsivo */}
                     {service.notes && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-                        <div className="flex items-start space-x-2">
-                          <FileText className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
-                          <div>
-                            <div className="text-xs font-medium text-yellow-700 mb-1">Observações</div>
-                            <div className="text-sm text-yellow-800 line-clamp-2">{service.notes}</div>
+                      <div className={cn(
+                        "bg-yellow-50 border border-yellow-200 rounded-lg mb-4",
+                        isMobile ? "p-2" : "p-3"
+                      )}>
+                        <div className={cn(
+                          "flex items-start",
+                          isMobile ? "space-x-1.5" : "space-x-2"
+                        )}>
+                          <FileText className={cn(
+                            "text-yellow-600 mt-0.5 flex-shrink-0",
+                            isMobile ? "h-3.5 w-3.5" : "h-4 w-4"
+                          )} />
+                          <div className="flex-1 min-w-0">
+                            <div className={cn(
+                              "font-medium text-yellow-700",
+                              isMobile ? "text-[10px] mb-0.5" : "text-xs mb-1"
+                            )}>
+                              Observações
+                            </div>
+                            <div className={cn(
+                              "text-yellow-800 line-clamp-2",
+                              isMobile ? "text-xs" : "text-sm"
+                            )}>
+                              {service.notes}
+                            </div>
                           </div>
                         </div>
                       </div>
                     )}
 
-                    {/* Ações */}
-                    <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                      <div className="flex items-center space-x-1">
+                    {/* Ações - Mobile Responsivo */}
+                    <div className={cn(
+                      "flex justify-between items-center border-t border-gray-200",
+                      isMobile ? "pt-1.5" : "pt-2"
+                    )}>
+                      <div className={cn(
+                        "flex items-center",
+                        isMobile ? "space-x-0.5" : "space-x-1"
+                      )}>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => setLocation(`/service-photos?serviceId=${service.id}`)}
-                          className="h-8 w-8 p-0 hover:bg-teal-100 text-teal-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setLocation(`/service-photos?serviceId=${service.id}`);
+                          }}
+                          className={cn(
+                            "p-0 hover:bg-teal-100 text-teal-600",
+                            isMobile ? "h-6 w-6" : "h-8 w-8"
+                          )}
                           title="Ver fotos"
                         >
-                          <Camera className="h-4 w-4" />
+                          <Camera className={cn(
+                            isMobile ? "h-3 w-3" : "h-4 w-4"
+                          )} />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleEdit(service)}
-                          className="h-8 w-8 p-0 hover:bg-blue-100 text-blue-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(service);
+                          }}
+                          className={cn(
+                            "p-0 hover:bg-blue-100 text-blue-600",
+                            isMobile ? "h-6 w-6" : "h-8 w-8"
+                          )}
                           title="Editar agendamento"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className={cn(
+                            isMobile ? "h-3 w-3" : "h-4 w-4"
+                          )} />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDelete(service.id)}
-                          className="h-8 w-8 p-0 hover:bg-red-100 text-red-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(service.id);
+                          }}
+                          className={cn(
+                            "p-0 hover:bg-red-100 text-red-600",
+                            isMobile ? "h-6 w-6" : "h-8 w-8"
+                          )}
                           title="Excluir agendamento"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className={cn(
+                            isMobile ? "h-3 w-3" : "h-4 w-4"
+                          )} />
                         </Button>
                       </div>
                       
@@ -2676,6 +2892,32 @@ export default function SchedulePage() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Botão Flutuante Mobile para Novo Agendamento */}
+        {isMobile && (
+          <div className="fixed bottom-6 right-6 z-50">
+            <Button
+              size="lg"
+              className="h-16 w-16 rounded-full bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 active:scale-95"
+              onClick={() => {
+                setEditingService(null);
+                form.reset();
+                setTemporaryPhotos([]);
+                setCurrentServicePhotos([]);
+                setServiceExtras([]);
+                setPaymentMethods({
+                  pix: "",
+                  dinheiro: "",
+                  cheque: "",
+                  cartao: ""
+                });
+                setIsDialogOpen(true);
+              }}
+            >
+              <Plus className="h-8 w-8" />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
