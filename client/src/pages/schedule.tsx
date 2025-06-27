@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
@@ -292,7 +291,7 @@ function CalendarView({ services, isLoading, onEdit, onDelete, isMobile, onDayCl
 }
 
 export default function SchedulePage() {
-  const { toast } = useToast();
+  const { toast } } from useToast();
   const [location, setLocation] = useLocation();
   const isMobile = useIsMobile();
 
@@ -458,7 +457,7 @@ export default function SchedulePage() {
     setTemporaryPhotos([]);
     setCurrentServicePhotos([]);
     setFormInitialValues(null);
-    
+
     // Reset form values
     form.reset({
       customerId: 0,
@@ -552,10 +551,10 @@ export default function SchedulePage() {
       }
 
       await queryClient.invalidateQueries({ queryKey: ['/api/services'] });
-      
+
       resetForm();
       setIsDialogOpen(false);
-      
+
       toast({
         title: "Agendamento criado com sucesso!",
         description: `Agendamento #${newService.id} foi criado.`,
@@ -637,11 +636,11 @@ export default function SchedulePage() {
       }
 
       await queryClient.invalidateQueries({ queryKey: ['/api/services'] });
-      
+
       resetForm();
       setIsDialogOpen(false);
       setEditingService(null);
-      
+
       toast({
         title: "Agendamento atualizado com sucesso!",
         description: `Agendamento #${updatedService.id} foi atualizado.`,
@@ -701,7 +700,7 @@ export default function SchedulePage() {
   const onSubmit = (data: z.infer<typeof serviceFormSchema>) => {
     console.log('Form submitted with data:', data);
     console.log('Current service items:', serviceItems);
-    
+
     if (editingService) {
       updateMutation.mutate({ id: editingService.id, data });
     } else {
@@ -714,17 +713,17 @@ export default function SchedulePage() {
     resetForm();
     setEditingService(null);
     setIsDialogOpen(true);
-    
+
     // Set form initial values for tracking changes
     const initialValues = form.getValues();
     setFormInitialValues(initialValues);
-    
+
     // If there's a customer filter, pre-select the customer
     if (customerIdFilter) {
       const customerId = parseInt(customerIdFilter);
       if (customerId > 0) {
         form.setValue('customerId', customerId);
-        
+
         // If there's also a vehicle filter, pre-select the vehicle
         if (vehicleIdFilter) {
           const vehicleId = parseInt(vehicleIdFilter);
@@ -740,7 +739,7 @@ export default function SchedulePage() {
   const openEditModal = async (service: Service) => {
     resetForm();
     setEditingService(service);
-    
+
     // Load service photos
     try {
       const response = await apiRequest('GET', `/api/photos?entityType=service&entityId=${service.id}`);
@@ -751,14 +750,14 @@ export default function SchedulePage() {
     } catch (error) {
       console.error('Error loading service photos:', error);
     }
-    
+
     // Load service items
     if (service.serviceItems && service.serviceItems.length > 0) {
       setServiceItems(service.serviceItems);
     } else {
       setServiceItems([]);
     }
-    
+
     // Populate form with service data
     const formData = {
       customerId: service.customerId,
@@ -777,10 +776,10 @@ export default function SchedulePage() {
       chequePago: service.chequePago || "0.00",
       cartaoPago: service.cartaoPago || "0.00",
     };
-    
+
     form.reset(formData);
     setFormInitialValues(formData);
-    
+
     // Load payment methods
     setPaymentMethods({
       pix: service.pixPago || "",
@@ -788,7 +787,7 @@ export default function SchedulePage() {
       cheque: service.chequePago || "",
       cartao: service.cartaoPago || "",
     });
-    
+
     setIsDialogOpen(true);
   };
 
@@ -809,7 +808,7 @@ export default function SchedulePage() {
   const getDateRange = (period: string) => {
     // Get current date in Brazilian timezone (America/Sao_Paulo)
     const now = new Date();
-    
+
     // Create a proper Brazilian date
     const brazilianDate = new Intl.DateTimeFormat('en-CA', { 
       timeZone: 'America/Sao_Paulo',
@@ -817,7 +816,7 @@ export default function SchedulePage() {
       month: '2-digit', 
       day: '2-digit'
     }).format(now);
-    
+
     console.log('getDateRange - period:', period, 'Brazilian date today:', brazilianDate, 'UTC now:', now.toISOString());
 
     switch (period) {
@@ -828,31 +827,31 @@ export default function SchedulePage() {
         // Get current date in Brazilian timezone as Date object
         const today = new Date();
         const brazilTime = new Date(today.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-        
+
         const startOfWeek = new Date(brazilTime);
         startOfWeek.setDate(brazilTime.getDate() - brazilTime.getDay());
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6);
-        
+
         const weekStart = new Intl.DateTimeFormat('en-CA', { 
           timeZone: 'America/Sao_Paulo',
           year: 'numeric',
           month: '2-digit', 
           day: '2-digit'
         }).format(startOfWeek);
-        
+
         const weekEnd = new Intl.DateTimeFormat('en-CA', { 
           timeZone: 'America/Sao_Paulo',
           year: 'numeric',
           month: '2-digit', 
           day: '2-digit'
         }).format(endOfWeek);
-        
+
         return { start: weekStart, end: weekEnd };
-        
+
       case "month":
         const currentMonth = new Date();
-        
+
         // Get first day of current month in Brazilian timezone
         const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
         const monthStart = new Intl.DateTimeFormat('en-CA', { 
@@ -861,7 +860,7 @@ export default function SchedulePage() {
           month: '2-digit', 
           day: '2-digit'
         }).format(firstDay);
-        
+
         // Get last day of current month in Brazilian timezone
         const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
         const monthEnd = new Intl.DateTimeFormat('en-CA', { 
@@ -870,7 +869,7 @@ export default function SchedulePage() {
           month: '2-digit', 
           day: '2-digit'
         }).format(lastDay);
-        
+
         return { start: monthStart, end: monthEnd };
       default:
         return null;
@@ -887,11 +886,11 @@ export default function SchedulePage() {
 
     const matchesPayment = (() => {
       if (filterPayment === "all") return true;
-      
+
       const valorPago = parseFloat(service.valorPago || "0");
       const estimatedValue = parseFloat(service.estimatedValue || "0");
       const finalValue = parseFloat(service.finalValue || service.estimatedValue || "0");
-      
+
       switch (filterPayment) {
         case "paid":
           return valorPago >= finalValue;
@@ -922,19 +921,18 @@ export default function SchedulePage() {
     }
 
     const result = matchesSearch && matchesStatus && matchesPayment && matchesPeriod;
-    
-    // Log para debug apenas para serviços do dia 26
-    if (service.scheduledDate === '2025-06-26') {
-      console.log('Service filter result for 2025-06-26:', {
-        serviceName: service.customer?.name,
-        scheduledDate: service.scheduledDate,
-        matchesSearch,
-        matchesStatus,
-        matchesPayment,
-        matchesPeriod,
-        periodFilter,
-        finalResult: result
-      });
+
+    // Log detalhado para TODOS os serviços do Antonio para debug
+    if (service.customer?.name === 'Antonio') {
+      console.log('=== ANÁLISE DETALHADA ANTONIO ===');
+      console.log('Data agendamento:', service.scheduledDate);
+      console.log('Filtro período:', periodFilter);
+      console.log('matchesSearch:', matchesSearch);
+      console.log('matchesStatus:', matchesStatus);
+      console.log('matchesPayment:', matchesPayment);
+      console.log('matchesPeriod:', matchesPeriod);
+      console.log('RESULTADO FINAL:', result);
+      console.log('===================================');
     }
 
     return result;
@@ -1106,7 +1104,7 @@ export default function SchedulePage() {
                   const paymentStatus = (() => {
                     const valorPago = parseFloat(service.valorPago || "0");
                     const finalValue = parseFloat(service.finalValue || service.estimatedValue || "0");
-                    
+
                     if (valorPago >= finalValue) return "paid";
                     if (valorPago === 0) return "pending";
                     return "partial";
@@ -1179,7 +1177,7 @@ export default function SchedulePage() {
                               </>
                             )}
                           </div>
-                          
+
                           {service.serviceType && (
                             <div className="flex items-center text-sm text-gray-600">
                               <Wrench className="h-4 w-4 mr-2" />
