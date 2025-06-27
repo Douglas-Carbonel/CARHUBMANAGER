@@ -312,6 +312,7 @@ export default function SchedulePage() {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [serviceExtras, setServiceExtras] = useState<any[]>([]);
   const [initialServiceExtras, setInitialServiceExtras] = useState<any[]>([]);
+  const [serviceItems, setServiceItems] = useState<any[]>([]);
   const [isResumeModalOpen, setIsResumeModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState({
@@ -383,7 +384,10 @@ export default function SchedulePage() {
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-      return response.json();
+      const data = await response.json();
+      console.log('Schedule page - Services data:', data);
+      console.log('Schedule page - First service:', data[0]);
+      return data;
     },
   });
 
@@ -434,6 +438,7 @@ export default function SchedulePage() {
   // Clear form when closing modal without edit
   const resetForm = () => {
     setServiceExtras([]);
+    setServiceItems([]);
     setInitialServiceExtras([]);
     setTemporaryPhotos([]);
     setCurrentServicePhotos([]);
@@ -469,22 +474,11 @@ export default function SchedulePage() {
   const createMutation = useMutation({
     mutationFn: async (data: z.infer<typeof serviceFormSchema>) => {
       console.log('Creating service with data:', data);
-      console.log('Service extras for creation:', serviceExtras);
-      
-      // Convert service extras to the format expected by the backend
-      const serviceItems = serviceExtras
-        .filter(extra => extra.serviceTypeId && extra.serviceTypeId > 0)
-        .map(extra => ({
-          serviceTypeId: extra.serviceTypeId,
-          quantity: 1,
-          unitPrice: extra.valor,
-          totalPrice: extra.valor,
-          notes: extra.observacao || "",
-        }));
+      console.log('Service items for creation:', serviceItems);
 
       const payload = {
         ...data,
-        serviceItems,
+        serviceItems: serviceItems || [],
         // Remove serviceExtras from the payload as we're using serviceItems
         serviceExtras: undefined,
       };
@@ -545,22 +539,11 @@ export default function SchedulePage() {
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: z.infer<typeof serviceFormSchema> }) => {
       console.log('Updating service with data:', data);
-      console.log('Service extras for update:', serviceExtras);
-      
-      // Convert service extras to the format expected by the backend
-      const serviceItems = serviceExtras
-        .filter(extra => extra.serviceTypeId && extra.serviceTypeId > 0)
-        .map(extra => ({
-          serviceTypeId: extra.serviceTypeId,
-          quantity: 1,
-          unitPrice: extra.valor,
-          totalPrice: extra.valor,
-          notes: extra.observacao || "",
-        }));
+      console.log('Service items for update:', serviceItems);
 
       const payload = {
         ...data,
-        serviceItems,
+        serviceItems: serviceItems || [],
         // Remove serviceExtras from the payload as we're using serviceItems
         serviceExtras: undefined,
       };
@@ -643,50 +626,7 @@ export default function SchedulePage() {
     },
   });
 
-  const fetchServiceExtras = async (serviceId: number) => {
-    try {
-      console.log(`Fetching service data for service ID: ${serviceId}`);
-      const response = await apiRequest('GET', `/api/services/${serviceId}`);
-      if (response.ok) {
-        const serviceData = await response.json();
-        console.log('Service data received:', serviceData);
-        
-        // Map service items to service extras format
-        console.log('Service items from API:', serviceData.serviceItems);
-        
-        if (serviceData.serviceItems && serviceData.serviceItems.length > 0) {
-          const mappedExtras = serviceData.serviceItems.map((item: any, index: number) => ({
-            tempId: `existing_${item.id || index}_${Date.now()}`,
-            serviceTypeId: item.serviceTypeId,
-            valor: item.unitPrice,
-            observacao: item.notes || "",
-            serviceExtra: {
-              id: item.serviceTypeId,
-              descricao: item.serviceTypeName,
-              defaultPrice: item.serviceTypeDefaultPrice,
-            }
-          }));
-          
-          console.log('Mapped service items to ServiceExtras format:', mappedExtras);
-          
-          setServiceExtras(mappedExtras);
-          setInitialServiceExtras(mappedExtras);
-        } else {
-          console.log('No service items found for this service');
-          setServiceExtras([]);
-          setInitialServiceExtras([]);
-        }
-      } else {
-        console.error('Failed to fetch service extras');
-        setServiceExtras([]);
-        setInitialServiceExtras([]);
-      }
-    } catch (error) {
-      console.error('Error fetching service extras:', error);
-      setServiceExtras([]);
-      setInitialServiceExtras([]);
-    }
-  };
+
 
   // Form submission
   const onSubmit = (data: z.infer<typeof serviceFormSchema>) => {
@@ -743,8 +683,12 @@ export default function SchedulePage() {
       console.error('Error loading service photos:', error);
     }
     
-    // Load service extras
-    await fetchServiceExtras(service.id);
+    // Load service items
+    if (service.serviceItems && service.serviceItems.length > 0) {
+      setServiceItems(service.serviceItems);
+    } else {
+      setServiceItems([]);
+    }
     
     // Populate form with service data
     const formData = {
@@ -1424,10 +1368,10 @@ export default function SchedulePage() {
                 {/* Service Items */}
                 <ServiceItems 
                   serviceId={editingService?.id}
-                  initialItems={serviceExtras}
+                  initialItems={serviceItems}
                   onChange={(items) => {
-                    console.log('Services page - Received items from ServiceItems:', items);
-                    setServiceExtras(items);
+                    console.log('Schedule page - Received items from ServiceItems:', items);
+                    setServiceItems(items);
                   }}
                 />
 
