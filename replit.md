@@ -144,6 +144,7 @@ Changelog:
 - June 27, 2025. Aligned schedule and service forms completely - agenda entries now create services with full functionality
 - June 27, 2025. Verified schedule page creates actual service orders with identical form structure, payment management, and notifications
 - June 27, 2025. Completed full alignment of schedule and service forms - added payment control, notification settings, and payment methods modal
+- June 27, 2025. Restored period filters and custom responsive calendar to agenda page - "Hoje/Semana/Mês/Todos" filters with dynamic counters and mobile-optimized calendar with visual indicators
 - June 26, 2025. Fixed service creation validation error by supporting both serviceExtras and serviceItems formats
 - June 26, 2025. Fixed service_items query errors after architecture centralization to service_types table
 - June 26, 2025. Simplified service extras endpoint to return empty array for backward compatibility

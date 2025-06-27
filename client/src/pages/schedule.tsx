@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, DollarSign, MoreHorizontal, Plus, Search, Edit, Trash2, Clock, User, Car, Wrench, CheckCircle, XCircle, Timer, BarChart3, FileText, Camera, Coins, Calculator, Smartphone, Banknote, CreditCard, Receipt, Bell } from "lucide-react";
+import { Calendar, DollarSign, MoreHorizontal, Plus, Search, Edit, Trash2, Clock, User, Car, Wrench, CheckCircle, XCircle, Timer, BarChart3, FileText, Camera, Coins, Calculator, Smartphone, Banknote, CreditCard, Receipt, Bell, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertServiceSchema, type Service, type Customer, type Vehicle, type ServiceType, type Photo } from "@shared/schema";
@@ -134,6 +134,9 @@ export default function SchedulePage() {
   const [searchTerm, setSearchTerm] = useState(customerFilter);
   const [filterStatus, setFilterStatus] = useState<string>(statusFilter);
   const [filterPayment, setFilterPayment] = useState<string>("all");
+  const [periodFilter, setPeriodFilter] = useState<string>("todos");
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -664,6 +667,40 @@ export default function SchedulePage() {
     return "pagos";
   };
 
+  // Função para filtrar por período
+  const getDateRange = (period: string) => {
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    switch (period) {
+      case "hoje":
+        return {
+          start: startOfDay,
+          end: new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1)
+        };
+      case "semana":
+        const startOfWeek = new Date(startOfDay);
+        startOfWeek.setDate(startOfDay.getDate() - today.getDay());
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        endOfWeek.setHours(23, 59, 59, 999);
+        return { start: startOfWeek, end: endOfWeek };
+      case "mes":
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        endOfMonth.setHours(23, 59, 59, 999);
+        return { start: startOfMonth, end: endOfMonth };
+      default:
+        return null;
+    }
+  };
+
+  const isDateInRange = (dateString: string, range: { start: Date; end: Date } | null) => {
+    if (!range || !dateString) return true;
+    const serviceDate = new Date(dateString + 'T00:00:00');
+    return serviceDate >= range.start && serviceDate <= range.end;
+  };
+
   const filteredServices = services.filter((service) => {
     const searchLower = searchTerm.toLowerCase();
 
@@ -672,19 +709,23 @@ export default function SchedulePage() {
     const paymentCategory = getPaymentCategory(service.valorPago || "0", totalValue);
     const matchesPayment = filterPayment === "all" || paymentCategory === filterPayment;
 
+    // Period filtering
+    const dateRange = getDateRange(periodFilter);
+    const matchesPeriod = isDateInRange(service.scheduledDate || "", dateRange);
+
     // If we have a customerId filter from URL, only show that customer's services
     if (customerIdFilter) {
       const customerId = parseInt(customerIdFilter);
       const matchesCustomer = service.customerId === customerId;
       const matchesStatus = filterStatus === "all" || service.status === filterStatus;
-      return matchesCustomer && matchesStatus && matchesPayment;
+      return matchesCustomer && matchesStatus && matchesPayment && matchesPeriod;
     }
 
     // If we have a customer name filter from URL and searchTerm matches it, only show that customer's services
     if (customerFilter && searchTerm === customerFilter) {
       const matchesCustomer = (service.customer?.name || "").toLowerCase() === searchLower;
       const matchesStatus = filterStatus === "all" || service.status === filterStatus;
-      return matchesCustomer && matchesStatus && matchesPayment;
+      return matchesCustomer && matchesStatus && matchesPayment && matchesPeriod;
     }
 
     // Vehicle Filtering by ID (priority filter)
@@ -692,7 +733,7 @@ export default function SchedulePage() {
       const vehicleId = parseInt(vehicleIdFilter);
       const matchesVehicle = service.vehicleId === vehicleId;
       const matchesStatus = filterStatus === "all" || service.status === filterStatus;
-      return matchesVehicle && matchesStatus && matchesPayment;
+      return matchesVehicle && matchesStatus && matchesPayment && matchesPeriod;
     }
 
     // Otherwise, use the regular search logic
@@ -705,7 +746,7 @@ export default function SchedulePage() {
 
     const matchesStatus = filterStatus === "all" || service.status === filterStatus;
 
-    return matchesSearch && matchesStatus && matchesPayment;
+    return matchesSearch && matchesStatus && matchesPayment && matchesPeriod;
   }).sort((a, b) => {
     // Sort by date first, then by time for proper chronological order
     const dateA = a.scheduledDate || '';
@@ -798,9 +839,50 @@ export default function SchedulePage() {
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-700 via-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
-                Gestão de Serviços
+                Agenda
               </h1>
-              <p className="text-teal-700 mt-2 font-medium">Controle completo de ordens de serviço</p>
+              <p className="text-teal-700 mt-2 font-medium">Controle completo de agendamentos</p>
+              
+              {/* Filtros de Período */}
+              <div className="flex items-center mt-4 space-x-2">
+                <div className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm rounded-lg p-2 border border-teal-200">
+                  {["hoje", "semana", "mes", "todos"].map((period) => (
+                    <Button
+                      key={period}
+                      variant={periodFilter === period ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setPeriodFilter(period)}
+                      className={cn(
+                        "text-xs font-medium transition-all duration-200",
+                        periodFilter === period
+                          ? "bg-teal-600 text-white hover:bg-teal-700"
+                          : "text-teal-700 hover:bg-teal-100"
+                      )}
+                    >
+                      {period === "hoje" && "Hoje"}
+                      {period === "semana" && "Semana"}
+                      {period === "mes" && "Mês"}
+                      {period === "todos" && "Todos"}
+                      {period === "hoje" && (
+                        <span className="ml-1 text-xs opacity-75">
+                          ({services.filter(s => isDateInRange(s.scheduledDate || "", getDateRange("hoje"))).length})
+                        </span>
+                      )}
+                    </Button>
+                  ))}
+                </div>
+                
+                {/* Botão do Calendário */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCalendar(!showCalendar)}
+                  className="bg-white/80 backdrop-blur-sm border-teal-200 text-teal-700 hover:bg-teal-50"
+                >
+                  <Calendar className="h-4 w-4 mr-1" />
+                  {showCalendar ? "Ocultar" : "Calendário"}
+                </Button>
+              </div>
             </div>
 
             <Dialog open={isDialogOpen} onOpenChange={(open) => {
@@ -1870,6 +1952,102 @@ export default function SchedulePage() {
               </DialogContent>
             </Dialog>
           </div>
+
+          {/* Calendário Customizado */}
+          {showCalendar && (
+            <div className="mb-6 bg-white/90 backdrop-blur-sm rounded-xl border border-teal-200 p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-teal-800">
+                  {new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowCalendar(false)}
+                  className="text-teal-600 hover:text-teal-800"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className={cn(
+                "grid grid-cols-7 gap-1 text-center text-sm font-medium text-teal-700 mb-3",
+                isMobile ? "text-xs" : "text-sm"
+              )}>
+                <div>Dom</div>
+                <div>Seg</div>
+                <div>Ter</div>
+                <div>Qua</div>
+                <div>Qui</div>
+                <div>Sex</div>
+                <div>Sáb</div>
+              </div>
+              
+              <div className="grid grid-cols-7 gap-1">
+                {Array.from({ length: 42 }, (_, index) => {
+                  const today = new Date();
+                  const currentMonth = today.getMonth();
+                  const currentYear = today.getFullYear();
+                  const firstDay = new Date(currentYear, currentMonth, 1);
+                  const startDate = new Date(firstDay);
+                  startDate.setDate(startDate.getDate() - firstDay.getDay());
+                  
+                  const date = new Date(startDate);
+                  date.setDate(startDate.getDate() + index);
+                  
+                  const isCurrentMonth = date.getMonth() === currentMonth;
+                  const isToday = date.toDateString() === today.toDateString();
+                  const dateString = date.toISOString().split('T')[0];
+                  
+                  const dayServices = services.filter(service => 
+                    service.scheduledDate === dateString
+                  );
+                  
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        setSelectedDate(date);
+                        setPeriodFilter("todos");
+                        // Modal para múltiplos agendamentos
+                        if (dayServices.length > 1) {
+                          // Aqui você pode implementar um modal para mostrar todos os agendamentos do dia
+                          console.log(`${dayServices.length} agendamentos em ${dateString}`);
+                        }
+                      }}
+                      className={cn(
+                        "aspect-square p-1 rounded-lg transition-all duration-200 relative flex flex-col items-center justify-center",
+                        isMobile ? "text-xs min-h-[32px]" : "text-sm min-h-[40px]",
+                        isCurrentMonth 
+                          ? "text-gray-900 hover:bg-teal-100 border border-transparent hover:border-teal-300" 
+                          : "text-gray-400",
+                        isToday && "bg-teal-600 text-white font-bold hover:bg-teal-700 border-teal-600",
+                        dayServices.length > 0 && !isToday && "bg-emerald-100 border border-emerald-300 hover:bg-emerald-200"
+                      )}
+                    >
+                      <span className="block leading-none">{date.getDate()}</span>
+                      {dayServices.length > 0 && (
+                        <div className={cn(
+                          "mt-0.5 w-1 h-1 rounded-full",
+                          isToday ? "bg-white" : "bg-emerald-600"
+                        )} />
+                      )}
+                      {dayServices.length > 1 && (
+                        <span className={cn(
+                          "absolute -top-1 -right-1 text-[10px] font-bold min-w-[16px] h-[16px] rounded-full flex items-center justify-center leading-none",
+                          isToday 
+                            ? "bg-white text-teal-600" 
+                            : "bg-emerald-600 text-white"
+                        )}>
+                          {dayServices.length}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Search and Filter */}
           <div className="space-y-4 mb-6">
