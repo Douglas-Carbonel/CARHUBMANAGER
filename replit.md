@@ -201,4 +201,5 @@ Changelog:
 
 ```
 Preferred communication style: Simple, everyday language.
+Working approach: Only perform requested tasks, ask permission for any intervention outside the specific scope.
 ```
