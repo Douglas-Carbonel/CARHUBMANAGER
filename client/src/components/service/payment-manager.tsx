@@ -109,7 +109,7 @@ export default function PaymentManager({
   }, [pixPago, dinheiroPago, chequePago, cartaoPago]);
 
   const getPaymentStatus = () => {
-    const paidValue = currentPaidValue;
+    const paidValue = currentPaidValue || 0;
     if (paidValue === 0) {
       return { 
         label: "Pendente", 
@@ -223,7 +223,7 @@ export default function PaymentManager({
             Total Pago:
           </Label>
           <span className="text-lg font-bold text-slate-800">
-            R$ {currentPaidValue.toFixed(2)}
+            R$ {(currentPaidValue || 0).toFixed(2)}
           </span>
         </div>
         
