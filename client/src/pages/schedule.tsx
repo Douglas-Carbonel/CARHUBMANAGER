@@ -26,7 +26,6 @@ import PhotoUpload from "@/components/photos/photo-upload";
 import CameraCapture from "@/components/camera/camera-capture";
 import ServiceItems from "@/components/service/service-items";
 import PaymentManager from "@/components/service/payment-manager";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
@@ -112,7 +111,34 @@ const serviceFormSchema = insertServiceSchema.extend({
 export default function SchedulePage() {
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
-  const isMobile = useIsMobile();
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Force re-check mobile state on component mount and location change
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+    };
+
+    // Initial check with a small delay to ensure DOM is ready
+    const timeoutId = setTimeout(checkMobile, 50);
+    checkMobile();
+    
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, [location]);
+
+  // Additional effect to ensure mobile state is correct on every render
+  useEffect(() => {
+    const mobile = window.innerWidth < 768;
+    if (isMobile !== mobile) {
+      setIsMobile(mobile);
+    }
+  });
 
   // Get filters from URL params
   const urlParams = new URLSearchParams(window.location.search);
