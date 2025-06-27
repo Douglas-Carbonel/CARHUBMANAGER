@@ -423,7 +423,7 @@ export default function SchedulePage() {
     },
     onError: (error: any) => {
       console.error("Error creating service:", error);
-      toast({ title: "Erro ao criar agendamento", variant: "destructive" });
+      toast({ title: "Erro ao criar serviço", variant: "destructive" });
     },
   });
 
@@ -435,11 +435,11 @@ export default function SchedulePage() {
       setIsDialogOpen(false);
       setEditingService(null);
       form.reset();
-      toast({ title: "Agendamento atualizado com sucesso!" });
+      toast({ title: "Serviço atualizado com sucesso!" });
     },
     onError: (error: any) => {
       console.error("Error updating service:", error);
-      toast({ title: "Erro ao atualizar agendamento.", variant: "destructive" });
+      toast({ title: "Erro ao atualizar serviço", variant: "destructive" });
     },
   });
 
@@ -448,10 +448,10 @@ export default function SchedulePage() {
       apiRequest("DELETE", `/api/services/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
-      toast({ title: "Agendamento excluído!", description: "O agendamento foi excluído com sucesso." });
+      toast({ title: "Serviço excluído com sucesso!" });
     },
     onError: () => {
-      toast({ title: "Erro", description: "Erro ao excluir agendamento.", variant: "destructive" });
+      toast({ title: "Erro ao excluir serviço", variant: "destructive" });
     },
   });
 
@@ -583,21 +583,20 @@ export default function SchedulePage() {
           // Show success message with photo count
           if (photosSaved > 0) {
             toast({
-              title: "Agendamento criado!",
+              title: "Serviço criado com sucesso!",
               description: `${photosSaved} foto(s) salva(s) junto com o serviço.`,
             });
           }
         } else {
           toast({
-            title: "Agendamento criado!",
-            description: "O agendamento foi criado com sucesso.",
+            title: "Serviço criado com sucesso!",
           });
         }
       } catch (error) {
         console.error('Error creating service:', error);
         toast({
-          title: "Erro",
-          description: "Erro ao criar agendamento.",
+          title: "Erro ao criar serviço",
+          description: "Ocorreu um erro ao criar o serviço.",
           variant: "destructive",
         });
       }
@@ -650,8 +649,8 @@ export default function SchedulePage() {
   const handleDelete = (id: number) => {
     setConfirmDialog({
       isOpen: true,
-      title: "Excluir Agendamento",
-      description: "Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.",
+      title: "Excluir Serviço",
+      description: "Tem certeza que deseja excluir este serviço? Esta ação não pode ser desfeita.",
       onConfirm: () => {
         deleteMutation.mutate(id);
         setConfirmDialog(prev => ({ ...prev, isOpen: false }));
@@ -820,8 +819,7 @@ export default function SchedulePage() {
 
   if (servicesLoading || customersLoading || vehiclesLoading || techniciansLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br```python
- from-teal-50 to-blue-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50">
         <LoadingSpinner size="lg" text="Carregando dados do sistema..." />
       </div>
     );
@@ -1631,8 +1629,7 @@ export default function SchedulePage() {
                             setCurrentServicePhotos([]);
                             setServiceExtras([]);
                             setEditingService(null);
-                            form```python
-.reset();
+                            form.reset();
                             setTemporaryPhotos([]);
                             setPaymentMethods({
                               pix: "",
@@ -1651,7 +1648,7 @@ export default function SchedulePage() {
                         className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-2 font-semibold"
                         disabled={createMutation.isPending || updateMutation.isPending}
                       >
-                        {editingService ? "Atualizar Agendamento" : "Criar Agendamento"}
+                        {editingService ? "Atualizar Serviço" : "Criar Serviço"}
                       </Button>
                     </div>
                   </form>
@@ -2342,7 +2339,7 @@ export default function SchedulePage() {
                       <div className="flex items-center space-x-2">
                         <Badge className={cn(
                           "text-xs font-medium border-0 shadow-sm",
-                          service.status === 'scheduled' && 'bg-blue-500 text-white',# Update toast messages to use 'agendamento' instead of 'serviço' throughout the component.
+                          service.status === 'scheduled' && 'bg-blue-500 text-white',
                           service.status === 'in_progress' && 'bg-orange-500 text-white',
                           service.status === 'completed' && 'bg-green-600 text-white',
                           service.status === 'cancelled' && 'bg-red-500 text-white'
@@ -2370,7 +2367,7 @@ export default function SchedulePage() {
                           <div className="text-sm text-gray-500">Cliente</div>
                         </div>
                       </div>
-
+                      
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg flex items-center justify-center">
                           <Car className="h-5 w-5 text-purple-600" />
@@ -2471,7 +2468,7 @@ export default function SchedulePage() {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-
+                      
                       {/* Indicador de técnico responsável */}
                       <div className="flex items-center space-x-2 text-xs text-gray-500">
                         <User className="h-3 w-3" />
