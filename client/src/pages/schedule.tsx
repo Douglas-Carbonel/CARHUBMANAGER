@@ -809,15 +809,19 @@ export default function SchedulePage() {
   const getDateRange = (period: string) => {
     // Get current date in Brazilian timezone (UTC-3)
     const now = new Date();
-    const brazilianDate = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-    const currentDate = brazilianDate.toISOString().split('T')[0];
+    // Correctly calculate Brazilian time considering daylight saving time
+    const brazilianTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const currentDate = brazilianTime.toISOString().split('T')[0];
+
+    console.log('getDateRange - period:', period, 'currentDate:', currentDate, 'brazilianTime:', brazilianTime);
 
     switch (period) {
       case "day":
+        console.log('getDateRange - day filter returning:', { start: currentDate, end: currentDate });
         return { start: currentDate, end: currentDate };
       case "week":
-        const startOfWeek = new Date(brazilianDate);
-        startOfWeek.setDate(brazilianDate.getDate() - brazilianDate.getDay());
+        const startOfWeek = new Date(brazilianTime);
+        startOfWeek.setDate(brazilianTime.getDate() - brazilianTime.getDay());
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6);
         return {
@@ -825,8 +829,8 @@ export default function SchedulePage() {
           end: endOfWeek.toISOString().split('T')[0]
         };
       case "month":
-        const startOfMonth = new Date(brazilianDate.getFullYear(), brazilianDate.getMonth(), 1);
-        const endOfMonth = new Date(brazilianDate.getFullYear(), brazilianDate.getMonth() + 1, 0);
+        const startOfMonth = new Date(brazilianTime.getFullYear(), brazilianTime.getMonth(), 1);
+        const endOfMonth = new Date(brazilianTime.getFullYear(), brazilianTime.getMonth() + 1, 0);
         return {
           start: startOfMonth.toISOString().split('T')[0],
           end: endOfMonth.toISOString().split('T')[0]
@@ -863,17 +867,40 @@ export default function SchedulePage() {
       }
     })();
 
-    // No modo calendário, não aplicar filtro de período para mostrar todos os agendamentos
+    // Aplicar filtro de período em ambos os modos (cards e calendar)
     let matchesPeriod = true;
-    if (viewMode === "cards" && periodFilter !== "all" && service.scheduledDate) {
+    if (periodFilter !== "all" && service.scheduledDate) {
       const dateRange = getDateRange(periodFilter);
       if (dateRange) {
         const serviceDate = service.scheduledDate;
         matchesPeriod = serviceDate >= dateRange.start && serviceDate <= dateRange.end;
+        console.log('Period filter check:', {
+          serviceDate,
+          dateRange,
+          matchesPeriod,
+          periodFilter,
+          serviceName: service.customer?.name
+        });
       }
     }
 
-    return matchesSearch && matchesStatus && matchesPayment && matchesPeriod;
+    const result = matchesSearch && matchesStatus && matchesPayment && matchesPeriod;
+    
+    // Log para debug apenas para serviços do dia 26
+    if (service.scheduledDate === '2025-06-26') {
+      console.log('Service filter result for 2025-06-26:', {
+        serviceName: service.customer?.name,
+        scheduledDate: service.scheduledDate,
+        matchesSearch,
+        matchesStatus,
+        matchesPayment,
+        matchesPeriod,
+        periodFilter,
+        finalResult: result
+      });
+    }
+
+    return result;
   });
 
   // Get selected customer's vehicles
