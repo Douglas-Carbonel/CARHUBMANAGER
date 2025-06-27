@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Edit, Trash2, Calendar, Clock, User, Car, Wrench, Calculator, Grid3X3, CalendarDays } from "lucide-react";
+import ServiceExtras from "@/components/service/service-extras-new";
 import { cn } from "@/lib/utils";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useForm } from "react-hook-form";
@@ -43,7 +44,20 @@ const serviceFormSchema = insertServiceSchema.extend({
   customerId: z.number().min(1, "Cliente é obrigatório"),
   vehicleId: z.number().min(1, "Veículo é obrigatório"),
   technicianId: z.number().optional(),
-  serviceTypeId: z.number().min(1, "Tipo de serviço é obrigatório"),
+  serviceTypeId: z.number().optional(),
+  scheduledTime: z.string().optional(),
+  valorPago: z.string().optional(),
+  pixPago: z.string().optional(),
+  dinheiroPago: z.string().optional(),
+  chequePago: z.string().optional(),
+  cartaoPago: z.string().optional(),
+  reminderEnabled: z.boolean().optional(),
+  reminderMinutes: z.number().optional(),
+  serviceExtras: z.array(z.object({
+    unifiedServiceId: z.number(),
+    valor: z.string(),
+    observacao: z.string().optional(),
+  })).optional(),
 });
 
 type ServiceFormData = z.infer<typeof serviceFormSchema>;
@@ -315,6 +329,18 @@ export default function SchedulePage() {
     onConfirm: () => {},
   });
 
+  // Additional states for complete functionality like services page
+  const [serviceExtras, setServiceExtras] = useState<any[]>([]);
+  const [initialServiceExtras, setInitialServiceExtras] = useState<any[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState({
+    pix: "",
+    dinheiro: "",
+    cheque: "",
+    cartao: ""
+  });
+  const [temporaryPhotos, setTemporaryPhotos] = useState<Array<{ photo: string; category: string }>>([]);
+  const [formInitialValues, setFormInitialValues] = useState<ServiceFormData | null>(null);
+
   const form = useForm<ServiceFormData>({
     resolver: zodResolver(serviceFormSchema),
     defaultValues: {
@@ -323,10 +349,16 @@ export default function SchedulePage() {
       technicianId: 0,
       status: "scheduled",
       scheduledDate: "",
+      scheduledTime: "",
       estimatedValue: undefined,
       finalValue: undefined,
       notes: "",
-      serviceTypeId: 0,
+      serviceTypeId: undefined,
+      valorPago: "0",
+      pixPago: "0.00",
+      dinheiroPago: "0.00",
+      chequePago: "0.00",
+      cartaoPago: "0.00",
     },
   });
 
