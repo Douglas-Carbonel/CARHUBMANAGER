@@ -2314,42 +2314,138 @@ export default function SchedulePage() {
                        const paymentStatus = getPaymentStatus(service.valorPago || "0", totalValue);
 
                       return (
-                      <Card key={service.id} className="bg-white/90 backdrop-blur-sm border border-teal-200 hover:shadow-lg transition-all duration-300 hover:border-emerald-300">
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg font-bold text-teal-800 mb-1">
-                          {service.serviceItems && service.serviceItems.length > 0 
-                            ? service.serviceItems.length === 1 
-                              ? service.serviceItems[0].serviceTypeName || 'Serviço'
-                              : `${service.serviceItems.length} serviços`
-                            : 'Serviço'}
-                        </CardTitle>
-                        <div className="flex items-center text-sm text-gray-600 mb-2">
-                          <User className="h-4 w-4 mr-1" />
-                          {service.customer?.name || 'Cliente não encontrado'}
+                      <Card key={service.id} className="bg-white/95 backdrop-blur-sm border-0 shadow-md hover:shadow-xl transition-all duration-300 rounded-xl overflow-hidden">
+                  {/* Header com horário e status */}
+                  <div className="bg-gradient-to-r from-teal-500 to-emerald-500 text-white p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2">
+                          <Clock className="h-5 w-5 text-white" />
                         </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Car className="h-4 w-4 mr-1" />
-                          {service.vehicle?.licensePlate || 'Placa não informada'} - {service.vehicle?.brand} {service.vehicle?.model}
+                        <div>
+                          <div className="text-lg font-bold">
+                            {service.scheduledTime ? service.scheduledTime.slice(0, 5) : '--:--'}
+                          </div>
+                          <div className="text-xs opacity-90">
+                            {service.scheduledDate && new Date(service.scheduledDate + 'T00:00:00').toLocaleDateString('pt-BR', {
+                              weekday: 'short',
+                              day: '2-digit',
+                              month: '2-digit',
+                              timeZone: 'America/Sao_Paulo'
+                            })}
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <div className="relative">
-                          <Coins className={`h-5 w-5 ${paymentStatus.color} cursor-pointer`} title={paymentStatus.label} />
-                        </div>
-                        <Badge className={`${getStatusBadge(service.status || 'scheduled')} font-medium`}>
+                        <Badge className={cn(
+                          "text-xs font-medium border-0 shadow-sm",
+                          service.status === 'scheduled' && 'bg-blue-500 text-white',
+                          service.status === 'in_progress' && 'bg-orange-500 text-white',
+                          service.status === 'completed' && 'bg-green-600 text-white',
+                          service.status === 'cancelled' && 'bg-red-500 text-white'
+                        )}>
                           {service.status === 'scheduled' && 'Agendado'}
                           {service.status === 'in_progress' && 'Em Andamento'}
                           {service.status === 'completed' && 'Concluído'}
                           {service.status === 'cancelled' && 'Cancelado'}
                         </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  <CardContent className="p-4">
+                    {/* Cliente e Veículo */}
+                    <div className="space-y-3 mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
+                          <User className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-semibold text-gray-800 truncate">
+                            {service.customer?.name || 'Cliente não encontrado'}
+                          </div>
+                          <div className="text-sm text-gray-500">Cliente</div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg flex items-center justify-center">
+                          <Car className="h-5 w-5 text-purple-600" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-semibold text-gray-800">
+                            {service.vehicle?.licensePlate || 'Placa não informada'}
+                          </div>
+                          <div className="text-sm text-gray-500 truncate">
+                            {service.vehicle?.brand} {service.vehicle?.model}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Serviços */}
+                    <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Wrench className="h-4 w-4 text-gray-600" />
+                        <span className="text-sm font-medium text-gray-700">Serviços</span>
+                      </div>
+                      <div className="text-sm text-gray-800">
+                        {service.serviceItems && service.serviceItems.length > 0 
+                          ? service.serviceItems.length === 1 
+                            ? service.serviceItems[0].serviceTypeName || 'Serviço não especificado'
+                            : `${service.serviceItems.length} serviços agendados`
+                          : 'Serviços não especificados'}
+                      </div>
+                    </div>
+
+                    {/* Valor e Status do Pagamento */}
+                    {service.estimatedValue && (
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 mb-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            <DollarSign className="h-4 w-4 text-emerald-600" />
+                            <span className="text-sm font-medium text-emerald-700">Valor Total</span>
+                          </div>
+                          <span className="text-lg font-bold text-emerald-700">
+                            R$ {Number(service.estimatedValue).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-emerald-600">
+                            Pago: R$ {Number(service.valorPago || 0).toFixed(2)}
+                          </span>
+                          <div className={`px-2 py-1 rounded-full flex items-center space-x-1 ${paymentStatus.bgColor} border ${paymentStatus.borderColor}`}>
+                            <div className={`w-1.5 h-1.5 rounded-full ${paymentStatus.dotColor}`}></div>
+                            <span className={`text-xs font-medium ${paymentStatus.color}`}>
+                              {paymentStatus.label}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Observações */}
+                    {service.notes && (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                        <div className="flex items-start space-x-2">
+                          <FileText className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <div className="text-xs font-medium text-yellow-700 mb-1">Observações</div>
+                            <div className="text-sm text-yellow-800 line-clamp-2">{service.notes}</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Ações */}
+                    <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                      <div className="flex items-center space-x-1">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => setLocation(`/service-photos?serviceId=${service.id}`)}
                           className="h-8 w-8 p-0 hover:bg-teal-100 text-teal-600"
-                          title="Ver fotos do serviço"
+                          title="Ver fotos"
                         >
                           <Camera className="h-4 w-4" />
                         </Button>
@@ -2357,7 +2453,8 @@ export default function SchedulePage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleEdit(service)}
-                          className="h-8 w-8 p-0 hover:bg-teal-100"
+                          className="h-8 w-8 p-0 hover:bg-blue-100 text-blue-600"
+                          title="Editar agendamento"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -2366,59 +2463,22 @@ export default function SchedulePage() {
                           size="sm"
                           onClick={() => handleDelete(service.id)}
                           className="h-8 w-8 p-0 hover:bg-red-100 text-red-600"
+                          title="Excluir agendamento"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-4">
-                    <div className="space-y-3">
-                      {service.scheduledDate && (
-                        <div className="flex items-center text-sm text-gray-600 mb-2">
-                          <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                          <span className="font-medium">
-                            {service.scheduledDate && new Date(service.scheduledDate + 'T00:00:00').toLocaleDateString('pt-BR', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                              timeZone: 'America/Sao_Paulo'
-                            })}
-                            {service.scheduledTime && ` às ${service.scheduledTime.slice(0, 5)}`}
-                          </span>
-                        </div>
-                      )}
-                      {service.estimatedValue && (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between text-sm">
-                            <div className="flex items-center font-semibold text-emerald-600">
-                              <DollarSign className="h-4 w-4 mr-2" />
-                              R$ {Number(service.estimatedValue).toFixed(2)}
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <span className="text-xs text-gray-500">Pago:</span>
-                              <span className="text-xs font-semibold text-emerald-600">
-                                R$ {Number(service.valorPago || 0).toFixed(2)}
-                              </span>
-                            </div>
-                          </div>
-                          {/* Payment Status Badge */}
-                          <div className="flex justify-end">
-                            <div className={`px-3 py-1 rounded-full flex items-center space-x-1 border-2 ${paymentStatus.bgColor} ${paymentStatus.borderColor}`}>
-                              <div className={`w-2 h-2 rounded-full ${paymentStatus.dotColor}`}></div>
-                              <span className={`text-xs font-bold ${paymentStatus.color}`}>
-                                {paymentStatus.label}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      {service.notes && (
-                        <div className="flex items-start text-sm text-gray-600 mt-2">
-                          <FileText className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                          <span className="line-clamp-2">{service.notes}</span>
-                        </div>
-                      )}
+                      
+                      {/* Indicador de técnico responsável */}
+                      <div className="flex items-center space-x-2 text-xs text-gray-500">
+                        <User className="h-3 w-3" />
+                        <span className="truncate max-w-20">
+                          {(() => {
+                            const technician = users.find(u => u.id === service.technicianId);
+                            return technician ? technician.firstName : 'N/A';
+                          })()}
+                        </span>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
