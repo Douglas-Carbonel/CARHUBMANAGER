@@ -807,16 +807,17 @@ export default function SchedulePage() {
 
   // Filter services
   const getDateRange = (period: string) => {
-    const today = new Date();
-    const brazilTime = new Date(today.getTime() - (3 * 60 * 60 * 1000));
-    const currentDate = brazilTime.toISOString().split('T')[0];
+    // Get current date in Brazilian timezone (UTC-3)
+    const now = new Date();
+    const brazilianDate = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const currentDate = brazilianDate.toISOString().split('T')[0];
 
     switch (period) {
       case "day":
         return { start: currentDate, end: currentDate };
       case "week":
-        const startOfWeek = new Date(brazilTime);
-        startOfWeek.setDate(brazilTime.getDate() - brazilTime.getDay());
+        const startOfWeek = new Date(brazilianDate);
+        startOfWeek.setDate(brazilianDate.getDate() - brazilianDate.getDay());
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6);
         return {
@@ -824,8 +825,8 @@ export default function SchedulePage() {
           end: endOfWeek.toISOString().split('T')[0]
         };
       case "month":
-        const startOfMonth = new Date(brazilTime.getFullYear(), brazilTime.getMonth(), 1);
-        const endOfMonth = new Date(brazilTime.getFullYear(), brazilTime.getMonth() + 1, 0);
+        const startOfMonth = new Date(brazilianDate.getFullYear(), brazilianDate.getMonth(), 1);
+        const endOfMonth = new Date(brazilianDate.getFullYear(), brazilianDate.getMonth() + 1, 0);
         return {
           start: startOfMonth.toISOString().split('T')[0],
           end: endOfMonth.toISOString().split('T')[0]
