@@ -699,7 +699,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteService(id: number): Promise<void> {
-    await db.delete(services).where(eq(services.id, id));
+    try {
+      console.log(`Storage: Attempting to delete service with ID: ${id}`);
+      
+      // First, delete related service_items to avoid foreign key constraints
+      const deletedItems = await db.delete(serviceItems).where(eq(serviceItems.serviceId, id));
+      console.log(`Storage: Deleted service items for service ${id}:`, deletedItems);
+      
+      // Then delete the service
+      const deletedService = await db.delete(services).where(eq(services.id, id));
+      console.log(`Storage: Deleted service ${id}:`, deletedService);
+      
+      console.log(`Storage: Successfully deleted service with ID: ${id}`);
+    } catch (error) {
+      console.error(`Storage: Error deleting service ${id}:`, error);
+      throw error;
+    }
   }
 
   // Service type operations

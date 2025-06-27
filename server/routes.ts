@@ -570,10 +570,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/services/:id", requireAuth, async (req, res) => {
     try {
-      await storage.deleteService(parseInt(req.params.id));
+      const serviceId = parseInt(req.params.id);
+      console.log(`API: Attempting to delete service with ID: ${serviceId}`);
+      
+      await storage.deleteService(serviceId);
+      console.log(`API: Successfully deleted service ${serviceId}`);
+      
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete service" });
+      console.error(`API: Error deleting service ${req.params.id}:`, error);
+      res.status(500).json({ 
+        message: "Failed to delete service",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
