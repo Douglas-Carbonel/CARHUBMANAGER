@@ -291,7 +291,7 @@ function CalendarView({ services, isLoading, onEdit, onDelete, isMobile, onDayCl
 }
 
 export default function SchedulePage() {
-  const { toast } } from useToast();
+  const { toast } = useToast();
   const [location, setLocation] = useLocation();
   const isMobile = useIsMobile();
 
