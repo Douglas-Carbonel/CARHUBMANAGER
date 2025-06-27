@@ -112,6 +112,7 @@ export default function SchedulePage() {
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
   const [isMobile, setIsMobile] = useState(false);
+  const [forceRender, setForceRender] = useState(0);
 
   // Force re-check mobile state on component mount and location change
   useEffect(() => {
@@ -120,25 +121,69 @@ export default function SchedulePage() {
       setIsMobile(mobile);
     };
 
-    // Initial check with a small delay to ensure DOM is ready
-    const timeoutId = setTimeout(checkMobile, 50);
+    // Force immediate check
     checkMobile();
+    
+    // Add multiple checks to ensure state is correct
+    const timeouts = [
+      setTimeout(checkMobile, 10),
+      setTimeout(checkMobile, 100),
+      setTimeout(checkMobile, 300),
+    ];
     
     window.addEventListener('resize', checkMobile);
     
     return () => {
-      clearTimeout(timeoutId);
+      timeouts.forEach(clearTimeout);
       window.removeEventListener('resize', checkMobile);
     };
   }, [location]);
 
-  // Additional effect to ensure mobile state is correct on every render
+  // Key effect: Force layout recalculation when component becomes visible
   useEffect(() => {
-    const mobile = window.innerWidth < 768;
-    if (isMobile !== mobile) {
+    const forceLayoutRecalc = () => {
+      // Force browser to recalculate layout
+      document.body.offsetHeight;
+      const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
+    };
+
+    // Run when page becomes visible (after navigation)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        forceLayoutRecalc();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Also run on focus (when user returns to tab)
+    window.addEventListener('focus', forceLayoutRecalc);
+    
+    // Run immediately for navigation scenarios
+    const immediateTimeout = setTimeout(forceLayoutRecalc, 0);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', forceLayoutRecalc);
+      clearTimeout(immediateTimeout);
+    };
+  }, []);
+
+  // Force re-render when location changes to schedule page
+  useEffect(() => {
+    if (location === '/schedule') {
+      setForceRender(prev => prev + 1);
+      
+      // Additional timeout to ensure layout is recalculated
+      const timeout = setTimeout(() => {
+        const mobile = window.innerWidth < 768;
+        setIsMobile(mobile);
+      }, 100);
+      
+      return () => clearTimeout(timeout);
     }
-  });
+  }, [location]);
 
   // Get filters from URL params
   const urlParams = new URLSearchParams(window.location.search);
@@ -854,7 +899,10 @@ export default function SchedulePage() {
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-emerald-50">
+    <div 
+      key={`schedule-${isMobile ? 'mobile' : 'desktop'}-${forceRender}`}
+      className="flex h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-emerald-50"
+    >
       <Sidebar />
 
       <div className="flex-1 flex flex-col">
