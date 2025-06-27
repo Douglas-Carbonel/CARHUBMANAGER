@@ -55,7 +55,6 @@ interface PaymentManagerProps {
   chequePago?: number;
   cartaoPago?: number;
   onPaymentChange: (pixPago: number, dinheiroPago: number, chequePago: number, cartaoPago: number) => void;
-  disabled?: boolean;
 }
 
 export default function PaymentManager({ 
@@ -65,8 +64,7 @@ export default function PaymentManager({
   dinheiroPago = 0, 
   chequePago = 0,
   cartaoPago = 0,
-  onPaymentChange,
-  disabled = false
+  onPaymentChange 
 }: PaymentManagerProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [payments, setPayments] = useState<PaymentMethod[]>([
@@ -238,10 +236,9 @@ export default function PaymentManager({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={disabled ? undefined : () => setIsModalOpen(true)}
-            disabled={disabled}
-            className={`h-10 w-10 p-0 rounded-full ${status.iconColor} ${disabled ? 'cursor-not-allowed opacity-60' : 'hover:bg-slate-100'} transition-all duration-200`}
-            title={disabled ? "Visualização de Pagamento" : "Gerenciar Pagamentos"}
+            onClick={() => setIsModalOpen(true)}
+            className={`h-10 w-10 p-0 rounded-full ${status.iconColor} hover:bg-slate-100 transition-all duration-200`}
+            title="Gerenciar Pagamentos"
           >
             <DollarSign className="h-6 w-6" />
           </Button>
