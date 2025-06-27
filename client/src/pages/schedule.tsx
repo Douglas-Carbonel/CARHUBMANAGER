@@ -2548,10 +2548,37 @@ export default function SchedulePage() {
                         </span>
                       </div>
                       <div className={cn(
-                        "text-gray-800",
+                        "text-gray-800 space-y-1",
                         isMobile ? "text-xs" : "text-sm"
                       )}>
-                        Serviços não especificados
+                        {(() => {
+                          // Check if service has items from the new architecture
+                          if ((service as any).serviceItems && (service as any).serviceItems.length > 0) {
+                            return (service as any).serviceItems.map((item: any, index: number) => (
+                              <div key={index} className="flex justify-between items-center">
+                                <span>{item.serviceType?.name || item.serviceTypeName || 'Serviço'}</span>
+                                <span className="text-gray-600">
+                                  {item.quantity > 1 ? `${item.quantity}x ` : ''}
+                                  R$ {Number(item.unitPrice || 0).toFixed(2)}
+                                </span>
+                              </div>
+                            ));
+                          }
+                          
+                          // Fallback for legacy services with serviceType
+                          if (service.serviceType?.name) {
+                            return (
+                              <div className="flex justify-between items-center">
+                                <span>{service.serviceType.name}</span>
+                                <span className="text-gray-600">
+                                  R$ {Number(service.serviceType.defaultPrice || 0).toFixed(2)}
+                                </span>
+                              </div>
+                            );
+                          }
+                          
+                          return "Serviços não especificados";
+                        })()}
                       </div>
                     </div>
 
@@ -2651,11 +2678,11 @@ export default function SchedulePage() {
                     {/* Ações - Mobile Responsivo */}
                     <div className={cn(
                       "flex justify-between items-center border-t border-gray-200",
-                      isMobile ? "pt-1.5" : "pt-2"
+                      isMobile ? "pt-2.5" : "pt-3"
                     )}>
                       <div className={cn(
                         "flex items-center",
-                        isMobile ? "space-x-0.5" : "space-x-1"
+                        isMobile ? "space-x-2" : "space-x-3"
                       )}>
                         <Button
                           variant="ghost"
@@ -2665,13 +2692,13 @@ export default function SchedulePage() {
                             setLocation(`/service-photos?serviceId=${service.id}`);
                           }}
                           className={cn(
-                            "p-0 hover:bg-teal-100 text-teal-600",
-                            isMobile ? "h-6 w-6" : "h-8 w-8"
+                            "hover:bg-teal-100 text-teal-600 rounded-lg transition-all duration-200",
+                            isMobile ? "h-9 w-9 p-0" : "h-10 w-10 p-0"
                           )}
                           title="Ver fotos"
                         >
                           <Camera className={cn(
-                            isMobile ? "h-3 w-3" : "h-4 w-4"
+                            isMobile ? "h-4 w-4" : "h-5 w-5"
                           )} />
                         </Button>
                         <Button
@@ -2682,13 +2709,13 @@ export default function SchedulePage() {
                             handleEdit(service);
                           }}
                           className={cn(
-                            "p-0 hover:bg-blue-100 text-blue-600",
-                            isMobile ? "h-6 w-6" : "h-8 w-8"
+                            "hover:bg-blue-100 text-blue-600 rounded-lg transition-all duration-200",
+                            isMobile ? "h-9 w-9 p-0" : "h-10 w-10 p-0"
                           )}
                           title="Editar agendamento"
                         >
                           <Edit className={cn(
-                            isMobile ? "h-3 w-3" : "h-4 w-4"
+                            isMobile ? "h-4 w-4" : "h-5 w-5"
                           )} />
                         </Button>
                         <Button
@@ -2699,21 +2726,29 @@ export default function SchedulePage() {
                             handleDelete(service.id);
                           }}
                           className={cn(
-                            "p-0 hover:bg-red-100 text-red-600",
-                            isMobile ? "h-6 w-6" : "h-8 w-8"
+                            "hover:bg-red-100 text-red-600 rounded-lg transition-all duration-200",
+                            isMobile ? "h-9 w-9 p-0" : "h-10 w-10 p-0"
                           )}
                           title="Excluir agendamento"
                         >
                           <Trash2 className={cn(
-                            isMobile ? "h-3 w-3" : "h-4 w-4"
+                            isMobile ? "h-4 w-4" : "h-5 w-5"
                           )} />
                         </Button>
                       </div>
                       
                       {/* Indicador de técnico responsável */}
-                      <div className="flex items-center space-x-2 text-xs text-gray-500">
-                        <User className="h-3 w-3" />
-                        <span className="truncate max-w-20">
+                      <div className={cn(
+                        "flex items-center text-gray-500",
+                        isMobile ? "space-x-1 text-xs" : "space-x-2 text-sm"
+                      )}>
+                        <User className={cn(
+                          isMobile ? "h-3 w-3" : "h-4 w-4"
+                        )} />
+                        <span className={cn(
+                          "truncate",
+                          isMobile ? "max-w-16" : "max-w-24"
+                        )}>
                           {(() => {
                             const technician = users.find(u => u.id === service.technicianId);
                             return technician ? technician.firstName : 'N/A';
