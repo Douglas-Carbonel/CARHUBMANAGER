@@ -34,6 +34,12 @@ export async function apiRequest(method: string, url: string, data?: any) {
     throw new Error(error);
   }
 
+  // Handle 204 No Content responses
+  if (response.status === 204) {
+    console.log('apiRequest result for', method, url, ': 204 No Content');
+    return response;
+  }
+
   const result = await response.json();
   console.log('apiRequest result for', method, url, ':', result);
   return result;

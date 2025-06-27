@@ -444,14 +444,8 @@ export default function Services() {
     mutationFn: async (id: number) => {
       console.log(`Frontend: Attempting to delete service ${id}`);
       const response = await apiRequest("DELETE", `/api/services/${id}`);
-      console.log(`Frontend: Delete response status:`, response.status);
-      
-      if (response.status === 204 || response.ok) {
-        console.log(`Frontend: Service ${id} deleted successfully`);
-        return { success: true };
-      }
-      
-      throw new Error(`Failed to delete service: ${response.status} ${response.statusText}`);
+      console.log(`Frontend: Delete successful for service ${id}`);
+      return response;
     },
     onSuccess: () => {
       console.log("Frontend: Delete mutation success callback");
