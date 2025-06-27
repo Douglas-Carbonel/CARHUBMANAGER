@@ -2104,20 +2104,14 @@ export default function Services() {
                         </div>
                         <div>
                           <div className="text-lg font-bold">
+                            OS #{String(service.id).padStart(6, '0')}
+                          </div>
+                          <div className="text-xs opacity-90">
                             {service.serviceItems && service.serviceItems.length > 0 
                               ? service.serviceItems.length === 1 
                                 ? service.serviceItems[0].serviceTypeName || 'Serviço'
                                 : `${service.serviceItems.length} serviços`
-                              : 'Serviço'}
-                          </div>
-                          <div className="text-xs opacity-90">
-                            {service.scheduledDate && new Date(service.scheduledDate + 'T00:00:00').toLocaleDateString('pt-BR', {
-                              weekday: 'short',
-                              day: '2-digit',
-                              month: '2-digit',
-                              timeZone: 'America/Sao_Paulo'
-                            })}
-                            {service.scheduledTime && ` às ${service.scheduledTime.slice(0, 5)}`}
+                              : 'Ordem de Serviço'}
                           </div>
                         </div>
                       </div>
@@ -2139,6 +2133,31 @@ export default function Services() {
                   </div>
 
                   <CardContent className="p-4">
+                    {/* Informações de Agendamento */}
+                    {(service.scheduledDate || service.scheduledTime) && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
+                            <Calendar className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-semibold text-blue-800">
+                              {service.scheduledDate && new Date(service.scheduledDate + 'T00:00:00').toLocaleDateString('pt-BR', {
+                                weekday: 'long',
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                timeZone: 'America/Sao_Paulo'
+                              })}
+                            </div>
+                            <div className="text-sm text-blue-600">
+                              {service.scheduledTime ? `${service.scheduledTime.slice(0, 5)}h` : 'Horário não definido'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Cliente e Veículo */}
                     <div className="space-y-3 mb-4">
                       <div className="flex items-center space-x-3">
