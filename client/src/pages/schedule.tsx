@@ -1635,7 +1635,7 @@ export default function SchedulePage() {
                               pix: "",
                               dinheiro: "",
                               cheque: "",
-                              cartao""
+                              cartao: ""
                             });
                           }
                         }}
