@@ -1663,11 +1663,24 @@ export default function Services() {
                         <span className="font-medium text-purple-800">Serviços Inclusos</span>
                       </div>
                       <div className="space-y-2">
-                        {serviceExtras.map((extra, index) => (
-                          <div key={index} className="flex justify-between items-center text-sm">
-                            <span className="text-purple-700">{extra.serviceExtra?.descricao || `Serviço ${index + 1}`}</span>
-                            <span className="font-medium text-purple-800">R$ {Number(extra.valor || 0).toFixed(2)}</span>                          </div>
-                        ))}
+                        {serviceExtras.map((extra, index) => {
+                          // Buscar o nome do tipo de serviço no array serviceTypes
+                          const serviceType = serviceTypes.find(st => st.id === extra.serviceTypeId);
+                          const serviceName = serviceType?.name || `Serviço ${index + 1}`;
+                          const servicePrice = extra.totalPrice || extra.unitPrice || "0.00";
+
+                          return (
+                            <div key={extra.tempId || index} className="flex justify-between items-center text-sm">
+                              <div className="flex-1">
+                                <span className="text-purple-700 font-medium">{serviceName}</span>
+                                {extra.notes && (
+                                  <div className="text-xs text-purple-600 mt-1">{extra.notes}</div>
+                                )}
+                              </div>
+                              <span className="font-medium text-purple-800">R$ {Number(servicePrice).toFixed(2)}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -1679,16 +1692,27 @@ export default function Services() {
                       <span className="font-medium text-emerald-800">Resumo Financeiro</span>
                     </div>
                     <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-emerald-700">Valor do Serviço:</span>
-                        <span className="font-medium">R$ {getServiceTypePrice()}</span>
-                      </div>
+                      {/* Detalhamento dos serviços */}
                       {serviceExtras.length > 0 && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-emerald-700">Adicionais:</span>
-                          <span className="font-medium">R$ {calculateExtrasTotal()}</span>
+                        <div className="bg-white border border-emerald-200 rounded-lg p-3 mb-3">
+                          <div className="text-sm font-medium text-emerald-800 mb-2">Serviços:</div>
+                          <div className="space-y-1">
+                            {serviceExtras.map((extra, index) => {
+                              const serviceType = serviceTypes.find(st => st.id === extra.serviceTypeId);
+                              const serviceName = serviceType?.name || `Serviço ${index + 1}`;
+                              const servicePrice = extra.totalPrice || extra.unitPrice || "0.00";
+
+                              return (
+                                <div key={extra.tempId || index} className="flex justify-between items-center text-xs">
+                                  <span className="text-emerald-700">{serviceName}:</span>
+                                  <span className="font-medium text-emerald-800">R$ {Number(servicePrice).toFixed(2)}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       )}
+
                       <div className="border-t border-emerald-300 pt-2">
                         <div className="flex justify-between items-center">
                           <span className="text-lg font-bold text-emerald-800">Total do Serviço:</span>
