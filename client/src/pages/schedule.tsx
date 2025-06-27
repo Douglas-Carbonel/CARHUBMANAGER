@@ -2290,7 +2290,7 @@ export default function SchedulePage() {
                       <Calendar className="h-5 w-5 text-teal-600" />
                       <h3 className="text-lg font-bold text-teal-800">
                         {date === 'sem-data' ? 'Sem data agendada' : 
-                         new Date(date).toLocaleDateString('pt-BR', {
+                         new Date(date + 'T00:00:00').toLocaleDateString('pt-BR', {
                            weekday: 'long',
                            day: '2-digit',
                            month: 'long',
@@ -2374,7 +2374,7 @@ export default function SchedulePage() {
                         </div>
                         <div className="flex-1">
                           <div className="font-semibold text-gray-800">
-                            {service.vehicle?.licensePlate || 'Placa não informada'}
+                            {service.vehicle?.licensePlate || service.vehicle?.license_plate || 'Placa não informada'}
                           </div>
                           <div className="text-sm text-gray-500 truncate">
                             {service.vehicle?.brand} {service.vehicle?.model}
