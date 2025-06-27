@@ -404,7 +404,7 @@ export default function SchedulePage() {
     // Load additional data in parallel after modal is open
     try {
       const [photosResponse, serviceResponse] = await Promise.all([
-        fetch(`/api/photos?entityType=service&entityId=${service.id}`, {
+        fetch(`/api/photos?serviceId=${service.id}`, {
           credentials: 'include'
         }),
         fetch(`/api/services/${service.id}`, {
