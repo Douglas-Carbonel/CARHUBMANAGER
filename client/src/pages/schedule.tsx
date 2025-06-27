@@ -2565,13 +2565,15 @@ export default function SchedulePage() {
                             ));
                           }
                           
-                          // Fallback for legacy services with serviceType
-                          if (service.serviceType?.name) {
+                          // Fallback for legacy services with serviceType or serviceTypeName
+                          if (service.serviceType?.name || (service as any).serviceTypeName) {
+                            const serviceName = service.serviceType?.name || (service as any).serviceTypeName;
+                            const servicePrice = service.serviceType?.defaultPrice || (service as any).estimatedValue || 0;
                             return (
                               <div className="flex justify-between items-center">
-                                <span>{service.serviceType.name}</span>
+                                <span>{serviceName}</span>
                                 <span className="text-gray-600">
-                                  R$ {Number(service.serviceType.defaultPrice || 0).toFixed(2)}
+                                  R$ {Number(servicePrice).toFixed(2)}
                                 </span>
                               </div>
                             );
@@ -2675,14 +2677,14 @@ export default function SchedulePage() {
                       </div>
                     )}
 
-                    {/* Ações - Mobile Responsivo */}
+                    {/* Ações - Mobile Responsivo com botões maiores */}
                     <div className={cn(
                       "flex justify-between items-center border-t border-gray-200",
-                      isMobile ? "pt-2.5" : "pt-3"
+                      isMobile ? "pt-3" : "pt-3"
                     )}>
                       <div className={cn(
-                        "flex items-center",
-                        isMobile ? "space-x-2" : "space-x-3"
+                        "flex items-center justify-start flex-1",
+                        isMobile ? "space-x-4" : "space-x-3"
                       )}>
                         <Button
                           variant="ghost"
@@ -2693,12 +2695,12 @@ export default function SchedulePage() {
                           }}
                           className={cn(
                             "hover:bg-teal-100 text-teal-600 rounded-lg transition-all duration-200",
-                            isMobile ? "h-9 w-9 p-0" : "h-10 w-10 p-0"
+                            isMobile ? "h-11 w-11 p-0" : "h-10 w-10 p-0"
                           )}
                           title="Ver fotos"
                         >
                           <Camera className={cn(
-                            isMobile ? "h-4 w-4" : "h-5 w-5"
+                            isMobile ? "h-5 w-5" : "h-5 w-5"
                           )} />
                         </Button>
                         <Button
@@ -2710,12 +2712,12 @@ export default function SchedulePage() {
                           }}
                           className={cn(
                             "hover:bg-blue-100 text-blue-600 rounded-lg transition-all duration-200",
-                            isMobile ? "h-9 w-9 p-0" : "h-10 w-10 p-0"
+                            isMobile ? "h-11 w-11 p-0" : "h-10 w-10 p-0"
                           )}
                           title="Editar agendamento"
                         >
                           <Edit className={cn(
-                            isMobile ? "h-4 w-4" : "h-5 w-5"
+                            isMobile ? "h-5 w-5" : "h-5 w-5"
                           )} />
                         </Button>
                         <Button
@@ -2727,12 +2729,12 @@ export default function SchedulePage() {
                           }}
                           className={cn(
                             "hover:bg-red-100 text-red-600 rounded-lg transition-all duration-200",
-                            isMobile ? "h-9 w-9 p-0" : "h-10 w-10 p-0"
+                            isMobile ? "h-11 w-11 p-0" : "h-10 w-10 p-0"
                           )}
                           title="Excluir agendamento"
                         >
                           <Trash2 className={cn(
-                            isMobile ? "h-4 w-4" : "h-5 w-5"
+                            isMobile ? "h-5 w-5" : "h-5 w-5"
                           )} />
                         </Button>
                       </div>

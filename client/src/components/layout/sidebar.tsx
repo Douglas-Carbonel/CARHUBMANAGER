@@ -79,13 +79,22 @@ export default function Sidebar() {
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      // Close mobile menu when switching to desktop
+      if (!mobile) {
+        setIsMobileOpen(false);
+      }
     };
 
     checkMobile();
     window.addEventListener('resize', checkMobile);
+    
+    // Also check on location change to ensure mobile state is correct
+    checkMobile();
+    
     return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  }, [location]);
 
   const handleLogout = () => {
     logoutMutation.mutate();
