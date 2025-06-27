@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
@@ -63,6 +64,20 @@ const translateStatus = (status: string): string => {
   };
 
   return statusTranslations[status] || status;
+};
+
+const parseCurrency = (formattedValue: string): string => {
+  if (!formattedValue) return '0.00';
+
+  // Remove tudo que não for número
+  const numericValue = formattedValue.replace(/[^\d]/g, '');
+
+  if (!numericValue) return '0.00';
+
+  // Converte para formato decimal americano
+  const numberValue = parseInt(numericValue) / 100;
+
+  return numberValue.toFixed(2);
 };
 
 // Service form schema
@@ -476,8 +491,28 @@ export default function SchedulePage() {
       console.log('Creating service with data:', data);
       console.log('Service items for creation:', serviceItems);
 
+      // Calculate total value from service items
+      const totalValue = calculateTotalValue();
+
+      // Calculate total from payment methods
+      const totalFromPaymentMethods = (
+        Number(paymentMethods.pix || 0) +
+        Number(paymentMethods.dinheiro || 0) +
+        Number(paymentMethods.cheque || 0) +
+        Number(paymentMethods.cartao || 0)
+      ).toFixed(2);
+
       const payload = {
         ...data,
+        estimatedValue: String(totalValue),
+        finalValue: String(totalValue),
+        valorPago: totalFromPaymentMethods,
+        pixPago: paymentMethods.pix || "0.00",
+        dinheiroPago: paymentMethods.dinheiro || "0.00",
+        chequePago: paymentMethods.cheque || "0.00",
+        cartaoPago: paymentMethods.cartao || "0.00",
+        reminderEnabled: data.reminderEnabled || false,
+        reminderMinutes: data.reminderMinutes || 30,
         serviceItems: serviceItems || [],
         // Remove serviceExtras from the payload as we're using serviceItems
         serviceExtras: undefined,
@@ -541,8 +576,28 @@ export default function SchedulePage() {
       console.log('Updating service with data:', data);
       console.log('Service items for update:', serviceItems);
 
+      // Calculate total value from service items
+      const totalValue = calculateTotalValue();
+
+      // Calculate total from payment methods
+      const totalFromPaymentMethods = (
+        Number(paymentMethods.pix || 0) +
+        Number(paymentMethods.dinheiro || 0) +
+        Number(paymentMethods.cheque || 0) +
+        Number(paymentMethods.cartao || 0)
+      ).toFixed(2);
+
       const payload = {
         ...data,
+        estimatedValue: String(totalValue),
+        finalValue: String(totalValue),
+        valorPago: totalFromPaymentMethods,
+        pixPago: paymentMethods.pix || "0.00",
+        dinheiroPago: paymentMethods.dinheiro || "0.00",
+        chequePago: paymentMethods.cheque || "0.00",
+        cartaoPago: paymentMethods.cartao || "0.00",
+        reminderEnabled: data.reminderEnabled || false,
+        reminderMinutes: data.reminderMinutes || 30,
         serviceItems: serviceItems || [],
         // Remove serviceExtras from the payload as we're using serviceItems
         serviceExtras: undefined,
@@ -626,12 +681,26 @@ export default function SchedulePage() {
     },
   });
 
+  // Calculate total value from services
+  const calculateTotalValue = () => {
+    let total = 0;
 
+    // Add all selected services values
+    serviceItems.forEach(item => {
+      if (item.totalPrice && !isNaN(Number(item.totalPrice))) {
+        total += Number(item.totalPrice);
+      } else if (item.unitPrice && !isNaN(Number(item.unitPrice))) {
+        total += Number(item.unitPrice);
+      }
+    });
+
+    return total.toFixed(2);
+  };
 
   // Form submission
   const onSubmit = (data: z.infer<typeof serviceFormSchema>) => {
     console.log('Form submitted with data:', data);
-    console.log('Current service extras:', serviceExtras);
+    console.log('Current service items:', serviceItems);
     
     if (editingService) {
       updateMutation.mutate({ id: editingService.id, data });
@@ -1167,7 +1236,7 @@ export default function SchedulePage() {
           </DialogContent>
         </Dialog>
 
-        {/* Service Form Dialog */}
+        {/* Service Form Dialog - IGUAL AO DA PÁGINA DE SERVIÇOS */}
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           if (!open && hasUnsavedChanges) {
             unsavedChanges.triggerConfirmation(() => {
@@ -1186,7 +1255,7 @@ export default function SchedulePage() {
           <DialogContent className={cn("max-h-[90vh] overflow-y-auto bg-gradient-to-br from-slate-50 to-blue-50/30", isMobile ? "max-w-[95vw] w-[95vw] h-[90vh] m-2 p-4" : "max-w-4xl")}>
             <DialogHeader className={cn(isMobile ? "pb-4" : "pb-6")}>
               <DialogTitle className={cn("font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent", isMobile ? "text-lg" : "text-2xl")}>
-                {editingService ? (isMobile ? "Editar" : "Editar Agendamento") : (isMobile ? "Novo" : "Novo Agendamento")}
+                {editingService ? (isMobile ? "Editar Agendamento" : "Editar Agendamento") : (isMobile ? "Novo Agendamento" : "Novo Agendamento")}
               </DialogTitle>
             </DialogHeader>
 
