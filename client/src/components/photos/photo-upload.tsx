@@ -103,7 +103,7 @@ export default function PhotoUpload({
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    if (photos.length + files.length > maxPhotos) {
+    if ((photos?.length || 0) + files.length > maxPhotos) {
       toast({
         title: "Limite de fotos excedido",
         description: `Máximo de ${maxPhotos} fotos permitidas.`,
@@ -259,7 +259,7 @@ export default function PhotoUpload({
             variant="outline"
             size="sm"
             onClick={() => document.getElementById('photo-upload-input')?.click()}
-            disabled={uploading || photos.length >= maxPhotos}
+            disabled={uploading || (photos?.length || 0) >= maxPhotos}
             className="flex items-center gap-2"
           >
             <Upload className="h-4 w-4" />
@@ -276,7 +276,7 @@ export default function PhotoUpload({
         </div>
       )}
 
-      {photos.length === 0 ? (
+      {(photos?.length || 0) === 0 ? (
         <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center">
           <Camera className="h-8 w-8 text-gray-400 mx-auto mb-2" />
           <p className="text-sm text-gray-500">

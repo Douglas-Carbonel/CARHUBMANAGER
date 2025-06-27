@@ -258,7 +258,7 @@ export default function PaymentManager({
             <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
               <div className="flex justify-between items-center text-sm">
                 <span className="font-medium text-emerald-700">Valor Total:</span>
-                <span className="font-bold text-emerald-800">R$ {totalValue.toFixed(2)}</span>
+                <span className="font-bold text-emerald-800">R$ {(totalValue || 0).toFixed(2)}</span>
               </div>
             </div>
 
@@ -298,7 +298,7 @@ export default function PaymentManager({
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-blue-700">Total dos Pagamentos:</span>
                 <span className="text-lg font-bold text-blue-800">
-                  R$ {calculateTotal().toFixed(2)}
+                  R$ {(calculateTotal() || 0).toFixed(2)}
                 </span>
               </div>
             </div>
