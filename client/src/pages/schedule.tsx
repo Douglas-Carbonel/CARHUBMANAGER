@@ -138,6 +138,8 @@ export default function SchedulePage() {
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDayAppointmentsModalOpen, setIsDayAppointmentsModalOpen] = useState(false);
+  const [selectedDayServices, setSelectedDayServices] = useState<any[]>([]);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
@@ -2011,8 +2013,31 @@ export default function SchedulePage() {
                         setPeriodFilter("todos");
                         // Modal para múltiplos agendamentos
                         if (dayServices.length > 1) {
-                          // Aqui você pode implementar um modal para mostrar todos os agendamentos do dia
-                          console.log(`${dayServices.length} agendamentos em ${dateString}`);
+                          setSelectedDayServices(dayServices);
+                          setIsDayAppointmentsModalOpen(true);
+                        } else if (dayServices.length === 1) {
+                          // Se houver apenas um serviço, navegar direto para ele
+                          const service = dayServices[0];
+                          setEditingService(service);
+                          
+                          // Carregar dados do serviço no formulário
+                          form.reset({
+                            customerId: service.customerId,
+                            vehicleId: service.vehicleId,
+                            technicianId: service.technicianId || 0,
+                            scheduledDate: service.scheduledDate || '',
+                            scheduledTime: service.scheduledTime || '',
+                            status: service.status || 'scheduled',
+                            notes: service.notes || '',
+                            estimatedValue: service.estimatedValue || '0.00',
+                            valorPago: service.valorPago || '0.00',
+                            pixPago: service.pixPago || '0.00',
+                            dinheiroPago: service.dinheiroPago || '0.00',
+                            chequePago: service.chequePago || '0.00',
+                            cartaoPago: service.cartaoPago || '0.00'
+                          });
+                          
+                          setIsDialogOpen(true);
                         }
                       }}
                       className={cn(
@@ -2510,6 +2535,147 @@ export default function SchedulePage() {
           cancelText="Cancelar"
           variant="destructive"
         />
+
+        {/* Modal para múltiplos agendamentos no mesmo dia */}
+        <Dialog open={isDayAppointmentsModalOpen} onOpenChange={setIsDayAppointmentsModalOpen}>
+          <DialogContent className={cn(
+            "bg-white/95 backdrop-blur-sm",
+            isMobile ? "max-w-[95vw] max-h-[90vh] p-4" : "max-w-2xl"
+          )}>
+            <DialogHeader className="pb-4">
+              <DialogTitle className="text-xl font-bold text-teal-800 flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Agendamentos do Dia
+              </DialogTitle>
+              {selectedDate && (
+                <p className="text-sm text-teal-600">
+                  {selectedDate.toLocaleDateString('pt-BR', {
+                    weekday: 'long',
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </p>
+              )}
+            </DialogHeader>
+
+            <div className={cn(
+              "max-h-[60vh] overflow-y-auto space-y-3",
+              isMobile ? "max-h-[70vh]" : "max-h-[60vh]"
+            )}>
+              {selectedDayServices.map((service) => (
+                <div
+                  key={service.id}
+                  onClick={() => {
+                    setIsDayAppointmentsModalOpen(false);
+                    setEditingService(service);
+                    
+                    // Carregar dados do serviço no formulário
+                    form.reset({
+                      customerId: service.customerId,
+                      vehicleId: service.vehicleId,
+                      technicianId: service.technicianId || 0,
+                      scheduledDate: service.scheduledDate || '',
+                      scheduledTime: service.scheduledTime || '',
+                      status: service.status || 'scheduled',
+                      notes: service.notes || '',
+                      estimatedValue: service.estimatedValue || '0.00',
+                      valorPago: service.valorPago || '0.00',
+                      pixPago: service.pixPago || '0.00',
+                      dinheiroPago: service.dinheiroPago || '0.00',
+                      chequePago: service.chequePago || '0.00',
+                      cartaoPago: service.cartaoPago || '0.00'
+                    });
+                    
+                    setIsDialogOpen(true);
+                  }}
+                  className="bg-white rounded-lg border border-teal-200 p-4 cursor-pointer hover:bg-teal-50 hover:border-teal-300 transition-all duration-200 active:scale-[0.98]"
+                >
+                  <div className="flex flex-col space-y-3">
+                    {/* Header com horário e status */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-teal-600" />
+                        <span className="font-semibold text-teal-800">
+                          {service.scheduledTime ? service.scheduledTime.slice(0, 5) : 'Sem horário'}
+                        </span>
+                      </div>
+                      <Badge
+                        variant={
+                          service.status === "completed" ? "default" :
+                          service.status === "in_progress" ? "secondary" :
+                          service.status === "cancelled" ? "destructive" : "outline"
+                        }
+                        className={cn(
+                          "text-xs px-2 py-1",
+                          service.status === "completed" && "bg-green-100 text-green-800 border-green-300",
+                          service.status === "in_progress" && "bg-blue-100 text-blue-800 border-blue-300",
+                          service.status === "cancelled" && "bg-red-100 text-red-800 border-red-300",
+                          service.status === "scheduled" && "bg-orange-100 text-orange-800 border-orange-300"
+                        )}
+                      >
+                        {translateStatus(service.status || 'scheduled')}
+                      </Badge>
+                    </div>
+
+                    {/* Informações do cliente e veículo */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm font-medium text-gray-900">
+                          {service.customerName}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Car className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm text-gray-700">
+                          {service.vehicleBrand} {service.vehicleModel} - {service.vehicleLicensePlate}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Valor e técnico */}
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4 text-green-600" />
+                        <span className="text-sm font-semibold text-green-700">
+                          R$ {service.estimatedValue || '0,00'}
+                        </span>
+                      </div>
+                      {service.technicianName && (
+                        <div className="flex items-center gap-1">
+                          <Wrench className="h-3 w-3 text-gray-500" />
+                          <span className="text-xs text-gray-600">
+                            {service.technicianName}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Observações se houver */}
+                    {service.notes && (
+                      <div className="pt-2 border-t border-gray-100">
+                        <p className="text-xs text-gray-600 line-clamp-2">
+                          {service.notes}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-end pt-4 border-t border-gray-200">
+              <Button
+                variant="outline"
+                onClick={() => setIsDayAppointmentsModalOpen(false)}
+                className="text-teal-700 border-teal-200 hover:bg-teal-50"
+              >
+                Fechar
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

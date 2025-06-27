@@ -145,6 +145,8 @@ Changelog:
 - June 27, 2025. Verified schedule page creates actual service orders with identical form structure, payment management, and notifications
 - June 27, 2025. Completed full alignment of schedule and service forms - added payment control, notification settings, and payment methods modal
 - June 27, 2025. Restored period filters and custom responsive calendar to agenda page - "Hoje/Semana/Mês/Todos" filters with dynamic counters and mobile-optimized calendar with visual indicators
+- June 27, 2025. Implemented mobile-optimized calendar modal for multiple appointments - clicking calendar days with multiple services opens responsive modal showing all appointments with navigation to specific services
+- June 27, 2025. Enhanced calendar responsiveness for mobile devices with touch-friendly interactions and optimized modal sizing
 - June 26, 2025. Fixed service creation validation error by supporting both serviceExtras and serviceItems formats
 - June 26, 2025. Fixed service_items query errors after architecture centralization to service_types table
 - June 26, 2025. Simplified service extras endpoint to return empty array for backward compatibility
@@ -202,4 +204,5 @@ Changelog:
 ```
 Preferred communication style: Simple, everyday language.
 Working approach: Only perform requested tasks, ask permission for any intervention outside the specific scope.
+Mobile-first approach: Application is designed for mobile use - all changes and improvements must be responsive and optimized for mobile devices.
 ```
