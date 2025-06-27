@@ -142,6 +142,7 @@ Changelog:
 - June 20, 2025. Improved mobile schedule page layout - moved counter next to "Hoje" for mobile devices
 - June 27, 2025. Completed migration from Replit Agent to standard Replit environment with full form alignment
 - June 27, 2025. Aligned schedule and service forms completely - agenda entries now create services with full functionality
+- June 27, 2025. Verified schedule page creates actual service orders with identical form structure, payment management, and notifications
 - June 26, 2025. Fixed service creation validation error by supporting both serviceExtras and serviceItems formats
 - June 26, 2025. Fixed service_items query errors after architecture centralization to service_types table
 - June 26, 2025. Simplified service extras endpoint to return empty array for backward compatibility
