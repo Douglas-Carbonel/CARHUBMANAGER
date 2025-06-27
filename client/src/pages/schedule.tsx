@@ -365,6 +365,90 @@ export default function SchedulePage() {
     }
   };
 
+  // Open modal for editing service with complete data loading
+  const openEditModal = async (service: Service) => {
+    setEditingService(service);
+    
+    // Load service photos
+    try {
+      const response = await fetch(`/api/photos?entityType=service&entityId=${service.id}`, {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const photos = await response.json();
+        setCurrentServicePhotos(photos);
+      }
+    } catch (error) {
+      console.error('Error loading service photos:', error);
+    }
+
+    // Load service items
+    try {
+      console.log('Loading service items for service:', service.id);
+      const response = await fetch(`/api/services/${service.id}`, {
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const serviceData = await response.json();
+        console.log('Service data loaded:', serviceData);
+
+        if (serviceData.serviceItems && serviceData.serviceItems.length > 0) {
+          const mappedExtras = serviceData.serviceItems.map((item: any, index: number) => ({
+            tempId: `existing_${item.id || index}`,
+            serviceTypeId: Number(item.serviceTypeId || item.service_type_id),
+            unitPrice: String(item.unitPrice || item.unit_price || "0.00"),
+            totalPrice: String(item.totalPrice || item.total_price || "0.00"),
+            quantity: Number(item.quantity) || 1,
+            notes: item.notes || "",
+          }));
+
+          console.log('Service items loaded and mapped:', mappedExtras);
+          setServiceExtras(mappedExtras);
+          setInitialServiceExtras(mappedExtras);
+        } else {
+          console.log('No service items found for this service');
+          setServiceExtras([]);
+          setInitialServiceExtras([]);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading service items:', error);
+      setServiceExtras([]);
+      setInitialServiceExtras([]);
+    }
+
+    // Populate form with service data
+    const formData = {
+      customerId: service.customerId,
+      vehicleId: service.vehicleId,
+      technicianId: service.technicianId || 0,
+      scheduledDate: service.scheduledDate || '',
+      scheduledTime: service.scheduledTime || '',
+      status: service.status || 'scheduled',
+      notes: service.notes || '',
+      estimatedValue: service.estimatedValue || '0.00',
+      valorPago: service.valorPago || '0.00',
+      pixPago: service.pixPago || '0.00',
+      dinheiroPago: service.dinheiroPago || '0.00',
+      chequePago: service.chequePago || '0.00',
+      cartaoPago: service.cartaoPago || '0.00'
+    };
+
+    form.reset(formData);
+    setFormInitialValues(formData);
+
+    // Load payment methods
+    setPaymentMethods({
+      pix: service.pixPago || "",
+      dinheiro: service.dinheiroPago || "",
+      cheque: service.chequePago || "",
+      cartao: service.cartaoPago || "",
+    });
+
+    setIsDialogOpen(true);
+  };
+
   const fetchServiceExtras = async (serviceId: number) => {
     try {
       console.log('Fetching service items for service:', serviceId);
@@ -634,47 +718,9 @@ export default function SchedulePage() {
     }
   };
 
-  const handleEdit = (service: Service) => {
-    setEditingService(service);
-    const editValues = {
-      customerId: service.customerId,
-      vehicleId: service.vehicleId,
-      serviceTypeId: service.serviceTypeId || undefined,
-      technicianId: service.technicianId || 0,
-      scheduledDate: service.scheduledDate || "",
-      scheduledTime: service.scheduledTime || "",
-      status: service.status || "scheduled",
-      notes: service.notes || "",
-      valorPago: service.valorPago || "0",
-      pixPago: service.pixPago || "0.00",
-      dinheiroPago: service.dinheiroPago || "0.00",
-      chequePago: service.chequePago || "0.00",
-      cartaoPago: service.cartaoPago || "0.00",
-    };
-
-    setFormInitialValues(editValues);
-    form.reset(editValues);
-
-    // Load existing payment methods from specific fields
-    console.log('Loading service payment data:', {
-      pixPago: service.pixPago,
-      dinheiroPago: service.dinheiroPago, 
-      chequePago: service.chequePago,
-      cartaoPago: service.cartaoPago
-    });
-
-    setPaymentMethods({
-      pix: service.pixPago || "0.00",
-      dinheiro: service.dinheiroPago || "0.00",
-      cheque: service.chequePago || "0.00",
-      cartao: service.cartaoPago || "0.00"
-    });
-
-    // Load photos and service items - fetch service items first to ensure they load properly
-    fetchServicePhotos(service.id);
-    fetchServiceExtras(service.id);
-
-    setIsDialogOpen(true);
+  const handleEdit = async (service: Service) => {
+    // Use the same logic as openEditModal
+    await openEditModal(service);
   };
 
   const handleDelete = (id: number) => {
@@ -2407,28 +2453,7 @@ export default function SchedulePage() {
                           "bg-white/95 backdrop-blur-sm border-0 shadow-md hover:shadow-xl transition-all duration-300 rounded-xl overflow-hidden cursor-pointer active:scale-[0.98]",
                           isMobile ? "mx-2" : ""
                         )}
-                        onClick={() => {
-                          setEditingService(service);
-                          
-                          // Carregar dados do serviço no formulário
-                          form.reset({
-                            customerId: service.customerId,
-                            vehicleId: service.vehicleId,
-                            technicianId: service.technicianId || 0,
-                            scheduledDate: service.scheduledDate || '',
-                            scheduledTime: service.scheduledTime || '',
-                            status: service.status || 'scheduled',
-                            notes: service.notes || '',
-                            estimatedValue: service.estimatedValue || '0.00',
-                            valorPago: service.valorPago || '0.00',
-                            pixPago: service.pixPago || '0.00',
-                            dinheiroPago: service.dinheiroPago || '0.00',
-                            chequePago: service.chequePago || '0.00',
-                            cartaoPago: service.cartaoPago || '0.00'
-                          });
-                          
-                          setIsDialogOpen(true);
-                        }}
+                        onClick={() => openEditModal(service)}
                       >
                   {/* Header com horário e status - Mobile Responsivo */}
                   <div className={cn(
