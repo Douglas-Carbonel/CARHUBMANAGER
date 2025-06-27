@@ -807,46 +807,71 @@ export default function SchedulePage() {
 
   // Filter services
   const getDateRange = (period: string) => {
-    // Get current date in Brazilian timezone (UTC-3)
+    // Get current date in Brazilian timezone (America/Sao_Paulo)
     const now = new Date();
-    // Create a proper Brazilian date using Intl.DateTimeFormat
-    const brazilianDate = new Intl.DateTimeFormat('sv-SE', { 
+    
+    // Create a proper Brazilian date
+    const brazilianDate = new Intl.DateTimeFormat('en-CA', { 
       timeZone: 'America/Sao_Paulo',
       year: 'numeric',
       month: '2-digit', 
       day: '2-digit'
     }).format(now);
     
-    const currentDate = brazilianDate; // Already in YYYY-MM-DD format
-    const brazilianTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-
-    console.log('getDateRange - period:', period, 'currentDate:', currentDate, 'now:', now, 'brazilianTime:', brazilianTime);
+    console.log('getDateRange - period:', period, 'Brazilian date today:', brazilianDate, 'UTC now:', now.toISOString());
 
     switch (period) {
       case "day":
-        console.log('getDateRange - day filter returning:', { start: currentDate, end: currentDate });
-        return { start: currentDate, end: currentDate };
+        console.log('getDateRange - day filter returning:', { start: brazilianDate, end: brazilianDate });
+        return { start: brazilianDate, end: brazilianDate };
       case "week":
-        // Parse the Brazilian date correctly
-        const [year, month, day] = currentDate.split('-').map(Number);
-        const brazilianDateObj = new Date(year, month - 1, day);
+        // Get current date in Brazilian timezone as Date object
+        const today = new Date();
+        const brazilTime = new Date(today.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
         
-        const startOfWeek = new Date(brazilianDateObj);
-        startOfWeek.setDate(brazilianDateObj.getDate() - brazilianDateObj.getDay());
+        const startOfWeek = new Date(brazilTime);
+        startOfWeek.setDate(brazilTime.getDate() - brazilTime.getDay());
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6);
-        return {
-          start: startOfWeek.toISOString().split('T')[0],
-          end: endOfWeek.toISOString().split('T')[0]
-        };
+        
+        const weekStart = new Intl.DateTimeFormat('en-CA', { 
+          timeZone: 'America/Sao_Paulo',
+          year: 'numeric',
+          month: '2-digit', 
+          day: '2-digit'
+        }).format(startOfWeek);
+        
+        const weekEnd = new Intl.DateTimeFormat('en-CA', { 
+          timeZone: 'America/Sao_Paulo',
+          year: 'numeric',
+          month: '2-digit', 
+          day: '2-digit'
+        }).format(endOfWeek);
+        
+        return { start: weekStart, end: weekEnd };
+        
       case "month":
-        const [yearNum, monthNum] = currentDate.split('-').map(Number);
-        const startOfMonth = new Date(yearNum, monthNum - 1, 1);
-        const endOfMonth = new Date(yearNum, monthNum, 0);
-        return {
-          start: startOfMonth.toISOString().split('T')[0],
-          end: endOfMonth.toISOString().split('T')[0]
-        };
+        const currentMonth = new Date();
+        
+        // Get first day of current month in Brazilian timezone
+        const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+        const monthStart = new Intl.DateTimeFormat('en-CA', { 
+          timeZone: 'America/Sao_Paulo',
+          year: 'numeric',
+          month: '2-digit', 
+          day: '2-digit'
+        }).format(firstDay);
+        
+        // Get last day of current month in Brazilian timezone
+        const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+        const monthEnd = new Intl.DateTimeFormat('en-CA', { 
+          timeZone: 'America/Sao_Paulo',
+          year: 'numeric',
+          month: '2-digit', 
+          day: '2-digit'
+        }).format(lastDay);
+        
+        return { start: monthStart, end: monthEnd };
       default:
         return null;
     }
