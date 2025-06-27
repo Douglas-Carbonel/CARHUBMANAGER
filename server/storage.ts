@@ -525,10 +525,10 @@ export class DatabaseStorage implements IStorage {
   async getService(id: number): Promise<Service | undefined> {
     try {
       console.log('Storage: Getting service with ID:', id);
-      
+
       // First get the service
       const [service] = await db.select().from(services).where(eq(services.id, id));
-      
+
       if (!service) {
         console.log('Storage: Service not found');
         return undefined;
@@ -554,7 +554,7 @@ export class DatabaseStorage implements IStorage {
         WHERE si.service_id = ${id}
         ORDER BY si.created_at ASC
       `);
-      
+
       console.log('Storage: Found', serviceItemsResult.rows.length, 'service items for service', id);
 
       const serviceItems = serviceItemsResult.rows.map((item: any) => ({
@@ -938,10 +938,14 @@ export class DatabaseStorage implements IStorage {
   async getUpcomingAppointments(limit: number = 5, technicianId?: number | null): Promise<any[]> {
     console.log("Storage: Getting upcoming appointments...", technicianId ? `for technician ${technicianId}` : "for admin");
 
-    // Get current date in Brazilian timezone (UTC-3)
+    // Get current date in Brazilian timezone
     const today = new Date();
-    const brazilTime = new Date(today.getTime() - (3 * 60 * 60 * 1000));
-    const brazilianDate = brazilTime.toISOString().split('T')[0];
+    const brazilianDate = new Intl.DateTimeFormat('sv-SE', { 
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit', 
+      day: '2-digit'
+    }).format(today);
     console.log("Storage: Today date for appointments (Brazilian timezone):", brazilianDate);
 
     try {
@@ -1676,10 +1680,14 @@ export class DatabaseStorage implements IStorage {
   async getTodayAppointments(technicianId?: number | null): Promise<any[]> {
     console.log("Storage: Getting today's appointments...", technicianId ? `for technician ${technicianId}` : "for admin");
 
-    // Get current date in Brazilian timezone (UTC-3)
+    // Get current date in Brazilian timezone
     const today = new Date();
-    const brazilTime = new Date(today.getTime() - (3 * 60 * 60 * 1000));
-    const brazilianDate = brazilTime.toISOString().split('T')[0];
+    const brazilianDate = new Intl.DateTimeFormat('sv-SE', { 
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit', 
+      day: '2-digit'
+    }).format(today);
     console.log("Storage: Today date for appointments (Brazilian timezone):", brazilianDate);
 
     try {
@@ -1753,7 +1761,8 @@ export class DatabaseStorage implements IStorage {
         customer: service.customer!,
         vehicle: service.vehicle!,
         serviceType: service.serviceType!,
-        serviceItems: serviceItemsResult,
+        serviceItems:```text
+ serviceItemsResult,
       };
     } catch (error) {
       console.error('Error fetching service:', error);

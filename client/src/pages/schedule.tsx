@@ -809,19 +809,30 @@ export default function SchedulePage() {
   const getDateRange = (period: string) => {
     // Get current date in Brazilian timezone (UTC-3)
     const now = new Date();
-    // Correctly calculate Brazilian time considering daylight saving time
+    // Create a proper Brazilian date using Intl.DateTimeFormat
+    const brazilianDate = new Intl.DateTimeFormat('sv-SE', { 
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit', 
+      day: '2-digit'
+    }).format(now);
+    
+    const currentDate = brazilianDate; // Already in YYYY-MM-DD format
     const brazilianTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-    const currentDate = brazilianTime.toISOString().split('T')[0];
 
-    console.log('getDateRange - period:', period, 'currentDate:', currentDate, 'brazilianTime:', brazilianTime);
+    console.log('getDateRange - period:', period, 'currentDate:', currentDate, 'now:', now, 'brazilianTime:', brazilianTime);
 
     switch (period) {
       case "day":
         console.log('getDateRange - day filter returning:', { start: currentDate, end: currentDate });
         return { start: currentDate, end: currentDate };
       case "week":
-        const startOfWeek = new Date(brazilianTime);
-        startOfWeek.setDate(brazilianTime.getDate() - brazilianTime.getDay());
+        // Parse the Brazilian date correctly
+        const [year, month, day] = currentDate.split('-').map(Number);
+        const brazilianDateObj = new Date(year, month - 1, day);
+        
+        const startOfWeek = new Date(brazilianDateObj);
+        startOfWeek.setDate(brazilianDateObj.getDate() - brazilianDateObj.getDay());
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6);
         return {
@@ -829,8 +840,9 @@ export default function SchedulePage() {
           end: endOfWeek.toISOString().split('T')[0]
         };
       case "month":
-        const startOfMonth = new Date(brazilianTime.getFullYear(), brazilianTime.getMonth(), 1);
-        const endOfMonth = new Date(brazilianTime.getFullYear(), brazilianTime.getMonth() + 1, 0);
+        const [yearNum, monthNum] = currentDate.split('-').map(Number);
+        const startOfMonth = new Date(yearNum, monthNum - 1, 1);
+        const endOfMonth = new Date(yearNum, monthNum, 0);
         return {
           start: startOfMonth.toISOString().split('T')[0],
           end: endOfMonth.toISOString().split('T')[0]
