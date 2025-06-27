@@ -1498,49 +1498,281 @@ export default function SchedulePage() {
                 />
 
                 {/* Service Items */}
-                <ServiceItems 
-                  serviceId={editingService?.id}
-                  initialItems={serviceItems}
-                  onChange={(items) => {
-                    console.log('Schedule page - Received items from ServiceItems:', items);
-                    setServiceItems(items);
-                  }}
-                />
+                <div className="col-span-2 border-t pt-4">
+                  <h4 className="text-lg font-semibold text-slate-700 mb-4 flex items-center">
+                    <Wrench className="h-5 w-5 mr-2 text-teal-600" />
+                    Serviços
+                  </h4>
+                  <ServiceItems
+                    serviceId={editingService?.id}
+                    onChange={(items) => {
+                      console.log('Schedule page - Received items from ServiceItems:', items);
+                      setServiceItems(items);
+                    }}
+                    initialItems={serviceItems}
+                  />
+                </div>
 
-                {/* Payment Manager */}
-                <PaymentManager
-                  form={form}
-                  paymentMethods={paymentMethods}
-                  onPaymentMethodsChange={setPaymentMethods}
-                />
+                {/* Service Budget Section */}
+                <div className="col-span-2 border-t pt-6">
+                  <div className="space-y-4">
+                    {/* Budget Summary */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                      <h3 className="text-lg font-semibold text-slate-700 mb-3 flex items-center">
+                        <Calculator className="h-5 w-5 mr-2 text-slate-600" />
+                        Valores do Serviço
+                      </h3>
+                      <div className="space-y-3">
+                        {/* Services Summary */}
+                        <div className="bg-white border border-slate-200 rounded-lg p-3">
+                          <div className="text-sm font-bold text-slate-800 mb-3">Serviços:</div>
+                          <div className="space-y-2">
+                            {/* Serviços selecionados */}
+                            {serviceItems.length > 0 ? serviceItems.map((item, index) => {
+                              const serviceName = item.serviceType?.name || item.serviceTypeName || `Serviço ${index + 1}`;
+                              const servicePrice = item.totalPrice || item.unitPrice || "0.00";
 
-                {/* Photo Upload */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">Fotos</h3>
-                    <div className="flex gap-2">
+                              return (
+                                <div key={item.tempId || index} className="flex justify-between items-center text-sm">
+                                  <span className="text-slate-700">{serviceName}</span>
+                                  <span className="font-medium text-slate-800">R$ {Number(servicePrice).toFixed(2)}</span>
+                                </div>
+                              );
+                            }) : (
+                              <div className="text-sm text-slate-500 italic">
+                                Nenhum serviço selecionado
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="border-t border-slate-300 pt-2 mt-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-lg font-bold text-slate-800">Total do Serviço:</span>
+                            <span className="text-xl font-bold text-slate-700">
+                              R$ {serviceItems.reduce((total, item) => total + Number(item.totalPrice || item.unitPrice || 0), 0).toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Payment Control Section */}
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                      <h3 className="text-lg font-semibold text-emerald-800 mb-3 flex items-center">
+                        <DollarSign className="h-5 w-5 mr-2 text-emerald-600" />
+                        Pagamentos
+                      </h3>
+
+                      <div className="grid grid-cols-3 gap-4 mb-4">
+                        <div className="text-center">
+                          <div className="text-xs text-slate-600 mb-1">Valor Total</div>
+                          <div className="text-lg font-bold text-slate-700">
+                            R$ {serviceItems.reduce((total, item) => total + Number(item.totalPrice || item.unitPrice || 0), 0).toFixed(2)}
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs text-slate-600 mb-1">Valor Pago</div>
+                          <div className="text-lg font-bold text-emerald-600">
+                            R$ {Number(form.watch("valorPago") || 0).toFixed(2)}
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs text-slate-600 mb-1">Saldo</div>
+                          <div className={`text-lg font-bold ${
+                            (serviceItems.reduce((total, item) => total + Number(item.totalPrice || item.unitPrice || 0), 0) - Number(form.watch("valorPago") || 0)) <= 0 
+                              ? 'text-green-600' 
+                              : 'text-red-600'
+                          }`}>
+                            R$ {(serviceItems.reduce((total, item) => total + Number(item.totalPrice || item.unitPrice || 0), 0) - Number(form.watch("valorPago") || 0)).toFixed(2)}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Payment Status */}
+                      <div className="flex items-center justify-center mb-4">
+                        <div className={`px-4 py-2 rounded-full flex items-center space-x-2 ${
+                          Number(form.watch("valorPago") || 0) === 0 
+                            ? 'bg-red-100 border-2 border-red-300' 
+                            : Number(form.watch("valorPago") || 0) >= serviceItems.reduce((total, item) => total + Number(item.totalPrice || item.unitPrice || 0), 0)
+                              ? 'bg-green-100 border-2 border-green-300'
+                              : 'bg-yellow-100 border-2 border-yellow-300'
+                        }`}>
+                          <div className={`w-3 h-3 rounded-full ${
+                            Number(form.watch("valorPago") || 0) === 0 
+                              ? 'bg-red-500' 
+                              : Number(form.watch("valorPago") || 0) >= serviceItems.reduce((total, item) => total + Number(item.totalPrice || item.unitPrice || 0), 0)
+                                ? 'bg-green-500'
+                                : 'bg-yellow-500'
+                          }`}></div>
+                          <span className={`text-sm font-bold ${
+                            Number(form.watch("valorPago") || 0) === 0 
+                              ? 'text-red-700' 
+                              : Number(form.watch("valorPago") || 0) >= serviceItems.reduce((total, item) => total + Number(item.totalPrice || item.unitPrice || 0), 0)
+                                ? 'text-green-700'
+                                : 'text-yellow-700'
+                          }`}>
+                            {Number(form.watch("valorPago") || 0) === 0 
+                              ? 'PENDENTE' 
+                              : Number(form.watch("valorPago") || 0) >= serviceItems.reduce((total, item) => total + Number(item.totalPrice || item.unitPrice || 0), 0)
+                                ? 'PAGO'
+                                : 'PARCIAL'
+                            }
+                          </span>
+                        </div>
+                      </div>
+
+                      <PaymentManager
+                        form={form}
+                        paymentMethods={paymentMethods}
+                        onPaymentMethodsChange={setPaymentMethods}
+                      />
+
+                      {/* Payment Input */}
+                      <FormField
+                        control={form.control}
+                        name="valorPago"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium text-emerald-700">
+                              Registrar Pagamento
+                            </FormLabel>
+                            <FormControl>
+                              <div className="flex space-x-2">
+                                <div className="relative flex-1">
+                                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-600" />
+                                  <Input
+                                    {...field}
+                                    type="text"
+                                    placeholder="0.00"
+                                    className="pl-10 h-11 border-2 border-emerald-200 focus:border-emerald-400 rounded-lg bg-white"
+                                    value={formatCurrency(field.value || "0.00")}
+                                    onChange={(e) => {
+                                      const formattedValue = formatCurrency(e.target.value);
+                                      field.onChange(parseCurrency(formattedValue));
+                                    }}
+                                  />
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setIsPaymentModalOpen(true)}
+                                  className="h-11 px-4 border-2 border-emerald-200 hover:border-emerald-400 text-emerald-700 hover:text-emerald-800 transition-all duration-200"
+                                >
+                                  <Coins className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    {/* Reminder Section */}
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <div className="flex items-center mb-3">
+                        <Bell className="h-5 w-5 text-yellow-600 mr-2" />
+                        <span className="font-medium text-yellow-800">Lembrete de Agendamento</span>
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name="reminderEnabled"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border border-yellow-300 p-3 shadow-sm">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-sm font-medium">
+                                Ativar lembrete de notificação
+                              </FormLabel>
+                              <div className="text-xs text-yellow-700">
+                                Receba uma notificação antes do horário do agendamento
+                              </div>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value || false}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      {form.watch("reminderEnabled") && (
+                        <FormField
+                          control={form.control}
+                          name="reminderMinutes"
+                          render={({ field }) => (
+                            <FormItem className="mt-3">
+                              <FormLabel>Enviar lembrete (minutos antes)</FormLabel>
+                              <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value?.toString() || "30"}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione quando enviar o lembrete" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="15">15 minutos antes</SelectItem>
+                                  <SelectItem value="30">30 minutos antes</SelectItem>
+                                  <SelectItem value="60">1 hora antes</SelectItem>
+                                  <SelectItem value="120">2 horas antes</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    <div className="flex justify-center">
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => setIsCameraOpen(true)}
-                        className="flex items-center gap-2"
+                        onClick={() => setIsResumeModalOpen(true)}
+                        className="bg-white hover:bg-slate-50 text-slate-700 border-slate-300 hover:border-slate-400 font-medium px-4 py-2 text-sm transition-all duration-200"
                       >
-                        <Camera className="h-4 w-4" />
-                        Câmera
+                        <FileText className="h-4 w-4 mr-2" />
+                        Ver Resumo Completo
                       </Button>
                     </div>
                   </div>
-
-                  <PhotoUpload
-                    entityType="service"
-                    entityId={editingService?.id}
-                    currentPhotos={currentServicePhotos}
-                    temporaryPhotos={temporaryPhotos}
-                    onPhotosChange={setCurrentServicePhotos}
-                    onTemporaryPhotosChange={setTemporaryPhotos}
-                  />
                 </div>
+
+                {/* Photos Section */}
+                <div className="col-span-2 border-t pt-4">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-medium text-gray-700">Fotos</h4>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsCameraOpen(true)}
+                          className="flex items-center gap-2"
+                        >
+                          <Camera className="h-4 w-4" />
+                          Tirar Foto
+                        </Button>
+                      </div>
+                    </div>
+
+                    <PhotoUpload
+                      entityType="service"
+                      entityId={editingService?.id}
+                      currentPhotos={currentServicePhotos}
+                      temporaryPhotos={temporaryPhotos}
+                      onPhotosChange={setCurrentServicePhotos}
+                      onTemporaryPhotosChange={setTemporaryPhotos}
+                    />
+                  </div>
+                </div>
+
+
 
                 {/* Notes */}
                 <FormField
@@ -1618,6 +1850,141 @@ export default function SchedulePage() {
             }}
           />
         )}
+
+        {/* Payment Methods Modal */}
+        <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center text-emerald-800">
+                <Coins className="h-5 w-5 mr-2" />
+                Formas de Pagamento
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                {/* PIX */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">PIX</label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-600" />
+                    <Input
+                      type="text"
+                      placeholder="0.00"
+                      value={formatCurrency(paymentMethods.pix)}
+                      onChange={(e) => {
+                        const formattedValue = formatCurrency(e.target.value);
+                        setPaymentMethods(prev => ({ ...prev, pix: parseCurrency(formattedValue) }));
+                      }}
+                      className="pl-10 h-11 border-2 border-emerald-200 focus:border-emerald-400 rounded-lg bg-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Dinheiro */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">Dinheiro</label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-600" />
+                    <Input
+                      type="text"
+                      placeholder="0.00"
+                      value={formatCurrency(paymentMethods.dinheiro)}
+                      onChange={(e) => {
+                        const formattedValue = formatCurrency(e.target.value);
+                        setPaymentMethods(prev => ({ ...prev, dinheiro: parseCurrency(formattedValue) }));
+                      }}
+                      className="pl-10 h-11 border-2 border-emerald-200 focus:border-emerald-400 rounded-lg bg-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Cheque */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">Cheque</label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-600" />
+                    <Input
+                      type="text"
+                      placeholder="0.00"
+                      value={formatCurrency(paymentMethods.cheque)}
+                      onChange={(e) => {
+                        const formattedValue = formatCurrency(e.target.value);
+                        setPaymentMethods(prev => ({ ...prev, cheque: parseCurrency(formattedValue) }));
+                      }}
+                      className="pl-10 h-11 border-2 border-emerald-200 focus:border-emerald-400 rounded-lg bg-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Cartão */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">Cartão</label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-600" />
+                    <Input
+                      type="text"
+                      placeholder="0.00"
+                      value={formatCurrency(paymentMethods.cartao)}
+                      onChange={(e) => {
+                        const formattedValue = formatCurrency(e.target.value);
+                        setPaymentMethods(prev => ({ ...prev, cartao: parseCurrency(formattedValue) }));
+                      }}
+                      className="pl-10 h-11 border-2 border-emerald-200 focus:border-emerald-400 rounded-lg bg-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Total */}
+              <div className="border-t pt-4">
+                <div className="flex justify-between items-center text-lg font-bold">
+                  <span>Total Pago:</span>
+                  <span className="text-emerald-600">
+                    R$ {(
+                      Number(paymentMethods.pix || 0) +
+                      Number(paymentMethods.dinheiro || 0) +
+                      Number(paymentMethods.cheque || 0) +
+                      Number(paymentMethods.cartao || 0)
+                    ).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsPaymentModalOpen(false)}
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    const total = Number(paymentMethods.pix || 0) +
+                                Number(paymentMethods.dinheiro || 0) +
+                                Number(paymentMethods.cheque || 0) +
+                                Number(paymentMethods.cartao || 0);
+                    
+                    form.setValue("valorPago", total.toFixed(2));
+                    form.setValue("pixPago", paymentMethods.pix || "0.00");
+                    form.setValue("dinheiroPago", paymentMethods.dinheiro || "0.00");
+                    form.setValue("chequePago", paymentMethods.cheque || "0.00");
+                    form.setValue("cartaoPago", paymentMethods.cartao || "0.00");
+                    
+                    setIsPaymentModalOpen(false);
+                  }}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                >
+                  Confirmar
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Analytics Modal */}
         <Dialog open={isAnalyticsModalOpen} onOpenChange={setIsAnalyticsModalOpen}>
