@@ -1761,8 +1761,7 @@ export class DatabaseStorage implements IStorage {
         customer: service.customer!,
         vehicle: service.vehicle!,
         serviceType: service.serviceType!,
-        serviceItems:```text
- serviceItemsResult,
+        serviceItems: serviceItemsResult,
       };
     } catch (error) {
       console.error('Error fetching service:', error);
