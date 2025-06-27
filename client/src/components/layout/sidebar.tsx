@@ -87,14 +87,32 @@ export default function Sidebar() {
       }
     };
 
+    // Force multiple checks on location change
     checkMobile();
+    const timeouts = [
+      setTimeout(checkMobile, 50),
+      setTimeout(checkMobile, 200),
+      setTimeout(checkMobile, 500),
+    ];
+    
     window.addEventListener('resize', checkMobile);
     
-    // Also check on location change to ensure mobile state is correct
-    checkMobile();
-    
-    return () => window.removeEventListener('resize', checkMobile);
+    return () => {
+      timeouts.forEach(clearTimeout);
+      window.removeEventListener('resize', checkMobile);
+    };
   }, [location]);
+
+  // Additional effect to ensure mobile state is properly maintained
+  useEffect(() => {
+    const mobile = window.innerWidth < 768;
+    if (isMobile !== mobile) {
+      setIsMobile(mobile);
+      if (!mobile) {
+        setIsMobileOpen(false);
+      }
+    }
+  });
 
   const handleLogout = () => {
     logoutMutation.mutate();

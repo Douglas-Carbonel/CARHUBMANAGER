@@ -111,78 +111,36 @@ const serviceFormSchema = insertServiceSchema.extend({
 export default function SchedulePage() {
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   const [forceRender, setForceRender] = useState(0);
 
-  // Force re-check mobile state on component mount and location change
+  // Mobile detection with proper synchronization
   useEffect(() => {
     const checkMobile = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
     };
 
-    // Force immediate check
+    // Immediate check
     checkMobile();
     
-    // Add multiple checks to ensure state is correct
+    // Additional checks for navigation scenarios
     const timeouts = [
-      setTimeout(checkMobile, 10),
       setTimeout(checkMobile, 100),
       setTimeout(checkMobile, 300),
     ];
     
     window.addEventListener('resize', checkMobile);
     
+    // Force complete re-render when navigating to schedule
+    if (location === '/schedule') {
+      setForceRender(prev => prev + 1);
+    }
+    
     return () => {
       timeouts.forEach(clearTimeout);
       window.removeEventListener('resize', checkMobile);
     };
-  }, [location]);
-
-  // Key effect: Force layout recalculation when component becomes visible
-  useEffect(() => {
-    const forceLayoutRecalc = () => {
-      // Force browser to recalculate layout
-      document.body.offsetHeight;
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-    };
-
-    // Run when page becomes visible (after navigation)
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        forceLayoutRecalc();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    // Also run on focus (when user returns to tab)
-    window.addEventListener('focus', forceLayoutRecalc);
-    
-    // Run immediately for navigation scenarios
-    const immediateTimeout = setTimeout(forceLayoutRecalc, 0);
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', forceLayoutRecalc);
-      clearTimeout(immediateTimeout);
-    };
-  }, []);
-
-  // Force re-render when location changes to schedule page
-  useEffect(() => {
-    if (location === '/schedule') {
-      setForceRender(prev => prev + 1);
-      
-      // Additional timeout to ensure layout is recalculated
-      const timeout = setTimeout(() => {
-        const mobile = window.innerWidth < 768;
-        setIsMobile(mobile);
-      }, 100);
-      
-      return () => clearTimeout(timeout);
-    }
   }, [location]);
 
   // Get filters from URL params
@@ -899,10 +857,7 @@ export default function SchedulePage() {
   }
 
   return (
-    <div 
-      key={`schedule-${isMobile ? 'mobile' : 'desktop'}-${forceRender}`}
-      className="flex h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-emerald-50"
-    >
+    <div className={cn("flex bg-gradient-to-br from-cyan-50 via-teal-50 to-emerald-50", isMobile ? "h-screen flex-col" : "h-screen")}>
       <Sidebar />
 
       <div className="flex-1 flex flex-col">
