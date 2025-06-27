@@ -2111,7 +2111,9 @@ export default function Services() {
                         </div>
                         <div className="flex items-center text-sm text-gray-600">
                           <Car className="h-4 w-4 mr-1" />
-                          {service.vehicle?.licensePlate || 'Placa não informada'} - {service.vehicle?.brand} {service.vehicle?.model}
+                          <span className="font-medium text-blue-600">{service.vehicle?.licensePlate || service.vehicleLicensePlate || 'Placa não informada'}</span>
+                          <span className="mx-1">-</span>
+                          <span>{service.vehicle?.brand || service.vehicleBrand} {service.vehicle?.model || service.vehicleModel}</span>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
