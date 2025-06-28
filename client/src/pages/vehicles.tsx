@@ -306,6 +306,7 @@ export default function VehiclesPage() {
     const urlParams = new URLSearchParams(window.location.search);
     const customerId = urlParams.get('customerId');
     const openModal = urlParams.get('openModal');
+    const action = urlParams.get('action');
     
     if (customerId) {
       setCustomerFilter(parseInt(customerId));
@@ -337,7 +338,18 @@ export default function VehiclesPage() {
       // Clear customer filter if no customerId in URL
       setCustomerFilter(null);
     }
-  }, [customers]);
+
+    // Auto-open modal for new vehicle creation
+    if (action === 'new' && !isModalOpen) {
+      setEditingVehicle(null);
+      setIsModalOpen(true);
+      form.reset();
+      setTemporaryPhotos([]);
+      setCurrentVehiclePhotos([]);
+      // Clean URL after opening modal
+      window.history.replaceState({}, '', '/vehicles');
+    }
+  }, [customers, form, isModalOpen]);
 
   const createMutation = useMutation({
     mutationFn: async (data: VehicleFormData) => {

@@ -123,6 +123,7 @@ export default function Services() {
   const vehiclePlateFilter = urlParams.get('vehiclePlate');
   const statusFilter = urlParams.get('status') || 'all';
   const openModalParam = urlParams.get('openModal') === 'true';
+  const actionParam = urlParams.get('action');
 
   // Debug logging
   console.log('Services page - location:', location);
@@ -264,9 +265,9 @@ export default function Services() {
     },
   });
 
-  // Auto-open modal when openModal=true in URL
+  // Auto-open modal when openModal=true or action=new in URL
   useEffect(() => {
-    if (openModalParam && customers.length > 0 && vehicles.length > 0) {
+    if ((openModalParam || actionParam === 'new') && customers.length > 0 && vehicles.length > 0) {
       const timer = setTimeout(() => {
         setEditingService(null);
         form.reset();
@@ -295,15 +296,16 @@ export default function Services() {
 
         setIsDialogOpen(true);
 
-        // Remove openModal parameter from URL to prevent re-opening
+        // Remove URL parameters to prevent re-opening
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.delete('openModal');
+        newUrl.searchParams.delete('action');
         window.history.replaceState({}, '', newUrl.toString());
       }, 500);
 
       return () => clearTimeout(timer);
     }
-  }, [openModalParam, customers, vehicles, customerIdFilter, vehicleIdFilter, form]);
+  }, [openModalParam, actionParam, customers, vehicles, customerIdFilter, vehicleIdFilter, form]);
 
   const fetchServicePhotos = async (serviceId: number | undefined) => {
     if (!serviceId) {

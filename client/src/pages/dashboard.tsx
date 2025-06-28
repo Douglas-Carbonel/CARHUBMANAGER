@@ -40,22 +40,22 @@ export default function Dashboard() {
 
   const quickActions = [
     {
-      title: "Novo Agendamento",
-      description: "Agendar um novo serviço",
-      icon: Calendar,
-      route: "/schedule"
-    },
-    {
       title: "Novo Cliente",
-      description: "Cadastrar cliente",
+      description: "Cadastrar novo cliente",
       icon: Users,
-      route: "/customers"
+      route: "/customers?action=new"
     },
     {
-      title: "Serviços",
-      description: "Gerenciar serviços",
+      title: "Novo Veículo",
+      description: "Cadastrar novo veículo",
+      icon: Car,
+      route: "/vehicles?action=new"
+    },
+    {
+      title: "Nova Ordem de Serviço",
+      description: "Criar nova ordem de serviço",
       icon: Wrench,
-      route: "/services"
+      route: "/services?action=new"
     }
   ];
 

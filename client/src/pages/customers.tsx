@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -126,6 +126,19 @@ export default function CustomersPage() {
     hasUnsavedChanges: !!hasUnsavedChanges || temporaryPhotos.length > 0,
     message: "Você tem alterações não salvas no cadastro do cliente. Deseja realmente sair?"
   });
+
+  // Check URL parameters to auto-open modal for new customer creation
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    if (action === 'new' && !isModalOpen) {
+      setEditingCustomer(null);
+      setIsModalOpen(true);
+      form.reset();
+      // Clean URL after opening modal
+      window.history.replaceState({}, '', '/customers');
+    }
+  }, [form, isModalOpen]);
 
   const { data: customers = [], isLoading } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
