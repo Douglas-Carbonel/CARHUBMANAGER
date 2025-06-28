@@ -660,18 +660,18 @@ export default function SchedulePage() {
                                 key={`week-day-${index}`}
                                 onClick={() => handleDayClick(day)}
                                 className={cn(
-                                  "p-3 rounded-xl cursor-pointer transition-all duration-200 min-h-[120px] max-h-[160px] border-2 hover:shadow-lg hover:scale-[1.02] flex flex-col overflow-hidden",
+                                  "p-2 rounded-xl cursor-pointer transition-all duration-200 min-h-[180px] border-2 hover:shadow-lg hover:scale-[1.01] flex flex-col",
                                   isToday(day) && "bg-gradient-to-br from-teal-500 to-emerald-500 text-white border-teal-300 shadow-lg",
                                   dayServices.length > 0 && !isToday(day) && "bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-300 shadow-md",
                                   !dayServices.length && !isToday(day) && "border-gray-200 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50"
                                 )}
                               >
                                 {/* Header do dia */}
-                                <div className="flex items-center justify-between mb-2 pb-1 border-b border-opacity-20" style={{borderColor: isToday(day) ? 'white' : '#e5e7eb'}}>
+                                <div className="flex items-center justify-between mb-2 pb-2 border-b border-opacity-20" style={{borderColor: isToday(day) ? 'white' : '#e5e7eb'}}>
                                   <div className="text-lg font-bold">{format(day, "d")}</div>
                                   {dayServices.length > 0 && (
                                     <div className={cn(
-                                      "rounded-full px-1.5 py-0.5 text-xs font-bold min-w-[18px] h-[18px] flex items-center justify-center",
+                                      "rounded-full px-2 py-1 text-xs font-bold min-w-[20px] h-[20px] flex items-center justify-center",
                                       isToday(day) ? "bg-white/30 text-white" : "bg-teal-500 text-white"
                                     )}>
                                       {dayServices.length}
@@ -680,64 +680,77 @@ export default function SchedulePage() {
                                 </div>
                                 
                                 {/* Lista de agendamentos */}
-                                <div className="flex-1 space-y-1 overflow-hidden">
+                                <div className="flex-1 space-y-2 overflow-y-auto">
                                   {dayServices.length === 0 ? (
                                     <div className={cn(
-                                      "text-xs text-center opacity-60 mt-2",
+                                      "text-xs text-center opacity-60 mt-4",
                                       isToday(day) ? "text-white" : "text-gray-500"
                                     )}>
                                       Sem agendamentos
                                     </div>
                                   ) : (
-                                    dayServices.slice(0, 3).map((service, serviceIndex) => (
+                                    dayServices.map((service, serviceIndex) => (
                                       <div 
                                         key={service.id} 
                                         className={cn(
-                                          "text-xs p-1.5 rounded-md border transition-all duration-200",
+                                          "text-xs p-2 rounded-lg border transition-all duration-200 hover:scale-105",
                                           isToday(day) 
                                             ? "bg-white/20 border-white/30 text-white" 
-                                            : "bg-white border-blue-200 text-gray-700 shadow-sm"
+                                            : "bg-white border-blue-200 text-gray-700 shadow-sm hover:shadow-md"
                                         )}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setLocation(`/services?openModal=true&serviceId=${service.id}`);
+                                        }}
                                       >
-                                        {/* Nome do cliente e horário na mesma linha */}
-                                        <div className="flex items-center justify-between mb-0.5">
+                                        {/* Horário destacado */}
+                                        {service.scheduledTime && (
                                           <div className={cn(
-                                            "font-semibold truncate text-[11px]",
-                                            isToday(day) ? "text-white" : "text-gray-900"
+                                            "text-xs font-bold mb-1 text-center py-1 px-2 rounded-md",
+                                            isToday(day) 
+                                              ? "bg-white/20 text-white" 
+                                              : "bg-blue-100 text-blue-800"
                                           )}>
-                                            {service.customer.name}
+                                            {service.scheduledTime.substring(0, 5)}
                                           </div>
-                                          {service.scheduledTime && (
-                                            <div className={cn(
-                                              "text-[9px] opacity-90 font-medium ml-1",
-                                              isToday(day) ? "text-white" : "text-blue-600"
-                                            )}>
-                                              {service.scheduledTime.substring(0, 5)}
-                                            </div>
-                                          )}
+                                        )}
+                                        
+                                        {/* Nome do cliente */}
+                                        <div className={cn(
+                                          "font-semibold text-center mb-1 text-[11px]",
+                                          isToday(day) ? "text-white" : "text-gray-900"
+                                        )}>
+                                          {service.customer.name}
                                         </div>
                                         
-                                        {/* Tipo de serviço ou veículo */}
+                                        {/* Tipo de serviço */}
                                         <div className={cn(
-                                          "text-[9px] opacity-80 truncate",
+                                          "text-[10px] text-center opacity-80",
                                           isToday(day) ? "text-white" : "text-gray-600"
                                         )}>
-                                          {service.serviceType?.name || `${service.vehicle.brand} ${service.vehicle.model}`}
+                                          {service.serviceType?.name || 'Serviço Geral'}
+                                        </div>
+                                        
+                                        {/* Veículo */}
+                                        <div className={cn(
+                                          "text-[9px] text-center opacity-70 mt-1",
+                                          isToday(day) ? "text-white" : "text-gray-500"
+                                        )}>
+                                          {service.vehicle.brand} {service.vehicle.model}
+                                        </div>
+                                        
+                                        {/* Status indicator */}
+                                        <div className="flex justify-center mt-1">
+                                          <div className={cn(
+                                            "w-2 h-2 rounded-full",
+                                            service.status === "completed" ? "bg-green-400" :
+                                            service.status === "in_progress" ? "bg-yellow-400" :
+                                            service.status === "cancelled" ? "bg-red-400" :
+                                            isToday(day) ? "bg-white/50" : "bg-blue-400"
+                                          )} />
                                         </div>
                                       </div>
                                     ))
-                                  )}
-                                  
-                                  {/* Indicador de mais agendamentos */}
-                                  {dayServices.length > 3 && (
-                                    <div className={cn(
-                                      "text-center text-[10px] font-semibold py-0.5 px-1 rounded-md border border-dashed",
-                                      isToday(day) 
-                                        ? "text-white border-white/50" 
-                                        : "text-gray-600 border-gray-300"
-                                    )}>
-                                      +{dayServices.length - 3} mais
-                                    </div>
                                   )}
                                 </div>
                               </div>
