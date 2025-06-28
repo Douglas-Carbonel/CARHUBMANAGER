@@ -12,24 +12,34 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Plus, ChevronLeft, ChevronRight, Home, CalendarIcon, Clock, User, Car } from "lucide-react";
+import { Calendar, DollarSign, MoreHorizontal, Plus, Search, Edit, Trash2, Clock, User, Car, Wrench, CheckCircle, XCircle, Timer, BarChart3, FileText, Camera, Coins, Calculator, Smartphone, Banknote, CreditCard, Receipt, Bell, X, ChevronLeft, ChevronRight, Home, CalendarIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertServiceSchema, type Service, type Customer, type Vehicle, type ServiceType } from "@shared/schema";
+import { insertServiceSchema, type Service, type Customer, type Vehicle, type ServiceType, type Photo } from "@shared/schema";
 import { z } from "zod";
-import { format, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isToday, isSameDay, parseISO } from "date-fns";
+import { format, addDays, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isToday, isSameDay, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ServiceItems from "@/components/service/service-items";
+import PaymentManager from "@/components/service/payment-manager";
 import { cn } from "@/lib/utils";
 import { useLocation } from "wouter";
 
 // Utility functions for currency formatting
 const formatCurrency = (value: string): string => {
   if (!value) return '';
+
+  // Remove tudo que não for número
   let numericValue = value.replace(/[^\d]/g, '');
+
+  // Se for vazio, retorna vazio
   if (!numericValue) return '';
+
+  // Converte para número e divide por 100 para ter centavos
   const numberValue = parseInt(numericValue) / 100;
+
+  // Formata para moeda brasileira
   return numberValue.toLocaleString('pt-BR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
@@ -43,14 +53,21 @@ const translateStatus = (status: string): string => {
     'completed': 'Concluído',
     'cancelled': 'Cancelado'
   };
+
   return statusTranslations[status] || status;
 };
 
 const parseCurrency = (formattedValue: string): string => {
   if (!formattedValue) return '0.00';
+
+  // Remove tudo que não for número
   const numericValue = formattedValue.replace(/[^\d]/g, '');
+
   if (!numericValue) return '0.00';
+
+  // Converte para formato decimal americano
   const numberValue = parseInt(numericValue) / 100;
+
   return numberValue.toFixed(2);
 };
 
@@ -73,7 +90,7 @@ const serviceFormSchema = insertServiceSchema.extend({
   })).optional(),
 });
 
-export default function SchedulePage() {
+export default function SchedulePageNew() {
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
@@ -88,6 +105,8 @@ export default function SchedulePage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDayAppointmentsModalOpen, setIsDayAppointmentsModalOpen] = useState(false);
   const [selectedDayServices, setSelectedDayServices] = useState<any[]>([]);
+  const [editingService, setEditingService] = useState<Service | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   
   const [serviceExtras, setServiceExtras] = useState<any[]>([]);
   const [temporaryPhotos, setTemporaryPhotos] = useState<Array<{ photo: string; category: string }>>([]);
@@ -263,6 +282,7 @@ export default function SchedulePage() {
 
   const createServiceMutation = useMutation({
     mutationFn: async (data: z.infer<typeof serviceFormSchema>) => {
+      // Convert form data to API format
       const formattedData = {
         ...data,
         valorPago: parseCurrency(data.valorPago || "0"),
@@ -273,7 +293,11 @@ export default function SchedulePage() {
         }))
       };
 
-      return await apiRequest('/api/services', 'POST', formattedData);
+      const response = await apiRequest('/api/services', {
+        method: 'POST',
+        body: JSON.stringify(formattedData),
+      });
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
@@ -311,7 +335,7 @@ export default function SchedulePage() {
     <div className="flex h-screen bg-slate-900 text-white">
       <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
-        <Header title="Agenda" />
+        <Header />
         <main className="flex-1 overflow-auto p-4 md:p-6">
           {/* Top Header */}
           <div className="flex items-center justify-between mb-6">
@@ -467,7 +491,7 @@ export default function SchedulePage() {
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-2">
                           <h3 className="font-medium text-white">
-                            {service.customer.name}
+                            {service.customer.firstName} {service.customer.lastName}
                           </h3>
                           <Badge 
                             className={cn(
@@ -482,12 +506,10 @@ export default function SchedulePage() {
                           </Badge>
                         </div>
                         <p className="text-slate-400 text-sm mb-1">
-                          <Clock className="inline h-3 w-3 mr-1" />
                           {service.scheduledTime || "Horário não definido"}
                         </p>
                         <p className="text-slate-400 text-sm">
-                          <Car className="inline h-3 w-3 mr-1" />
-                          {service.vehicle.brand} {service.vehicle.model} - {service.vehicle.licensePlate}
+                          {service.vehicle.brand} {service.vehicle.model} - {service.vehicle.plate}
                         </p>
                         {service.serviceType && (
                           <p className="text-green-400 text-sm mt-1">
@@ -503,21 +525,19 @@ export default function SchedulePage() {
           </div>
 
           {/* Bottom Navigation */}
-          {isMobile && (
-            <div className="fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-700 p-4">
-              <div className="flex justify-around">
-                <Button variant="ghost" className="text-slate-400" onClick={() => setLocation('/dashboard')}>
-                  <Home className="h-6 w-6" />
-                </Button>
-                <Button variant="ghost" className="text-slate-400" onClick={() => setIsAddModalOpen(true)}>
-                  <Plus className="h-6 w-6" />
-                </Button>
-                <Button variant="ghost" className="text-green-400">
-                  <CalendarIcon className="h-6 w-6" />
-                </Button>
-              </div>
+          <div className="fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-700 p-4 md:hidden">
+            <div className="flex justify-around">
+              <Button variant="ghost" className="text-slate-400">
+                <Home className="h-6 w-6" />
+              </Button>
+              <Button variant="ghost" className="text-slate-400">
+                <Plus className="h-6 w-6" />
+              </Button>
+              <Button variant="ghost" className="text-green-400">
+                <CalendarIcon className="h-6 w-6" />
+              </Button>
             </div>
-          )}
+          </div>
 
           {/* Multiple Appointments Modal */}
           <Dialog open={isDayAppointmentsModalOpen} onOpenChange={setIsDayAppointmentsModalOpen}>
@@ -540,7 +560,7 @@ export default function SchedulePage() {
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="font-medium text-white">
-                          {service.customer.name}
+                          {service.customer.firstName} {service.customer.lastName}
                         </h3>
                         <Badge 
                           className={cn(
@@ -555,12 +575,10 @@ export default function SchedulePage() {
                         </Badge>
                       </div>
                       <p className="text-slate-400 text-sm mb-1">
-                        <Clock className="inline h-3 w-3 mr-1" />
                         {service.scheduledTime || "Horário não definido"}
                       </p>
                       <p className="text-slate-400 text-sm">
-                        <Car className="inline h-3 w-3 mr-1" />
-                        {service.vehicle.brand} {service.vehicle.model} - {service.vehicle.licensePlate}
+                        {service.vehicle.brand} {service.vehicle.model} - {service.vehicle.plate}
                       </p>
                       {service.serviceType && (
                         <p className="text-green-400 text-sm mt-1">
@@ -598,7 +616,7 @@ export default function SchedulePage() {
                             <SelectContent className="bg-slate-700 border-slate-600">
                               {customers.map((customer) => (
                                 <SelectItem key={customer.id} value={customer.id.toString()}>
-                                  {customer.name}
+                                  {customer.firstName} {customer.lastName}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -623,7 +641,7 @@ export default function SchedulePage() {
                             <SelectContent className="bg-slate-700 border-slate-600">
                               {vehicles.map((vehicle) => (
                                 <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                                  {vehicle.brand} {vehicle.model} - {vehicle.licensePlate}
+                                  {vehicle.brand} {vehicle.model} - {vehicle.plate}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -741,6 +759,7 @@ export default function SchedulePage() {
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium text-white">Serviços</h3>
                     <ServiceItems 
+                      serviceTypes={serviceTypes}
                       serviceExtras={serviceExtras}
                       setServiceExtras={setServiceExtras}
                     />
