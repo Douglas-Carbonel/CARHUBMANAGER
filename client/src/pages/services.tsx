@@ -775,63 +775,64 @@ export default function Services() {
   const handleGeneratePDF = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     let currentY = 20;
 
     // Header com logo/empresa (opcional)
     doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(20, 100, 150);
+    doc.setTextColor('#146490'); // Usando hex color
     doc.text('ORDEM DE SERVIÇO', pageWidth / 2, currentY, { align: 'center' });
     currentY += 8;
 
     // Número da OS
     const serviceNumber = editingService?.id ? String(editingService.id).padStart(6, '0') : 'NOVA';
     doc.setFontSize(16);
-    doc.setTextColor(100, 100, 100);
+    doc.setTextColor('#646464'); // Usando hex color
     doc.text(`OS #${serviceNumber}`, pageWidth / 2, currentY, { align: 'center' });
     currentY += 15;
 
     // Linha separadora decorativa
-    doc.setDrawColor(20, 100, 150);
+    doc.setDrawColor('#146490'); // Usando hex color
     doc.setLineWidth(1);
     doc.line(20, currentY, pageWidth - 20, currentY);
     currentY += 20;
 
     // Reset colors
-    doc.setTextColor(0, 0, 0);
+    doc.setTextColor('#000000');
 
     // Informações do Cliente e Veículo em caixas
-    doc.setFillColor(245, 248, 252);
+    doc.setFillColor('#f5f8fc');
     doc.rect(20, currentY - 5, (pageWidth - 50) / 2, 35, 'F');
-    doc.setDrawColor(200, 200, 200);
+    doc.setDrawColor('#c8c8c8');
     doc.rect(20, currentY - 5, (pageWidth - 50) / 2, 35);
 
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(20, 100, 150);
+    doc.setTextColor('#146490');
     doc.text('CLIENTE', 25, currentY + 5);
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(0, 0, 0);
+    doc.setTextColor('#000000');
     const selectedCustomerId = form.watch("customerId");
     const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
     doc.text(`${selectedCustomer?.name || "Cliente não selecionado"}`, 25, currentY + 15);
 
     // Caixa do Veículo
-    doc.setFillColor(252, 248, 245);
+    doc.setFillColor('#fcf8f5');
     doc.rect(pageWidth / 2 + 5, currentY - 5, (pageWidth - 50) / 2, 35, 'F');
-    doc.setDrawColor(200, 200, 200);
+    doc.setDrawColor('#c8c8c8');
     doc.rect(pageWidth / 2 + 5, currentY - 5, (pageWidth - 50) / 2, 35);
 
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(20, 100, 150);
+    doc.setTextColor('#146490');
     doc.text('VEÍCULO', pageWidth / 2 + 10, currentY + 5);
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(0, 0, 0);
+    doc.setTextColor('#000000');
     const selectedVehicleId = form.watch("vehicleId");
     const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);
     if (selectedVehicle) {
@@ -844,19 +845,19 @@ export default function Services() {
     currentY += 50;
 
     // Detalhes do Serviço
-    doc.setFillColor(248, 252, 245);
+    doc.setFillColor('#f8fcf5');
     doc.rect(20, currentY - 5, pageWidth - 40, 45, 'F');
-    doc.setDrawColor(200, 200, 200);
+    doc.setDrawColor('#c8c8c8');
     doc.rect(20, currentY - 5, pageWidth - 40, 45);
 
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(20, 100, 150);
+    doc.setTextColor('#146490');
     doc.text('DETALHES DO SERVIÇO', 25, currentY + 5);
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(0, 0, 0);
+    doc.setTextColor('#000000');
 
     const scheduledDate = form.watch("scheduledDate");
     const formattedDate = scheduledDate ? new Date(scheduledDate + 'T00:00:00').toLocaleDateString('pt-BR') : "Não definida";
@@ -874,7 +875,7 @@ export default function Services() {
     if (serviceExtras.length > 0) {
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(20, 100, 150);
+      doc.setTextColor('#146490');
       doc.text('SERVIÇOS INCLUSOS', 20, currentY);
       currentY += 10;
 
@@ -903,8 +904,8 @@ export default function Services() {
           cellPadding: 5
         },
         headStyles: { 
-          fillColor: [20, 100, 150],
-          textColor: [255, 255, 255],
+          fillColor: '#146490',
+          textColor: '#ffffff',
           fontStyle: 'bold'
         },
         alternateRowStyles: {
@@ -921,20 +922,20 @@ export default function Services() {
     }
 
     // Resumo Financeiro destacado
-    doc.setFillColor(245, 252, 245);
-    doc.rect(20, currentY - 5, pageWidth - 40, 35, 'F');
-    doc.setDrawColor(100, 180, 100);
+    doc.setFillColor('#f5fcf5');
+    doc.rect(20, currentY - 5, pageWidth - 40, 50, 'F');
+    doc.setDrawColor('#64b464');
     doc.setLineWidth(2);
-    doc.rect(20, currentY - 5, pageWidth - 40, 35);
+    doc.rect(20, currentY - 5, pageWidth - 40, 50);
 
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(20, 100, 150);
+    doc.setTextColor('#146490');
     doc.text('RESUMO FINANCEIRO', 25, currentY + 8);
 
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(0, 0, 0);
+    doc.setTextColor('#000000');
     
     const totalValue = calculateTotalValue();
     const paidValue = Number(form.watch("valorPago") || 0);
@@ -947,17 +948,17 @@ export default function Services() {
     doc.setFont('helvetica', 'normal');
     doc.text(`Valor Pago:`, 25, currentY + 30);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(balance <= 0 ? [0, 150, 0] : [0, 0, 0]);
+    doc.setTextColor(balance <= 0 ? '#009600' : '#000000');
     doc.text(`R$ ${paidValue.toFixed(2)}`, pageWidth - 80, currentY + 30, { align: 'right' });
 
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(0, 0, 0);
+    doc.setTextColor('#000000');
     doc.text(`Saldo:`, 25, currentY + 40);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(balance <= 0 ? [0, 150, 0] : [200, 50, 50]);
+    doc.setTextColor(balance <= 0 ? '#009600' : '#c83232');
     doc.text(`R$ ${balance.toFixed(2)}`, pageWidth - 80, currentY + 40, { align: 'right' });
 
-    currentY += 55;
+    currentY += 65;
 
     // Observações
     const notes = form.watch("notes");
@@ -968,19 +969,19 @@ export default function Services() {
         currentY = 20;
       }
 
-      doc.setFillColor(252, 248, 245);
+      doc.setFillColor('#fcf8f5');
       doc.rect(20, currentY - 5, pageWidth - 40, 40, 'F');
-      doc.setDrawColor(200, 200, 200);
+      doc.setDrawColor('#c8c8c8');
       doc.rect(20, currentY - 5, pageWidth - 40, 40);
 
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(20, 100, 150);
+      doc.setTextColor('#146490');
       doc.text('OBSERVAÇÕES', 25, currentY + 8);
 
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(0, 0, 0);
+      doc.setTextColor('#000000');
       const notesLines = doc.splitTextToSize(notes, pageWidth - 60);
       doc.text(notesLines, 25, currentY + 20);
 
@@ -988,14 +989,13 @@ export default function Services() {
     }
 
     // Footer
-    const pageHeight = doc.internal.pageSize.getHeight();
-    doc.setDrawColor(200, 200, 200);
+    doc.setDrawColor('#c8c8c8');
     doc.setLineWidth(0.5);
     doc.line(20, pageHeight - 30, pageWidth - 20, pageHeight - 30);
 
     doc.setFontSize(8);
     doc.setFont('helvetica', 'italic');
-    doc.setTextColor(120, 120, 120);
+    doc.setTextColor('#787878');
     doc.text(`Documento gerado em ${new Date().toLocaleString('pt-BR')}`, 20, pageHeight - 20);
     doc.text(`OS #${serviceNumber}`, pageWidth - 20, pageHeight - 20, { align: 'right' });
 
