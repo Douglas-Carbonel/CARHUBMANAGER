@@ -832,11 +832,9 @@ export default function Services() {
               }
             }}>
               <DialogTrigger asChild>
-                <Button 
-                    className={cn(
-                      "fixed bottom-6 right-6 h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110",
-                      isMobile ? "h-14 w-14 bottom-4 right-4" : "h-16 w-16"
-                    )}
+                <Button
+                    className="fixed bottom-6 right-6 h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110"
+                    size="sm"
                     onClick={async () => {
                       setEditingService(null);
                       setCurrentServicePhotos([]);
@@ -894,7 +892,7 @@ export default function Services() {
                       });
                     }}
                   >
-                    <Plus className="h-6 w-6" />
+                    <Plus className="h-7 w-7" />
                   </Button>
               </DialogTrigger>
 
