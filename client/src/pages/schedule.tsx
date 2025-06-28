@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, DollarSign, MoreHorizontal, Plus, Search, Edit, Trash2, Clock, User, Car, Wrench, CheckCircle, XCircle, Timer, BarChart3, FileText, Camera, Coins, Calculator, Smartphone, Banknote, CreditCard, Receipt, Bell, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, DollarSign, MoreHorizontal, Plus, Search, Edit, Trash2, Clock, User, Car, Wrench, CheckCircle, XCircle, Timer, BarChart3, FileText, Camera, Coins, Calculator, Smartphone, Banknote, CreditCard, Receipt, Bell, ChevronLeft, ChevronRight, MapPin, Phone, Star, TrendingUp, Activity, AlertCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertServiceSchema, type Service, type Customer, type Vehicle, type ServiceType, type Photo } from "@shared/schema";
@@ -293,6 +293,7 @@ export default function SchedulePage() {
     const dayServices = getServicesForDate(date);
     if (dayServices.length > 1) {
       setSelectedDayServices(dayServices);
+      setSelectedDate(date);
       setIsDayAppointmentsModalOpen(true);
     } else if (dayServices.length === 1) {
       setLocation(`/services?openModal=true&serviceId=${dayServices[0].id}`);
@@ -497,50 +498,62 @@ export default function SchedulePage() {
         <main className="flex-1 overflow-auto p-4 md:p-6">
           {/* Quick Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0">
+            <Card className="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-blue-100 text-sm font-medium">Hoje</p>
+                    <p className="text-blue-100 text-sm font-medium mb-1">Hoje</p>
                     <p className="text-2xl font-bold">{getFilterCount("hoje")}</p>
+                    <p className="text-blue-200 text-xs mt-1">agendamentos</p>
                   </div>
-                  <Calendar className="h-8 w-8 text-blue-200" />
+                  <div className="bg-white/20 p-3 rounded-full">
+                    <Calendar className="h-6 w-6 text-white" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0">
+            <Card className="bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-emerald-100 text-sm font-medium">Esta Semana</p>
+                    <p className="text-emerald-100 text-sm font-medium mb-1">Esta Semana</p>
                     <p className="text-2xl font-bold">{getFilterCount("semana")}</p>
+                    <p className="text-emerald-200 text-xs mt-1">agendamentos</p>
                   </div>
-                  <Clock className="h-8 w-8 text-emerald-200" />
+                  <div className="bg-white/20 p-3 rounded-full">
+                    <Clock className="h-6 w-6 text-white" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0">
+            <Card className="bg-gradient-to-br from-purple-500 via-purple-600 to-violet-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-purple-100 text-sm font-medium">Este Mês</p>
+                    <p className="text-purple-100 text-sm font-medium mb-1">Este Mês</p>
                     <p className="text-2xl font-bold">{getFilterCount("mes")}</p>
+                    <p className="text-purple-200 text-xs mt-1">agendamentos</p>
                   </div>
-                  <BarChart3 className="h-8 w-8 text-purple-200" />
+                  <div className="bg-white/20 p-3 rounded-full">
+                    <BarChart3 className="h-6 w-6 text-white" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0">
+            <Card className="bg-gradient-to-br from-orange-500 via-orange-600 to-red-500 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-orange-100 text-sm font-medium">Total</p>
+                    <p className="text-orange-100 text-sm font-medium mb-1">Total</p>
                     <p className="text-2xl font-bold">{services.length}</p>
+                    <p className="text-orange-200 text-xs mt-1">agendamentos</p>
                   </div>
-                  <FileText className="h-8 w-8 text-orange-200" />
+                  <div className="bg-white/20 p-3 rounded-full">
+                    <FileText className="h-6 w-6 text-white" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -550,12 +563,14 @@ export default function SchedulePage() {
             {/* Calendar Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <Calendar className="h-5 w-5 mr-2 text-teal-600" />
+                <h2 className="text-xl font-bold text-gray-900 flex items-center">
+                  <div className="bg-gradient-to-r from-teal-500 to-emerald-500 p-2 rounded-lg mr-3">
+                    <Calendar className="h-5 w-5 text-white" />
+                  </div>
                   Calendário
                 </h2>
                 {/* View Mode Selector */}
-                <div className="flex bg-gray-100 rounded-full p-1">
+                <div className="flex bg-gray-100 rounded-xl p-1 shadow-inner">
                   {[
                     { key: 'Month', label: 'Mês' },
                     { key: 'Week', label: 'Semana' },
@@ -567,10 +582,10 @@ export default function SchedulePage() {
                       size="sm"
                       onClick={() => setViewMode(mode.key as any)}
                       className={cn(
-                        "rounded-full px-3 py-1 text-xs",
+                        "rounded-lg px-4 py-2 text-xs font-medium transition-all duration-200",
                         viewMode === mode.key 
-                          ? "bg-teal-600 text-white hover:bg-teal-700" 
-                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-200"
+                          ? "bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-md hover:from-teal-600 hover:to-emerald-600" 
+                          : "text-gray-600 hover:text-gray-900 hover:bg-white"
                       )}
                     >
                       {mode.label}
@@ -579,9 +594,9 @@ export default function SchedulePage() {
                 </div>
               </div>
 
-              <Card className="bg-gradient-to-br from-white to-gray-50 border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <CardHeader className="flex flex-row items-center justify-between border-b border-gray-100">
-                  <CardTitle className="text-gray-900 font-bold">
+              <Card className="bg-gradient-to-br from-white via-gray-50 to-blue-50/30 border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+                <CardHeader className="flex flex-row items-center justify-between border-b border-gray-100/50 bg-gradient-to-r from-slate-50 to-blue-50/50 rounded-t-lg">
+                  <CardTitle className="text-gray-900 font-bold text-lg">
                     {format(currentDate, "MMMM yyyy", { locale: ptBR })}
                   </CardTitle>
                   <div className="flex items-center gap-2">
@@ -589,7 +604,7 @@ export default function SchedulePage() {
                       variant="ghost"
                       size="sm"
                       onClick={handlePrevMonth}
-                      className="text-gray-600 hover:text-gray-900"
+                      className="text-gray-600 hover:text-gray-900 hover:bg-white/80 rounded-full h-9 w-9 p-0"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
@@ -597,17 +612,17 @@ export default function SchedulePage() {
                       variant="ghost"
                       size="sm"
                       onClick={handleNextMonth}
-                      className="text-gray-600 hover:text-gray-900"
+                      className="text-gray-600 hover:text-gray-900 hover:bg-white/80 rounded-full h-9 w-9 p-0"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4">
                   {viewMode === 'Month' && (
-                    <div className="grid grid-cols-7 gap-1">
+                    <div className="grid grid-cols-7 gap-2">
                       {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day, index) => (
-                        <div key={`header-${index}`} className="text-center text-sm font-medium text-gray-600 p-2">
+                        <div key={`header-${index}`} className="text-center text-sm font-semibold text-gray-700 p-3 bg-gradient-to-r from-slate-100 to-blue-100/50 rounded-lg mb-2">
                           {day}
                         </div>
                       ))}
@@ -616,20 +631,26 @@ export default function SchedulePage() {
                           key={`day-${index}-${day.date.getTime()}`}
                           onClick={() => handleDayClick(day.date)}
                           className={cn(
-                            "relative p-2 text-center cursor-pointer rounded-lg transition-colors min-h-[40px] flex items-center justify-center",
+                            "relative p-3 text-center cursor-pointer rounded-xl transition-all duration-200 min-h-[50px] flex flex-col items-center justify-center hover:scale-105 hover:shadow-lg",
                             day.isCurrentMonth 
-                              ? "text-gray-900 hover:bg-gray-100" 
-                              : "text-gray-400",
-                            day.isToday && "bg-teal-600 text-white hover:bg-teal-700",
-                            day.services.length > 0 && !day.isToday && "bg-blue-50 border border-blue-200"
+                              ? "text-gray-900 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50" 
+                              : "text-gray-400 hover:bg-gray-50",
+                            day.isToday && "bg-gradient-to-br from-teal-500 to-emerald-500 text-white hover:from-teal-600 hover:to-emerald-600 shadow-lg font-bold",
+                            day.services.length > 0 && !day.isToday && "bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 shadow-md"
                           )}
                         >
-                          <span className="text-sm">{format(day.date, "d")}</span>
+                          <span className="text-sm font-medium">{format(day.date, "d")}</span>
                           {day.services.length > 0 && (
                             <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex gap-1">
                               {day.services.slice(0, 3).map((_, i) => (
-                                <div key={i} className="w-1 h-1 bg-teal-500 rounded-full" />
+                                <div key={i} className={cn(
+                                  "w-1.5 h-1.5 rounded-full",
+                                  day.isToday ? "bg-white/80" : "bg-teal-500"
+                                )} />
                               ))}
+                              {day.services.length > 3 && (
+                                <span className="text-[10px] font-bold text-teal-600">+{day.services.length - 3}</span>
+                              )}
                             </div>
                           )}
                         </div>
@@ -638,13 +659,13 @@ export default function SchedulePage() {
                   )}
 
                   {viewMode === 'Week' && (
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-7 gap-2 text-center text-sm font-medium text-gray-600 pb-2">
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-7 gap-3 text-center text-sm font-semibold text-gray-700 pb-2">
                         {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day, index) => (
-                          <div key={`week-header-${index}`}>{day}</div>
+                          <div key={`week-header-${index}`} className="bg-gradient-to-r from-slate-100 to-blue-100/50 rounded-lg p-2">{day}</div>
                         ))}
                       </div>
-                      <div className="grid grid-cols-7 gap-2">
+                      <div className="grid grid-cols-7 gap-3">
                         {(() => {
                           const startWeekDay = startOfWeek(currentDate, { weekStartsOn: 0 });
                           const weekDays = Array.from({ length: 7 }, (_, i) => addDays(startWeekDay, i));
@@ -657,21 +678,24 @@ export default function SchedulePage() {
                                 key={`week-day-${index}`}
                                 onClick={() => handleDayClick(day)}
                                 className={cn(
-                                  "p-3 rounded-lg cursor-pointer transition-colors min-h-[80px] border border-gray-200",
-                                  isToday(day) && "bg-teal-600 text-white",
-                                  dayServices.length > 0 && !isToday(day) && "bg-blue-50 border-blue-200",
-                                  !dayServices.length && !isToday(day) && "hover:bg-gray-50"
+                                  "p-3 rounded-xl cursor-pointer transition-all duration-200 min-h-[100px] border-2 hover:shadow-lg hover:scale-105",
+                                  isToday(day) && "bg-gradient-to-br from-teal-500 to-emerald-500 text-white border-teal-300",
+                                  dayServices.length > 0 && !isToday(day) && "bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200",
+                                  !dayServices.length && !isToday(day) && "border-gray-200 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50"
                                 )}
                               >
-                                <div className="text-sm font-medium mb-1">{format(day, "d")}</div>
+                                <div className="text-sm font-semibold mb-2">{format(day, "d")}</div>
                                 <div className="space-y-1">
                                   {dayServices.slice(0, 2).map(service => (
-                                    <div key={service.id} className="text-xs bg-teal-500 text-white px-1 py-0.5 rounded truncate">
+                                    <div key={service.id} className={cn(
+                                      "text-xs px-2 py-1 rounded-lg truncate font-medium",
+                                      isToday(day) ? "bg-white/20 text-white" : "bg-teal-500 text-white"
+                                    )}>
                                       {service.customer.name}
                                     </div>
                                   ))}
                                   {dayServices.length > 2 && (
-                                    <div className="text-xs text-gray-500">+{dayServices.length - 2} mais</div>
+                                    <div className="text-xs text-gray-600 font-medium">+{dayServices.length - 2} mais</div>
                                   )}
                                 </div>
                               </div>
@@ -683,13 +707,13 @@ export default function SchedulePage() {
                   )}
 
                   {viewMode === 'Day' && (
-                    <div className="space-y-3">
-                      <div className="text-center">
-                        <h3 className="text-lg font-semibold text-gray-900">
+                    <div className="space-y-4">
+                      <div className="text-center bg-gradient-to-r from-slate-100 to-blue-100/50 rounded-xl p-4">
+                        <h3 className="text-lg font-bold text-gray-900">
                           {format(currentDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}
                         </h3>
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {(() => {
                           const dayServices = services.filter(service => 
                             service.scheduledDate && isSameDay(parseISO(service.scheduledDate), currentDate)
@@ -697,9 +721,11 @@ export default function SchedulePage() {
                           
                           if (dayServices.length === 0) {
                             return (
-                              <div className="text-center py-8 text-gray-500">
-                                <Calendar className="h-12 w-12 mx-auto mb-3" />
-                                <p>Nenhum agendamento para este dia</p>
+                              <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-xl">
+                                <div className="bg-gradient-to-r from-teal-500 to-emerald-500 p-4 rounded-full w-16 h-16 mx-auto mb-4">
+                                  <Calendar className="h-8 w-8 text-white mx-auto" />
+                                </div>
+                                <p className="text-gray-600 font-medium">Nenhum agendamento para este dia</p>
                               </div>
                             );
                           }
@@ -707,28 +733,28 @@ export default function SchedulePage() {
                           return dayServices.map(service => (
                             <Card 
                               key={service.id} 
-                              className="bg-white border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
+                              className="bg-gradient-to-r from-white to-blue-50/30 border-0 shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer transform hover:-translate-y-1"
                               onClick={() => setLocation(`/services?openModal=true&serviceId=${service.id}`)}
                             >
-                              <CardContent className="p-3">
-                                <div className="flex items-center justify-between mb-1">
-                                  <h4 className="font-medium text-gray-900 text-sm">{service.customer.name}</h4>
+                              <CardContent className="p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h4 className="font-bold text-gray-900">{service.customer.name}</h4>
                                   <Badge className={cn(
-                                    "text-xs",
-                                    service.status === 'completed' && "bg-emerald-100 text-emerald-800",
-                                    service.status === 'in_progress' && "bg-blue-100 text-blue-800",
-                                    service.status === 'scheduled' && "bg-orange-100 text-orange-800",
-                                    service.status === 'cancelled' && "bg-red-100 text-red-800"
+                                    "text-xs font-medium",
+                                    service.status === 'completed' && "bg-gradient-to-r from-emerald-500 to-green-500 text-white",
+                                    service.status === 'in_progress' && "bg-gradient-to-r from-blue-500 to-indigo-500 text-white",
+                                    service.status === 'scheduled' && "bg-gradient-to-r from-orange-500 to-yellow-500 text-white",
+                                    service.status === 'cancelled' && "bg-gradient-to-r from-red-500 to-pink-500 text-white"
                                   )}>
                                     {translateStatus(service.status)}
                                   </Badge>
                                 </div>
-                                <p className="text-gray-600 text-xs">
-                                  <Clock className="inline h-3 w-3 mr-1" />
+                                <p className="text-gray-600 text-sm mb-1 flex items-center">
+                                  <Clock className="inline h-3 w-3 mr-2" />
                                   {service.scheduledTime || "Horário não definido"}
                                 </p>
-                                <p className="text-gray-600 text-xs">
-                                  <Car className="inline h-3 w-3 mr-1" />
+                                <p className="text-gray-600 text-sm flex items-center">
+                                  <Car className="inline h-3 w-3 mr-2" />
                                   {service.vehicle.brand} {service.vehicle.model}
                                 </p>
                               </CardContent>
@@ -745,16 +771,18 @@ export default function SchedulePage() {
             {/* Appointments List Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <Clock className="h-5 w-5 mr-2 text-teal-600" />
+                <h2 className="text-xl font-bold text-gray-900 flex items-center">
+                  <div className="bg-gradient-to-r from-purple-500 to-indigo-500 p-2 rounded-lg mr-3">
+                    <Activity className="h-5 w-5 text-white" />
+                  </div>
                   Agendamentos
                 </h2>
                 {/* Period Filter Dropdown */}
                 <Select value={periodFilter} onValueChange={setPeriodFilter}>
-                  <SelectTrigger className="w-40 bg-white border-gray-300 text-gray-900">
+                  <SelectTrigger className="w-44 bg-white border-2 border-gray-200 text-gray-900 shadow-md hover:shadow-lg transition-all duration-200">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-300">
+                  <SelectContent className="bg-white border-gray-200">
                     <SelectItem value="hoje">Hoje ({getFilterCount("hoje")})</SelectItem>
                     <SelectItem value="semana">Esta Semana ({getFilterCount("semana")})</SelectItem>
                     <SelectItem value="mes">Este Mês ({getFilterCount("mes")})</SelectItem>
@@ -764,52 +792,111 @@ export default function SchedulePage() {
               </div>
               
               {filteredServices.length === 0 ? (
-                <Card className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 shadow-lg">
-                  <CardContent className="p-8 text-center">
-                    <div className="w-16 h-16 bg-gradient-to-r from-teal-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Calendar className="h-8 w-8 text-white" />
+                <Card className="bg-gradient-to-br from-gray-50 via-blue-50/20 to-purple-50/20 border-0 shadow-xl">
+                  <CardContent className="p-12 text-center">
+                    <div className="bg-gradient-to-r from-teal-500 to-emerald-500 p-6 rounded-full w-20 h-20 mx-auto mb-6">
+                      <Calendar className="h-8 w-8 text-white mx-auto" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-700 mb-2">Nenhum agendamento</h3>
-                    <p className="text-gray-500">Não há agendamentos para o período selecionado</p>
+                    <h3 className="text-xl font-bold text-gray-700 mb-3">Nenhum agendamento</h3>
+                    <p className="text-gray-500 mb-4">Não há agendamentos para o período selecionado</p>
+                    <div className="flex justify-center">
+                      <Button
+                        onClick={() => {
+                          const defaultValues = {
+                            customerId: 0,
+                            vehicleId: 0,
+                            serviceTypeId: undefined,
+                            technicianId: 0,
+                            scheduledDate: "",
+                            scheduledTime: "",
+                            status: "scheduled" as "scheduled" | "in_progress" | "completed" | "cancelled",
+                            notes: "",
+                            valorPago: "0",
+                            pixPago: "0.00",
+                            dinheiroPago: "0.00",
+                            chequePago: "0.00",
+                            cartaoPago: "0.00",
+                          };
+
+                          form.reset(defaultValues);
+                          setServiceExtras([]);
+                          setInitialServiceExtras([]);
+                          setFormInitialValues(defaultValues);
+                          setPaymentMethods({
+                            pix: "",
+                            dinheiro: "",
+                            cheque: "",
+                            cartao: ""
+                          });
+                          setIsAddModalOpen(true);
+                        }}
+                        className="bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white px-6 py-2 shadow-lg hover:shadow-xl transition-all duration-200"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Criar Primeiro Agendamento
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
+                <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                   {filteredServices.map(service => (
                     <Card 
                       key={service.id} 
-                      className="bg-gradient-to-r from-white to-gray-50 border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer group"
+                      className="bg-gradient-to-r from-white via-blue-50/30 to-purple-50/20 border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group transform hover:-translate-y-1"
                       onClick={() => setLocation(`/services?openModal=true&serviceId=${service.id}`)}
                     >
-                      <CardContent className="p-4 group-hover:bg-white transition-colors duration-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold text-gray-900 group-hover:text-teal-700 transition-colors">
-                            {service.customer.name}
-                          </h3>
+                      <CardContent className="p-5">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <h3 className="font-bold text-gray-900 group-hover:text-teal-700 transition-colors text-lg mb-1">
+                              {service.customer.name}
+                            </h3>
+                            <div className="flex items-center text-gray-600 text-sm mb-1">
+                              <Clock className="h-4 w-4 mr-2 text-teal-500" />
+                              {service.scheduledTime || "Horário não definido"}
+                            </div>
+                          </div>
                           <Badge 
                             className={cn(
-                              "text-xs",
-                              service.status === 'completed' && "bg-emerald-100 text-emerald-800",
-                              service.status === 'in_progress' && "bg-blue-100 text-blue-800",
-                              service.status === 'scheduled' && "bg-orange-100 text-orange-800",
-                              service.status === 'cancelled' && "bg-red-100 text-red-800"
+                              "text-xs font-semibold shadow-md",
+                              service.status === 'completed' && "bg-gradient-to-r from-emerald-500 to-green-500 text-white",
+                              service.status === 'in_progress' && "bg-gradient-to-r from-blue-500 to-indigo-500 text-white",
+                              service.status === 'scheduled' && "bg-gradient-to-r from-orange-500 to-yellow-500 text-white",
+                              service.status === 'cancelled' && "bg-gradient-to-r from-red-500 to-pink-500 text-white"
                             )}
                           >
                             {translateStatus(service.status)}
                           </Badge>
                         </div>
-                        <p className="text-gray-600 text-sm mb-1">
-                          <Clock className="inline h-3 w-3 mr-1" />
-                          {service.scheduledTime || "Horário não definido"}
-                        </p>
-                        <p className="text-gray-600 text-sm">
-                          <Car className="inline h-3 w-3 mr-1" />
-                          {service.vehicle.brand} {service.vehicle.model} - {service.vehicle.licensePlate}
-                        </p>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                          <div className="flex items-center text-gray-600 text-sm">
+                            <Car className="h-4 w-4 mr-2 text-indigo-500" />
+                            <span className="font-medium">{service.vehicle.brand} {service.vehicle.model}</span>
+                          </div>
+                          <div className="flex items-center text-gray-600 text-sm">
+                            <MapPin className="h-4 w-4 mr-2 text-purple-500" />
+                            <span className="font-medium">{service.vehicle.licensePlate}</span>
+                          </div>
+                        </div>
+
                         {service.serviceType && (
-                          <p className="text-teal-600 text-sm mt-1">
-                            {service.serviceType.name}
-                          </p>
+                          <div className="bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 rounded-lg p-3 mb-3">
+                            <div className="flex items-center text-teal-700 text-sm font-semibold">
+                              <Wrench className="h-4 w-4 mr-2" />
+                              {service.serviceType.name}
+                            </div>
+                          </div>
+                        )}
+
+                        {service.estimatedValue && (
+                          <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                            <span className="text-gray-600 text-sm">Valor Estimado:</span>
+                            <span className="font-bold text-green-600">
+                              R$ {Number(service.estimatedValue).toFixed(2)}
+                            </span>
+                          </div>
                         )}
                       </CardContent>
                     </Card>
@@ -854,7 +941,7 @@ export default function SchedulePage() {
           }}>
             <DialogTrigger asChild>
               <Button
-                className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-teal-600 hover:bg-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 z-50"
+                className="fixed bottom-6 right-6 h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110"
                 size="sm"
                 onClick={() => {
                   const defaultValues = {
@@ -892,7 +979,7 @@ export default function SchedulePage() {
                   });
                 }}
               >
-                <Plus className="h-6 w-6" />
+                <Plus className="h-7 w-7" />
               </Button>
             </DialogTrigger>
 
@@ -1308,57 +1395,96 @@ export default function SchedulePage() {
             </DialogContent>
           </Dialog>
 
-          {/* Multiple Appointments Modal */}
+          {/* Enhanced Multiple Appointments Modal */}
           <Dialog open={isDayAppointmentsModalOpen} onOpenChange={setIsDayAppointmentsModalOpen}>
-            <DialogContent className="bg-white border-gray-300 text-gray-900 max-w-md">
-              <DialogHeader>
-                <DialogTitle className="text-gray-900">
-                  Agendamentos para {selectedDate && format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
+            <DialogContent className="bg-gradient-to-br from-white via-blue-50/30 to-purple-50/20 border-0 shadow-2xl max-w-lg">
+              <DialogHeader className="pb-4 border-b border-gray-100">
+                <DialogTitle className="text-xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent flex items-center">
+                  <Calendar className="h-6 w-6 mr-3 text-teal-600" />
+                  Agendamentos - {selectedDate && format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
                 </DialogTitle>
+                <p className="text-gray-600 text-sm mt-2">
+                  {selectedDayServices.length} agendamento{selectedDayServices.length !== 1 ? 's' : ''} para este dia
+                </p>
               </DialogHeader>
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {selectedDayServices.map(service => (
+              <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                {selectedDayServices.map((service, index) => (
                   <Card 
                     key={service.id} 
-                    className="bg-gray-50 border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer"
+                    className="bg-gradient-to-r from-white to-blue-50/50 border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group transform hover:-translate-y-1"
                     onClick={() => {
                       setIsDayAppointmentsModalOpen(false);
                       setLocation(`/services?openModal=true&serviceId=${service.id}`);
                     }}
                   >
                     <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-medium text-gray-900">
-                          {service.customer.name}
-                        </h3>
-                        <Badge 
-                          className={cn(
-                            "text-xs",
-                            service.status === 'completed' && "bg-emerald-100 text-emerald-800",
-                            service.status === 'in_progress' && "bg-blue-100 text-blue-800",
-                            service.status === 'scheduled' && "bg-orange-100 text-orange-800",
-                            service.status === 'cancelled' && "bg-red-100 text-red-800"
-                          )}
-                        >
-                          {translateStatus(service.status)}
-                        </Badge>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h3 className="font-bold text-gray-900 group-hover:text-teal-700 transition-colors mb-1">
+                            {service.customer.name}
+                          </h3>
+                          <div className="flex items-center text-gray-600 text-sm mb-1">
+                            <Clock className="h-3 w-3 mr-2 text-teal-500" />
+                            {service.scheduledTime || "Horário não definido"}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end space-y-2">
+                          <Badge 
+                            className={cn(
+                              "text-xs font-semibold",
+                              service.status === 'completed' && "bg-gradient-to-r from-emerald-500 to-green-500 text-white",
+                              service.status === 'in_progress' && "bg-gradient-to-r from-blue-500 to-indigo-500 text-white",
+                              service.status === 'scheduled' && "bg-gradient-to-r from-orange-500 to-yellow-500 text-white",
+                              service.status === 'cancelled' && "bg-gradient-to-r from-red-500 to-pink-500 text-white"
+                            )}
+                          >
+                            {translateStatus(service.status)}
+                          </Badge>
+                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                            #{index + 1}
+                          </span>
+                        </div>
                       </div>
-                      <p className="text-gray-600 text-sm mb-1">
-                        <Clock className="inline h-3 w-3 mr-1" />
-                        {service.scheduledTime || "Horário não definido"}
-                      </p>
-                      <p className="text-gray-600 text-sm">
-                        <Car className="inline h-3 w-3 mr-1" />
-                        {service.vehicle.brand} {service.vehicle.model} - {service.vehicle.licensePlate}
-                      </p>
+                      
+                      <div className="grid grid-cols-1 gap-2 mb-3">
+                        <div className="flex items-center text-gray-600 text-sm">
+                          <Car className="h-3 w-3 mr-2 text-indigo-500" />
+                          <span className="font-medium">{service.vehicle.brand} {service.vehicle.model}</span>
+                        </div>
+                        <div className="flex items-center text-gray-600 text-sm">
+                          <MapPin className="h-3 w-3 mr-2 text-purple-500" />
+                          <span className="font-medium">{service.vehicle.licensePlate}</span>
+                        </div>
+                      </div>
+
                       {service.serviceType && (
-                        <p className="text-teal-600 text-sm mt-1">
-                          {service.serviceType.name}
-                        </p>
+                        <div className="bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 rounded-lg p-2">
+                          <div className="flex items-center text-teal-700 text-xs font-semibold">
+                            <Wrench className="h-3 w-3 mr-2" />
+                            {service.serviceType.name}
+                          </div>
+                        </div>
+                      )}
+
+                      {service.estimatedValue && (
+                        <div className="flex items-center justify-between pt-2 mt-2 border-t border-gray-200">
+                          <span className="text-gray-600 text-xs">Valor:</span>
+                          <span className="font-bold text-green-600 text-sm">
+                            R$ {Number(service.estimatedValue).toFixed(2)}
+                          </span>
+                        </div>
                       )}
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+              <div className="pt-4 border-t border-gray-100">
+                <Button
+                  onClick={() => setIsDayAppointmentsModalOpen(false)}
+                  className="w-full bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white"
+                >
+                  Fechar
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
