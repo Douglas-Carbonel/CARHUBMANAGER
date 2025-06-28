@@ -236,19 +236,6 @@ export default function PaymentManager({
             </span>
           </div>
         </div>
-        
-        <div className="flex items-center space-x-3">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsModalOpen(true)}
-            className="text-slate-600 hover:text-slate-800 hover:bg-slate-200 transition-all duration-200"
-            title="Gerenciar Pagamentos"
-          >
-            <DollarSign className="h-4 w-4" />
-          </Button>
-        </div>
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
