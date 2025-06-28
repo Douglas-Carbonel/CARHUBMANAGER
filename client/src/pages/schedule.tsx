@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -113,13 +111,13 @@ export default function SchedulePage() {
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
   const isMobile = useIsMobile();
-  
+
   // Calendar state
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [viewMode, setViewMode] = useState<'Month' | 'Week' | 'Day'>('Month');
   const [periodFilter, setPeriodFilter] = useState<string>("todos");
-  
+
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDayAppointmentsModalOpen, setIsDayAppointmentsModalOpen] = useState(false);
@@ -237,9 +235,9 @@ export default function SchedulePage() {
 
     return services.filter(service => {
       if (!service.scheduledDate) return false;
-      
+
       const serviceDate = parseISO(service.scheduledDate);
-      
+
       switch (periodFilter) {
         case "hoje":
           return serviceDate >= startOfToday && serviceDate <= endOfToday;
@@ -273,14 +271,14 @@ export default function SchedulePage() {
       const dayServices = services.filter(service => 
         service.scheduledDate && isSameDay(parseISO(service.scheduledDate), day)
       );
-      
+
       days.push({
         date: new Date(day),
         services: dayServices,
         isCurrentMonth: day.getMonth() === currentDate.getMonth(),
         isToday: isToday(day)
       });
-      
+
       day = addDays(day, 1);
     }
 
@@ -647,9 +645,9 @@ export default function SchedulePage() {
 
     return services.filter(service => {
       if (!service.scheduledDate) return false;
-      
+
       const serviceDate = parseISO(service.scheduledDate);
-      
+
       switch (period) {
         case "hoje":
           return serviceDate >= startOfToday && serviceDate <= endOfToday;
@@ -667,7 +665,7 @@ export default function SchedulePage() {
     }).length;
   };
 
-  
+
 
   if (servicesLoading || customersLoading || vehiclesLoading || techniciansLoading) {
     return (
@@ -774,7 +772,7 @@ export default function SchedulePage() {
                               </div>
                             )}
                           </div>
-                          
+
                           {day.services.length > 0 && (
                             <div className="flex-1 w-full space-y-1">
                               {day.services.length <= 3 ? (
@@ -859,9 +857,9 @@ export default function SchedulePage() {
                             const dayServices = services.filter(service => 
                               service.scheduledDate && isSameDay(parseISO(service.scheduledDate), day)
                             ).sort((a, b) => (a.scheduledTime || '').localeCompare(b.scheduledTime || ''));
-                            
+
                             const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-                            
+
                             return (
                               <Card 
                                 key={`week-day-${index}`}
@@ -896,7 +894,7 @@ export default function SchedulePage() {
                                         </p>
                                       </div>
                                     </div>
-                                    
+
                                     {/* Contador de agendamentos */}
                                     <div className="flex items-center space-x-2">
                                       {dayServices.length > 0 ? (
@@ -948,7 +946,7 @@ export default function SchedulePage() {
                                                 {translateStatus(service.status)}
                                               </Badge>
                                             </div>
-                                            
+
                                             <div className="flex items-center justify-between text-xs text-gray-600">
                                               <div className="flex items-center">
                                                 <Clock className="h-3 w-3 mr-1 text-teal-500" />
@@ -964,7 +962,7 @@ export default function SchedulePage() {
                                                 </div>
                                               )}
                                             </div>
-                                            
+
                                             {service.serviceType && (
                                               <div className="mt-2 text-xs">
                                                 <span className="inline-flex items-center px-2 py-1 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200">
@@ -1043,7 +1041,7 @@ export default function SchedulePage() {
                           const dayServices = services.filter(service => 
                             service.scheduledDate && isSameDay(parseISO(service.scheduledDate), currentDate)
                           ).sort((a, b) => (a.scheduledTime || '').localeCompare(b.scheduledTime || ''));
-                          
+
                           if (dayServices.length === 0) {
                             return (
                               <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-xl">
@@ -1115,7 +1113,7 @@ export default function SchedulePage() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               {filteredServices.length === 0 ? (
                 <Card className="bg-gradient-to-br from-gray-50 via-blue-50/20 to-purple-50/20 border-0 shadow-xl">
                   <CardContent className="p-12 text-center">
@@ -1194,7 +1192,7 @@ export default function SchedulePage() {
                             {translateStatus(service.status)}
                           </Badge>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                           <div className="flex items-center text-gray-600 text-sm">
                             <Car className="h-4 w-4 mr-2 text-indigo-500" />
@@ -1620,38 +1618,6 @@ export default function SchedulePage() {
                           </div>
                         </div>
 
-                        {/* Payment Status */}
-                        <div className="flex items-center justify-center mb-4">
-                          <div className={`px-4 py-2 rounded-full flex items-center space-x-2 ${
-                            Number(form.watch("valorPago") || 0) === 0 
-                              ? 'bg-red-100 border-2 border-red-300' 
-                              : Number(form.watch("valorPago") || 0) >= Number(calculateTotalValue())
-                                ? 'bg-green-100 border-2 border-green-300'
-                                : 'bg-yellow-100 border-2 border-yellow-300'
-                          }`}>
-                            <div className={`w-3 h-3 rounded-full ${
-                              Number(form.watch("valorPago") || 0) === 0 
-                                ? 'bg-red-500' 
-                                : Number(form.watch("valorPago") || 0) >= Number(calculateTotalValue())
-                                  ? 'bg-green-500'
-                                  : 'bg-yellow-500'
-                            }`}></div>
-                            <span className={`text-sm font-bold ${
-                              Number(form.watch("valorPago") || 0) === 0 
-                                ? 'text-red-700' 
-                                : Number(form.watch("valorPago") || 0) >= Number(calculateTotalValue())
-                                  ? 'text-green-700'
-                                  : 'text-yellow-700'
-                            }`}>
-                              {Number(form.watch("valorPago") || 0) === 0 
-                                ? 'PENDENTE' 
-                                : Number(form.watch("valorPago") || 0) >= Number(calculateTotalValue())
-                                  ? 'PAGO'
-                                  : 'PARCIAL'
-                              }
-                            </span>
-                          </div>
-                        </div>
                         <PaymentManager
                           totalValue={Number(calculateTotalValue())}
                           currentPaidValue={Number(form.watch("valorPago") || 0)}
@@ -2028,7 +1994,7 @@ export default function SchedulePage() {
                           </span>
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 gap-2 mb-3">
                         <div className="flex items-center text-gray-600 text-sm">
                           <Car className="h-3 w-3 mr-2 text-indigo-500" />
@@ -2274,7 +2240,7 @@ export default function SchedulePage() {
                           const formattedValue = formatCurrency(e.target.value);
                           setPaymentMethods(prev => ({ ...prev, pix: parseCurrency(formattedValue) }));
                         }}
-                        className="pl-10 h-11 border-2 border-emerald-200 focus:border-emerald-400 rounded-lg bg-white"
+                        className="pl-10 h-11 border-2 border-emerald-200 focus:border-emerald400 rounded-lg bg-white"
                       />
                     </div>
                   </div>
