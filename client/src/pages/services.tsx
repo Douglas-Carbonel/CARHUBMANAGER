@@ -33,7 +33,7 @@ import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import 'jspdf-autotable';
 
 // Utility functions for currency formatting
 const formatCurrency = (value: string): string => {
@@ -774,95 +774,115 @@ export default function Services() {
 
   const handleGeneratePDF = () => {
     const doc = new jsPDF();
-
-    // Configurações de fonte e tamanho
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(12);
-
-    let y = 15; // Posição inicial Y
-
-    // Função para adicionar texto com quebra de linha
-    const addWrappedText = (text: string, x: number, y: number, width: number, fontSize: number = 12) => {
-      doc.setFontSize(fontSize);
-      const textLines = doc.splitTextToSize(text, width);
-      textLines.forEach(line => {
-        doc.text(line, x, y);
-        y += fontSize / 3.527777778; // Converter pt para mm (1pt = 0.352778mm)
-      });
-      return y;
-    };
+    let currentY = 20;
 
     // Título do Documento
-    doc.setFontSize(16);
-    doc.text('Resumo Completo do Serviço', 15, y);
-    y += 10;
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('RESUMO COMPLETO DO SERVIÇO', 105, currentY, { align: 'center' });
+    currentY += 15;
+
+    // Linha separadora
+    doc.setLineWidth(0.5);
+    doc.line(20, currentY, 190, currentY);
+    currentY += 15;
 
     // Informações do Cliente e Veículo
     doc.setFontSize(14);
-    doc.text('Informações do Cliente e Veículo', 15, y);
-    y += 7;
+    doc.setFont('helvetica', 'bold');
+    doc.text('DADOS DO CLIENTE E VEÍCULO', 20, currentY);
+    currentY += 10;
 
-    const customerText = `Cliente: ${(() => {
-      const selectedCustomerId = form.watch("customerId");
-      const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
-      return selectedCustomer?.name || "Nenhum cliente selecionado";
-    })()}`;
-    y = addWrappedText(customerText, 15, y, 180);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    
+    const selectedCustomerId = form.watch("customerId");
+    const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
+    doc.text(`Cliente: ${selectedCustomer?.name || "Nenhum cliente selecionado"}`, 20, currentY);
+    currentY += 7;
 
-    const vehicleText = `Veículo: ${(() => {
-      const selectedVehicleId = form.watch("vehicleId");
-      const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);
-      return selectedVehicle ? `${selectedVehicle.brand} ${selectedVehicle.model} - ${selectedVehicle.licensePlate}` : "Nenhum veículo selecionado";
-    })()}`;
-    y = addWrappedText(vehicleText, 15, y, 180);
-    y += 5;
+    const selectedVehicleId = form.watch("vehicleId");
+    const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);
+    doc.text(`Veículo: ${selectedVehicle ? `${selectedVehicle.brand} ${selectedVehicle.model}` : "Nenhum veículo selecionado"}`, 20, currentY);
+    currentY += 7;
+    
+    if (selectedVehicle) {
+      doc.text(`Placa: ${selectedVehicle.licensePlate}`, 20, currentY);
+      currentY += 10;
+    }
 
     // Detalhes do Agendamento
     doc.setFontSize(14);
-    doc.text('Detalhes do Agendamento', 15, y);
-    y += 7;
+    doc.setFont('helvetica', 'bold');
+    doc.text('DETALHES DO AGENDAMENTO', 20, currentY);
+    currentY += 10;
 
-    const scheduleText = `Data: ${form.watch("scheduledDate") || "Não definida"} - Hora: ${form.watch("scheduledTime") || "Não definida"} - Status: ${translateStatus(form.watch("status") || "scheduled")} - Técnico: ${(() => {
-      const selectedTechnicianId = form.watch("technicianId");
-      const selectedTechnician = users.find(u => u.id === selectedTechnicianId);
-      return selectedTechnician ? `${selectedTechnician.firstName} ${selectedTechnician.lastName}` : "Não atribuído";
-    })()}`;
-    y = addWrappedText(scheduleText, 15, y, 180);
-    y += 5;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Data: ${form.watch("scheduledDate") || "Não definida"}`, 20, currentY);
+    currentY += 7;
+    doc.text(`Hora: ${form.watch("scheduledTime") || "Não definida"}`, 20, currentY);
+    currentY += 7;
+    doc.text(`Status: ${translateStatus(form.watch("status") || "scheduled")}`, 20, currentY);
+    currentY += 7;
 
-    // Serviços Inclusos
+    const selectedTechnicianId = form.watch("technicianId");
+    const selectedTechnician = users.find(u => u.id === selectedTechnicianId);
+    doc.text(`Técnico: ${selectedTechnician ? `${selectedTechnician.firstName} ${selectedTechnician.lastName}` : "Não atribuído"}`, 20, currentY);
+    currentY += 15;
+
+    // Serviços Inclusos (usando tabela)
     if (serviceExtras.length > 0) {
       doc.setFontSize(14);
-      doc.text('Serviços Inclusos', 15, y);
-      y += 7;
+      doc.setFont('helvetica', 'bold');
+      doc.text('SERVIÇOS INCLUSOS', 20, currentY);
+      currentY += 10;
 
-      serviceExtras.forEach((extra, index) => {
+      const serviceTableData = serviceExtras.map((extra, index) => {
         const serviceType = serviceTypes.find(st => st.id === extra.serviceTypeId);
         const serviceName = serviceType?.name || `Serviço ${index + 1}`;
         const servicePrice = extra.totalPrice || extra.unitPrice || "0.00";
-        const extraText = `${serviceName} - R$ ${Number(servicePrice).toFixed(2)}`;
-        y = addWrappedText(extraText, 15, y, 180);
+        return [serviceName, `R$ ${Number(servicePrice).toFixed(2)}`];
       });
-      y += 5;
+
+      (doc as any).autoTable({
+        startY: currentY,
+        head: [['Serviço', 'Valor']],
+        body: serviceTableData,
+        theme: 'grid',
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [41, 128, 185] },
+      });
+
+      currentY = (doc as any).lastAutoTable.finalY + 15;
     }
 
     // Resumo Financeiro
     doc.setFontSize(14);
-    doc.text('Resumo Financeiro', 15, y);
-    y += 7;
+    doc.setFont('helvetica', 'bold');
+    doc.text('RESUMO FINANCEIRO', 20, currentY);
+    currentY += 10;
 
-    const financialText = `Total do Serviço: R$ ${calculateTotalValue()} - Valor Pago: R$ ${Number(form.watch("valorPago") || 0).toFixed(2)} - Saldo: R$ ${(Number(calculateTotalValue()) - Number(form.watch("valorPago") || 0)).toFixed(2)}`;
-    y = addWrappedText(financialText, 15, y, 180);
-    y += 5;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Total do Serviço: R$ ${calculateTotalValue()}`, 20, currentY);
+    currentY += 7;
+    doc.text(`Valor Pago: R$ ${Number(form.watch("valorPago") || 0).toFixed(2)}`, 20, currentY);
+    currentY += 7;
+    doc.text(`Saldo: R$ ${(Number(calculateTotalValue()) - Number(form.watch("valorPago") || 0)).toFixed(2)}`, 20, currentY);
+    currentY += 15;
 
     // Observações
     if (form.watch("notes")) {
       doc.setFontSize(14);
-      doc.text('Observações', 15, y);
-      y += 7;
+      doc.setFont('helvetica', 'bold');
+      doc.text('OBSERVAÇÕES', 20, currentY);
+      currentY += 10;
 
-      const notesText = form.watch("notes");
-      y = addWrappedText(notesText, 15, y, 180);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      const notesLines = doc.splitTextToSize(form.watch("notes"), 170);
+      doc.text(notesLines, 20, currentY);
     }
 
     // Salvar o PDF
