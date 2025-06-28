@@ -640,100 +640,203 @@ export default function SchedulePage() {
 
                   {viewMode === 'Week' && (
                     <div className="space-y-4">
-                      <div className="grid grid-cols-7 gap-3 text-center text-sm font-semibold text-gray-700">
-                        {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day, index) => (
-                          <div key={`week-header-${index}`} className="bg-gradient-to-r from-slate-100 to-blue-100/50 rounded-lg p-3 font-bold">{day}</div>
-                        ))}
+                      {/* Header da semana com navegação */}
+                      <div className="flex items-center justify-between bg-gradient-to-r from-slate-100 to-blue-100/50 rounded-xl p-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setCurrentDate(prev => addDays(prev, -7))}
+                          className="text-gray-600 hover:text-gray-900 hover:bg-white/80 rounded-full h-9 w-9 p-0"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <h3 className="text-lg font-bold text-gray-900">
+                          Semana de {format(startOfWeek(currentDate, { weekStartsOn: 0 }), "dd/MM", { locale: ptBR })} a {format(endOfWeek(currentDate, { weekStartsOn: 0 }), "dd/MM/yyyy", { locale: ptBR })}
+                        </h3>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setCurrentDate(prev => addDays(prev, 7))}
+                          className="text-gray-600 hover:text-gray-900 hover:bg-white/80 rounded-full h-9 w-9 p-0"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <div className="grid grid-cols-7 gap-3">
+
+                      {/* Layout da agenda semanal - um dia por linha */}
+                      <div className="space-y-3">
                         {(() => {
-                          // Calcula a semana que contém a data atual, começando sempre no domingo
-                          const today = new Date();
-                          const startWeekDay = startOfWeek(today, { weekStartsOn: 0 });
+                          const startWeekDay = startOfWeek(currentDate, { weekStartsOn: 0 });
                           const weekDays = Array.from({ length: 7 }, (_, i) => addDays(startWeekDay, i));
                           return weekDays.map((day, index) => {
                             const dayServices = services.filter(service => 
                               service.scheduledDate && isSameDay(parseISO(service.scheduledDate), day)
-                            );
+                            ).sort((a, b) => (a.scheduledTime || '').localeCompare(b.scheduledTime || ''));
+                            
+                            const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+                            
                             return (
-                              <div
+                              <Card 
                                 key={`week-day-${index}`}
-                                onClick={() => handleDayClick(day)}
                                 className={cn(
-                                  "p-3 rounded-xl cursor-pointer transition-all duration-200 min-h-[120px] border-2 hover:shadow-lg hover:scale-[1.02] flex flex-col",
-                                  isToday(day) && "bg-gradient-to-br from-teal-500 to-emerald-500 text-white border-teal-300 shadow-lg",
-                                  dayServices.length > 0 && !isToday(day) && "bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-300 shadow-md",
-                                  !dayServices.length && !isToday(day) && "border-gray-200 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50"
+                                  "border-2 transition-all duration-200 hover:shadow-lg",
+                                  isToday(day) && "border-teal-300 bg-gradient-to-r from-teal-50 to-emerald-50 shadow-md",
+                                  dayServices.length > 0 && !isToday(day) && "border-blue-200 bg-gradient-to-r from-blue-50/50 to-indigo-50/30",
+                                  !dayServices.length && !isToday(day) && "border-gray-200 bg-white"
                                 )}
                               >
-                                {/* Header do dia com número e contador */}
-                                <div className="flex items-center justify-between mb-3">
-                                  <div className="text-xl font-bold">{format(day, "d")}</div>
-                                  {dayServices.length > 0 && (
-                                    <div className={cn(
-                                      "rounded-full px-2 py-1 text-xs font-bold min-w-[24px] h-[24px] flex items-center justify-center",
-                                      isToday(day) ? "bg-white/30 text-white" : "bg-teal-500 text-white"
-                                    )}>
-                                      {dayServices.length}
+                                <CardContent className="p-4">
+                                  {/* Header do dia */}
+                                  <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center space-x-3">
+                                      <div className={cn(
+                                        "w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold",
+                                        isToday(day) 
+                                          ? "bg-gradient-to-br from-teal-500 to-emerald-500 text-white shadow-lg" 
+                                          : "bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700"
+                                      )}>
+                                        {format(day, "d")}
+                                      </div>
+                                      <div>
+                                        <h4 className={cn(
+                                          "text-lg font-bold",
+                                          isToday(day) ? "text-teal-700" : "text-gray-900"
+                                        )}>
+                                          {dayNames[index]}
+                                        </h4>
+                                        <p className="text-sm text-gray-600">
+                                          {format(day, "dd 'de' MMMM", { locale: ptBR })}
+                                        </p>
+                                      </div>
                                     </div>
-                                  )}
-                                </div>
-                                
-                                {/* Lista simplificada de agendamentos */}
-                                <div className="flex-1 space-y-1">
-                                  {dayServices.length === 0 ? (
-                                    <div className={cn(
-                                      "text-xs text-center opacity-60 mt-2",
-                                      isToday(day) ? "text-white" : "text-gray-500"
-                                    )}>
-                                      Vazio
+                                    
+                                    {/* Contador de agendamentos */}
+                                    <div className="flex items-center space-x-2">
+                                      {dayServices.length > 0 ? (
+                                        <Badge className={cn(
+                                          "text-sm font-semibold px-3 py-1",
+                                          isToday(day) 
+                                            ? "bg-gradient-to-r from-teal-600 to-emerald-600 text-white" 
+                                            : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
+                                        )}>
+                                          {dayServices.length} agendamento{dayServices.length !== 1 ? 's' : ''}
+                                        </Badge>
+                                      ) : (
+                                        <Badge variant="outline" className="text-sm text-gray-500 border-gray-300">
+                                          Sem agendamentos
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Lista de agendamentos */}
+                                  {dayServices.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                      {dayServices.map((service, serviceIndex) => (
+                                        <Card 
+                                          key={service.id}
+                                          className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group"
+                                          onClick={() => setLocation(`/services?openModal=true&serviceId=${service.id}`)}
+                                        >
+                                          <CardContent className="p-3">
+                                            <div className="flex items-start justify-between mb-2">
+                                              <div className="flex-1">
+                                                <h5 className="font-semibold text-gray-900 group-hover:text-teal-700 transition-colors text-sm">
+                                                  {service.customer.name}
+                                                </h5>
+                                                <p className="text-xs text-gray-600 mt-1">
+                                                  {service.vehicle.brand} {service.vehicle.model}
+                                                </p>
+                                              </div>
+                                              <Badge 
+                                                className={cn(
+                                                  "text-xs font-medium ml-2",
+                                                  service.status === 'completed' && "bg-green-100 text-green-700 border-green-200",
+                                                  service.status === 'in_progress' && "bg-blue-100 text-blue-700 border-blue-200",
+                                                  service.status === 'scheduled' && "bg-orange-100 text-orange-700 border-orange-200",
+                                                  service.status === 'cancelled' && "bg-red-100 text-red-700 border-red-200"
+                                                )}
+                                                variant="outline"
+                                              >
+                                                {translateStatus(service.status)}
+                                              </Badge>
+                                            </div>
+                                            
+                                            <div className="flex items-center justify-between text-xs text-gray-600">
+                                              <div className="flex items-center">
+                                                <Clock className="h-3 w-3 mr-1 text-teal-500" />
+                                                <span className="font-medium">
+                                                  {service.scheduledTime ? service.scheduledTime.substring(0, 5) : 'Sem horário'}
+                                                </span>
+                                              </div>
+                                              {service.estimatedValue && (
+                                                <div className="flex items-center">
+                                                  <span className="font-semibold text-green-600">
+                                                    R$ {Number(service.estimatedValue).toFixed(2)}
+                                                  </span>
+                                                </div>
+                                              )}
+                                            </div>
+                                            
+                                            {service.serviceType && (
+                                              <div className="mt-2 text-xs">
+                                                <span className="inline-flex items-center px-2 py-1 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                                  <Wrench className="h-3 w-3 mr-1" />
+                                                  {service.serviceType.name}
+                                                </span>
+                                              </div>
+                                            )}
+                                          </CardContent>
+                                        </Card>
+                                      ))}
                                     </div>
                                   ) : (
-                                    dayServices.slice(0, 3).map((service, serviceIndex) => (
-                                      <div 
-                                        key={service.id} 
-                                        className={cn(
-                                          "text-xs p-2 rounded-md border transition-all duration-200",
-                                          isToday(day) 
-                                            ? "bg-white/20 border-white/30 text-white" 
-                                            : "bg-white border-blue-200 text-gray-700 shadow-sm"
-                                        )}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setLocation(`/services?openModal=true&serviceId=${service.id}`);
+                                    <div className="text-center py-8 text-gray-500">
+                                      <div className="bg-gray-100 p-4 rounded-full w-16 h-16 mx-auto mb-3 flex items-center justify-center">
+                                        <Calendar className="h-8 w-8 text-gray-400" />
+                                      </div>
+                                      <p className="text-sm">Nenhum agendamento para este dia</p>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="mt-2 text-xs"
+                                        onClick={() => {
+                                          const defaultValues = {
+                                            customerId: 0,
+                                            vehicleId: 0,
+                                            serviceTypeId: undefined,
+                                            technicianId: 0,
+                                            scheduledDate: format(day, "yyyy-MM-dd"),
+                                            scheduledTime: "",
+                                            status: "scheduled" as "scheduled" | "in_progress" | "completed" | "cancelled",
+                                            notes: "",
+                                            valorPago: "0",
+                                            pixPago: "0.00",
+                                            dinheiroPago: "0.00",
+                                            chequePago: "0.00",
+                                            cartaoPago: "0.00",
+                                          };
+
+                                          form.reset(defaultValues);
+                                          setServiceExtras([]);
+                                          setInitialServiceExtras([]);
+                                          setFormInitialValues(defaultValues);
+                                          setPaymentMethods({
+                                            pix: "",
+                                            dinheiro: "",
+                                            cheque: "",
+                                            cartao: ""
+                                          });
+                                          setIsAddModalOpen(true);
                                         }}
                                       >
-                                        <div className="flex items-center justify-between">
-                                          <div className={cn(
-                                            "font-medium text-[11px] truncate mr-1",
-                                            isToday(day) ? "text-white" : "text-gray-900"
-                                          )}>
-                                            {service.customer.name.split(' ')[0]}
-                                          </div>
-                                          {service.scheduledTime && (
-                                            <div className={cn(
-                                              "text-[9px] font-bold",
-                                              isToday(day) ? "text-white/80" : "text-blue-600"
-                                            )}>
-                                              {service.scheduledTime.substring(0, 5)}
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    ))
-                                  )}
-                                  
-                                  {/* Indicador para mais agendamentos */}
-                                  {dayServices.length > 3 && (
-                                    <div className={cn(
-                                      "text-center text-[10px] font-bold py-1",
-                                      isToday(day) ? "text-white/70" : "text-gray-500"
-                                    )}>
-                                      +{dayServices.length - 3} mais
+                                        <Plus className="h-3 w-3 mr-1" />
+                                        Agendar
+                                      </Button>
                                     </div>
                                   )}
-                                </div>
-                              </div>
+                                </CardContent>
+                              </Card>
                             );
                           });
                         })()}
