@@ -774,119 +774,238 @@ export default function Services() {
 
   const handleGeneratePDF = () => {
     const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
     let currentY = 20;
 
-    // Título do Documento
-    doc.setFontSize(20);
+    // Header com logo/empresa (opcional)
+    doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
-    doc.text('RESUMO COMPLETO DO SERVIÇO', 105, currentY, { align: 'center' });
+    doc.setTextColor(20, 100, 150);
+    doc.text('ORDEM DE SERVIÇO', pageWidth / 2, currentY, { align: 'center' });
+    currentY += 8;
+
+    // Número da OS
+    const serviceNumber = editingService?.id ? String(editingService.id).padStart(6, '0') : 'NOVA';
+    doc.setFontSize(16);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`OS #${serviceNumber}`, pageWidth / 2, currentY, { align: 'center' });
     currentY += 15;
 
-    // Linha separadora
-    doc.setLineWidth(0.5);
-    doc.line(20, currentY, 190, currentY);
-    currentY += 15;
+    // Linha separadora decorativa
+    doc.setDrawColor(20, 100, 150);
+    doc.setLineWidth(1);
+    doc.line(20, currentY, pageWidth - 20, currentY);
+    currentY += 20;
 
-    // Informações do Cliente e Veículo
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('DADOS DO CLIENTE E VEÍCULO', 20, currentY);
-    currentY += 10;
+    // Reset colors
+    doc.setTextColor(0, 0, 0);
+
+    // Informações do Cliente e Veículo em caixas
+    doc.setFillColor(245, 248, 252);
+    doc.rect(20, currentY - 5, (pageWidth - 50) / 2, 35, 'F');
+    doc.setDrawColor(200, 200, 200);
+    doc.rect(20, currentY - 5, (pageWidth - 50) / 2, 35);
 
     doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(20, 100, 150);
+    doc.text('CLIENTE', 25, currentY + 5);
+
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    
+    doc.setTextColor(0, 0, 0);
     const selectedCustomerId = form.watch("customerId");
     const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
-    doc.text(`Cliente: ${selectedCustomer?.name || "Nenhum cliente selecionado"}`, 20, currentY);
-    currentY += 7;
+    doc.text(`${selectedCustomer?.name || "Cliente não selecionado"}`, 25, currentY + 15);
 
-    const selectedVehicleId = form.watch("vehicleId");
-    const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);
-    doc.text(`Veículo: ${selectedVehicle ? `${selectedVehicle.brand} ${selectedVehicle.model}` : "Nenhum veículo selecionado"}`, 20, currentY);
-    currentY += 7;
-    
-    if (selectedVehicle) {
-      doc.text(`Placa: ${selectedVehicle.licensePlate}`, 20, currentY);
-      currentY += 10;
-    }
-
-    // Detalhes do Agendamento
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('DETALHES DO AGENDAMENTO', 20, currentY);
-    currentY += 10;
+    // Caixa do Veículo
+    doc.setFillColor(252, 248, 245);
+    doc.rect(pageWidth / 2 + 5, currentY - 5, (pageWidth - 50) / 2, 35, 'F');
+    doc.setDrawColor(200, 200, 200);
+    doc.rect(pageWidth / 2 + 5, currentY - 5, (pageWidth - 50) / 2, 35);
 
     doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Data: ${form.watch("scheduledDate") || "Não definida"}`, 20, currentY);
-    currentY += 7;
-    doc.text(`Hora: ${form.watch("scheduledTime") || "Não definida"}`, 20, currentY);
-    currentY += 7;
-    doc.text(`Status: ${translateStatus(form.watch("status") || "scheduled")}`, 20, currentY);
-    currentY += 7;
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(20, 100, 150);
+    doc.text('VEÍCULO', pageWidth / 2 + 10, currentY + 5);
 
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+    const selectedVehicleId = form.watch("vehicleId");
+    const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);
+    if (selectedVehicle) {
+      doc.text(`${selectedVehicle.brand} ${selectedVehicle.model}`, pageWidth / 2 + 10, currentY + 15);
+      doc.text(`Placa: ${selectedVehicle.licensePlate}`, pageWidth / 2 + 10, currentY + 25);
+    } else {
+      doc.text('Veículo não selecionado', pageWidth / 2 + 10, currentY + 15);
+    }
+
+    currentY += 50;
+
+    // Detalhes do Serviço
+    doc.setFillColor(248, 252, 245);
+    doc.rect(20, currentY - 5, pageWidth - 40, 45, 'F');
+    doc.setDrawColor(200, 200, 200);
+    doc.rect(20, currentY - 5, pageWidth - 40, 45);
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(20, 100, 150);
+    doc.text('DETALHES DO SERVIÇO', 25, currentY + 5);
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+
+    const scheduledDate = form.watch("scheduledDate");
+    const formattedDate = scheduledDate ? new Date(scheduledDate + 'T00:00:00').toLocaleDateString('pt-BR') : "Não definida";
+    doc.text(`Data: ${formattedDate}`, 25, currentY + 18);
+    doc.text(`Horário: ${form.watch("scheduledTime") || "Não definido"}`, 25, currentY + 28);
+    
     const selectedTechnicianId = form.watch("technicianId");
     const selectedTechnician = users.find(u => u.id === selectedTechnicianId);
-    doc.text(`Técnico: ${selectedTechnician ? `${selectedTechnician.firstName} ${selectedTechnician.lastName}` : "Não atribuído"}`, 20, currentY);
-    currentY += 15;
+    doc.text(`Técnico: ${selectedTechnician ? `${selectedTechnician.firstName} ${selectedTechnician.lastName}` : "Não atribuído"}`, pageWidth / 2 + 10, currentY + 18);
+    doc.text(`Status: ${translateStatus(form.watch("status") || "scheduled")}`, pageWidth / 2 + 10, currentY + 28);
 
-    // Serviços Inclusos (usando tabela)
+    currentY += 60;
+
+    // Serviços Inclusos com tabela melhorada
     if (serviceExtras.length > 0) {
-      doc.setFontSize(14);
+      doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
+      doc.setTextColor(20, 100, 150);
       doc.text('SERVIÇOS INCLUSOS', 20, currentY);
       currentY += 10;
 
       const serviceTableData = serviceExtras.map((extra, index) => {
         const serviceType = serviceTypes.find(st => st.id === extra.serviceTypeId);
         const serviceName = serviceType?.name || `Serviço ${index + 1}`;
-        const servicePrice = extra.totalPrice || extra.unitPrice || "0.00";
-        return [serviceName, `R$ ${Number(servicePrice).toFixed(2)}`];
+        const quantity = extra.quantity || 1;
+        const unitPrice = extra.unitPrice || "0.00";
+        const totalPrice = extra.totalPrice || unitPrice;
+        
+        return [
+          serviceName,
+          quantity.toString(),
+          `R$ ${Number(unitPrice).toFixed(2)}`,
+          `R$ ${Number(totalPrice).toFixed(2)}`
+        ];
       });
 
       autoTable(doc, {
         startY: currentY,
-        head: [['Serviço', 'Valor']],
+        head: [['Serviço', 'Qtd', 'Valor Unit.', 'Total']],
         body: serviceTableData,
-        theme: 'grid',
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [41, 128, 185] },
+        theme: 'striped',
+        styles: { 
+          fontSize: 10,
+          cellPadding: 5
+        },
+        headStyles: { 
+          fillColor: [20, 100, 150],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252]
+        },
+        columnStyles: {
+          1: { halign: 'center' },
+          2: { halign: 'right' },
+          3: { halign: 'right', fontStyle: 'bold' }
+        }
       });
 
-      currentY = (doc as any).lastAutoTable.finalY + 15;
+      currentY = (doc as any).lastAutoTable.finalY + 20;
     }
 
-    // Resumo Financeiro
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('RESUMO FINANCEIRO', 20, currentY);
-    currentY += 10;
+    // Resumo Financeiro destacado
+    doc.setFillColor(245, 252, 245);
+    doc.rect(20, currentY - 5, pageWidth - 40, 35, 'F');
+    doc.setDrawColor(100, 180, 100);
+    doc.setLineWidth(2);
+    doc.rect(20, currentY - 5, pageWidth - 40, 35);
 
     doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(20, 100, 150);
+    doc.text('RESUMO FINANCEIRO', 25, currentY + 8);
+
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Total do Serviço: R$ ${calculateTotalValue()}`, 20, currentY);
-    currentY += 7;
-    doc.text(`Valor Pago: R$ ${Number(form.watch("valorPago") || 0).toFixed(2)}`, 20, currentY);
-    currentY += 7;
-    doc.text(`Saldo: R$ ${(Number(calculateTotalValue()) - Number(form.watch("valorPago") || 0)).toFixed(2)}`, 20, currentY);
-    currentY += 15;
+    doc.setTextColor(0, 0, 0);
+    
+    const totalValue = calculateTotalValue();
+    const paidValue = Number(form.watch("valorPago") || 0);
+    const balance = Number(totalValue) - paidValue;
+
+    doc.text(`Total dos Serviços:`, 25, currentY + 20);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`R$ ${totalValue}`, pageWidth - 80, currentY + 20, { align: 'right' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Valor Pago:`, 25, currentY + 30);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(balance <= 0 ? [0, 150, 0] : [0, 0, 0]);
+    doc.text(`R$ ${paidValue.toFixed(2)}`, pageWidth - 80, currentY + 30, { align: 'right' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Saldo:`, 25, currentY + 40);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(balance <= 0 ? [0, 150, 0] : [200, 50, 50]);
+    doc.text(`R$ ${balance.toFixed(2)}`, pageWidth - 80, currentY + 40, { align: 'right' });
+
+    currentY += 55;
 
     // Observações
-    if (form.watch("notes")) {
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text('OBSERVAÇÕES', 20, currentY);
-      currentY += 10;
+    const notes = form.watch("notes");
+    if (notes && notes.trim()) {
+      // Check if we need a new page
+      if (currentY > pageHeight - 60) {
+        doc.addPage();
+        currentY = 20;
+      }
+
+      doc.setFillColor(252, 248, 245);
+      doc.rect(20, currentY - 5, pageWidth - 40, 40, 'F');
+      doc.setDrawColor(200, 200, 200);
+      doc.rect(20, currentY - 5, pageWidth - 40, 40);
 
       doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(20, 100, 150);
+      doc.text('OBSERVAÇÕES', 25, currentY + 8);
+
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      const notesLines = doc.splitTextToSize(form.watch("notes"), 170);
-      doc.text(notesLines, 20, currentY);
+      doc.setTextColor(0, 0, 0);
+      const notesLines = doc.splitTextToSize(notes, pageWidth - 60);
+      doc.text(notesLines, 25, currentY + 20);
+
+      currentY += 50;
     }
 
-    // Salvar o PDF
-    doc.save(`resumo_servico_${editingService?.id || 'novo'}.pdf`);
+    // Footer
+    const pageHeight = doc.internal.pageSize.getHeight();
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.5);
+    doc.line(20, pageHeight - 30, pageWidth - 20, pageHeight - 30);
+
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(120, 120, 120);
+    doc.text(`Documento gerado em ${new Date().toLocaleString('pt-BR')}`, 20, pageHeight - 20);
+    doc.text(`OS #${serviceNumber}`, pageWidth - 20, pageHeight - 20, { align: 'right' });
+
+    // Salvar o PDF com nome mais descritivo
+    const customerName = selectedCustomer?.name?.replace(/\s+/g, '-').toLowerCase() || 'cliente';
+    const fileName = editingService?.id 
+      ? `OS-${serviceNumber}-${customerName}.pdf`
+      : `nova-ordem-servico-${customerName}.pdf`;
+      
+    doc.save(fileName);
   };
 
   if (servicesLoading || customersLoading || vehiclesLoading || techniciansLoading) {
