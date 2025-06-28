@@ -1205,38 +1205,7 @@ export default function Services() {
                             </div>
                           </div>
 
-                          {/* Payment Status */}
-                          <div className="flex items-center justify-center mb-4">
-                            <div className={`px-4 py-2 rounded-full flex items-center space-x-2 ${
-                              Number(form.watch("valorPago") || 0) === 0 
-                                ? 'bg-red-100 border-2 border-red-300' 
-                                : Number(form.watch("valorPago") || 0) >= Number(calculateTotalValue())
-                                  ? 'bg-green-100 border-2 border-green-300'
-                                  : 'bg-yellow-100 border-2 border-yellow-300'
-                            }`}>
-                              <div className={`w-3 h-3 rounded-full ${
-                                Number(form.watch("valorPago") || 0) === 0 
-                                  ? 'bg-red-500' 
-                                  : Number(form.watch("valorPago") || 0) >= Number(calculateTotalValue())
-                                    ? 'bg-green-500'
-                                    : 'bg-yellow-500'
-                              }`}></div>
-                              <span className={`text-sm font-bold ${
-                                Number(form.watch("valorPago") || 0) === 0 
-                                  ? 'text-red-700' 
-                                  : Number(form.watch("valorPago") || 0) >= Number(calculateTotalValue())
-                                    ? 'text-green-700'
-                                    : 'text-yellow-700'
-                              }`}>
-                                {Number(form.watch("valorPago") || 0) === 0 
-                                  ? 'PENDENTE' 
-                                  : Number(form.watch("valorPago") || 0) >= Number(calculateTotalValue())
-                                    ? 'PAGO'
-                                    : 'PARCIAL'
-                                }
-                              </span>
-                            </div>
-                          </div>
+                          
                           <PaymentManager
                             totalValue={Number(calculateTotalValue())}
                             currentPaidValue={Number(form.watch("valorPago") || 0)}
