@@ -306,7 +306,7 @@ export default function VehiclesPage() {
     const urlParams = new URLSearchParams(window.location.search);
     const customerId = urlParams.get('customerId');
     const openModal = urlParams.get('openModal');
-
+    
     if (customerId) {
       setCustomerFilter(parseInt(customerId));
 
@@ -558,13 +558,13 @@ export default function VehiclesPage() {
   return (
     <div className={cn("flex bg-gradient-to-br from-slate-100 via-white to-blue-50/30", isMobile ? "h-screen flex-col" : "h-screen")}>
       <Sidebar />
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
           title="Veículos"
           subtitle={isMobile ? "Veículos" : "Gerencie a frota de veículos"}
         />
 
-        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-white/80 via-blue-50/50 to-indigo-50/30 backdrop-blur-sm pt-20 md:pt-24">
+        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-white/80 via-blue-50/50 to-indigo-50/30 backdrop-blur-sm">
           <div className={cn(isMobile ? "p-2" : "p-8")}>
             <div className={cn(
               "flex justify-between items-center gap-2 mb-4",
@@ -1691,7 +1691,7 @@ export default function VehiclesPage() {
                 Primeiro Serviço
               </DialogTitle>
             </DialogHeader>
-
+            
             <div className="text-center space-y-4">
               <p className="text-gray-700">
                 O veículo <strong>{vehicleForServiceWarning?.licensePlate}</strong> ({vehicleForServiceWarning?.brand} {vehicleForServiceWarning?.model}) ainda não possui serviços cadastrados.

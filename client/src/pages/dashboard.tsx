@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useLocation } from "wouter";
@@ -103,7 +104,7 @@ export default function Dashboard() {
           subtitle={`Bem-vindo, ${user?.firstName || user?.username}!`}
         />
 
-        <main className="flex-1 overflow-y-auto bg-gray-50/50 pt-20 md:pt-24">
+        <main className="flex-1 overflow-y-auto bg-gray-50/50">
           <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
             {/* Header Section */}
@@ -111,7 +112,7 @@ export default function Dashboard() {
               <div className="flex items-center text-sm text-gray-500">
                 <span>{new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
               </div>
-
+              
               {/* Search and Actions */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <div className="relative flex-1 sm:flex-none">
@@ -150,7 +151,7 @@ export default function Dashboard() {
 
             {/* Main Content Grid - Reorganizado com novos gráficos */}
             <div className="space-y-6">
-
+              
               {/* First Row - Analytics Charts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <ServiceStatusChart />
@@ -164,15 +165,15 @@ export default function Dashboard() {
 
               {/* Third Row - Existing Charts */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
+                
                 {/* Left Column - Métricas Financeiras */}
                 <div className="lg:col-span-4 space-y-6">
-
+                  
                 </div>
 
                 {/* Center Column - Análises Financeiras Comparativas */}
                 <div className="lg:col-span-5 space-y-6">
-
+                  
                   {/* Receita Estimada vs Realizada */}
                   {user?.role === "admin" && (
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
@@ -220,7 +221,7 @@ export default function Dashboard() {
 
                 {/* Right Column - Operações e Serviços */}
                 <div className="lg:col-span-3 space-y-6">
-
+                  
                   {/* Serviços Populares - Movido para a direita */}
                   {user?.role === "admin" && (
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
@@ -232,7 +233,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                   )}
-
+                  
                   {/* Próximos Agendamentos */}
                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                     <div className="p-6 border-b border-gray-100">
@@ -250,7 +251,7 @@ export default function Dashboard() {
                       <UpcomingAppointments />
                     </div>
                   </div>
-
+                  
                   {/* Atividade Recente de Serviços */}
                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                     <div className="p-6 border-b border-gray-100">

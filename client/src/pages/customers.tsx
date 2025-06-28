@@ -115,7 +115,7 @@ export default function CustomersPage() {
   // Track form changes for unsaved changes detection
   const currentFormValues = form.watch();
   const hasUnsavedChanges = formInitialValues && isModalOpen && JSON.stringify(currentFormValues) !== JSON.stringify(formInitialValues);
-
+  
   console.log('Customers - hasUnsavedChanges:', hasUnsavedChanges);
   console.log('Customers - formInitialValues:', formInitialValues);
   console.log('Customers - currentFormValues:', currentFormValues);
@@ -144,7 +144,7 @@ export default function CustomersPage() {
     onSuccess: async (newCustomer) => {
       queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/analytics/customers"] });
-
+      
       // Save temporary photos if any
       if (temporaryPhotos.length > 0) {
         let photosSaved = 0;
@@ -410,13 +410,13 @@ export default function CustomersPage() {
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
 
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
           title="Clientes"
           subtitle="Gerencie seus clientes e suas informações"
         />
 
-        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-white/80 via-blue-50/50 to-indigo-50/30 backdrop-blur-sm pt-20 md:pt-24">
+        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-white/80 via-blue-50/50 to-indigo-50/30 backdrop-blur-sm">
           <div className="p-4 sm:p-6 md:p-8">
             <div className={cn(
               "flex justify-between items-center gap-2 mb-4",
@@ -783,7 +783,7 @@ export default function CustomersPage() {
 
                                   for (const file of Array.from(files)) {
                                     if (!file.type.startsWith('image/')) continue;
-
+                                    
                                     // Convert to base64 for preview
                                     const reader = new FileReader();
                                     reader.onload = (event) => {
@@ -792,7 +792,7 @@ export default function CustomersPage() {
                                     };
                                     reader.readAsDataURL(file);
                                   }
-
+                                  
                                   // Clear the input
                                   e.target.value = '';
                                 }}
@@ -800,7 +800,8 @@ export default function CustomersPage() {
                             </div>
                           </div>
                           <PhotoUpload
-                            photos={currentCustomerPhotos}                            onPhotoUploaded={() => fetchCustomerPhotos(editingCustomer?.id)}
+                            photos={currentCustomerPhotos}
+                            onPhotoUploaded={() => fetchCustomerPhotos(editingCustomer?.id)}
                             customerId={editingCustomer?.id}
                             maxPhotos={7}
                           />
@@ -1053,7 +1054,7 @@ export default function CustomersPage() {
                               // Navegação instantânea com informação contextual
                               // A página de veículos já tem toda a lógica necessária para lidar com ambos cenários
                               setLocation(`/vehicles?customerId=${customer.id}`);
-
+                              
                               // Opcional: Fazer pré-cache em background para melhorar UX futura
                               setTimeout(() => {
                                 fetch(`/api/vehicles?customerId=${customer.id}`, {
@@ -1215,7 +1216,7 @@ export default function CustomersPage() {
                       Deseja cadastrar o primeiro veículo para este cliente?
                     </p>
                   </div>
-
+                  
                   <div className="flex gap-3">
                     <Button
                       variant="outline"
@@ -1246,7 +1247,7 @@ export default function CustomersPage() {
             </Dialog>
           </div>
         </main>
-
+        
         {/* Dialog de confirmação de alterações não salvas */}
         <UnsavedChangesDialog
           isOpen={unsavedChanges.showConfirmDialog}
