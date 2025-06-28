@@ -620,7 +620,9 @@ export default function SchedulePage() {
                       </div>
                       <div className="grid grid-cols-7 gap-3">
                         {(() => {
-                          const startWeekDay = startOfWeek(currentDate, { weekStartsOn: 0 });
+                          // Calcula a semana que contém a data atual, começando sempre no domingo
+                          const today = new Date();
+                          const startWeekDay = startOfWeek(today, { weekStartsOn: 0 });
                           const weekDays = Array.from({ length: 7 }, (_, i) => addDays(startWeekDay, i));
                           return weekDays.map((day, index) => {
                             const dayServices = services.filter(service => 
