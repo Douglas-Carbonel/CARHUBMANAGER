@@ -639,13 +639,13 @@ export default function SchedulePage() {
                   )}
 
                   {viewMode === 'Week' && (
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-7 gap-3 text-center text-sm font-semibold text-gray-700 pb-2">
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-7 gap-2 text-center text-sm font-semibold text-gray-700 pb-3">
                         {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day, index) => (
-                          <div key={`week-header-${index}`} className="bg-gradient-to-r from-slate-100 to-blue-100/50 rounded-lg p-2">{day}</div>
+                          <div key={`week-header-${index}`} className="bg-gradient-to-r from-slate-100 to-blue-100/50 rounded-lg p-3 font-bold">{day}</div>
                         ))}
                       </div>
-                      <div className="grid grid-cols-7 gap-3">
+                      <div className="grid grid-cols-7 gap-2">
                         {(() => {
                           // Calcula a semana que contém a data atual, começando sempre no domingo
                           const today = new Date();
@@ -660,59 +660,84 @@ export default function SchedulePage() {
                                 key={`week-day-${index}`}
                                 onClick={() => handleDayClick(day)}
                                 className={cn(
-                                  "p-3 rounded-xl cursor-pointer transition-all duration-200 min-h-[120px] border-2 hover:shadow-lg hover:scale-105 flex flex-col",
-                                  isToday(day) && "bg-gradient-to-br from-teal-500 to-emerald-500 text-white border-teal-300",
-                                  dayServices.length > 0 && !isToday(day) && "bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200",
+                                  "p-4 rounded-xl cursor-pointer transition-all duration-200 min-h-[160px] border-2 hover:shadow-lg hover:scale-[1.02] flex flex-col",
+                                  isToday(day) && "bg-gradient-to-br from-teal-500 to-emerald-500 text-white border-teal-300 shadow-lg",
+                                  dayServices.length > 0 && !isToday(day) && "bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-300 shadow-md",
                                   !dayServices.length && !isToday(day) && "border-gray-200 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50"
                                 )}
                               >
-                                <div className="text-lg font-bold mb-2 text-center">{format(day, "d")}</div>
-                                <div className="flex-1 space-y-1 overflow-hidden">
+                                {/* Header do dia */}
+                                <div className="flex items-center justify-between mb-3 pb-2 border-b border-opacity-20" style={{borderColor: isToday(day) ? 'white' : '#e5e7eb'}}>
+                                  <div className="text-xl font-bold">{format(day, "d")}</div>
+                                  {dayServices.length > 0 && (
+                                    <div className={cn(
+                                      "rounded-full px-2 py-1 text-xs font-bold min-w-[20px] h-[20px] flex items-center justify-center",
+                                      isToday(day) ? "bg-white/30 text-white" : "bg-teal-500 text-white"
+                                    )}>
+                                      {dayServices.length}
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {/* Lista de agendamentos */}
+                                <div className="flex-1 space-y-2 overflow-hidden">
                                   {dayServices.length === 0 ? (
                                     <div className={cn(
-                                      "text-xs text-center opacity-50 mt-2",
+                                      "text-xs text-center opacity-60 mt-4",
                                       isToday(day) ? "text-white" : "text-gray-500"
                                     )}>
                                       Sem agendamentos
                                     </div>
-                                  ) : dayServices.length <= 3 ? (
-                                    // Mostra até 3 serviços completos
-                                    dayServices.map(service => (
-                                      <div key={service.id} className={cn(
-                                        "text-xs px-2 py-1 rounded-md font-medium text-center",
-                                        isToday(day) ? "bg-white/20 text-white" : "bg-teal-500 text-white"
-                                      )}>
-                                        <div className="truncate">{service.customer.name}</div>
+                                  ) : (
+                                    dayServices.slice(0, 4).map((service, serviceIndex) => (
+                                      <div 
+                                        key={service.id} 
+                                        className={cn(
+                                          "text-xs p-2 rounded-lg border transition-all duration-200 hover:scale-105",
+                                          isToday(day) 
+                                            ? "bg-white/20 border-white/30 text-white" 
+                                            : "bg-white border-blue-200 text-gray-700 shadow-sm hover:shadow-md"
+                                        )}
+                                      >
+                                        {/* Nome do cliente */}
+                                        <div className={cn(
+                                          "font-semibold truncate mb-1",
+                                          isToday(day) ? "text-white" : "text-gray-900"
+                                        )}>
+                                          {service.customer.name}
+                                        </div>
+                                        
+                                        {/* Horário */}
                                         {service.scheduledTime && (
-                                          <div className="text-[10px] opacity-80">
-                                            {service.scheduledTime.substring(0, 5)}
+                                          <div className={cn(
+                                            "text-[10px] opacity-90 mb-1 font-medium",
+                                            isToday(day) ? "text-white" : "text-blue-600"
+                                          )}>
+                                            🕐 {service.scheduledTime.substring(0, 5)}
                                           </div>
                                         )}
+                                        
+                                        {/* Tipo de serviço ou veículo */}
+                                        <div className={cn(
+                                          "text-[10px] opacity-80 truncate",
+                                          isToday(day) ? "text-white" : "text-gray-600"
+                                        )}>
+                                          {service.serviceType?.name || `${service.vehicle.brand} ${service.vehicle.model}`}
+                                        </div>
                                       </div>
                                     ))
-                                  ) : (
-                                    // Para mais de 3 serviços, mostra os 2 primeiros + contador
-                                    <>
-                                      {dayServices.slice(0, 2).map(service => (
-                                        <div key={service.id} className={cn(
-                                          "text-xs px-2 py-1 rounded-md font-medium text-center",
-                                          isToday(day) ? "bg-white/20 text-white" : "bg-teal-500 text-white"
-                                        )}>
-                                          <div className="truncate">{service.customer.name}</div>
-                                          {service.scheduledTime && (
-                                            <div className="text-[10px] opacity-80">
-                                              {service.scheduledTime.substring(0, 5)}
-                                            </div>
-                                          )}
-                                        </div>
-                                      ))}
-                                      <div className={cn(
-                                        "text-xs text-center font-semibold py-1",
-                                        isToday(day) ? "text-white" : "text-gray-600"
-                                      )}>
-                                        +{dayServices.length - 2} mais
-                                      </div>
-                                    </>
+                                  )}
+                                  
+                                  {/* Indicador de mais agendamentos */}
+                                  {dayServices.length > 4 && (
+                                    <div className={cn(
+                                      "text-center text-xs font-semibold py-1 px-2 rounded-lg border-2 border-dashed",
+                                      isToday(day) 
+                                        ? "text-white border-white/50" 
+                                        : "text-gray-600 border-gray-300"
+                                    )}>
+                                      +{dayServices.length - 4} agendamento{dayServices.length - 4 > 1 ? 's' : ''}
+                                    </div>
                                   )}
                                 </div>
                               </div>
