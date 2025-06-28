@@ -30,6 +30,7 @@ import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import PhotoUpload from "@/components/photos/photo-upload";
 import CameraCapture from "@/components/camera/camera-capture";
+import { generateServicePDF } from "@/lib/pdf-generator";
 
 // Utility functions for currency formatting
 const formatCurrency = (value: string): string => {
@@ -663,6 +664,68 @@ export default function SchedulePage() {
           return services.length;
       }
     }).length;
+  };
+
+  const handleGeneratePDF = async () => {
+    try {
+      const selectedCustomerId = form.watch("customerId");
+      const selectedVehicleId = form.watch("vehicleId");
+      const selectedTechnicianId = form.watch("technicianId");
+      
+      const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
+      const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);
+      const selectedTechnician = users.find(u => u.id === selectedTechnicianId);
+
+      if (!selectedCustomer || !selectedVehicle || !selectedTechnician) {
+        toast({
+          title: "Erro",
+          description: "Dados incompletos para gerar o PDF. Verifique se cliente, veículo e técnico estão selecionados.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const serviceData = {
+        customer: { name: selectedCustomer.name },
+        vehicle: { 
+          brand: selectedVehicle.brand, 
+          model: selectedVehicle.model, 
+          licensePlate: selectedVehicle.licensePlate 
+        },
+        scheduledDate: form.watch("scheduledDate"),
+        scheduledTime: form.watch("scheduledTime"),
+        status: form.watch("status") || "scheduled",
+        technician: { 
+          firstName: selectedTechnician.firstName, 
+          lastName: selectedTechnician.lastName 
+        },
+        serviceExtras: serviceExtras.map((extra, index) => {
+          const serviceType = serviceTypes.find(st => st.id === extra.serviceTypeId);
+          return {
+            serviceName: serviceType?.name || `Serviço ${index + 1}`,
+            price: extra.totalPrice || extra.unitPrice || "0.00",
+            notes: extra.notes || undefined,
+          };
+        }),
+        totalValue: calculateTotalValue(),
+        valorPago: form.watch("valorPago") || "0",
+        notes: form.watch("notes") || undefined,
+      };
+
+      await generateServicePDF(serviceData, true); // true indica que é um agendamento
+      
+      toast({
+        title: "PDF Gerado",
+        description: "O PDF do agendamento foi gerado e baixado com sucesso!",
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Erro ao gerar PDF",
+        description: "Ocorreu um erro ao gerar o PDF. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
 
@@ -2211,6 +2274,26 @@ export default function SchedulePage() {
                     <div className="text-sm text-yellow-700">{form.watch("notes")}</div>
                   </div>
                 )}
+              </div>
+              
+              <div className="flex justify-center gap-3 pt-6 border-t border-gray-200">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleGeneratePDF}
+                  className="bg-red-50 hover:bg-red-100 text-red-700 border-red-300 hover:border-red-400 font-medium px-6 py-2 text-sm transition-all duration-200"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Gerar PDF
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsResumeModalOpen(false)}
+                  className="bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-300 hover:border-gray-400 font-medium px-6 py-2 text-sm transition-all duration-200"
+                >
+                  Fechar
+                </Button>
               </div>
             </DialogContent>
           </Dialog>

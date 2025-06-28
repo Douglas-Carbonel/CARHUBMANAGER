@@ -32,6 +32,8 @@ import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 // Utility functions for currency formatting
 const formatCurrency = (value: string): string => {
@@ -770,6 +772,103 @@ export default function Services() {
     }
   };
 
+  const handleGeneratePDF = () => {
+    const doc = new jsPDF();
+
+    // Configurações de fonte e tamanho
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(12);
+
+    let y = 15; // Posição inicial Y
+
+    // Função para adicionar texto com quebra de linha
+    const addWrappedText = (text: string, x: number, y: number, width: number, fontSize: number = 12) => {
+      doc.setFontSize(fontSize);
+      const textLines = doc.splitTextToSize(text, width);
+      textLines.forEach(line => {
+        doc.text(line, x, y);
+        y += fontSize / 3.527777778; // Converter pt para mm (1pt = 0.352778mm)
+      });
+      return y;
+    };
+
+    // Título do Documento
+    doc.setFontSize(16);
+    doc.text('Resumo Completo do Serviço', 15, y);
+    y += 10;
+
+    // Informações do Cliente e Veículo
+    doc.setFontSize(14);
+    doc.text('Informações do Cliente e Veículo', 15, y);
+    y += 7;
+
+    const customerText = `Cliente: ${(() => {
+      const selectedCustomerId = form.watch("customerId");
+      const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
+      return selectedCustomer?.name || "Nenhum cliente selecionado";
+    })()}`;
+    y = addWrappedText(customerText, 15, y, 180);
+
+    const vehicleText = `Veículo: ${(() => {
+      const selectedVehicleId = form.watch("vehicleId");
+      const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);
+      return selectedVehicle ? `${selectedVehicle.brand} ${selectedVehicle.model} - ${selectedVehicle.licensePlate}` : "Nenhum veículo selecionado";
+    })()}`;
+    y = addWrappedText(vehicleText, 15, y, 180);
+    y += 5;
+
+    // Detalhes do Agendamento
+    doc.setFontSize(14);
+    doc.text('Detalhes do Agendamento', 15, y);
+    y += 7;
+
+    const scheduleText = `Data: ${form.watch("scheduledDate") || "Não definida"} - Hora: ${form.watch("scheduledTime") || "Não definida"} - Status: ${translateStatus(form.watch("status") || "scheduled")} - Técnico: ${(() => {
+      const selectedTechnicianId = form.watch("technicianId");
+      const selectedTechnician = users.find(u => u.id === selectedTechnicianId);
+      return selectedTechnician ? `${selectedTechnician.firstName} ${selectedTechnician.lastName}` : "Não atribuído";
+    })()}`;
+    y = addWrappedText(scheduleText, 15, y, 180);
+    y += 5;
+
+    // Serviços Inclusos
+    if (serviceExtras.length > 0) {
+      doc.setFontSize(14);
+      doc.text('Serviços Inclusos', 15, y);
+      y += 7;
+
+      serviceExtras.forEach((extra, index) => {
+        const serviceType = serviceTypes.find(st => st.id === extra.serviceTypeId);
+        const serviceName = serviceType?.name || `Serviço ${index + 1}`;
+        const servicePrice = extra.totalPrice || extra.unitPrice || "0.00";
+        const extraText = `${serviceName} - R$ ${Number(servicePrice).toFixed(2)}`;
+        y = addWrappedText(extraText, 15, y, 180);
+      });
+      y += 5;
+    }
+
+    // Resumo Financeiro
+    doc.setFontSize(14);
+    doc.text('Resumo Financeiro', 15, y);
+    y += 7;
+
+    const financialText = `Total do Serviço: R$ ${calculateTotalValue()} - Valor Pago: R$ ${Number(form.watch("valorPago") || 0).toFixed(2)} - Saldo: R$ ${(Number(calculateTotalValue()) - Number(form.watch("valorPago") || 0)).toFixed(2)}`;
+    y = addWrappedText(financialText, 15, y, 180);
+    y += 5;
+
+    // Observações
+    if (form.watch("notes")) {
+      doc.setFontSize(14);
+      doc.text('Observações', 15, y);
+      y += 7;
+
+      const notesText = form.watch("notes");
+      y = addWrappedText(notesText, 15, y, 180);
+    }
+
+    // Salvar o PDF
+    doc.save(`resumo_servico_${editingService?.id || 'novo'}.pdf`);
+  };
+
   if (servicesLoading || customersLoading || vehiclesLoading || techniciansLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50">
@@ -1205,7 +1304,7 @@ export default function Services() {
                             </div>
                           </div>
 
-                          
+
                           <PaymentManager
                             totalValue={Number(calculateTotalValue())}
                             currentPaidValue={Number(form.watch("valorPago") || 0)}
@@ -1721,8 +1820,28 @@ export default function Services() {
                     </div>
                   )}
                 </div>
-              </DialogContent>
-            </Dialog>
+
+              <div className="flex justify-center gap-3 pt-6 border-t border-gray-200">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleGeneratePDF}
+                  className="bg-red-50 hover:bg-red-100 text-red-700 border-red-300 hover:border-red-400 font-medium px-6 py-2 text-sm transition-all duration-200"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Gerar PDF
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsResumeModalOpen(false)}
+                  className="bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-300 hover:border-gray-400 font-medium px-6 py-2 text-sm transition-all duration-200"
+                >
+                  Fechar
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
 
             {/* Payment Methods Modal */}
             <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
@@ -2169,7 +2288,7 @@ export default function Services() {
                           <div className="text-sm text-gray-500">Cliente</div>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg flex items-center justify-center">
                           <Car className="h-5 w-5 text-purple-600" />
@@ -2277,7 +2396,7 @@ export default function Services() {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                      
+
                       {/* Indicador de técnico responsável */}
                       <div className="flex items-center space-x-2 text-xs text-gray-500">
                         <User className="h-3 w-3" />
