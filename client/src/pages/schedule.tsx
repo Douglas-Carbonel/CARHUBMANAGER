@@ -496,69 +496,6 @@ export default function SchedulePage() {
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header title="Agenda" />
         <main className="flex-1 overflow-auto p-4 md:p-6">
-          {/* Quick Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card className="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-blue-100 text-sm font-medium mb-1">Hoje</p>
-                    <p className="text-2xl font-bold">{getFilterCount("hoje")}</p>
-                    <p className="text-blue-200 text-xs mt-1">agendamentos</p>
-                  </div>
-                  <div className="bg-white/20 p-3 rounded-full">
-                    <Calendar className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-emerald-100 text-sm font-medium mb-1">Esta Semana</p>
-                    <p className="text-2xl font-bold">{getFilterCount("semana")}</p>
-                    <p className="text-emerald-200 text-xs mt-1">agendamentos</p>
-                  </div>
-                  <div className="bg-white/20 p-3 rounded-full">
-                    <Clock className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-gradient-to-br from-purple-500 via-purple-600 to-violet-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-purple-100 text-sm font-medium mb-1">Este Mês</p>
-                    <p className="text-2xl font-bold">{getFilterCount("mes")}</p>
-                    <p className="text-purple-200 text-xs mt-1">agendamentos</p>
-                  </div>
-                  <div className="bg-white/20 p-3 rounded-full">
-                    <BarChart3 className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-gradient-to-br from-orange-500 via-orange-600 to-red-500 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-orange-100 text-sm font-medium mb-1">Total</p>
-                    <p className="text-2xl font-bold">{services.length}</p>
-                    <p className="text-orange-200 text-xs mt-1">agendamentos</p>
-                  </div>
-                  <div className="bg-white/20 p-3 rounded-full">
-                    <FileText className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Calendar Section */}
             <div className="space-y-4">
