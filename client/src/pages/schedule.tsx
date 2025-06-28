@@ -568,7 +568,7 @@ export default function SchedulePage() {
                           key={`day-${index}-${day.date.getTime()}`}
                           onClick={() => handleDayClick(day.date)}
                           className={cn(
-                            "relative p-3 text-center cursor-pointer rounded-xl transition-all duration-200 min-h-[50px] flex flex-col items-center justify-center hover:scale-105 hover:shadow-lg",
+                            "relative p-2 text-center cursor-pointer rounded-xl transition-all duration-200 min-h-[60px] flex flex-col justify-between hover:scale-105 hover:shadow-lg",
                             day.isCurrentMonth 
                               ? "text-gray-900 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50" 
                               : "text-gray-400 hover:bg-gray-50",
@@ -576,17 +576,33 @@ export default function SchedulePage() {
                             day.services.length > 0 && !day.isToday && "bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 shadow-md"
                           )}
                         >
-                          <span className="text-sm font-medium">{format(day.date, "d")}</span>
+                          <span className="text-sm font-medium self-center">{format(day.date, "d")}</span>
                           {day.services.length > 0 && (
-                            <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex gap-1">
-                              {day.services.slice(0, 3).map((_, i) => (
-                                <div key={i} className={cn(
-                                  "w-1.5 h-1.5 rounded-full",
-                                  day.isToday ? "bg-white/80" : "bg-teal-500"
-                                )} />
-                              ))}
-                              {day.services.length > 3 && (
-                                <span className="text-[10px] font-bold text-teal-600">+{day.services.length - 3}</span>
+                            <div className="flex flex-wrap justify-center gap-0.5 mt-1">
+                              {day.services.length <= 4 ? (
+                                // Mostra até 4 bolinhas individuais
+                                day.services.map((_, i) => (
+                                  <div key={i} className={cn(
+                                    "w-1.5 h-1.5 rounded-full",
+                                    day.isToday ? "bg-white/80" : "bg-teal-500"
+                                  )} />
+                                ))
+                              ) : (
+                                // Mostra 3 bolinhas + contador para mais de 4 serviços
+                                <>
+                                  {day.services.slice(0, 3).map((_, i) => (
+                                    <div key={i} className={cn(
+                                      "w-1.5 h-1.5 rounded-full",
+                                      day.isToday ? "bg-white/80" : "bg-teal-500"
+                                    )} />
+                                  ))}
+                                  <span className={cn(
+                                    "text-[9px] font-bold ml-0.5",
+                                    day.isToday ? "text-white" : "text-teal-600"
+                                  )}>
+                                    +{day.services.length - 3}
+                                  </span>
+                                </>
                               )}
                             </div>
                           )}
@@ -615,24 +631,59 @@ export default function SchedulePage() {
                                 key={`week-day-${index}`}
                                 onClick={() => handleDayClick(day)}
                                 className={cn(
-                                  "p-3 rounded-xl cursor-pointer transition-all duration-200 min-h-[100px] border-2 hover:shadow-lg hover:scale-105",
+                                  "p-3 rounded-xl cursor-pointer transition-all duration-200 min-h-[120px] border-2 hover:shadow-lg hover:scale-105 flex flex-col",
                                   isToday(day) && "bg-gradient-to-br from-teal-500 to-emerald-500 text-white border-teal-300",
                                   dayServices.length > 0 && !isToday(day) && "bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200",
                                   !dayServices.length && !isToday(day) && "border-gray-200 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50"
                                 )}
                               >
-                                <div className="text-sm font-semibold mb-2">{format(day, "d")}</div>
-                                <div className="space-y-1">
-                                  {dayServices.slice(0, 2).map(service => (
-                                    <div key={service.id} className={cn(
-                                      "text-xs px-2 py-1 rounded-lg truncate font-medium",
-                                      isToday(day) ? "bg-white/20 text-white" : "bg-teal-500 text-white"
+                                <div className="text-lg font-bold mb-2 text-center">{format(day, "d")}</div>
+                                <div className="flex-1 space-y-1 overflow-hidden">
+                                  {dayServices.length === 0 ? (
+                                    <div className={cn(
+                                      "text-xs text-center opacity-50 mt-2",
+                                      isToday(day) ? "text-white" : "text-gray-500"
                                     )}>
-                                      {service.customer.name}
+                                      Sem agendamentos
                                     </div>
-                                  ))}
-                                  {dayServices.length > 2 && (
-                                    <div className="text-xs text-gray-600 font-medium">+{dayServices.length - 2} mais</div>
+                                  ) : dayServices.length <= 3 ? (
+                                    // Mostra até 3 serviços completos
+                                    dayServices.map(service => (
+                                      <div key={service.id} className={cn(
+                                        "text-xs px-2 py-1 rounded-md font-medium text-center",
+                                        isToday(day) ? "bg-white/20 text-white" : "bg-teal-500 text-white"
+                                      )}>
+                                        <div className="truncate">{service.customer.name}</div>
+                                        {service.scheduledTime && (
+                                          <div className="text-[10px] opacity-80">
+                                            {service.scheduledTime.substring(0, 5)}
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))
+                                  ) : (
+                                    // Para mais de 3 serviços, mostra os 2 primeiros + contador
+                                    <>
+                                      {dayServices.slice(0, 2).map(service => (
+                                        <div key={service.id} className={cn(
+                                          "text-xs px-2 py-1 rounded-md font-medium text-center",
+                                          isToday(day) ? "bg-white/20 text-white" : "bg-teal-500 text-white"
+                                        )}>
+                                          <div className="truncate">{service.customer.name}</div>
+                                          {service.scheduledTime && (
+                                            <div className="text-[10px] opacity-80">
+                                              {service.scheduledTime.substring(0, 5)}
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
+                                      <div className={cn(
+                                        "text-xs text-center font-semibold py-1",
+                                        isToday(day) ? "text-white" : "text-gray-600"
+                                      )}>
+                                        +{dayServices.length - 2} mais
+                                      </div>
+                                    </>
                                   )}
                                 </div>
                               </div>
