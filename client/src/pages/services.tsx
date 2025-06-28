@@ -834,8 +834,8 @@ export default function Services() {
               <DialogTrigger asChild>
                 <Button 
                     className={cn(
-                      "bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold rounded-lg",
-                      isMobile ? "px-4 py-2 text-sm transform-none" : "transform hover:scale-105 px-6 py-3"
+                      "fixed bottom-6 right-6 h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110",
+                      isMobile ? "h-14 w-14 bottom-4 right-4" : "h-16 w-16"
                     )}
                     onClick={async () => {
                       setEditingService(null);
@@ -894,8 +894,7 @@ export default function Services() {
                       });
                     }}
                   >
-                    <Plus className={cn(isMobile ? "h-4 w-4 mr-1" : "h-5 w-5 mr-2")} />
-                    {isMobile ? "Novo" : "Novo Serviço"}
+                    <Plus className="h-6 w-6" />
                   </Button>
               </DialogTrigger>
 
