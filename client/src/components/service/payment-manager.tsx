@@ -228,19 +228,22 @@ export default function PaymentManager({
         </div>
         
         <div className="flex items-center space-x-3">
-          <div className={`text-xs px-3 py-1 rounded-full ${status.bgColor} ${status.color} font-medium`}>
-            {status.label}
-          </div>
-          
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={() => setIsModalOpen(true)}
-            className={`h-10 w-10 p-0 rounded-full ${status.iconColor} hover:bg-slate-100 transition-all duration-200`}
+            className={`flex items-center space-x-2 px-3 py-1 rounded-full ${status.bgColor} hover:opacity-90 transition-all duration-200`}
             title="Gerenciar Pagamentos"
           >
-            <DollarSign className="h-6 w-6" />
+            <div className={`w-3 h-3 rounded-full ${
+              status.label === 'Pendente' ? 'bg-red-500' :
+              status.label === 'Pago' ? 'bg-green-500' :
+              'bg-yellow-500'
+            }`}></div>
+            <span className={`text-xs font-medium ${status.color}`}>
+              {status.label}
+            </span>
           </Button>
         </div>
       </div>
