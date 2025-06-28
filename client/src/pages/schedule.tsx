@@ -495,19 +495,65 @@ export default function SchedulePage() {
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header title="Agenda" />
         <main className="flex-1 overflow-auto p-4 md:p-6">
-          {/* Top Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Agenda</h1>
-              <p className="text-gray-600 text-sm mt-1">Gerencie seus agendamentos</p>
-            </div>
+          {/* Quick Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-blue-100 text-sm font-medium">Hoje</p>
+                    <p className="text-2xl font-bold">{getFilterCount("hoje")}</p>
+                  </div>
+                  <Calendar className="h-8 w-8 text-blue-200" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-emerald-100 text-sm font-medium">Esta Semana</p>
+                    <p className="text-2xl font-bold">{getFilterCount("semana")}</p>
+                  </div>
+                  <Clock className="h-8 w-8 text-emerald-200" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-purple-100 text-sm font-medium">Este Mês</p>
+                    <p className="text-2xl font-bold">{getFilterCount("mes")}</p>
+                  </div>
+                  <BarChart3 className="h-8 w-8 text-purple-200" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-orange-100 text-sm font-medium">Total</p>
+                    <p className="text-2xl font-bold">{services.length}</p>
+                  </div>
+                  <FileText className="h-8 w-8 text-orange-200" />
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Calendar Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">Calendário</h2>
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <Calendar className="h-5 w-5 mr-2 text-teal-600" />
+                  Calendário
+                </h2>
                 {/* View Mode Selector */}
                 <div className="flex bg-gray-100 rounded-full p-1">
                   {[
@@ -533,9 +579,9 @@ export default function SchedulePage() {
                 </div>
               </div>
 
-              <Card className="bg-white border-gray-200 shadow-sm">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="text-gray-900">
+              <Card className="bg-gradient-to-br from-white to-gray-50 border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <CardHeader className="flex flex-row items-center justify-between border-b border-gray-100">
+                  <CardTitle className="text-gray-900 font-bold">
                     {format(currentDate, "MMMM yyyy", { locale: ptBR })}
                   </CardTitle>
                   <div className="flex items-center gap-2">
@@ -699,7 +745,10 @@ export default function SchedulePage() {
             {/* Appointments List Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">Agendamentos</h2>
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <Clock className="h-5 w-5 mr-2 text-teal-600" />
+                  Agendamentos
+                </h2>
                 {/* Period Filter Dropdown */}
                 <Select value={periodFilter} onValueChange={setPeriodFilter}>
                   <SelectTrigger className="w-40 bg-white border-gray-300 text-gray-900">
@@ -715,10 +764,13 @@ export default function SchedulePage() {
               </div>
               
               {filteredServices.length === 0 ? (
-                <Card className="bg-white border-gray-200 shadow-sm">
-                  <CardContent className="p-6 text-center">
-                    <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Nenhum agendamento encontrado</p>
+                <Card className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 shadow-lg">
+                  <CardContent className="p-8 text-center">
+                    <div className="w-16 h-16 bg-gradient-to-r from-teal-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Calendar className="h-8 w-8 text-white" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">Nenhum agendamento</h3>
+                    <p className="text-gray-500">Não há agendamentos para o período selecionado</p>
                   </CardContent>
                 </Card>
               ) : (
@@ -726,12 +778,12 @@ export default function SchedulePage() {
                   {filteredServices.map(service => (
                     <Card 
                       key={service.id} 
-                      className="bg-white border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer shadow-sm"
+                      className="bg-gradient-to-r from-white to-gray-50 border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer group"
                       onClick={() => setLocation(`/services?openModal=true&serviceId=${service.id}`)}
                     >
-                      <CardContent className="p-4">
+                      <CardContent className="p-4 group-hover:bg-white transition-colors duration-200">
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-medium text-gray-900">
+                          <h3 className="font-semibold text-gray-900 group-hover:text-teal-700 transition-colors">
                             {service.customer.name}
                           </h3>
                           <Badge 
