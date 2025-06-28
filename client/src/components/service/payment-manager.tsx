@@ -78,11 +78,11 @@ export default function PaymentManager({
   useEffect(() => {
     console.log('PaymentManager - Initializing with values:', { pixPago, dinheiroPago, chequePago, cartaoPago });
     
-    // Convert to formatted currency values
-    const pixValue = pixPago || 0;
-    const dinheiroValue = dinheiroPago || 0;
-    const chequeValue = chequePago || 0;
-    const cartaoValue = cartaoPago || 0;
+    // Convert to formatted currency values - ensure values are numbers
+    const pixValue = parseFloat(pixPago?.toString() || '0') || 0;
+    const dinheiroValue = parseFloat(dinheiroPago?.toString() || '0') || 0;
+    const chequeValue = parseFloat(chequePago?.toString() || '0') || 0;
+    const cartaoValue = parseFloat(cartaoPago?.toString() || '0') || 0;
     
     setPayments([
       { 
@@ -162,11 +162,11 @@ export default function PaymentManager({
   };
 
   const handleCancel = () => {
-    // Reset payments to original values
-    const pixValue = pixPago || 0;
-    const dinheiroValue = dinheiroPago || 0;
-    const chequeValue = chequePago || 0;
-    const cartaoValue = cartaoPago || 0;
+    // Reset payments to original values - ensure values are numbers
+    const pixValue = parseFloat(pixPago?.toString() || '0') || 0;
+    const dinheiroValue = parseFloat(dinheiroPago?.toString() || '0') || 0;
+    const chequeValue = parseFloat(chequePago?.toString() || '0') || 0;
+    const cartaoValue = parseFloat(cartaoPago?.toString() || '0') || 0;
     
     setPayments([
       { 
