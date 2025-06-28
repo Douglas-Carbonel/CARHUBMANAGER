@@ -568,40 +568,67 @@ export default function SchedulePage() {
                           key={`day-${index}-${day.date.getTime()}`}
                           onClick={() => handleDayClick(day.date)}
                           className={cn(
-                            "relative p-2 text-center cursor-pointer rounded-xl transition-all duration-200 min-h-[60px] flex flex-col justify-between hover:scale-105 hover:shadow-lg",
+                            "relative p-2 text-center cursor-pointer rounded-xl transition-all duration-200 min-h-[80px] flex flex-col justify-start hover:scale-105 hover:shadow-lg border-2",
                             day.isCurrentMonth 
-                              ? "text-gray-900 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50" 
-                              : "text-gray-400 hover:bg-gray-50",
-                            day.isToday && "bg-gradient-to-br from-teal-500 to-emerald-500 text-white hover:from-teal-600 hover:to-emerald-600 shadow-lg font-bold",
-                            day.services.length > 0 && !day.isToday && "bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 shadow-md"
+                              ? "text-gray-900 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 border-gray-100" 
+                              : "text-gray-400 hover:bg-gray-50 border-gray-100",
+                            day.isToday && "bg-gradient-to-br from-teal-500 to-emerald-500 text-white hover:from-teal-600 hover:to-emerald-600 shadow-lg font-bold border-teal-300",
+                            day.services.length > 0 && !day.isToday && "bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-300 shadow-md"
                           )}
                         >
-                          <span className="text-sm font-medium self-center">{format(day.date, "d")}</span>
+                          <div className="flex items-center justify-between w-full mb-2">
+                            <span className="text-sm font-medium">{format(day.date, "d")}</span>
+                            {day.services.length > 0 && (
+                              <div className={cn(
+                                "rounded-full px-1.5 py-0.5 text-xs font-bold min-w-[18px] h-[18px] flex items-center justify-center",
+                                day.isToday ? "bg-white/20 text-white" : "bg-teal-500 text-white"
+                              )}>
+                                {day.services.length}
+                              </div>
+                            )}
+                          </div>
+                          
                           {day.services.length > 0 && (
-                            <div className="flex flex-wrap justify-center gap-0.5 mt-1">
-                              {day.services.length <= 4 ? (
-                                // Mostra até 4 bolinhas individuais
-                                day.services.map((_, i) => (
-                                  <div key={i} className={cn(
-                                    "w-1.5 h-1.5 rounded-full",
-                                    day.isToday ? "bg-white/80" : "bg-teal-500"
-                                  )} />
+                            <div className="flex-1 w-full space-y-1">
+                              {day.services.length <= 3 ? (
+                                // Mostra até 3 agendamentos como barrinhas
+                                day.services.map((service, i) => (
+                                  <div
+                                    key={i}
+                                    className={cn(
+                                      "w-full h-1.5 rounded-full shadow-sm",
+                                      day.isToday ? "bg-white/30" : 
+                                      service.status === "completed" ? "bg-green-500" :
+                                      service.status === "in_progress" ? "bg-yellow-500" :
+                                      service.status === "cancelled" ? "bg-red-500" :
+                                      "bg-blue-500"
+                                    )}
+                                    title={`${service.customer.name} - ${service.scheduledTime || 'Sem horário'}`}
+                                  />
                                 ))
                               ) : (
-                                // Mostra 3 bolinhas + contador para mais de 4 serviços
+                                // Para mais de 3 agendamentos, mostra 2 barrinhas + indicador
                                 <>
-                                  {day.services.slice(0, 3).map((_, i) => (
-                                    <div key={i} className={cn(
-                                      "w-1.5 h-1.5 rounded-full",
-                                      day.isToday ? "bg-white/80" : "bg-teal-500"
-                                    )} />
+                                  {day.services.slice(0, 2).map((service, i) => (
+                                    <div
+                                      key={i}
+                                      className={cn(
+                                        "w-full h-1.5 rounded-full shadow-sm",
+                                        day.isToday ? "bg-white/30" : 
+                                        service.status === "completed" ? "bg-green-500" :
+                                        service.status === "in_progress" ? "bg-yellow-500" :
+                                        service.status === "cancelled" ? "bg-red-500" :
+                                        "bg-blue-500"
+                                      )}
+                                      title={`${service.customer.name} - ${service.scheduledTime || 'Sem horário'}`}
+                                    />
                                   ))}
-                                  <span className={cn(
-                                    "text-[9px] font-bold ml-0.5",
-                                    day.isToday ? "text-white" : "text-teal-600"
+                                  <div className={cn(
+                                    "w-full h-1.5 rounded-full flex items-center justify-center text-[9px] font-bold",
+                                    day.isToday ? "bg-white/20 text-white" : "bg-gray-400 text-white"
                                   )}>
-                                    +{day.services.length - 3}
-                                  </span>
+                                    +{day.services.length - 2}
+                                  </div>
                                 </>
                               )}
                             </div>
