@@ -876,6 +876,19 @@ export default function Services() {
                   <Plus className="h-7 w-7" />
                 </Button>
               </DialogTrigger>
+              
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingService ? 'Editar Ordem de Serviço' : 'Nova Ordem de Serviço'}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="p-6">
+                  <p>Service form content goes here</p>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
 
           {/* Search and Filter */}
           <div className="space-y-4 mb-6">
