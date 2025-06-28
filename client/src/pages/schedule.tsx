@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -313,14 +314,14 @@ export default function SchedulePage() {
 
   if (servicesLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-900">
-        <div className="text-white">Carregando...</div>
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="text-gray-900">Carregando...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-slate-900 text-white">
+    <div className="flex h-screen bg-gray-50">
       <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header title="Agenda" />
@@ -328,25 +329,18 @@ export default function SchedulePage() {
           {/* Top Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-white">Agenda</h1>
-              <p className="text-slate-400 text-sm mt-1">Gerencie seus agendamentos</p>
+              <h1 className="text-2xl font-bold text-gray-900">Agenda</h1>
+              <p className="text-gray-600 text-sm mt-1">Gerencie seus agendamentos</p>
             </div>
-            <Button
-              onClick={() => setIsAddModalOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Agendamento
-            </Button>
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Calendar Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-white">Calendário</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Calendário</h2>
                 {/* View Mode Selector */}
-                <div className="flex bg-slate-800 rounded-full p-1">
+                <div className="flex bg-gray-100 rounded-full p-1">
                   {[
                     { key: 'Month', label: 'Mês' },
                     { key: 'Week', label: 'Semana' },
@@ -360,8 +354,8 @@ export default function SchedulePage() {
                       className={cn(
                         "rounded-full px-3 py-1 text-xs",
                         viewMode === mode.key 
-                          ? "bg-white text-slate-900" 
-                          : "text-slate-400 hover:text-white"
+                          ? "bg-teal-600 text-white hover:bg-teal-700" 
+                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-200"
                       )}
                     >
                       {mode.label}
@@ -370,9 +364,9 @@ export default function SchedulePage() {
                 </div>
               </div>
 
-              <Card className="bg-slate-800 border-slate-700">
+              <Card className="bg-white border-gray-200 shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="text-white">
+                  <CardTitle className="text-gray-900">
                     {format(currentDate, "MMMM yyyy", { locale: ptBR })}
                   </CardTitle>
                   <div className="flex items-center gap-2">
@@ -380,7 +374,7 @@ export default function SchedulePage() {
                       variant="ghost"
                       size="sm"
                       onClick={handlePrevMonth}
-                      className="text-slate-400 hover:text-white"
+                      className="text-gray-600 hover:text-gray-900"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
@@ -388,7 +382,7 @@ export default function SchedulePage() {
                       variant="ghost"
                       size="sm"
                       onClick={handleNextMonth}
-                      className="text-slate-400 hover:text-white"
+                      className="text-gray-600 hover:text-gray-900"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>
@@ -398,7 +392,7 @@ export default function SchedulePage() {
                   {viewMode === 'Month' && (
                     <div className="grid grid-cols-7 gap-1">
                       {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day, index) => (
-                        <div key={`header-${index}`} className="text-center text-sm font-medium text-slate-400 p-2">
+                        <div key={`header-${index}`} className="text-center text-sm font-medium text-gray-600 p-2">
                           {day}
                         </div>
                       ))}
@@ -409,17 +403,17 @@ export default function SchedulePage() {
                           className={cn(
                             "relative p-2 text-center cursor-pointer rounded-lg transition-colors min-h-[40px] flex items-center justify-center",
                             day.isCurrentMonth 
-                              ? "text-white hover:bg-slate-700" 
-                              : "text-slate-600",
-                            day.isToday && "bg-green-600 text-white",
-                            day.services.length > 0 && !day.isToday && "bg-slate-700"
+                              ? "text-gray-900 hover:bg-gray-100" 
+                              : "text-gray-400",
+                            day.isToday && "bg-teal-600 text-white hover:bg-teal-700",
+                            day.services.length > 0 && !day.isToday && "bg-blue-50 border border-blue-200"
                           )}
                         >
                           <span className="text-sm">{format(day.date, "d")}</span>
                           {day.services.length > 0 && (
                             <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex gap-1">
                               {day.services.slice(0, 3).map((_, i) => (
-                                <div key={i} className="w-1 h-1 bg-green-400 rounded-full" />
+                                <div key={i} className="w-1 h-1 bg-teal-500 rounded-full" />
                               ))}
                             </div>
                           )}
@@ -430,7 +424,7 @@ export default function SchedulePage() {
 
                   {viewMode === 'Week' && (
                     <div className="space-y-2">
-                      <div className="grid grid-cols-7 gap-2 text-center text-sm font-medium text-slate-400 pb-2">
+                      <div className="grid grid-cols-7 gap-2 text-center text-sm font-medium text-gray-600 pb-2">
                         {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day, index) => (
                           <div key={`week-header-${index}`}>{day}</div>
                         ))}
@@ -448,21 +442,21 @@ export default function SchedulePage() {
                                 key={`week-day-${index}`}
                                 onClick={() => handleDayClick(day)}
                                 className={cn(
-                                  "p-3 rounded-lg cursor-pointer transition-colors min-h-[80px] border border-slate-700",
-                                  isToday(day) && "bg-green-600 text-white",
-                                  dayServices.length > 0 && !isToday(day) && "bg-slate-700",
-                                  !dayServices.length && !isToday(day) && "hover:bg-slate-700"
+                                  "p-3 rounded-lg cursor-pointer transition-colors min-h-[80px] border border-gray-200",
+                                  isToday(day) && "bg-teal-600 text-white",
+                                  dayServices.length > 0 && !isToday(day) && "bg-blue-50 border-blue-200",
+                                  !dayServices.length && !isToday(day) && "hover:bg-gray-50"
                                 )}
                               >
                                 <div className="text-sm font-medium mb-1">{format(day, "d")}</div>
                                 <div className="space-y-1">
                                   {dayServices.slice(0, 2).map(service => (
-                                    <div key={service.id} className="text-xs bg-green-500 text-white px-1 py-0.5 rounded truncate">
+                                    <div key={service.id} className="text-xs bg-teal-500 text-white px-1 py-0.5 rounded truncate">
                                       {service.customer.name}
                                     </div>
                                   ))}
                                   {dayServices.length > 2 && (
-                                    <div className="text-xs text-slate-400">+{dayServices.length - 2} mais</div>
+                                    <div className="text-xs text-gray-500">+{dayServices.length - 2} mais</div>
                                   )}
                                 </div>
                               </div>
@@ -476,7 +470,7 @@ export default function SchedulePage() {
                   {viewMode === 'Day' && (
                     <div className="space-y-3">
                       <div className="text-center">
-                        <h3 className="text-lg font-semibold text-white">
+                        <h3 className="text-lg font-semibold text-gray-900">
                           {format(currentDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}
                         </h3>
                       </div>
@@ -488,7 +482,7 @@ export default function SchedulePage() {
                           
                           if (dayServices.length === 0) {
                             return (
-                              <div className="text-center py-8 text-slate-400">
+                              <div className="text-center py-8 text-gray-500">
                                 <Calendar className="h-12 w-12 mx-auto mb-3" />
                                 <p>Nenhum agendamento para este dia</p>
                               </div>
@@ -498,21 +492,27 @@ export default function SchedulePage() {
                           return dayServices.map(service => (
                             <Card 
                               key={service.id} 
-                              className="bg-slate-700 border-slate-600 hover:bg-slate-600 transition-colors cursor-pointer"
+                              className="bg-white border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
                               onClick={() => setLocation(`/services?openModal=true&serviceId=${service.id}`)}
                             >
                               <CardContent className="p-3">
                                 <div className="flex items-center justify-between mb-1">
-                                  <h4 className="font-medium text-white text-sm">{service.customer.name}</h4>
-                                  <Badge className="text-xs">
+                                  <h4 className="font-medium text-gray-900 text-sm">{service.customer.name}</h4>
+                                  <Badge className={cn(
+                                    "text-xs",
+                                    service.status === 'completed' && "bg-emerald-100 text-emerald-800",
+                                    service.status === 'in_progress' && "bg-blue-100 text-blue-800",
+                                    service.status === 'scheduled' && "bg-orange-100 text-orange-800",
+                                    service.status === 'cancelled' && "bg-red-100 text-red-800"
+                                  )}>
                                     {translateStatus(service.status)}
                                   </Badge>
                                 </div>
-                                <p className="text-slate-400 text-xs">
+                                <p className="text-gray-600 text-xs">
                                   <Clock className="inline h-3 w-3 mr-1" />
                                   {service.scheduledTime || "Horário não definido"}
                                 </p>
-                                <p className="text-slate-400 text-xs">
+                                <p className="text-gray-600 text-xs">
                                   <Car className="inline h-3 w-3 mr-1" />
                                   {service.vehicle.brand} {service.vehicle.model}
                                 </p>
@@ -530,13 +530,13 @@ export default function SchedulePage() {
             {/* Appointments List Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-white">Agendamentos</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Agendamentos</h2>
                 {/* Period Filter Dropdown */}
                 <Select value={periodFilter} onValueChange={setPeriodFilter}>
-                  <SelectTrigger className="w-40 bg-slate-800 border-slate-700 text-white">
+                  <SelectTrigger className="w-40 bg-white border-gray-300 text-gray-900">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
+                  <SelectContent className="bg-white border-gray-300">
                     <SelectItem value="hoje">Hoje ({getFilterCount("hoje")})</SelectItem>
                     <SelectItem value="semana">Esta Semana ({getFilterCount("semana")})</SelectItem>
                     <SelectItem value="mes">Este Mês ({getFilterCount("mes")})</SelectItem>
@@ -546,10 +546,10 @@ export default function SchedulePage() {
               </div>
               
               {filteredServices.length === 0 ? (
-                <Card className="bg-slate-800 border-slate-700">
+                <Card className="bg-white border-gray-200 shadow-sm">
                   <CardContent className="p-6 text-center">
-                    <Calendar className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                    <p className="text-slate-400">Nenhum agendamento encontrado</p>
+                    <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">Nenhum agendamento encontrado</p>
                   </CardContent>
                 </Card>
               ) : (
@@ -557,36 +557,36 @@ export default function SchedulePage() {
                   {filteredServices.map(service => (
                     <Card 
                       key={service.id} 
-                      className="bg-slate-800 border-slate-700 hover:bg-slate-700 transition-colors cursor-pointer"
+                      className="bg-white border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer shadow-sm"
                       onClick={() => setLocation(`/services?openModal=true&serviceId=${service.id}`)}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-medium text-white">
+                          <h3 className="font-medium text-gray-900">
                             {service.customer.name}
                           </h3>
                           <Badge 
                             className={cn(
                               "text-xs",
-                              service.status === 'completed' && "bg-emerald-600 text-white",
-                              service.status === 'in_progress' && "bg-blue-600 text-white",
-                              service.status === 'scheduled' && "bg-orange-600 text-white",
-                              service.status === 'cancelled' && "bg-red-600 text-white"
+                              service.status === 'completed' && "bg-emerald-100 text-emerald-800",
+                              service.status === 'in_progress' && "bg-blue-100 text-blue-800",
+                              service.status === 'scheduled' && "bg-orange-100 text-orange-800",
+                              service.status === 'cancelled' && "bg-red-100 text-red-800"
                             )}
                           >
                             {translateStatus(service.status)}
                           </Badge>
                         </div>
-                        <p className="text-slate-400 text-sm mb-1">
+                        <p className="text-gray-600 text-sm mb-1">
                           <Clock className="inline h-3 w-3 mr-1" />
                           {service.scheduledTime || "Horário não definido"}
                         </p>
-                        <p className="text-slate-400 text-sm">
+                        <p className="text-gray-600 text-sm">
                           <Car className="inline h-3 w-3 mr-1" />
                           {service.vehicle.brand} {service.vehicle.model} - {service.vehicle.licensePlate}
                         </p>
                         {service.serviceType && (
-                          <p className="text-green-400 text-sm mt-1">
+                          <p className="text-teal-600 text-sm mt-1">
                             {service.serviceType.name}
                           </p>
                         )}
@@ -598,11 +598,20 @@ export default function SchedulePage() {
             </div>
           </div>
 
+          {/* Floating Action Button */}
+          <Button
+            onClick={() => setIsAddModalOpen(true)}
+            className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-teal-600 hover:bg-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 z-50"
+            size="sm"
+          >
+            <Plus className="h-6 w-6" />
+          </Button>
+
           {/* Multiple Appointments Modal */}
           <Dialog open={isDayAppointmentsModalOpen} onOpenChange={setIsDayAppointmentsModalOpen}>
-            <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-md">
+            <DialogContent className="bg-white border-gray-300 text-gray-900 max-w-md">
               <DialogHeader>
-                <DialogTitle className="text-white">
+                <DialogTitle className="text-gray-900">
                   Agendamentos para {selectedDate && format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
                 </DialogTitle>
               </DialogHeader>
@@ -610,7 +619,7 @@ export default function SchedulePage() {
                 {selectedDayServices.map(service => (
                   <Card 
                     key={service.id} 
-                    className="bg-slate-700 border-slate-600 hover:bg-slate-600 transition-colors cursor-pointer"
+                    className="bg-gray-50 border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer"
                     onClick={() => {
                       setIsDayAppointmentsModalOpen(false);
                       setLocation(`/services?openModal=true&serviceId=${service.id}`);
@@ -618,31 +627,31 @@ export default function SchedulePage() {
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-medium text-white">
+                        <h3 className="font-medium text-gray-900">
                           {service.customer.name}
                         </h3>
                         <Badge 
                           className={cn(
                             "text-xs",
-                            service.status === 'completed' && "bg-emerald-600 text-white",
-                            service.status === 'in_progress' && "bg-blue-600 text-white",
-                            service.status === 'scheduled' && "bg-orange-600 text-white",
-                            service.status === 'cancelled' && "bg-red-600 text-white"
+                            service.status === 'completed' && "bg-emerald-100 text-emerald-800",
+                            service.status === 'in_progress' && "bg-blue-100 text-blue-800",
+                            service.status === 'scheduled' && "bg-orange-100 text-orange-800",
+                            service.status === 'cancelled' && "bg-red-100 text-red-800"
                           )}
                         >
                           {translateStatus(service.status)}
                         </Badge>
                       </div>
-                      <p className="text-slate-400 text-sm mb-1">
+                      <p className="text-gray-600 text-sm mb-1">
                         <Clock className="inline h-3 w-3 mr-1" />
                         {service.scheduledTime || "Horário não definido"}
                       </p>
-                      <p className="text-slate-400 text-sm">
+                      <p className="text-gray-600 text-sm">
                         <Car className="inline h-3 w-3 mr-1" />
                         {service.vehicle.brand} {service.vehicle.model} - {service.vehicle.licensePlate}
                       </p>
                       {service.serviceType && (
-                        <p className="text-green-400 text-sm mt-1">
+                        <p className="text-teal-600 text-sm mt-1">
                           {service.serviceType.name}
                         </p>
                       )}
@@ -655,29 +664,29 @@ export default function SchedulePage() {
 
           {/* Add Service Modal */}
           <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-            <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="bg-white border-gray-300 text-gray-900 max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-white">Nova Ordem de Serviço</DialogTitle>
+                <DialogTitle className="text-gray-900">Nova Ordem de Serviço</DialogTitle>
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   {/* Basic Information */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-white border-b border-slate-600 pb-2">Informações Básicas</h3>
+                    <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">Informações Básicas</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
                         name="customerId"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-white">Cliente</FormLabel>
+                            <FormLabel className="text-gray-700">Cliente</FormLabel>
                             <Select onValueChange={(value) => field.onChange(parseInt(value))}>
                               <FormControl>
-                                <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                                <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                                   <SelectValue placeholder="Selecione um cliente" />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent className="bg-slate-700 border-slate-600">
+                              <SelectContent className="bg-white border-gray-300">
                                 {customers.map((customer) => (
                                   <SelectItem key={customer.id} value={customer.id.toString()}>
                                     {customer.name}
@@ -695,14 +704,14 @@ export default function SchedulePage() {
                         name="vehicleId"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-white">Veículo</FormLabel>
+                            <FormLabel className="text-gray-700">Veículo</FormLabel>
                             <Select onValueChange={(value) => field.onChange(parseInt(value))}>
                               <FormControl>
-                                <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                                <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                                   <SelectValue placeholder="Selecione um veículo" />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent className="bg-slate-700 border-slate-600">
+                              <SelectContent className="bg-white border-gray-300">
                                 {vehicles.map((vehicle) => (
                                   <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
                                     {vehicle.brand} {vehicle.model} - {vehicle.licensePlate}
@@ -720,12 +729,12 @@ export default function SchedulePage() {
                         name="scheduledDate"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-white">Data</FormLabel>
+                            <FormLabel className="text-gray-700">Data</FormLabel>
                             <FormControl>
                               <Input 
                                 type="date" 
                                 {...field} 
-                                className="bg-slate-700 border-slate-600 text-white"
+                                className="bg-white border-gray-300 text-gray-900"
                               />
                             </FormControl>
                             <FormMessage />
@@ -738,12 +747,12 @@ export default function SchedulePage() {
                         name="scheduledTime"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-white">Horário</FormLabel>
+                            <FormLabel className="text-gray-700">Horário</FormLabel>
                             <FormControl>
                               <Input 
                                 type="time" 
                                 {...field} 
-                                className="bg-slate-700 border-slate-600 text-white"
+                                className="bg-white border-gray-300 text-gray-900"
                               />
                             </FormControl>
                             <FormMessage />
@@ -756,14 +765,14 @@ export default function SchedulePage() {
                         name="technicianId"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-white">Técnico</FormLabel>
+                            <FormLabel className="text-gray-700">Técnico</FormLabel>
                             <Select onValueChange={(value) => field.onChange(parseInt(value))}>
                               <FormControl>
-                                <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                                <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                                   <SelectValue placeholder="Selecione um técnico" />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent className="bg-slate-700 border-slate-600">
+                              <SelectContent className="bg-white border-gray-300">
                                 {users.map((user) => (
                                   <SelectItem key={user.id} value={user.id.toString()}>
                                     {user.firstName} {user.lastName}
@@ -781,14 +790,14 @@ export default function SchedulePage() {
                         name="status"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-white">Status</FormLabel>
+                            <FormLabel className="text-gray-700">Status</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue="scheduled">
                               <FormControl>
-                                <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                                <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent className="bg-slate-700 border-slate-600">
+                              <SelectContent className="bg-white border-gray-300">
                                 <SelectItem value="scheduled">Agendado</SelectItem>
                                 <SelectItem value="in_progress">Em Andamento</SelectItem>
                                 <SelectItem value="completed">Concluído</SelectItem>
@@ -806,12 +815,12 @@ export default function SchedulePage() {
                       name="notes"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-white">Observações</FormLabel>
+                          <FormLabel className="text-gray-700">Observações</FormLabel>
                           <FormControl>
                             <Textarea 
                               {...field} 
                               placeholder="Observações sobre o serviço"
-                              className="bg-slate-700 border-slate-600 text-white"
+                              className="bg-white border-gray-300 text-gray-900"
                             />
                           </FormControl>
                           <FormMessage />
@@ -822,7 +831,7 @@ export default function SchedulePage() {
 
                   {/* Service Items */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-white border-b border-slate-600 pb-2">Serviços</h3>
+                    <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">Serviços</h3>
                     <ServiceItems 
                       serviceExtras={serviceExtras}
                       setServiceExtras={setServiceExtras}
@@ -831,13 +840,13 @@ export default function SchedulePage() {
 
                   {/* Photos Section */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-white border-b border-slate-600 pb-2">Fotos</h3>
+                    <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">Fotos</h3>
                     <div className="grid grid-cols-2 gap-4">
                       <Button
                         type="button"
                         variant="outline"
                         onClick={() => setIsCameraOpen(true)}
-                        className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+                        className="bg-white border-gray-300 text-gray-900 hover:bg-gray-50"
                       >
                         <Camera className="h-4 w-4 mr-2" />
                         Câmera
@@ -871,7 +880,7 @@ export default function SchedulePage() {
 
                   {/* Payment Section */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-white border-b border-slate-600 pb-2">Pagamento</h3>
+                    <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">Pagamento</h3>
                     <PaymentManager
                       pixPago={form.watch('pixPago') || '0.00'}
                       dinheiroPago={form.watch('dinheiroPago') || '0.00'}
@@ -887,16 +896,16 @@ export default function SchedulePage() {
 
                   {/* Notifications Section */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-white border-b border-slate-600 pb-2">Notificações</h3>
+                    <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">Notificações</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
                         name="reminderEnabled"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between rounded-lg border border-slate-600 p-4">
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border border-gray-200 p-4">
                             <div className="space-y-0.5">
-                              <FormLabel className="text-base text-white">Lembrete</FormLabel>
-                              <div className="text-sm text-slate-400">
+                              <FormLabel className="text-base text-gray-900">Lembrete</FormLabel>
+                              <div className="text-sm text-gray-600">
                                 Receber notificação antes do agendamento
                               </div>
                             </div>
@@ -916,14 +925,14 @@ export default function SchedulePage() {
                           name="reminderMinutes"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-white">Minutos de antecedência</FormLabel>
+                              <FormLabel className="text-gray-700">Minutos de antecedência</FormLabel>
                               <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue="15">
                                 <FormControl>
-                                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                                  <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                                     <SelectValue />
                                   </SelectTrigger>
                                 </FormControl>
-                                <SelectContent className="bg-slate-700 border-slate-600">
+                                <SelectContent className="bg-white border-gray-300">
                                   <SelectItem value="15">15 minutos</SelectItem>
                                   <SelectItem value="30">30 minutos</SelectItem>
                                   <SelectItem value="60">1 hora</SelectItem>
@@ -937,19 +946,19 @@ export default function SchedulePage() {
                     </div>
                   </div>
 
-                  <div className="flex justify-end gap-2 pt-4 border-t border-slate-600">
+                  <div className="flex justify-end gap-2 pt-4 border-t border-gray-200">
                     <Button 
                       type="button" 
                       variant="ghost" 
                       onClick={() => setIsAddModalOpen(false)}
-                      className="text-slate-400 hover:text-white"
+                      className="text-gray-600 hover:text-gray-900"
                     >
                       Cancelar
                     </Button>
                     <Button 
                       type="submit" 
                       disabled={createServiceMutation.isPending}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      className="bg-teal-600 hover:bg-teal-700 text-white"
                     >
                       {createServiceMutation.isPending ? "Salvando..." : "Salvar Agendamento"}
                     </Button>
