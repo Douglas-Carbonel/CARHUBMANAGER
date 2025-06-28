@@ -225,6 +225,16 @@ export default function PaymentManager({
           <span className="text-lg font-bold text-slate-800">
             R$ {(currentPaidValue || 0).toFixed(2)}
           </span>
+          <div className={`flex items-center space-x-2 px-3 py-1 rounded-full ${status.bgColor}`}>
+            <div className={`w-3 h-3 rounded-full ${
+              status.label === 'Pendente' ? 'bg-red-500' :
+              status.label === 'Concluído' ? 'bg-green-500' :
+              'bg-yellow-500'
+            }`}></div>
+            <span className={`text-xs font-medium ${status.color}`}>
+              {status.label}
+            </span>
+          </div>
         </div>
         
         <div className="flex items-center space-x-3">
@@ -233,17 +243,10 @@ export default function PaymentManager({
             variant="ghost"
             size="sm"
             onClick={() => setIsModalOpen(true)}
-            className={`flex items-center space-x-2 px-3 py-1 rounded-full ${status.bgColor} hover:opacity-90 transition-all duration-200`}
+            className="text-slate-600 hover:text-slate-800 hover:bg-slate-200 transition-all duration-200"
             title="Gerenciar Pagamentos"
           >
-            <div className={`w-3 h-3 rounded-full ${
-              status.label === 'Pendente' ? 'bg-red-500' :
-              status.label === 'Pago' ? 'bg-green-500' :
-              'bg-yellow-500'
-            }`}></div>
-            <span className={`text-xs font-medium ${status.color}`}>
-              {status.label}
-            </span>
+            <DollarSign className="h-4 w-4" />
           </Button>
         </div>
       </div>
