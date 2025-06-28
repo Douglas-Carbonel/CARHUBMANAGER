@@ -920,35 +920,33 @@ export default function SchedulePage() {
               </Button>
             </DialogTrigger>
 
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-slate-50 to-blue-50/30">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col bg-gradient-to-br from-slate-50 to-blue-50/30">
               <DialogHeader className="pb-6">
                 <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent">
-                  Nova Ordem de Serviço
+                  Novo Serviço
                 </DialogTitle>
               </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <div className="grid grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="customerId"
-                      render={({ field }) => (
-                        <FormItem className="space-y-2">
-                          <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
-                            <User className="h-4 w-4 mr-2 text-teal-600" />
-                            Cliente
-                          </FormLabel>
-                          {customersLoading ? (
-                            <div className="py-8">
-                              <LoadingSpinner size="md" text="Carregando clientes..." />
-                            </div>
-                          ) : (
+
+              <div className="flex-1 overflow-y-auto">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-1">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="customerId"
+                        render={({ field }) => (
+                          <FormItem className="space-y-2">
+                            <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                              <User className="h-4 w-4 mr-2 text-teal-600" />
+                              Cliente
+                            </FormLabel>
                             <Select 
                               onValueChange={(value) => {
-                                field.onChange(Number(value));
-                                form.setValue("vehicleId", 0); // Reset vehicle when customer changes
-                              }} 
-                              value={field.value > 0 ? field.value.toString() : ""}
+                                const numValue = parseInt(value);
+                                field.onChange(numValue);
+                                form.setValue("vehicleId", 0);
+                              }}
+                              value={field.value ? field.value.toString() : ""}
                             >
                               <FormControl>
                                 <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
@@ -956,82 +954,92 @@ export default function SchedulePage() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {customers.map((customer: Customer) => (
-                                  <SelectItem key={customer.id} value={customer.id.toString()}>
-                                    {customer.name}
-                                  </SelectItem>
-                                ))}
+                                {customersLoading ? (
+                                  <SelectItem value="loading" disabled>Carregando...</SelectItem>
+                                ) : customers && customers.length > 0 ? (
+                                  customers.map((customer: Customer) => (
+                                    <SelectItem key={customer.id} value={customer.id.toString()}>
+                                      {customer.name}
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <SelectItem value="empty" disabled>Nenhum cliente encontrado</SelectItem>
+                                )}
                               </SelectContent>
                             </Select>
-                          )}
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={form.control}
-                      name="vehicleId"
-                      render={({ field }) => {
-                        const selectedCustomerId = form.watch("customerId");
-                        const availableVehicles = vehicles.filter(vehicle => 
-                          selectedCustomerId ? (vehicle.customerId === selectedCustomerId || vehicle.customer?.id === selectedCustomerId) : true
-                        );
+                      <FormField
+                        control={form.control}
+                        name="vehicleId"
+                        render={({ field }) => {
+                          const selectedCustomerId = form.watch("customerId");
+                          const getCustomerVehicles = (customerId: number) => {
+                            if (!customerId || !vehicles) return [];
+                            const customerVehicles = vehicles.filter((v: any) => v.customerId === customerId);
+                            return customerVehicles;
+                          };
 
-                        return (
-                          <FormItem className="space-y-2">
-                            <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
-                              <Car className="h-4 w-4 mr-2 text-teal-600" />
-                              Veículo
-                            </FormLabel>
-                            {vehiclesLoading ? (
-                              <div className="py-8">
-                                <LoadingSpinner size="md" text="Carregando veículos..." />
-                              </div>
-                            ) : (
+                          return (
+                            <FormItem className="space-y-2">
+                              <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                                <Car className="h-4 w-4 mr-2 text-teal-600" />
+                                Veículo
+                              </FormLabel>
                               <Select 
-                                onValueChange={(value) => field.onChange(Number(value))} 
-                                value={field.value > 0 ? field.value.toString() : ""}
+                                onValueChange={(value) => {
+                                  const numValue = parseInt(value);
+                                  field.onChange(numValue);
+                                }}
+                                value={field.value ? field.value.toString() : ""}
                                 disabled={!selectedCustomerId}
                               >
                                 <FormControl>
                                   <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md disabled:opacity-50">
-                                    <SelectValue placeholder={selectedCustomerId ? "Selecione um veículo" : "Primeiro selecione um cliente"} />
+                                    <SelectValue placeholder={!selectedCustomerId ? "Selecione um cliente primeiro" : "Selecione um veículo"} />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  {availableVehicles.map((vehicle) => (
-                                    <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                                      {vehicle.licensePlate} - {vehicle.brand} {vehicle.model}
-                                    </SelectItem>
-                                  ))}
+                                  {!selectedCustomerId ? (
+                                    <SelectItem value="no-customer" disabled>Selecione um cliente primeiro</SelectItem>
+                                  ) : vehiclesLoading ? (
+                                    <SelectItem value="loading" disabled>Carregando...</SelectItem>
+                                  ) : getCustomerVehicles(selectedCustomerId).length > 0 ? (
+                                    getCustomerVehicles(selectedCustomerId).map((vehicle: any) => (
+                                      <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                                        {vehicle.brand} {vehicle.model} - {vehicle.licensePlate}
+                                      </SelectItem>
+                                    ))
+                                  ) : (
+                                    <SelectItem value="empty" disabled>Nenhum veículo encontrado para este cliente</SelectItem>
+                                  )}
                                 </SelectContent>
                               </Select>
-                            )}
-                            <FormMessage />
-                          </FormItem>
-                        );
-                      }}
-                    />
-                  </div>
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
+                      />
+                    </div>
 
-                  <FormField
-                    control={form.control}
-                    name="technicianId"
-                    render={({ field }) => (
-                      <FormItem className="space-y-2">
-                        <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
-                          <User className="h-4 w-4 mr-2 text-teal-600" />
-                          Técnico Responsável
-                        </FormLabel>
-                        {techniciansLoading ? (
-                          <div className="py-8">
-                            <LoadingSpinner size="md" text="Carregando técnicos..." />
-                          </div>
-                        ) : (
+                    <FormField
+                      control={form.control}
+                      name="technicianId"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                            <User className="h-4 w-4 mr-2 text-teal-600" />
+                            Técnico Responsável
+                          </FormLabel>
                           <Select 
-                            onValueChange={(value) => field.onChange(Number(value))} 
-                            value={field.value > 0 ? field.value.toString() : ""}
+                            onValueChange={(value) => {
+                              const numValue = parseInt(value);
+                              field.onChange(numValue);
+                            }}
+                            value={field.value ? field.value.toString() : ""}
                           >
                             <FormControl>
                               <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
@@ -1039,256 +1047,157 @@ export default function SchedulePage() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {users.map((technician: any) => (
-                                <SelectItem key={technician.id} value={technician.id.toString()}>
-                                  {technician.firstName} {technician.lastName} ({technician.username})
-                                </SelectItem>
-                              ))}
+                              {techniciansLoading ? (
+                                <SelectItem value="loading" disabled>Carregando...</SelectItem>
+                              ) : users && users.length > 0 ? (
+                                users.map((user: any) => (
+                                  <SelectItem key={user.id} value={user.id.toString()}>
+                                    {user.firstName} {user.lastName} ({user.username})
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="empty" disabled>Nenhum técnico encontrado</SelectItem>
+                              )}
                             </SelectContent>
                           </Select>
-                        )}
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem className="space-y-2">
-                        <FormLabel className="text-sm font-semibold text-slate-700">Status</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || ""}>
-                          <FormControl>
-                            <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
-                              <SelectValue placeholder="Selecione o status" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="scheduled">Agendado</SelectItem>
-                            <SelectItem value="in_progress">Em Andamento</SelectItem>
-                            <SelectItem value="completed">Concluído</SelectItem>
-                            <SelectItem value="cancelled">Cancelado</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className={cn("grid gap-4", isMobile ? "grid-cols-1" : "grid-cols-3")}>
-                    <FormField
-                      control={form.control}
-                      name="scheduledDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Data</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field} 
-                              type="date" 
-                              value={field.value || ""} 
-                              className={cn(
-                                "h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg bg-white transition-all duration-200",
-                                isMobile && "text-base" // Prevent zoom on iOS
-                              )}
-                            />
-                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="scheduledTime"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Hora</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field} 
-                              type="time" 
-                              value={field.value || ""} 
-                              className={cn(
-                                "h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg bg-white transition-all duration-200",
-                                isMobile && "text-base" // Prevent zoom on iOS
-                              )}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Observações</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} value={field.value || ""} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Services Section */}
-                  <div className="col-span-2 border-t pt-4">
-                    <h4 className="text-lg font-semibold text-slate-700 mb-4 flex items-center">
-                      <Wrench className="h-5 w-5 mr-2 text-teal-600" />
-                      Serviços
-                    </h4>
-                    <ServiceItems
-                      onChange={(items) => {
-                        console.log('Schedule page - Received items from ServiceItems:', items);
-                        setServiceExtras(items);
-                      }}
-                      initialItems={serviceExtras}
-                    />
-                  </div>
-
-                  {/* Service Budget Section */}
-                  <div className="col-span-2 border-t pt-6">
-                    <div className="space-y-4">
-                      {/* Budget Summary */}
-                      <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                        <h3 className="text-lg font-semibold text-slate-700 mb-3 flex items-center">
-                          <Calculator className="h-5 w-5 mr-2 text-slate-600" />
-                          Valores do Serviço
-                        </h3>
-                        <div className="space-y-3">
-                          {/* Services Summary */}
-                          <div className="bg-white border border-slate-200 rounded-lg p-3">
-                            <div className="text-sm font-bold text-slate-800 mb-3">Serviços:</div>
-                            <div className="space-y-2">
-                              {/* Serviços selecionados */}
-                              {serviceExtras.length > 0 ? serviceExtras.map((extra, index) => {
-                                // Buscar o nome do tipo de serviço no array serviceTypes
-                                const serviceType = serviceTypes.find(st => st.id === extra.serviceTypeId);
-                                const serviceName = serviceType?.name || `Serviço ${index + 1}`;
-                                const servicePrice = extra.totalPrice || extra.unitPrice || "0.00";
-
-                                return (
-                                  <div key={extra.tempId || index} className="flex justify-between items-center text-sm">
-                                    <span className="text-slate-700">{serviceName}</span>
-                                    <span className="font-medium text-slate-800">R$ {Number(servicePrice).toFixed(2)}</span>
-                                  </div>
-                                );
-                              }) : (
-                                <div className="text-sm text-slate-500 italic">
-                                  Nenhum serviço selecionado
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="border-t border-slate-300 pt-2 mt-2">
-                            <div className="flex justify-between items-center">
-                              <span className="text-lg font-bold text-slate-800">Total do Serviço:</span>
-                              <span className="text-xl font-bold text-slate-700">
-                                R$ {calculateTotalValue()}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Payment Control Section */}
-                      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-                        <h3 className="text-lg font-semibold text-emerald-800 mb-3 flex items-center">
-                          <DollarSign className="h-5 w-5 mr-2 text-emerald-600" />
-                          Pagamentos
-                        </h3>
-
-                        <PaymentManager
-                          totalValue={Number(calculateTotalValue())}
-                          currentPaidValue={Number(form.watch("valorPago") || 0)}
-                          pixPago={Number(form.watch("pixPago") || 0)}
-                          dinheiroPago={Number(form.watch("dinheiroPago") || 0)}
-                          chequePago={Number(form.watch("chequePago") || 0)}
-                          cartaoPago={Number(form.watch("cartaoPago") || 0)}
-                          onPaymentChange={(pixPago, dinheiroPago, chequePago, cartaoPago) => {
-                            form.setValue("pixPago", pixPago.toFixed(2));
-                            form.setValue("dinheiroPago", dinheiroPago.toFixed(2));
-                            form.setValue("chequePago", chequePago.toFixed(2));
-                            form.setValue("cartaoPago", cartaoPago.toFixed(2));
-
-                            const totalPago = pixPago + dinheiroPago + chequePago + cartaoPago;
-                            form.setValue("valorPago", totalPago.toFixed(2));
-                          }}
-                        />
-                      </div>
-
-                      {/* Reminder Section */}
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                        <div className="flex items-center mb-3">
-                          <Bell className="h-5 w-5 text-yellow-600 mr-2" />
-                          <span className="font-medium text-yellow-800">Lembrete de Serviço</span>
-                        </div>
-
-                        <FormField
-                          control={form.control}
-                          name="reminderEnabled"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border border-yellow-300 p-3 shadow-sm">
-                              <div className="space-y-0.5">
-                                <FormLabel className="text-sm font-medium">
-                                  Ativar lembrete de notificação
-                                </FormLabel>
-                                <div className="text-xs text-yellow-700">
-                                  Receba uma notificação antes do horário do serviço
-                                </div>
-                              </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value || false}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-
-                        {form.watch("reminderEnabled") && (
-                          <FormField
-                            control={form.control}
-                            name="reminderMinutes"
-                            render={({ field }) => (
-                              <FormItem className="mt-3">
-                                <FormLabel>Enviar lembrete (minutos antes)</FormLabel>
-                                <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value?.toString() || "30"}>
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Selecione quando enviar o lembrete" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="15">15 minutos antes</SelectItem>
-                                    <SelectItem value="30">30 minutos antes</SelectItem>
-                                    <SelectItem value="60">1 hora antes</SelectItem>
-                                    <SelectItem value="120">2 horas antes</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="scheduledDate"
+                        render={({ field }) => (
+                          <FormItem className="space-y-2">
+                            <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                              <Calendar className="h-4 w-4 mr-2 text-teal-600" />
+                              Data Agendada
+                            </FormLabel>
+                            <FormControl>
+                              <Input 
+                                {...field} 
+                                type="date" 
+                                value={field.value || ""}
+                                className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md text-base"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
                         )}
-                      </div>
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="scheduledTime"
+                        render={({ field }) => (
+                          <FormItem className="space-y-2">
+                            <FormLabel className="text-sm font-semibold text-slate-700 flex items-center">
+                              <Clock className="h-4 w-4 mr-2 text-teal-600" />
+                              Horário
+                            </FormLabel>
+                            <FormControl>
+                              <Input 
+                                {...field} 
+                                type="time" 
+                                value={field.value || ""}
+                                className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md text-base"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
-                  </div>
 
-                  <div className="flex justify-end space-x-3 pt-4">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => {
-                        if (hasUnsavedChanges || temporaryPhotos.length > 0 || serviceExtras.length > 0) {
-                          unsavedChanges.triggerConfirmation(() => {
+                    <FormField
+                      control={form.control}
+                      name="notes"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <FormLabel className="text-sm font-semibold text-slate-700">Observações</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              {...field} 
+                              rows={3} 
+                              placeholder="Observações sobre o serviço..." 
+                              value={field.value || ""}
+                              className="border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md resize-none"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Services Section */}
+                    <div>
+                      <Card className="border border-gray-200">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-medium text-gray-700">Serviços</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <ServiceItems
+                            onChange={(items) => {
+                              setServiceExtras(items);
+                            }}
+                            initialItems={[]}
+                          />
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Service Summary */}
+                    {serviceExtras.length > 0 && (
+                      <Card className="border border-emerald-200 bg-emerald-50">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-medium text-emerald-800">Resumo do Serviço</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            <div className="text-xs font-medium text-emerald-800 mb-1">Serviços Selecionados:</div>
+                            {serviceExtras.map((extra, index) => (
+                              <div key={index} className="flex justify-between items-center text-xs">
+                                <span className="text-emerald-700">{extra.serviceExtra?.name || extra.descricao}:</span>
+                                <span className="font-medium text-emerald-700">
+                                  R$ {Number(extra.valor || 0).toFixed(2)}
+                                </span>
+                              </div>
+                            ))}
+                            <div className="border-t border-emerald-400 mt-2 pt-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-bold text-emerald-800">Valor Total:</span>
+                                <span className="text-sm font-bold text-emerald-800">
+                                  R$ {calculateTotalValue()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    <div className="flex justify-end space-x-3 pt-4">
+                      <Button 
+                        type="button" 
+                        variant="outline"
+                        onClick={() => {
+                          if (hasUnsavedChanges || temporaryPhotos.length > 0 || serviceExtras.length > 0) {
+                            unsavedChanges.triggerConfirmation(() => {
+                              setIsAddModalOpen(false);
+                              setFormInitialValues(null);
+                              setServiceExtras([]);
+                              form.reset();
+                              setTemporaryPhotos([]);
+                              setPaymentMethods({
+                                pix: "",
+                                dinheiro: "",
+                                cheque: "",
+                                cartao: ""
+                              });
+                            });
+                          } else {
                             setIsAddModalOpen(false);
                             setFormInitialValues(null);
                             setServiceExtras([]);
@@ -1300,35 +1209,22 @@ export default function SchedulePage() {
                               cheque: "",
                               cartao: ""
                             });
-                          });
-                        } else {
-                          setIsAddModalOpen(false);
-                          setFormInitialValues(null);
-                          setServiceExtras([]);
-                          form.reset();
-                          setTemporaryPhotos([]);
-                          setPaymentMethods({
-                            pix: "",
-                            dinheiro: "",
-                            cheque: "",
-                            cartao: ""
-                          });
-                        }
-                      }}
-                      className="px-6 py-2 font-medium"
-                    >
-                      Cancelar
-                    </Button>
-                    <Button 
-                      type="submit" 
-                      className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-2 font-semibold"
-                      disabled={createMutation.isPending}
-                    >
-                      Criar Serviço
-                    </Button>
-                  </div>
-                </form>
-              </Form>
+                          }
+                        }}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button 
+                        type="submit"
+                        className="bg-primary hover:bg-primary/90"
+                        disabled={createMutation.isPending || serviceExtras.length === 0}
+                      >
+                        {createMutation.isPending ? "Criando..." : "Criar Serviço"}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </div>
             </DialogContent>
           </Dialog>
 
