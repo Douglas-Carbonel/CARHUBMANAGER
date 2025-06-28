@@ -17,7 +17,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
 
   return (
     <header className={cn(
-      "bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 text-white shadow-xl border-b border-teal-500/30",
+      "fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 text-white shadow-xl border-b border-teal-500/30",
       isMobile ? "px-3 py-3" : "px-8 py-6"
     )}>
       <div className="flex items-center justify-between">

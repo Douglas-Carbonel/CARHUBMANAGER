@@ -682,7 +682,7 @@ export default function SchedulePage() {
       <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header title="Agenda" />
-        <main className="flex-1 overflow-auto p-4 md:p-6">
+        <main className="flex-1 overflow-auto p-4 md:p-6 pt-20 md:pt-24">
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Calendar Section */}
             <div className="space-y-4">
