@@ -1,19 +1,18 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Plus, ChevronLeft, ChevronRight, Home, CalendarIcon, Clock, User, Car } from "lucide-react";
+import { Calendar, Plus, ChevronLeft, ChevronRight, Clock, User, Car } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertServiceSchema, type Service, type Customer, type Vehicle, type ServiceType } from "@shared/schema";
@@ -24,18 +23,7 @@ import ServiceItems from "@/components/service/service-items";
 import { cn } from "@/lib/utils";
 import { useLocation } from "wouter";
 
-// Utility functions for currency formatting
-const formatCurrency = (value: string): string => {
-  if (!value) return '';
-  let numericValue = value.replace(/[^\d]/g, '');
-  if (!numericValue) return '';
-  const numberValue = parseInt(numericValue) / 100;
-  return numberValue.toLocaleString('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-};
-
+// Utility functions
 const translateStatus = (status: string): string => {
   const statusTranslations: Record<string, string> = {
     'scheduled': 'Agendado',
@@ -64,8 +52,6 @@ const serviceFormSchema = insertServiceSchema.extend({
   status: z.enum(["scheduled", "in_progress", "completed", "cancelled"]).optional(),
   notes: z.string().optional(),
   valorPago: z.string().optional(),
-  reminderEnabled: z.boolean().optional(),
-  reminderMinutes: z.number().optional(),
   serviceExtras: z.array(z.object({
     unifiedServiceId: z.number(),
     valor: z.string(),
@@ -76,7 +62,6 @@ const serviceFormSchema = insertServiceSchema.extend({
 export default function SchedulePage() {
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   
   // Calendar state
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -90,7 +75,6 @@ export default function SchedulePage() {
   const [selectedDayServices, setSelectedDayServices] = useState<any[]>([]);
   
   const [serviceExtras, setServiceExtras] = useState<any[]>([]);
-  const [temporaryPhotos, setTemporaryPhotos] = useState<Array<{ photo: string; category: string }>>([]);
 
   const queryClient = useQueryClient();
 
@@ -109,22 +93,7 @@ export default function SchedulePage() {
     },
   });
 
-  // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => {
-      window.removeEventListener('resize', checkMobile);
-    };
-  }, []);
-
-  // Fetch services
+  // Fetch data
   const { data: services = [], isLoading: servicesLoading } = useQuery<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]>({
     queryKey: ["/api/services"],
   });
@@ -280,7 +249,6 @@ export default function SchedulePage() {
       setIsAddModalOpen(false);
       form.reset();
       setServiceExtras([]);
-      setTemporaryPhotos([]);
       toast({
         title: "Sucesso",
         description: "Ordem de serviço criada com sucesso!",
@@ -316,73 +284,48 @@ export default function SchedulePage() {
           {/* Top Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-white">
-                {format(currentDate, "dd MMM yyyy", { locale: ptBR })}
-              </h1>
-              <div className="flex items-center gap-2 mt-2">
-                {/* Period Filter Buttons */}
-                <div className="flex bg-slate-800 rounded-full p-1">
-                  {[
-                    { key: "hoje", label: "Hoje" },
-                    { key: "semana", label: "Semana" },
-                    { key: "mes", label: "Mês" },
-                    { key: "todos", label: "Todos" }
-                  ].map(filter => (
-                    <Button
-                      key={filter.key}
-                      variant={periodFilter === filter.key ? "default" : "ghost"}
-                      size="sm"
-                      onClick={() => setPeriodFilter(filter.key)}
-                      className={cn(
-                        "rounded-full px-4 py-2 text-sm",
-                        periodFilter === filter.key 
-                          ? "bg-green-600 text-white" 
-                          : "text-slate-400 hover:text-white"
-                      )}
-                    >
-                      {filter.label}
-                      {filter.key !== "todos" && (
-                        <span className="ml-1 text-xs">
-                          ({getFilterCount(filter.key)})
-                        </span>
-                      )}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+              <h1 className="text-2xl font-bold text-white">Agenda</h1>
+              <p className="text-slate-400 text-sm mt-1">Gerencie seus agendamentos</p>
             </div>
             <Button
               onClick={() => setIsAddModalOpen(true)}
               className="bg-green-600 hover:bg-green-700 text-white rounded-full"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Novo
+              Novo Agendamento
             </Button>
           </div>
 
-          {/* View Mode Selector */}
-          <div className="flex bg-slate-800 rounded-full p-1 mb-6 w-fit">
-            {['Month', 'Week', 'Day'].map(mode => (
-              <Button
-                key={mode}
-                variant={viewMode === mode ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode(mode as any)}
-                className={cn(
-                  "rounded-full px-4 py-2",
-                  viewMode === mode 
-                    ? "bg-white text-slate-900" 
-                    : "text-slate-400 hover:text-white"
-                )}
-              >
-                {mode}
-              </Button>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Calendar Section */}
-            <div className="lg:col-span-2">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-white">Calendário</h2>
+                {/* View Mode Selector */}
+                <div className="flex bg-slate-800 rounded-full p-1">
+                  {[
+                    { key: 'Month', label: 'Mês' },
+                    { key: 'Week', label: 'Semana' },
+                    { key: 'Day', label: 'Dia' }
+                  ].map(mode => (
+                    <Button
+                      key={mode.key}
+                      variant={viewMode === mode.key ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setViewMode(mode.key as any)}
+                      className={cn(
+                        "rounded-full px-3 py-1 text-xs",
+                        viewMode === mode.key 
+                          ? "bg-white text-slate-900" 
+                          : "text-slate-400 hover:text-white"
+                      )}
+                    >
+                      {mode.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
               <Card className="bg-slate-800 border-slate-700">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle className="text-white">
@@ -408,46 +351,172 @@ export default function SchedulePage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {/* Calendar Grid */}
-                  <div className="grid grid-cols-7 gap-1 mb-4">
-                    {['S', 'T', 'Q', 'Q', 'S', 'S', 'D'].map(day => (
-                      <div key={day} className="text-center text-sm font-medium text-slate-400 p-2">
-                        {day}
+                  {viewMode === 'Month' && (
+                    <div className="grid grid-cols-7 gap-1">
+                      {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day, index) => (
+                        <div key={`header-${index}`} className="text-center text-sm font-medium text-slate-400 p-2">
+                          {day}
+                        </div>
+                      ))}
+                      {calendarDays.map((day, index) => (
+                        <div
+                          key={`day-${index}-${day.date.getTime()}`}
+                          onClick={() => handleDayClick(day.date)}
+                          className={cn(
+                            "relative p-2 text-center cursor-pointer rounded-lg transition-colors min-h-[40px] flex items-center justify-center",
+                            day.isCurrentMonth 
+                              ? "text-white hover:bg-slate-700" 
+                              : "text-slate-600",
+                            day.isToday && "bg-green-600 text-white",
+                            day.services.length > 0 && !day.isToday && "bg-slate-700"
+                          )}
+                        >
+                          <span className="text-sm">{format(day.date, "d")}</span>
+                          {day.services.length > 0 && (
+                            <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex gap-1">
+                              {day.services.slice(0, 3).map((_, i) => (
+                                <div key={i} className="w-1 h-1 bg-green-400 rounded-full" />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {viewMode === 'Week' && (
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-7 gap-2 text-center text-sm font-medium text-slate-400 pb-2">
+                        {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day, index) => (
+                          <div key={`week-header-${index}`}>{day}</div>
+                        ))}
                       </div>
-                    ))}
-                    {calendarDays.map((day, index) => (
-                      <div
-                        key={index}
-                        onClick={() => handleDayClick(day.date)}
-                        className={cn(
-                          "relative p-2 text-center cursor-pointer rounded-lg transition-colors min-h-[40px] flex items-center justify-center",
-                          day.isCurrentMonth 
-                            ? "text-white hover:bg-slate-700" 
-                            : "text-slate-600",
-                          day.isToday && "bg-green-600 text-white",
-                          day.services.length > 0 && !day.isToday && "bg-slate-700"
-                        )}
-                      >
-                        <span className="text-sm">{format(day.date, "d")}</span>
-                        {day.services.length > 0 && (
-                          <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex gap-1">
-                            {day.services.slice(0, 3).map((_, i) => (
-                              <div key={i} className="w-1 h-1 bg-green-400 rounded-full" />
-                            ))}
-                          </div>
-                        )}
+                      <div className="grid grid-cols-7 gap-2">
+                        {(() => {
+                          const startWeekDay = startOfWeek(currentDate, { weekStartsOn: 0 });
+                          const weekDays = Array.from({ length: 7 }, (_, i) => addDays(startWeekDay, i));
+                          return weekDays.map((day, index) => {
+                            const dayServices = services.filter(service => 
+                              service.scheduledDate && isSameDay(parseISO(service.scheduledDate), day)
+                            );
+                            return (
+                              <div
+                                key={`week-day-${index}`}
+                                onClick={() => handleDayClick(day)}
+                                className={cn(
+                                  "p-3 rounded-lg cursor-pointer transition-colors min-h-[80px] border border-slate-700",
+                                  isToday(day) && "bg-green-600 text-white",
+                                  dayServices.length > 0 && !isToday(day) && "bg-slate-700",
+                                  !dayServices.length && !isToday(day) && "hover:bg-slate-700"
+                                )}
+                              >
+                                <div className="text-sm font-medium mb-1">{format(day, "d")}</div>
+                                <div className="space-y-1">
+                                  {dayServices.slice(0, 2).map(service => (
+                                    <div key={service.id} className="text-xs bg-green-500 text-white px-1 py-0.5 rounded truncate">
+                                      {service.customer.name}
+                                    </div>
+                                  ))}
+                                  {dayServices.length > 2 && (
+                                    <div className="text-xs text-slate-400">+{dayServices.length - 2} mais</div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          });
+                        })()}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  )}
+
+                  {viewMode === 'Day' && (
+                    <div className="space-y-3">
+                      <div className="text-center">
+                        <h3 className="text-lg font-semibold text-white">
+                          {format(currentDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                        </h3>
+                      </div>
+                      <div className="space-y-2">
+                        {(() => {
+                          const dayServices = services.filter(service => 
+                            service.scheduledDate && isSameDay(parseISO(service.scheduledDate), currentDate)
+                          ).sort((a, b) => (a.scheduledTime || '').localeCompare(b.scheduledTime || ''));
+                          
+                          if (dayServices.length === 0) {
+                            return (
+                              <div className="text-center py-8 text-slate-400">
+                                <Calendar className="h-12 w-12 mx-auto mb-3" />
+                                <p>Nenhum agendamento para este dia</p>
+                              </div>
+                            );
+                          }
+
+                          return dayServices.map(service => (
+                            <Card 
+                              key={service.id} 
+                              className="bg-slate-700 border-slate-600 hover:bg-slate-600 transition-colors cursor-pointer"
+                              onClick={() => setLocation(`/services?openModal=true&serviceId=${service.id}`)}
+                            >
+                              <CardContent className="p-3">
+                                <div className="flex items-center justify-between mb-1">
+                                  <h4 className="font-medium text-white text-sm">{service.customer.name}</h4>
+                                  <Badge className="text-xs">
+                                    {translateStatus(service.status)}
+                                  </Badge>
+                                </div>
+                                <p className="text-slate-400 text-xs">
+                                  <Clock className="inline h-3 w-3 mr-1" />
+                                  {service.scheduledTime || "Horário não definido"}
+                                </p>
+                                <p className="text-slate-400 text-xs">
+                                  <Car className="inline h-3 w-3 mr-1" />
+                                  {service.vehicle.brand} {service.vehicle.model}
+                                </p>
+                              </CardContent>
+                            </Card>
+                          ));
+                        })()}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
 
-            {/* Appointments List */}
+            {/* Appointments List Section */}
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-white">
-                Agendamentos de {periodFilter === "hoje" ? "Hoje" : periodFilter === "semana" ? "Esta Semana" : periodFilter === "mes" ? "Este Mês" : "Todos"}
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-white">Agendamentos</h2>
+                {/* Period Filter Buttons */}
+                <div className="flex bg-slate-800 rounded-full p-1">
+                  {[
+                    { key: "hoje", label: "Hoje" },
+                    { key: "semana", label: "Semana" },
+                    { key: "mes", label: "Mês" },
+                    { key: "todos", label: "Todos" }
+                  ].map(filter => (
+                    <Button
+                      key={filter.key}
+                      variant={periodFilter === filter.key ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setPeriodFilter(filter.key)}
+                      className={cn(
+                        "rounded-full px-3 py-1 text-xs",
+                        periodFilter === filter.key 
+                          ? "bg-green-600 text-white" 
+                          : "text-slate-400 hover:text-white"
+                      )}
+                    >
+                      {filter.label}
+                      {filter.key !== "todos" && (
+                        <span className="ml-1">
+                          ({getFilterCount(filter.key)})
+                        </span>
+                      )}
+                    </Button>
+                  ))}
+                </div>
+              </div>
               
               {filteredServices.length === 0 ? (
                 <Card className="bg-slate-800 border-slate-700">
@@ -457,7 +526,7 @@ export default function SchedulePage() {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-96 overflow-y-auto">
                   {filteredServices.map(service => (
                     <Card 
                       key={service.id} 
@@ -501,23 +570,6 @@ export default function SchedulePage() {
               )}
             </div>
           </div>
-
-          {/* Bottom Navigation */}
-          {isMobile && (
-            <div className="fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-700 p-4">
-              <div className="flex justify-around">
-                <Button variant="ghost" className="text-slate-400" onClick={() => setLocation('/dashboard')}>
-                  <Home className="h-6 w-6" />
-                </Button>
-                <Button variant="ghost" className="text-slate-400" onClick={() => setIsAddModalOpen(true)}>
-                  <Plus className="h-6 w-6" />
-                </Button>
-                <Button variant="ghost" className="text-green-400">
-                  <CalendarIcon className="h-6 w-6" />
-                </Button>
-              </div>
-            </div>
-          )}
 
           {/* Multiple Appointments Modal */}
           <Dialog open={isDayAppointmentsModalOpen} onOpenChange={setIsDayAppointmentsModalOpen}>

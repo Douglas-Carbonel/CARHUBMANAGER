@@ -128,6 +128,14 @@ This is a comprehensive automotive service management system built as a full-sta
 
 ```
 Changelog:
+- June 28, 2025. Completely redesigned schedule page with modern dark theme and improved UX based on user feedback
+- June 28, 2025. Reorganized schedule interface into two clear sections: calendar view and filtered appointments list
+- June 28, 2025. Implemented functional calendar view modes (Month/Week/Day) with proper Portuguese translations
+- June 28, 2025. Removed unnecessary mobile bottom navigation bar for web-focused experience
+- June 28, 2025. Enhanced period filters (Hoje/Semana/Mês/Todos) with dynamic counters and clear separation from calendar controls
+- June 28, 2025. Added comprehensive week and day view modes with detailed service information display
+- June 28, 2025. Improved calendar navigation with previous/next month controls and better visual hierarchy
+- June 28, 2025. Successfully completed migration from Replit Agent to standard Replit environment
 - January 27, 2025. Documented service architecture consolidation and removed legacy service_extras table
 - January 27, 2025. Created comprehensive migration documentation for service management system
 - January 27, 2025. Cleaned up legacy tables and verified data integrity of consolidated architecture
