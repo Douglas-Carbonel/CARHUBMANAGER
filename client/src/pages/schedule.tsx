@@ -1,44 +1,20 @@
 
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Plus, ChevronLeft, ChevronRight, Clock, User, Car, Camera, Bell, DollarSign, Calculator, Smartphone, Banknote, CreditCard, Receipt } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { insertServiceSchema, type Service, type Customer, type Vehicle, type ServiceType, type Photo } from "@shared/schema";
-import { z } from "zod";
+import { Calendar, Plus, ChevronLeft, ChevronRight, Clock, Car } from "lucide-react";
+import { insertServiceSchema, type Service, type Customer, type Vehicle, type ServiceType } from "@shared/schema";
 import { format, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isToday, isSameDay, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import ServiceItems from "@/components/service/service-items";
-import PaymentManager from "@/components/service/payment-manager";
-import PhotoUpload from "@/components/photos/photo-upload";
-import CameraCapture from "@/components/camera/camera-capture";
 import { cn } from "@/lib/utils";
 import { useLocation } from "wouter";
-
-// Utility functions
-const formatCurrency = (value: string): string => {
-  if (!value) return '';
-  let numericValue = value.replace(/[^\d]/g, '');
-  if (!numericValue) return '';
-  const numberValue = parseInt(numericValue) / 100;
-  return numberValue.toLocaleString('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-};
+import NewServiceModal from "@/components/modals/new-service-modal";
 
 const translateStatus = (status: string): string => {
   const statusTranslations: Record<string, string> = {
@@ -50,46 +26,7 @@ const translateStatus = (status: string): string => {
   return statusTranslations[status] || status;
 };
 
-const parseCurrency = (formattedValue: string): string => {
-  if (!formattedValue) return '0.00';
-  const numericValue = formattedValue.replace(/[^\d]/g, '');
-  if (!numericValue) return '0.00';
-  const numberValue = parseInt(numericValue) / 100;
-  return numberValue.toFixed(2);
-};
-
-interface PaymentMethods {
-  pix: string;
-  dinheiro: string;
-  cheque: string;
-  cartao: string;
-}
-
-const serviceFormSchema = insertServiceSchema.extend({
-  customerId: z.number().min(1, "Cliente é obrigatório"),
-  vehicleId: z.number().min(1, "Veículo é obrigatório"),
-  serviceTypeId: z.number().optional(),
-  technicianId: z.number().min(1, "Técnico é obrigatório"),
-  scheduledDate: z.string().optional(),
-  scheduledTime: z.string().optional(),
-  status: z.enum(["scheduled", "in_progress", "completed", "cancelled"]).optional(),
-  notes: z.string().optional(),
-  valorPago: z.string().optional(),
-  pixPago: z.string().optional(),
-  dinheiroPago: z.string().optional(),
-  chequePago: z.string().optional(),
-  cartaoPago: z.string().optional(),
-  reminderEnabled: z.boolean().optional(),
-  reminderMinutes: z.number().optional(),
-  serviceExtras: z.array(z.object({
-    unifiedServiceId: z.number(),
-    valor: z.string(),
-    observacao: z.string().optional(),
-  })).optional(),
-});
-
 export default function SchedulePage() {
-  const { toast } = useToast();
   const [location, setLocation] = useLocation();
   
   // Calendar state
@@ -102,61 +39,10 @@ export default function SchedulePage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDayAppointmentsModalOpen, setIsDayAppointmentsModalOpen] = useState(false);
   const [selectedDayServices, setSelectedDayServices] = useState<any[]>([]);
-  
-  const [serviceExtras, setServiceExtras] = useState<any[]>([]);
-  const [temporaryPhotos, setTemporaryPhotos] = useState<Array<{ photo: string; category: string }>>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethods>({
-    pix: "",
-    dinheiro: "",
-    cheque: "",
-    cartao: ""
-  });
-
-  const queryClient = useQueryClient();
-
-  const form = useForm<z.infer<typeof serviceFormSchema>>({
-    resolver: zodResolver(serviceFormSchema),
-    defaultValues: {
-      customerId: 0,
-      vehicleId: 0,
-      serviceTypeId: undefined,
-      technicianId: 0,
-      scheduledDate: "",
-      scheduledTime: "",
-      status: "scheduled",
-      notes: "",
-      valorPago: "0.00",
-      pixPago: "0.00",
-      dinheiroPago: "0.00",
-      chequePago: "0.00",
-      cartaoPago: "0.00",
-      reminderEnabled: false,
-      reminderMinutes: 15,
-    },
-  });
 
   // Fetch data
   const { data: services = [], isLoading: servicesLoading } = useQuery<(Service & { customer: Customer; vehicle: Vehicle; serviceType: ServiceType })[]>({
     queryKey: ["/api/services"],
-  });
-
-  const { data: customers = [] } = useQuery<Customer[]>({
-    queryKey: ["/api/customers"],
-  });
-
-  const { data: vehicles = [] } = useQuery<(Vehicle & { customer: Customer })[]>({
-    queryKey: ["/api/vehicles"],
-  });
-
-  const { data: serviceTypes = [] } = useQuery<ServiceType[]>({
-    queryKey: ["/api/service-types"],
-  });
-
-  const { data: users = [] } = useQuery<any[]>({
-    queryKey: ["/api/admin/users"],
   });
 
   // Filter services by period
@@ -275,42 +161,7 @@ export default function SchedulePage() {
     }).length;
   };
 
-  const createServiceMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof serviceFormSchema>) => {
-      const formattedData = {
-        ...data,
-        valorPago: parseCurrency(data.valorPago || "0"),
-        serviceExtras: serviceExtras.map(extra => ({
-          unifiedServiceId: extra.unifiedServiceId,
-          valor: parseCurrency(extra.valor || "0"),
-          observacao: extra.observacao || "",
-        }))
-      };
-
-      return await apiRequest('/api/services', 'POST', formattedData);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/services"] });
-      setIsAddModalOpen(false);
-      form.reset();
-      setServiceExtras([]);
-      toast({
-        title: "Sucesso",
-        description: "Ordem de serviço criada com sucesso!",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao criar ordem de serviço",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const onSubmit = async (data: z.infer<typeof serviceFormSchema>) => {
-    createServiceMutation.mutate(data);
-  };
+  
 
   if (servicesLoading) {
     return (
@@ -662,323 +513,11 @@ export default function SchedulePage() {
             </DialogContent>
           </Dialog>
 
-          {/* Add Service Modal */}
-          <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-            <DialogContent className="bg-white border-gray-300 text-gray-900 max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="text-gray-900">Nova Ordem de Serviço</DialogTitle>
-              </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  {/* Basic Information */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">Informações Básicas</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="customerId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-gray-700">Cliente</FormLabel>
-                            <Select onValueChange={(value) => field.onChange(parseInt(value))}>
-                              <FormControl>
-                                <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                                  <SelectValue placeholder="Selecione um cliente" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-white border-gray-300">
-                                {customers.map((customer) => (
-                                  <SelectItem key={customer.id} value={customer.id.toString()}>
-                                    {customer.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="vehicleId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-gray-700">Veículo</FormLabel>
-                            <Select onValueChange={(value) => field.onChange(parseInt(value))}>
-                              <FormControl>
-                                <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                                  <SelectValue placeholder="Selecione um veículo" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-white border-gray-300">
-                                {vehicles.map((vehicle) => (
-                                  <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                                    {vehicle.brand} {vehicle.model} - {vehicle.licensePlate}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="scheduledDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-gray-700">Data</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="date" 
-                                {...field} 
-                                className="bg-white border-gray-300 text-gray-900"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="scheduledTime"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-gray-700">Horário</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="time" 
-                                {...field} 
-                                className="bg-white border-gray-300 text-gray-900"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="technicianId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-gray-700">Técnico</FormLabel>
-                            <Select onValueChange={(value) => field.onChange(parseInt(value))}>
-                              <FormControl>
-                                <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                                  <SelectValue placeholder="Selecione um técnico" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-white border-gray-300">
-                                {users.map((user) => (
-                                  <SelectItem key={user.id} value={user.id.toString()}>
-                                    {user.firstName} {user.lastName}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="status"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-gray-700">Status</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue="scheduled">
-                              <FormControl>
-                                <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                                  <SelectValue />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-white border-gray-300">
-                                <SelectItem value="scheduled">Agendado</SelectItem>
-                                <SelectItem value="in_progress">Em Andamento</SelectItem>
-                                <SelectItem value="completed">Concluído</SelectItem>
-                                <SelectItem value="cancelled">Cancelado</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <FormField
-                      control={form.control}
-                      name="notes"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700">Observações</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              {...field} 
-                              placeholder="Observações sobre o serviço"
-                              className="bg-white border-gray-300 text-gray-900"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  {/* Service Items */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">Serviços</h3>
-                    <ServiceItems 
-                      serviceExtras={serviceExtras}
-                      setServiceExtras={setServiceExtras}
-                    />
-                  </div>
-
-                  {/* Photos Section */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">Fotos</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setIsCameraOpen(true)}
-                        className="bg-white border-gray-300 text-gray-900 hover:bg-gray-50"
-                      >
-                        <Camera className="h-4 w-4 mr-2" />
-                        Câmera
-                      </Button>
-                      <PhotoUpload
-                        onPhotoCapture={(photo, category) => {
-                          setTemporaryPhotos(prev => [...prev, { photo, category }]);
-                        }}
-                      />
-                    </div>
-                    
-                    {temporaryPhotos.length > 0 && (
-                      <div className="grid grid-cols-3 gap-2">
-                        {temporaryPhotos.map((photo, index) => (
-                          <div key={index} className="relative">
-                            <img src={photo.photo} alt={`Foto ${index + 1}`} className="w-full h-20 object-cover rounded" />
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="sm"
-                              className="absolute top-1 right-1 h-6 w-6 p-0"
-                              onClick={() => setTemporaryPhotos(prev => prev.filter((_, i) => i !== index))}
-                            >
-                              ×
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Payment Section */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">Pagamento</h3>
-                    <PaymentManager
-                      pixPago={form.watch('pixPago') || '0.00'}
-                      dinheiroPago={form.watch('dinheiroPago') || '0.00'}
-                      chequePago={form.watch('chequePago') || '0.00'}
-                      cartaoPago={form.watch('cartaoPago') || '0.00'}
-                      onPaymentChange={(field, value) => {
-                        form.setValue(field as any, value);
-                      }}
-                      isPaymentModalOpen={isPaymentModalOpen}
-                      setIsPaymentModalOpen={setIsPaymentModalOpen}
-                    />
-                  </div>
-
-                  {/* Notifications Section */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">Notificações</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="reminderEnabled"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between rounded-lg border border-gray-200 p-4">
-                            <div className="space-y-0.5">
-                              <FormLabel className="text-base text-gray-900">Lembrete</FormLabel>
-                              <div className="text-sm text-gray-600">
-                                Receber notificação antes do agendamento
-                              </div>
-                            </div>
-                            <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-
-                      {form.watch('reminderEnabled') && (
-                        <FormField
-                          control={form.control}
-                          name="reminderMinutes"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-gray-700">Minutos de antecedência</FormLabel>
-                              <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue="15">
-                                <FormControl>
-                                  <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent className="bg-white border-gray-300">
-                                  <SelectItem value="15">15 minutos</SelectItem>
-                                  <SelectItem value="30">30 minutos</SelectItem>
-                                  <SelectItem value="60">1 hora</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end gap-2 pt-4 border-t border-gray-200">
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      onClick={() => setIsAddModalOpen(false)}
-                      className="text-gray-600 hover:text-gray-900"
-                    >
-                      Cancelar
-                    </Button>
-                    <Button 
-                      type="submit" 
-                      disabled={createServiceMutation.isPending}
-                      className="bg-teal-600 hover:bg-teal-700 text-white"
-                    >
-                      {createServiceMutation.isPending ? "Salvando..." : "Salvar Agendamento"}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
-
-          {/* Camera Modal */}
-          {isCameraOpen && (
-            <CameraCapture
-              isOpen={isCameraOpen}
-              onClose={() => setIsCameraOpen(false)}
-              onCapture={(photo, category) => {
-                setTemporaryPhotos(prev => [...prev, { photo, category }]);
-                setIsCameraOpen(false);
-              }}
-            />
-          )}
+          {/* New Service Modal */}
+          <NewServiceModal 
+            isOpen={isAddModalOpen} 
+            onClose={() => setIsAddModalOpen(false)} 
+          />
         </main>
       </div>
     </div>
