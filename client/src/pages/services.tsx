@@ -780,13 +780,13 @@ export default function Services() {
     <div className="flex h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-emerald-50">
       <Sidebar />
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex flex-col flex-1 overflow-hidden">
         <Header 
           title="Serviços"
           subtitle="Gerencie os serviços da sua oficina"
         />
 
-        <main className="flex-1 p-8">
+        <main className="flex-1 overflow-auto p-8">
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-700 via-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
