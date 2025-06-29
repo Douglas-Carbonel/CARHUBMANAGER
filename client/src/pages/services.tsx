@@ -2172,24 +2172,29 @@ export default function Services() {
             </div>
 
             {/* Reports and Counter Row - Optimized for mobile */}
-            <div className={cn("flex items-center", isMobile ? "justify-between" : "justify-end gap-4")}>
+            <div className={cn(
+              "flex items-center gap-3",
+              isMobile ? "justify-center" : "justify-end gap-4"
+            )}>
               <Button
                 variant="outline"
                 onClick={() => setIsAnalyticsModalOpen(true)}
                 className={cn(
                   "border-emerald-200 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2",
-                  isMobile ? "px-3 py-2 text-sm" : "px-4 py-2"
+                  isMobile ? "px-4 py-2.5 text-sm flex-1 max-w-36" : "px-4 py-2"
                 )}
               >
                 <BarChart3 className={cn("h-4 w-4", isMobile && "h-3 w-3")} />
-                <span className={isMobile ? "text-xs" : "text-sm"}>Ver Relatórios</span>
+                <span className={isMobile ? "text-xs" : "text-sm"}>Relatórios</span>
               </Button>
               <div className={cn(
-                "bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg shadow-md flex items-center",
-                isMobile ? "px-3 py-2 text-sm" : "px-4 py-2"
+                "bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg shadow-md flex items-center justify-center",
+                isMobile ? "px-4 py-2.5 text-sm flex-1 max-w-28" : "px-4 py-2"
               )}>
                 <span className="font-semibold">{filteredServices.length}</span>
-                <span className={cn("ml-1", isMobile ? "text-xs" : "text-sm")}>serviços</span>
+                <span className={cn("ml-1", isMobile ? "text-xs" : "text-sm")}>
+                  {isMobile ? "OS" : "serviços"}
+                </span>
               </div>
             </div>
           </div>
