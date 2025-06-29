@@ -2127,15 +2127,18 @@ export default function Services() {
 
           {/* Filters */}
           <div className="space-y-4 mb-6">
-            {/* Filters Row - Responsive layout */}
-            <div className={cn("grid gap-3", isMobile ? "grid-cols-2" : "flex flex-row gap-4")}>
+            {/* Mobile: Stack filters vertically, Desktop: Side by side */}
+            <div className={cn(
+              "gap-3",
+              isMobile ? "space-y-3" : "flex flex-row gap-4"
+            )}>
               {/* Status Filter */}
               <div className="relative">
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
                   <SelectTrigger className={cn(
-                    "h-12 border-2 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm",
+                    "h-12 border-2 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm transition-colors",
                     filterStatus !== 'all' ? 'border-blue-400 bg-blue-50' : 'border-teal-200',
-                    isMobile ? "w-full" : "w-48"
+                    isMobile ? "w-full" : "w-52"
                   )}>
                     <SelectValue placeholder="Todos os status" />
                   </SelectTrigger>
@@ -2155,46 +2158,59 @@ export default function Services() {
               </div>
 
               {/* Payment Filter */}
-              <Select value={filterPayment} onValueChange={setFilterPayment}>
-                <SelectTrigger className={cn(
-                  "h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm",
-                  isMobile ? "w-full" : "w-48"
-                )}>
-                  <SelectValue placeholder="Todos os pagamentos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os pagamentos</SelectItem>
-                  <SelectItem value="pagos">Pagos</SelectItem>
-                  <SelectItem value="pendentes">Pendentes</SelectItem>
-                  <SelectItem value="parcial">Parcial</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="relative">
+                <Select value={filterPayment} onValueChange={setFilterPayment}>
+                  <SelectTrigger className={cn(
+                    "h-12 border-2 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm transition-colors",
+                    filterPayment !== 'all' ? 'border-emerald-400 bg-emerald-50' : 'border-teal-200',
+                    isMobile ? "w-full" : "w-52"
+                  )}>
+                    <SelectValue placeholder="Todos os pagamentos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os pagamentos</SelectItem>
+                    <SelectItem value="pagos">Pagos</SelectItem>
+                    <SelectItem value="pendentes">Pendentes</SelectItem>
+                    <SelectItem value="parcial">Parcial</SelectItem>
+                  </SelectContent>
+                </Select>
+                {filterPayment !== 'all' && (
+                  <div className="absolute -top-2 -right-2 w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center">
+                    <span className="text-xs text-white font-bold">!</span>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Reports and Counter Row - Optimized for mobile */}
+            {/* Reports and Counter Row - Better mobile organization */}
             <div className={cn(
               "flex items-center gap-3",
-              isMobile ? "justify-center" : "justify-end gap-4"
+              isMobile ? "justify-between px-1" : "justify-end gap-4"
             )}>
               <Button
                 variant="outline"
                 onClick={() => setIsAnalyticsModalOpen(true)}
                 className={cn(
-                  "border-emerald-200 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2",
-                  isMobile ? "px-4 py-2.5 text-sm flex-1 max-w-36" : "px-4 py-2"
+                  "border-emerald-200 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 transition-all",
+                  isMobile ? "px-3 py-2 text-sm h-10" : "px-4 py-2"
                 )}
               >
                 <BarChart3 className={cn("h-4 w-4", isMobile && "h-3 w-3")} />
-                <span className={isMobile ? "text-xs" : "text-sm"}>Relatórios</span>
-              </Button>
-              <div className={cn(
-                "bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg shadow-md flex items-center justify-center",
-                isMobile ? "px-4 py-2.5 text-sm flex-1 max-w-28" : "px-4 py-2"
-              )}>
-                <span className="font-semibold">{filteredServices.length}</span>
-                <span className={cn("ml-1", isMobile ? "text-xs" : "text-sm")}>
-                  {isMobile ? "OS" : "serviços"}
+                <span className={isMobile ? "text-xs font-medium" : "text-sm"}>
+                  {isMobile ? "Relatórios" : "Ver Relatórios"}
                 </span>
+              </Button>
+              
+              <div className={cn(
+                "bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg shadow-md flex items-center justify-center min-w-0",
+                isMobile ? "px-3 py-2 h-10" : "px-4 py-2"
+              )}>
+                <div className="flex items-center space-x-1">
+                  <span className="font-bold text-lg">{filteredServices.length}</span>
+                  <span className={cn("font-medium", isMobile ? "text-xs" : "text-sm")}>
+                    {isMobile ? "OS" : "serviços"}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
