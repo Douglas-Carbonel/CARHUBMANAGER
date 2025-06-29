@@ -25,37 +25,41 @@ export const generateServicePDF = async (serviceData: ServiceData, isSchedule: b
   const pageHeight = pdf.internal.pageSize.getHeight();
   
   // Cores do design
-  const primaryGreen = '#8BC34A';
-  const darkGray = '#424242';
-  const lightGray = '#F5F5F5';
-  const mediumGray = '#E0E0E0';
+  const primaryGreen = [139, 195, 74]; // #8BC34A
+  const darkGray = [66, 66, 66]; // #424242
+  const lightGray = [245, 245, 245]; // #F5F5F5
+  const mediumGray = [224, 224, 224]; // #E0E0E0
 
   // ===== CABEÇALHO COM ÍCONES E TÍTULO =====
   
   // Fundo cinza escuro no topo
-  pdf.setFillColor(darkGray);
+  pdf.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
   pdf.rect(0, 0, pageWidth, 50, 'F');
 
-  // Ícones de ferramentas (simulados com texto/formas)
+  // Ícones de ferramentas (usando formas geométricas simples)
   pdf.setFillColor(255, 255, 255);
   
-  // Chave inglesa (simulada)
-  pdf.setFontSize(24);
-  pdf.setTextColor(255, 255, 255);
-  pdf.text('🔧', 20, 30);
+  // Chave inglesa (forma simplificada)
+  pdf.rect(20, 20, 3, 15, 'F');
+  pdf.rect(15, 25, 13, 3, 'F');
   
-  // Chave de fenda (simulada)
-  pdf.text('🔩', 40, 30);
+  // Chave de fenda
+  pdf.rect(40, 20, 2, 15, 'F');
+  pdf.rect(38, 32, 6, 2, 'F');
   
-  // Carro (simulado)
-  pdf.text('🚗', 60, 30);
+  // Carro (forma simplificada)
+  pdf.rect(60, 25, 20, 8, 'F');
+  pdf.circle(65, 35, 3, 'F');
+  pdf.circle(75, 35, 3, 'F');
 
   // Título principal
   pdf.setFontSize(18);
   pdf.setFont('helvetica', 'bold');
   pdf.setTextColor(255, 255, 255);
-  const mainTitle = isSchedule ? 'Ordem de Serviço para\nOficina Mecânica' : 'Ordem de Serviço para\nOficina Mecânica';
-  pdf.text(mainTitle, pageWidth - 20, 20, { align: 'right' });
+  const mainTitle = 'Ordem de Serviço para\nOficina Mecânica';
+  const titleLines = mainTitle.split('\n');
+  pdf.text(titleLines[0], pageWidth - 20, 20, { align: 'right' });
+  pdf.text(titleLines[1], pageWidth - 20, 32, { align: 'right' });
 
   // Data da ordem
   pdf.setFontSize(10);
@@ -64,21 +68,21 @@ export const generateServicePDF = async (serviceData: ServiceData, isSchedule: b
   pdf.text(`Data da Ordem: ${currentDate}`, pageWidth - 20, 42, { align: 'right' });
 
   // ===== FAIXA VERDE =====
-  pdf.setFillColor(primaryGreen);
+  pdf.setFillColor(primaryGreen[0], primaryGreen[1], primaryGreen[2]);
   pdf.rect(0, 50, pageWidth, 8, 'F');
 
   // ===== NÚMERO DA ORDEM =====
   let yPosition = 70;
   
   // Fundo cinza claro para número da ordem
-  pdf.setFillColor(lightGray);
+  pdf.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
   pdf.rect(20, yPosition - 5, 60, 15, 'F');
-  pdf.setDrawColor(mediumGray);
+  pdf.setDrawColor(mediumGray[0], mediumGray[1], mediumGray[2]);
   pdf.rect(20, yPosition - 5, 60, 15);
 
   pdf.setFontSize(12);
   pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(darkGray);
+  pdf.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
   pdf.text('Nº da Ordem', 25, yPosition + 2);
 
   pdf.setFont('helvetica', 'normal');
@@ -92,26 +96,26 @@ export const generateServicePDF = async (serviceData: ServiceData, isSchedule: b
   // Título da seção
   pdf.setFontSize(16);
   pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(darkGray);
+  pdf.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
   pdf.text('Informações do Cliente', 20, yPosition);
   
   // Linha verde sob o título
-  pdf.setDrawColor(primaryGreen);
+  pdf.setDrawColor(primaryGreen[0], primaryGreen[1], primaryGreen[2]);
   pdf.setLineWidth(2);
   pdf.line(20, yPosition + 2, pageWidth - 20, yPosition + 2);
   
   yPosition += 15;
 
   // Fundo cinza claro para informações
-  pdf.setFillColor(lightGray);
+  pdf.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
   pdf.rect(20, yPosition - 5, pageWidth - 40, 35, 'F');
-  pdf.setDrawColor(mediumGray);
+  pdf.setDrawColor(mediumGray[0], mediumGray[1], mediumGray[2]);
   pdf.rect(20, yPosition - 5, pageWidth - 40, 35);
 
   // Informações do cliente em duas colunas
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(darkGray);
+  pdf.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
   
   // Coluna esquerda
   pdf.text('Nome', 25, yPosition + 5);
@@ -124,9 +128,9 @@ export const generateServicePDF = async (serviceData: ServiceData, isSchedule: b
   // Valores
   pdf.setFont('helvetica', 'normal');
   pdf.text(serviceData.customer.name, 60, yPosition + 5);
-  pdf.text('(11) 0000-0000', 60, yPosition + 15); // Placeholder
-  pdf.text('Endereço não informado', 60, yPosition + 25); // Placeholder
-  pdf.text('cliente@email.com', pageWidth/2 + 40, yPosition + 5); // Placeholder
+  pdf.text('(11) 0000-0000', 60, yPosition + 15);
+  pdf.text('Endereço não informado', 60, yPosition + 25);
+  pdf.text('cliente@email.com', pageWidth/2 + 40, yPosition + 5);
 
   yPosition += 50;
 
@@ -134,18 +138,18 @@ export const generateServicePDF = async (serviceData: ServiceData, isSchedule: b
   
   pdf.setFontSize(16);
   pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(darkGray);
+  pdf.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
   pdf.text('Descrição do Veículo', 20, yPosition);
   
   // Linha verde sob o título
-  pdf.setDrawColor(primaryGreen);
+  pdf.setDrawColor(primaryGreen[0], primaryGreen[1], primaryGreen[2]);
   pdf.setLineWidth(2);
   pdf.line(20, yPosition + 2, pageWidth - 20, yPosition + 2);
   
   yPosition += 15;
 
   // ===== FAIXA VERDE PARA CABEÇALHO DA TABELA =====
-  pdf.setFillColor(primaryGreen);
+  pdf.setFillColor(primaryGreen[0], primaryGreen[1], primaryGreen[2]);
   pdf.rect(20, yPosition - 5, pageWidth - 40, 12, 'F');
 
   // Cabeçalhos da tabela do veículo
@@ -159,24 +163,24 @@ export const generateServicePDF = async (serviceData: ServiceData, isSchedule: b
   yPosition += 12;
 
   // Fundo cinza claro para dados do veículo
-  pdf.setFillColor(lightGray);
+  pdf.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
   pdf.rect(20, yPosition, pageWidth - 40, 40, 'F');
-  pdf.setDrawColor(mediumGray);
+  pdf.setDrawColor(mediumGray[0], mediumGray[1], mediumGray[2]);
   pdf.rect(20, yPosition, pageWidth - 40, 40);
 
   // Dados do veículo
   pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(darkGray);
+  pdf.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
   
   const currentYear = new Date().getFullYear();
   pdf.text(currentYear.toString(), 25, yPosition + 10);
   pdf.text(`${serviceData.vehicle.brand} ${serviceData.vehicle.model}`, 80, yPosition + 10);
 
-  // Tipos de conserto (baseado nos serviços)
+  // Tipos de conserto (baseado nos serviços) - usando símbolos normais
   let serviceTypeY = yPosition + 10;
   serviceData.serviceExtras.forEach((service, index) => {
     if (index < 4) { // Máximo 4 serviços para não ultrapassar o espaço
-      pdf.text(`☑ ${service.serviceName}`, 130, serviceTypeY);
+      pdf.text(`& ${service.serviceName}`, 130, serviceTypeY);
       serviceTypeY += 8;
     }
   });
@@ -188,12 +192,13 @@ export const generateServicePDF = async (serviceData: ServiceData, isSchedule: b
   pdf.setFont('helvetica', 'bold');
   pdf.text('Cor', 25, yPosition + 10);
   pdf.text('Quilometragem', 80, yPosition + 10);
-  pdf.text('Deseja reutilizar suas\npeças antigas?', 130, yPosition + 6);
+  pdf.text('Deseja reutilizar suas', 130, yPosition + 6);
+  pdf.text('peças antigas?', 130, yPosition + 12);
 
   pdf.setFont('helvetica', 'normal');
   pdf.text('Não informado', 25, yPosition + 20);
   pdf.text('000000', 80, yPosition + 20);
-  pdf.text('☑ Sim', 130, yPosition + 20);
+  pdf.text('& Sim', 130, yPosition + 20);
 
   yPosition += 30;
 
@@ -209,7 +214,7 @@ export const generateServicePDF = async (serviceData: ServiceData, isSchedule: b
   yPosition += 40;
 
   // ===== FAIXA VERDE PARA SEPARAÇÃO =====
-  pdf.setFillColor(primaryGreen);
+  pdf.setFillColor(primaryGreen[0], primaryGreen[1], primaryGreen[2]);
   pdf.rect(0, yPosition, pageWidth, 8, 'F');
   
   yPosition += 20;
@@ -218,7 +223,7 @@ export const generateServicePDF = async (serviceData: ServiceData, isSchedule: b
   
   pdf.setFontSize(12);
   pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(darkGray);
+  pdf.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
   pdf.text('Observações Adicionais', 20, yPosition);
   
   pdf.setFontSize(10);
@@ -228,9 +233,9 @@ export const generateServicePDF = async (serviceData: ServiceData, isSchedule: b
   yPosition += 20;
 
   // Caixa para observações
-  pdf.setFillColor(lightGray);
+  pdf.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
   pdf.rect(20, yPosition, pageWidth - 40, 40, 'F');
-  pdf.setDrawColor(mediumGray);
+  pdf.setDrawColor(mediumGray[0], mediumGray[1], mediumGray[2]);
   pdf.rect(20, yPosition, pageWidth - 40, 40);
 
   // Texto das observações
@@ -247,10 +252,10 @@ export const generateServicePDF = async (serviceData: ServiceData, isSchedule: b
   if (serviceData.serviceExtras.length > 0) {
     pdf.setFontSize(14);
     pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(darkGray);
+    pdf.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
     pdf.text('RESUMO FINANCEIRO', 20, yPosition);
     
-    pdf.setDrawColor(primaryGreen);
+    pdf.setDrawColor(primaryGreen[0], primaryGreen[1], primaryGreen[2]);
     pdf.setLineWidth(2);
     pdf.line(20, yPosition + 2, pageWidth - 20, yPosition + 2);
     
@@ -268,7 +273,7 @@ export const generateServicePDF = async (serviceData: ServiceData, isSchedule: b
     yPosition += 10;
 
     // Total
-    pdf.setDrawColor(darkGray);
+    pdf.setDrawColor(darkGray[0], darkGray[1], darkGray[2]);
     pdf.setLineWidth(1);
     pdf.line(20, yPosition, pageWidth - 20, yPosition);
     yPosition += 8;
@@ -286,28 +291,10 @@ export const generateServicePDF = async (serviceData: ServiceData, isSchedule: b
     yPosition += 40;
   }
 
-  // ===== ASSINATURAS =====
-  
-  if (yPosition > pageHeight - 80) {
-    pdf.addPage();
-    yPosition = 30;
-  }
-
-  pdf.setFontSize(12);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('Assinatura do Cliente', 20, yPosition);
-  pdf.text('Assinatura Autorizada', pageWidth - 100, yPosition);
-
-  // Linhas para assinatura
-  pdf.setDrawColor(darkGray);
-  pdf.setLineWidth(0.5);
-  pdf.line(20, yPosition + 20, 80, yPosition + 20);
-  pdf.line(pageWidth - 100, yPosition + 20, pageWidth - 20, yPosition + 20);
-
-  // Informações do técnico
-  yPosition += 30;
+  // Informações técnicas no final
   pdf.setFontSize(8);
   pdf.setFont('helvetica', 'normal');
+  pdf.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
   pdf.text(`Técnico responsável: ${serviceData.technician.firstName} ${serviceData.technician.lastName}`, 20, yPosition);
   pdf.text(`Data: ${serviceData.scheduledDate ? new Date(serviceData.scheduledDate + 'T00:00:00').toLocaleDateString('pt-BR') : currentDate}`, 20, yPosition + 8);
   if (serviceData.scheduledTime) {
