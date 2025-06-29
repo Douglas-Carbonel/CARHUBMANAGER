@@ -33,8 +33,7 @@ import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+
 
 // Utility functions for currency formatting
 const formatCurrency = (value: string): string => {
@@ -229,6 +228,7 @@ export default function Services() {
       }
       return await res.json();
     },
+    enabled: isDialogOpen, // Only load when dialog is open
   });
 
   const { data: vehicles = [], isLoading: vehiclesLoading } = useQuery<(Vehicle & { customer: Customer })[]>({
@@ -242,6 +242,7 @@ export default function Services() {
       }
       return await res.json();
     },
+    enabled: isDialogOpen, // Only load when dialog is open
   });
 
   const { data: serviceTypes = [] } = useQuery<ServiceType[]>({
@@ -255,6 +256,7 @@ export default function Services() {
       }
       return await res.json();
     },
+    enabled: isDialogOpen, // Only load when dialog is open
   });
 
   const { data: users = [], isLoading: techniciansLoading } = useQuery<any[]>({
@@ -268,6 +270,7 @@ export default function Services() {
       }
       return await res.json();
     },
+    enabled: isDialogOpen, // Only load when dialog is open
   });
 
   // Auto-open modal when openModal=true or action=new in URL
@@ -775,246 +778,69 @@ export default function Services() {
     }
   };
 
-  const handleGeneratePDF = () => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    let currentY = 20;
-
-    // Header com logo/empresa (opcional)
-    doc.setFontSize(22);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor('#146490'); // Usando hex color
-    doc.text('ORDEM DE SERVIÇO', pageWidth / 2, currentY, { align: 'center' });
-    currentY += 8;
-
-    // Número da OS
-    const serviceNumber = editingService?.id ? String(editingService.id).padStart(6, '0') : 'NOVA';
-    doc.setFontSize(16);
-    doc.setTextColor('#646464'); // Usando hex color
-    doc.text(`OS #${serviceNumber}`, pageWidth / 2, currentY, { align: 'center' });
-    currentY += 15;
-
-    // Linha separadora decorativa
-    doc.setDrawColor('#146490'); // Usando hex color
-    doc.setLineWidth(1);
-    doc.line(20, currentY, pageWidth - 20, currentY);
-    currentY += 20;
-
-    // Reset colors
-    doc.setTextColor('#000000');
-
-    // Informações do Cliente e Veículo em caixas
-    doc.setFillColor('#f5f8fc');
-    doc.rect(20, currentY - 5, (pageWidth - 50) / 2, 35, 'F');
-    doc.setDrawColor('#c8c8c8');
-    doc.rect(20, currentY - 5, (pageWidth - 50) / 2, 35);
-
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor('#146490');
-    doc.text('CLIENTE', 25, currentY + 5);
-
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor('#000000');
+  const handleGeneratePDF = async () => {
     const selectedCustomerId = form.watch("customerId");
     const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
-    doc.text(`${selectedCustomer?.name || "Cliente não selecionado"}`, 25, currentY + 15);
-
-    // Caixa do Veículo
-    doc.setFillColor('#fcf8f5');
-    doc.rect(pageWidth / 2 + 5, currentY - 5, (pageWidth - 50) / 2, 35, 'F');
-    doc.setDrawColor('#c8c8c8');
-    doc.rect(pageWidth / 2 + 5, currentY - 5, (pageWidth - 50) / 2, 35);
-
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor('#146490');
-    doc.text('VEÍCULO', pageWidth / 2 + 10, currentY + 5);
-
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor('#000000');
     const selectedVehicleId = form.watch("vehicleId");
     const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);
-    if (selectedVehicle) {
-      doc.text(`${selectedVehicle.brand} ${selectedVehicle.model}`, pageWidth / 2 + 10, currentY + 15);
-      doc.text(`Placa: ${selectedVehicle.licensePlate}`, pageWidth / 2 + 10, currentY + 25);
-    } else {
-      doc.text('Veículo não selecionado', pageWidth / 2 + 10, currentY + 15);
-    }
-
-    currentY += 50;
-
-    // Detalhes do Serviço
-    doc.setFillColor('#f8fcf5');
-    doc.rect(20, currentY - 5, pageWidth - 40, 45, 'F');
-    doc.setDrawColor('#c8c8c8');
-    doc.rect(20, currentY - 5, pageWidth - 40, 45);
-
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor('#146490');
-    doc.text('DETALHES DO SERVIÇO', 25, currentY + 5);
-
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor('#000000');
-
-    const scheduledDate = form.watch("scheduledDate");
-    const formattedDate = scheduledDate ? new Date(scheduledDate + 'T00:00:00').toLocaleDateString('pt-BR') : "Não definida";
-    doc.text(`Data: ${formattedDate}`, 25, currentY + 18);
-    doc.text(`Horário: ${form.watch("scheduledTime") || "Não definido"}`, 25, currentY + 28);
-    
     const selectedTechnicianId = form.watch("technicianId");
     const selectedTechnician = users.find(u => u.id === selectedTechnicianId);
-    doc.text(`Técnico: ${selectedTechnician ? `${selectedTechnician.firstName} ${selectedTechnician.lastName}` : "Não atribuído"}`, pageWidth / 2 + 10, currentY + 18);
-    doc.text(`Status: ${translateStatus(form.watch("status") || "scheduled")}`, pageWidth / 2 + 10, currentY + 28);
 
-    currentY += 60;
+    if (!selectedCustomer || !selectedVehicle || !selectedTechnician) {
+      toast({
+        title: "Erro ao gerar PDF",
+        description: "Por favor, preencha todos os campos obrigatórios antes de gerar o PDF.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    // Serviços Inclusos com tabela melhorada
-    if (serviceExtras.length > 0) {
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor('#146490');
-      doc.text('SERVIÇOS INCLUSOS', 20, currentY);
-      currentY += 10;
-
-      const serviceTableData = serviceExtras.map((extra, index) => {
+    // Prepare service data in the format expected by generateServicePDF
+    const serviceData = {
+      customer: { name: selectedCustomer.name },
+      vehicle: {
+        brand: selectedVehicle.brand,
+        model: selectedVehicle.model,
+        licensePlate: selectedVehicle.licensePlate
+      },
+      scheduledDate: form.watch("scheduledDate"),
+      scheduledTime: form.watch("scheduledTime"),
+      status: form.watch("status") || "scheduled",
+      technician: {
+        firstName: selectedTechnician.firstName,
+        lastName: selectedTechnician.lastName
+      },
+      serviceExtras: serviceExtras.map(extra => {
         const serviceType = serviceTypes.find(st => st.id === extra.serviceTypeId);
-        const serviceName = serviceType?.name || `Serviço ${index + 1}`;
-        const quantity = extra.quantity || 1;
-        const unitPrice = extra.unitPrice || "0.00";
-        const totalPrice = extra.totalPrice || unitPrice;
-        
-        return [
-          serviceName,
-          quantity.toString(),
-          `R$ ${Number(unitPrice).toFixed(2)}`,
-          `R$ ${Number(totalPrice).toFixed(2)}`
-        ];
+        return {
+          serviceName: serviceType?.name || 'Serviço',
+          price: extra.totalPrice || extra.unitPrice || "0.00",
+          notes: extra.notes
+        };
+      }),
+      totalValue: calculateTotalValue(),
+      valorPago: form.watch("valorPago") || "0.00",
+      notes: form.watch("notes")
+    };
+
+    try {
+      // Import the PDF generator function
+      const { generateServicePDF } = await import('@/lib/pdf-generator');
+      await generateServicePDF(serviceData, false); // false = não é agendamento, é ordem de serviço
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Erro ao gerar PDF",
+        description: "Ocorreu um erro ao gerar o PDF. Tente novamente.",
+        variant: "destructive",
       });
-
-      autoTable(doc, {
-        startY: currentY,
-        head: [['Serviço', 'Qtd', 'Valor Unit.', 'Total']],
-        body: serviceTableData,
-        theme: 'striped',
-        styles: { 
-          fontSize: 10,
-          cellPadding: 5
-        },
-        headStyles: { 
-          fillColor: '#146490',
-          textColor: '#ffffff',
-          fontStyle: 'bold'
-        },
-        alternateRowStyles: {
-          fillColor: [248, 250, 252]
-        },
-        columnStyles: {
-          1: { halign: 'center' },
-          2: { halign: 'right' },
-          3: { halign: 'right', fontStyle: 'bold' }
-        }
-      });
-
-      currentY = (doc as any).lastAutoTable.finalY + 20;
     }
-
-    // Resumo Financeiro destacado
-    doc.setFillColor('#f5fcf5');
-    doc.rect(20, currentY - 5, pageWidth - 40, 50, 'F');
-    doc.setDrawColor('#64b464');
-    doc.setLineWidth(2);
-    doc.rect(20, currentY - 5, pageWidth - 40, 50);
-
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor('#146490');
-    doc.text('RESUMO FINANCEIRO', 25, currentY + 8);
-
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor('#000000');
-    
-    const totalValue = calculateTotalValue();
-    const paidValue = Number(form.watch("valorPago") || 0);
-    const balance = Number(totalValue) - paidValue;
-
-    doc.text(`Total dos Serviços:`, 25, currentY + 20);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`R$ ${totalValue}`, pageWidth - 80, currentY + 20, { align: 'right' });
-
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Valor Pago:`, 25, currentY + 30);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(balance <= 0 ? '#009600' : '#000000');
-    doc.text(`R$ ${paidValue.toFixed(2)}`, pageWidth - 80, currentY + 30, { align: 'right' });
-
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor('#000000');
-    doc.text(`Saldo:`, 25, currentY + 40);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(balance <= 0 ? '#009600' : '#c83232');
-    doc.text(`R$ ${balance.toFixed(2)}`, pageWidth - 80, currentY + 40, { align: 'right' });
-
-    currentY += 65;
-
-    // Observações
-    const notes = form.watch("notes");
-    if (notes && notes.trim()) {
-      // Check if we need a new page
-      if (currentY > pageHeight - 60) {
-        doc.addPage();
-        currentY = 20;
-      }
-
-      doc.setFillColor('#fcf8f5');
-      doc.rect(20, currentY - 5, pageWidth - 40, 40, 'F');
-      doc.setDrawColor('#c8c8c8');
-      doc.rect(20, currentY - 5, pageWidth - 40, 40);
-
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor('#146490');
-      doc.text('OBSERVAÇÕES', 25, currentY + 8);
-
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor('#000000');
-      const notesLines = doc.splitTextToSize(notes, pageWidth - 60);
-      doc.text(notesLines, 25, currentY + 20);
-
-      currentY += 50;
-    }
-
-    // Footer
-    doc.setDrawColor('#c8c8c8');
-    doc.setLineWidth(0.5);
-    doc.line(20, pageHeight - 30, pageWidth - 20, pageHeight - 30);
-
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'italic');
-    doc.setTextColor('#787878');
-    doc.text(`Documento gerado em ${new Date().toLocaleString('pt-BR')}`, 20, pageHeight - 20);
-    doc.text(`OS #${serviceNumber}`, pageWidth - 20, pageHeight - 20, { align: 'right' });
-
-    // Salvar o PDF com nome mais descritivo
-    const customerName = selectedCustomer?.name?.replace(/\s+/g, '-').toLowerCase() || 'cliente';
-    const fileName = editingService?.id 
-      ? `OS-${serviceNumber}-${customerName}.pdf`
-      : `nova-ordem-servico-${customerName}.pdf`;
-      
-    doc.save(fileName);
   };
 
-  if (servicesLoading || customersLoading || vehiclesLoading || techniciansLoading) {
+  if (servicesLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50">
-        <LoadingSpinner size="lg" text="Carregando dados do sistema..." />
+        <LoadingSpinner size="lg" text="Carregando serviços..." />
       </div>
     );
   }

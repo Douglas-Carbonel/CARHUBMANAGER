@@ -433,51 +433,54 @@ export class DatabaseStorage implements IStorage {
 
       console.log('Storage: Found services:', result.rows.length);
 
-      // Get service items for all services at once
+      // Get service items for all services at once (optimized query)
       const serviceIds = result.rows.map(row => row.id);
       let serviceItemsMap: { [key: number]: any[] } = {};
 
       if (serviceIds.length > 0) {
-        const serviceItemsResult = await db.execute(sql`
-          SELECT 
-            si.service_id,
-            si.id,
-            si.service_type_id,
-            si.quantity,
-            si.unit_price,
-            si.total_price,
-            si.notes,
-            st.name as service_type_name,
-            st.description as service_type_description,
-            st.default_price as service_type_default_price
-          FROM service_items si
-          LEFT JOIN service_types st ON si.service_type_id = st.id
-          WHERE si.service_id IN (${sql.join(serviceIds.map(id => sql`${id}`), sql`, `)})
-          ORDER BY si.created_at ASC
-        `);
+        // Use a more efficient query with batching
+        const batchSize = 100;
+        const batches = [];
+        
+        for (let i = 0; i < serviceIds.length; i += batchSize) {
+          const batch = serviceIds.slice(i, i + batchSize);
+          batches.push(batch);
+        }
 
-        // Group service items by service_id
-        serviceItemsResult.rows.forEach((item: any) => {
-          if (!serviceItemsMap[item.service_id]) {
-            serviceItemsMap[item.service_id] = [];
-          }
-          serviceItemsMap[item.service_id].push({
-            id: item.id,
-            serviceId: item.service_id,
-            serviceTypeId: item.service_type_id,
-            quantity: item.quantity,
-            unitPrice: item.unit_price,
-            totalPrice: item.total_price,
-            notes: item.notes,
-            serviceTypeName: item.service_type_name,
-            serviceType: {
-              id: item.service_type_id,
-              name: item.service_type_name,
-              description: item.service_type_description,
-              defaultPrice: item.service_type_default_price
+        for (const batch of batches) {
+          const serviceItemsResult = await db.execute(sql`
+            SELECT 
+              si.service_id,
+              si.id,
+              si.service_type_id,
+              si.quantity,
+              si.unit_price,
+              si.total_price,
+              si.notes,
+              st.name as service_type_name
+            FROM service_items si
+            LEFT JOIN service_types st ON si.service_type_id = st.id
+            WHERE si.service_id = ANY(${batch})
+            ORDER BY si.created_at ASC
+          `);
+
+          // Group service items by service_id
+          serviceItemsResult.rows.forEach((item: any) => {
+            if (!serviceItemsMap[item.service_id]) {
+              serviceItemsMap[item.service_id] = [];
             }
+            serviceItemsMap[item.service_id].push({
+              id: item.id,
+              serviceId: item.service_id,
+              serviceTypeId: item.service_type_id,
+              quantity: item.quantity,
+              unitPrice: item.unit_price,
+              totalPrice: item.total_price,
+              notes: item.notes,
+              serviceTypeName: item.service_type_name,
+            });
           });
-        });
+        }
       }
 
       const servicesData = result.rows.map(row => ({
