@@ -1263,7 +1263,7 @@ export default function CustomersPage() {
 
         {/* Floating Action Buttons */}
         <Button
-          className="fixed bottom-6 left-6 h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110"
+          className="fixed bottom-24 right-6 h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110"
           size="sm"
           onClick={() => {
             const searchInput = document.querySelector('input[placeholder="Buscar clientes..."]') as HTMLInputElement;

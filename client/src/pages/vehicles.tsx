@@ -308,7 +308,7 @@ export default function VehiclesPage() {
     const customerId = urlParams.get('customerId');
     const openModal = urlParams.get('openModal');
     const action = urlParams.get('action');
-    
+
     if (customerId) {
       setCustomerFilter(parseInt(customerId));
 
@@ -1669,7 +1669,10 @@ export default function VehiclesPage() {
                               onClick={() => setLocation(`/vehicle-photos?vehicleId=${vehicle.id}&vehiclePlate=${encodeURIComponent(vehicle.licensePlate)}`)}
                               className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl h-9"
                             >
-                              <Camera className="h-3 w-3 mr-1" />
+                              <Camera classNameNameError: name 'vehicle' is not defined
+```
+
+This code modifies the floating action buttons in the VehiclesPage component to position the search button above the add button.className="h-3 w-3 mr-1" />
                               <span className="text-xs">Fotos</span>
                             </Button>
 
@@ -1704,7 +1707,7 @@ export default function VehiclesPage() {
                 Primeiro Serviço
               </DialogTitle>
             </DialogHeader>
-            
+
             <div className="text-center space-y-4">
               <p className="text-gray-700">
                 O veículo <strong>{vehicleForServiceWarning?.licensePlate}</strong> ({vehicleForServiceWarning?.brand} {vehicleForServiceWarning?.model}) ainda não possui serviços cadastrados.
@@ -1746,7 +1749,7 @@ export default function VehiclesPage() {
 
         {/* Floating Action Buttons */}
         <Button
-          className="fixed bottom-6 left-6 h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110"
+          className="fixed bottom-24 right-6 h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110"
           size="sm"
           onClick={() => {
             const searchInput = document.querySelector('input[placeholder="Buscar veículos..."]') as HTMLInputElement;
@@ -1764,21 +1767,22 @@ export default function VehiclesPage() {
           size="sm"
           onClick={() => {
             setEditingVehicle(null);
-            const defaultValues: VehicleFormData = {
-              customerId: null,
+            const defaultValues = {
+              customerId: customerFilter || 0,
               licensePlate: "",
               brand: "",
               model: "",
-              year: null,
+              year: new Date().getFullYear(),
               color: "",
-              fuelType: null,
-              mileage: null,
-              observations: null,
+              chassis: "",
+              engine: "",
+              fuelType: "gasoline",
+              notes: "",
             };
-            setFormInitialValues(defaultValues);
             form.reset(defaultValues);
-            setCurrentVehiclePhotos([]);
+            setFormInitialValues(defaultValues);
             setTemporaryPhotos([]);
+            setCurrentVehiclePhotos([]);
             setIsModalOpen(true);
           }}
         >
