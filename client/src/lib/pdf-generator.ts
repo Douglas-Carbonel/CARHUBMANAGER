@@ -164,14 +164,28 @@ export const generateServicePDF = async (serviceData: ServiceData, isSchedule: b
   pdf.text(currentYear.toString(), 25, yPosition + 10);
   pdf.text(`${serviceData.vehicle.brand} ${serviceData.vehicle.model}`, 80, yPosition + 10);
 
-  // Tipos de conserto (baseado nos serviços) - usando símbolos normais com controle de largura
+  // Tipos de conserto (baseado nos serviços) - com quebra de linha adequada
   let serviceTypeY = yPosition + 10;
+  const maxWidth = 60; // Largura máxima da coluna "Tipo de Conserto"
+  
   serviceData.serviceExtras.forEach((service, index) => {
-    if (index < 3) { // Máximo 3 serviços para não ultrapassar o espaço
-      const serviceName = service.serviceName.length > 15 ? 
-        service.serviceName.substring(0, 15) + '...' : 
-        service.serviceName;
-      pdf.text(`& ${serviceName}`, 130, serviceTypeY);
+    if (index < 3 && serviceTypeY < yPosition + 35) { // Máximo 3 serviços e controle de altura
+      const serviceName = `& ${service.serviceName}`;
+      
+      // Quebra o texto se for muito longo para a coluna
+      const textLines = pdf.splitTextToSize(serviceName, maxWidth);
+      
+      // Adiciona apenas a primeira linha se houver quebra
+      if (Array.isArray(textLines)) {
+        pdf.text(textLines[0], 130, serviceTypeY);
+        if (textLines.length > 1 && serviceTypeY + 8 < yPosition + 35) {
+          serviceTypeY += 8;
+          pdf.text(textLines[1], 130, serviceTypeY);
+        }
+      } else {
+        pdf.text(textLines, 130, serviceTypeY);
+      }
+      
       serviceTypeY += 8;
     }
   });
