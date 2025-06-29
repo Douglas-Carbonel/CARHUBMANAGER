@@ -1669,10 +1669,7 @@ export default function VehiclesPage() {
                               onClick={() => setLocation(`/vehicle-photos?vehicleId=${vehicle.id}&vehiclePlate=${encodeURIComponent(vehicle.licensePlate)}`)}
                               className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl h-9"
                             >
-                              <Camera classNameNameError: name 'vehicle' is not defined
-```
-
-This code modifies the floating action buttons in the VehiclesPage component to position the search button above the add button.className="h-3 w-3 mr-1" />
+                              <Camera className="h-3 w-3 mr-1" />
                               <span className="text-xs">Fotos</span>
                             </Button>
 
