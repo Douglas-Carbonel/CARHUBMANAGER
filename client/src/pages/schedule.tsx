@@ -2464,10 +2464,11 @@ export default function SchedulePage() {
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {searchTerm.length >= 2 ? (
                     services
-                      .filter(service => 
-                        service.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        (service.vehicle.licensePlate || "").toLowerCase().includes(searchTerm.toLowerCase())
-                      )
+                      .filter(service => {
+                        const customerMatch = service.customer.name.toLowerCase().includes(searchTerm.toLowerCase());
+                        const plateMatch = (service.vehicleLicensePlate || service.vehicle?.licensePlate || "").toLowerCase().includes(searchTerm.toLowerCase());
+                        return customerMatch || plateMatch;
+                      })
                       .slice(0, 10) // Limitar a 10 resultados
                       .map(service => (
                         <Card 
