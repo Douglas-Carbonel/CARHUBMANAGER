@@ -1029,8 +1029,8 @@ export default function Services() {
           subtitle="Gerencie os serviços da sua oficina"
         />
 
-        <main className="flex-1 overflow-auto p-8">
-          <div className="flex justify-between items-center mb-8">
+        <main className="flex-1 overflow-auto px-8 py-4">
+          <div className="flex justify-between items-center mb-4">
             <div></div>
 
             <Dialog open={isDialogOpen} onOpenChange={(open) => {
