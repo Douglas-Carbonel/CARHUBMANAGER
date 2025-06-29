@@ -1072,19 +1072,20 @@ export default function Services() {
                 }
               }
             }}>
-              {/* Campo de Pesquisa Flutuante */}
-              <div className="fixed bottom-24 right-6 z-50">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-500 h-4 w-4" />
-                  <Input
-                    ref={searchInputRef}
-                    placeholder="Buscar cliente, veículo, tipo de serviço..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-80 pl-10 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-xl bg-white/95 backdrop-blur-sm"
-                  />
-                </div>
-              </div>
+              {/* Botão de Pesquisa Flutuante */}
+              <Button
+                className="fixed bottom-24 right-6 h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110"
+                size="sm"
+                onClick={() => {
+                  // Foca no campo de pesquisa existente
+                  if (searchInputRef.current) {
+                    searchInputRef.current.focus();
+                    searchInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }}
+              >
+                <Search className="h-7 w-7" />
+              </Button>
 
               <DialogTrigger asChild>
                 <Button
@@ -2128,8 +2129,19 @@ export default function Services() {
             </Dialog>
           </div>
 
-          {/* Filter */}
+          {/* Search and Filter */}
           <div className="space-y-4 mb-6">
+            {/* Search Input - Full width on mobile */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-500 h-4 w-4" />
+              <Input
+                ref={searchInputRef}
+                placeholder="Buscar por cliente, veículo, tipo de serviço..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm"
+              />
+            </div>
 
             {/* Filters Row - Responsive layout */}
             <div className={cn("grid gap-3", isMobile ? "grid-cols-2" : "flex flex-row gap-4")}>

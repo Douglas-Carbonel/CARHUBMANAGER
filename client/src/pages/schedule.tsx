@@ -1329,18 +1329,14 @@ export default function SchedulePage() {
               }
             }
           }}>
-            {/* Campo de Pesquisa Flutuante */}
-            <div className="fixed bottom-24 right-6 z-50">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-500 h-4 w-4" />
-                <Input
-                  placeholder="Buscar cliente..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-64 pl-10 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-xl bg-white/95 backdrop-blur-sm"
-                />
-              </div>
-            </div>
+            {/* Botão de Pesquisa Flutuante */}
+            <Button
+              className="fixed bottom-24 right-6 h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110"
+              size="sm"
+              onClick={() => setIsSearchModalOpen(true)}
+            >
+              <Search className="h-7 w-7" />
+            </Button>
 
             <DialogTrigger asChild>
               <Button
