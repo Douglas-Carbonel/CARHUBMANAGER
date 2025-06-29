@@ -688,6 +688,7 @@ export default function SchedulePage() {
       }
 
       const serviceData = {
+        id: editingService?.id, // Incluir o ID do serviço que está sendo editado
         customer: { name: selectedCustomer.name },
         vehicle: { 
           brand: selectedVehicle.brand, 
