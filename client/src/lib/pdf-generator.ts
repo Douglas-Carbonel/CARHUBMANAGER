@@ -146,17 +146,21 @@ export const generateServicePDF = async (serviceData: ServiceData, isSchedule: b
   pdf.setTextColor(255, 255, 255);
   pdf.text('Ano', 25, yPosition + 2);
   pdf.text('Modelo', 80, yPosition + 2);
-  pdf.text('Tipo de Conserto', 130, yPosition + 2);
+  pdf.text('Serviços', 130, yPosition + 2);
 
   yPosition += 12;
 
+  // Calcula a altura necessária para o box baseado no número de serviços
+  const numServices = Math.min(serviceData.serviceExtras.length, 5);
+  const boxHeight = 60 + (numServices * 8); // Altura base + altura por serviço
+  
   // Fundo cinza claro para dados do veículo
   pdf.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
-  pdf.rect(20, yPosition, pageWidth - 40, 40, 'F');
+  pdf.rect(20, yPosition, pageWidth - 40, boxHeight, 'F');
   pdf.setDrawColor(mediumGray[0], mediumGray[1], mediumGray[2]);
-  pdf.rect(20, yPosition, pageWidth - 40, 40);
+  pdf.rect(20, yPosition, pageWidth - 40, boxHeight);
 
-  // Dados do veículo
+  // Dados do veículo - Primeira linha
   pdf.setFont('helvetica', 'normal');
   pdf.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
   
@@ -164,59 +168,47 @@ export const generateServicePDF = async (serviceData: ServiceData, isSchedule: b
   pdf.text(currentYear.toString(), 25, yPosition + 10);
   pdf.text(`${serviceData.vehicle.brand} ${serviceData.vehicle.model}`, 80, yPosition + 10);
 
-  // Tipos de conserto (baseado nos serviços) - com quebra de linha adequada
+  // Lista todos os serviços
   let serviceTypeY = yPosition + 10;
-  const maxWidth = 60; // Largura máxima da coluna "Tipo de Conserto"
+  const maxWidth = 60; // Largura máxima da coluna "Serviços"
   
   serviceData.serviceExtras.forEach((service, index) => {
-    if (index < 3 && serviceTypeY < yPosition + 35) { // Máximo 3 serviços e controle de altura
+    if (index < 5 && serviceTypeY < yPosition + boxHeight - 15) { // Máximo 5 serviços
       const serviceName = `& ${service.serviceName}`;
       
       // Quebra o texto se for muito longo para a coluna
       const textLines = pdf.splitTextToSize(serviceName, maxWidth);
       
-      // Adiciona apenas a primeira linha se houver quebra
-      if (Array.isArray(textLines)) {
+      if (Array.isArray(textLines) && textLines.length > 0) {
         pdf.text(textLines[0], 130, serviceTypeY);
-        if (textLines.length > 1 && serviceTypeY + 8 < yPosition + 35) {
-          serviceTypeY += 8;
-          pdf.text(textLines[1], 130, serviceTypeY);
-        }
       } else {
-        pdf.text(textLines, 130, serviceTypeY);
+        pdf.text(serviceName, 130, serviceTypeY);
       }
       
       serviceTypeY += 8;
     }
   });
 
-  yPosition += 25;
-
-  // Segunda linha da tabela do veículo
+  // Segunda linha - Cor e Quilometragem
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('Cor', 25, yPosition + 10);
-  pdf.text('Quilometragem', 80, yPosition + 10);
-  pdf.text('Deseja reutilizar suas', 130, yPosition + 6);
-  pdf.text('peças antigas?', 130, yPosition + 12);
+  pdf.text('Cor', 25, yPosition + 25);
+  pdf.text('Quilometragem', 80, yPosition + 25);
 
   pdf.setFont('helvetica', 'normal');
-  pdf.text('Não informado', 25, yPosition + 20);
-  pdf.text('000000', 80, yPosition + 20);
-  pdf.text('& Sim', 130, yPosition + 20);
+  pdf.text('Não informado', 25, yPosition + 35);
+  pdf.text('000000', 80, yPosition + 35);
 
-  yPosition += 30;
-
-  // Marca e Placa
+  // Terceira linha - Marca e Placa (dentro do box)
   pdf.setFont('helvetica', 'bold');
-  pdf.text('Marca', 25, yPosition + 10);
-  pdf.text('Placa', 80, yPosition + 10);
+  pdf.text('Marca', 25, yPosition + 45);
+  pdf.text('Placa', 80, yPosition + 45);
 
   pdf.setFont('helvetica', 'normal');
-  pdf.text(serviceData.vehicle.brand, 25, yPosition + 20);
-  pdf.text(serviceData.vehicle.licensePlate, 80, yPosition + 20);
+  pdf.text(serviceData.vehicle.brand, 25, yPosition + 52);
+  pdf.text(serviceData.vehicle.licensePlate, 80, yPosition + 52);
 
-  yPosition += 40;
+  yPosition += boxHeight + 10;
 
   // ===== FAIXA VERDE PARA SEPARAÇÃO =====
   pdf.setFillColor(primaryGreen[0], primaryGreen[1], primaryGreen[2]);
