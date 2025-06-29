@@ -2466,7 +2466,7 @@ export default function SchedulePage() {
                     services
                       .filter(service => 
                         service.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        service.vehicle.licensePlate.toLowerCase().includes(searchTerm.toLowerCase())
+                        (service.vehicle.licensePlate || "").toLowerCase().includes(searchTerm.toLowerCase())
                       )
                       .slice(0, 10) // Limitar a 10 resultados
                       .map(service => (
