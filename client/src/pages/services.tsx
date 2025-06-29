@@ -2130,7 +2130,7 @@ export default function Services() {
             {/* Filters Container */}
             <div className={cn(
               isMobile 
-                ? "bg-white/90 backdrop-blur-sm rounded-xl border border-teal-100 p-4 space-y-4 shadow-sm" 
+                ? "space-y-3" 
                 : "flex flex-row gap-4"
             )}>
               {/* Status Filter */}
@@ -2181,49 +2181,36 @@ export default function Services() {
                   </div>
                 )}
               </div>
-
-              {/* Mobile: Actions row inside container */}
-              {isMobile && (
-                <div className="flex items-center justify-between pt-2 border-t border-teal-100">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsAnalyticsModalOpen(true)}
-                    className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 transition-all px-4 py-2.5 h-11 flex-1 mr-3"
-                  >
-                    <BarChart3 className="h-4 w-4" />
-                    <span className="text-sm font-medium">Ver Relatórios</span>
-                  </Button>
-                  
-                  <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg shadow-md flex items-center justify-center px-4 py-2.5 h-11 min-w-fit">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-bold text-lg">{filteredServices.length}</span>
-                      <span className="font-medium text-sm">OS</span>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* Desktop: Reports and Counter Row */}
-            {!isMobile && (
-              <div className="flex items-center justify-end gap-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsAnalyticsModalOpen(true)}
-                  className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 transition-all px-4 py-2"
-                >
-                  <BarChart3 className="h-4 w-4" />
-                  <span className="text-sm">Ver Relatórios</span>
-                </Button>
-                
-                <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg shadow-md flex items-center justify-center px-4 py-2">
-                  <div className="flex items-center space-x-1">
-                    <span className="font-bold text-lg">{filteredServices.length}</span>
-                    <span className="font-medium text-sm">serviços</span>
-                  </div>
+            {/* Actions Row - Always visible now with better mobile layout */}
+            <div className={cn(
+              "flex items-center gap-3",
+              isMobile ? "justify-between" : "justify-end"
+            )}>
+              <Button
+                variant="outline"
+                onClick={() => setIsAnalyticsModalOpen(true)}
+                className={cn(
+                  "border-emerald-200 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 transition-all h-11",
+                  isMobile ? "flex-1 px-3" : "px-4"
+                )}
+              >
+                <BarChart3 className="h-4 w-4" />
+                <span className="text-sm font-medium">
+                  {isMobile ? "Relatórios" : "Ver Relatórios"}
+                </span>
+              </Button>
+              
+              <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg shadow-md flex items-center justify-center px-4 py-2.5 h-11">
+                <div className="flex items-center space-x-1">
+                  <span className="font-bold text-lg">{filteredServices.length}</span>
+                  <span className="font-medium text-sm">
+                    {isMobile ? "OS" : "serviços"}
+                  </span>
                 </div>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Services Grid */}
