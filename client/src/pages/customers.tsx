@@ -81,6 +81,7 @@ export default function CustomersPage() {
   const [isPhotosModalOpen, setIsPhotosModalOpen] = useState(false);
   const [currentCustomerPhotos, setCurrentCustomerPhotos] = useState<any[]>([]);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const isMobile = useIsMobile();
   const [temporaryPhotos, setTemporaryPhotos] = useState<{photo: string, category: string}[]>([]);
   const [isVehicleWarningOpen, setIsVehicleWarningOpen] = useState(false);
@@ -1145,6 +1146,90 @@ export default function CustomersPage() {
               </div>
             )}
 
+            {/* Search Modal */}
+            <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
+              <DialogContent className="max-w-md bg-gradient-to-br from-slate-50 to-blue-50/30 border-0 shadow-2xl">
+                <DialogHeader className="pb-4 border-b border-gray-100/50">
+                  <DialogTitle className="text-xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent flex items-center">
+                    <Search className="h-6 w-6 mr-3 text-teal-600" />
+                    Pesquisar Clientes
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      placeholder="Digite o nome, documento, email ou código..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 h-12 border-2 border-gray-200 focus:border-teal-400 rounded-xl shadow-sm bg-white transition-all duration-200"
+                      autoFocus
+                    />
+                  </div>
+                  
+                  {searchTerm && (
+                    <div className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm">
+                      <div className="text-sm text-gray-600 mb-2">
+                        {filteredCustomers.length} cliente{filteredCustomers.length !== 1 ? 's' : ''} encontrado{filteredCustomers.length !== 1 ? 's' : ''}
+                      </div>
+                      
+                      {filteredCustomers.length > 0 ? (
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {filteredCustomers.slice(0, 5).map((customer) => (
+                            <div
+                              key={customer.id}
+                              className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+                              onClick={() => {
+                                setIsSearchModalOpen(false);
+                                handleEdit(customer);
+                              }}
+                            >
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-900 text-sm">{customer.name}</div>
+                                <div className="text-xs text-gray-500">
+                                  {customer.document && (customer.documentType === 'cpf' ? formatCPF(customer.document) : formatCNPJ(customer.document))}
+                                </div>
+                              </div>
+                              <Edit className="h-4 w-4 text-gray-400" />
+                            </div>
+                          ))}
+                          {filteredCustomers.length > 5 && (
+                            <div className="text-xs text-gray-500 text-center py-2">
+                              +{filteredCustomers.length - 5} cliente{filteredCustomers.length - 5 !== 1 ? 's' : ''} a mais...
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center py-4">
+                          <User className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                          <p className="text-sm text-gray-500">Nenhum cliente encontrado</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 pt-4 border-t border-gray-100">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSearchTerm("");
+                        setIsSearchModalOpen(false);
+                      }}
+                      className="flex-1"
+                    >
+                      Limpar
+                    </Button>
+                    <Button
+                      onClick={() => setIsSearchModalOpen(false)}
+                      className="flex-1 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700"
+                    >
+                      Fechar
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
             {/* Analytics Modal */}
             <Dialog open={isAnalyticsModalOpen} onOpenChange={setIsAnalyticsModalOpen}>
               <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
@@ -1247,12 +1332,7 @@ export default function CustomersPage() {
         <Button
           className="fixed bottom-24 right-6 h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110"
           size="sm"
-          onClick={() => {
-            const searchInput = document.querySelector('input[placeholder="Buscar clientes..."]') as HTMLInputElement;
-            if (searchInput) {
-              searchInput.focus();
-            }
-          }}
+          onClick={() => setIsSearchModalOpen(true)}
           aria-label="Pesquisar clientes"
         >
           <Search className="h-7 w-7" />
