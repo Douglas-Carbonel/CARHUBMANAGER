@@ -126,8 +126,9 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ isOpen, onClose, onPhotoT
       startCamera();
     } else {
       // Stop the camera stream when the modal is closed
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      if (videoRef.current?.srcObject) {
+        const mediaStream = videoRef.current.srcObject as MediaStream;
+        mediaStream.getTracks().forEach(track => track.stop());
       }
       setIsCameraReady(false);
     }
@@ -1098,7 +1099,7 @@ export default function VehiclesPage() {
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">
                   {customerFilter 
-                    ? `${customers.find(c => c.id === customerFilter)?.name || 'Cliente'} não possui veículos cadastrados`
+                    ? `${customers.find((c: Customer) => c.id === customerFilter)?.name || 'Cliente'} não possui veículos cadastrados`
                     : "Nenhum veículo encontrado"
                   }
                 </h3>
@@ -1742,6 +1743,47 @@ export default function VehiclesPage() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Floating Action Buttons */}
+        <Button
+          className="fixed bottom-6 left-6 h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110"
+          size="sm"
+          onClick={() => {
+            const searchInput = document.querySelector('input[placeholder="Buscar veículos..."]') as HTMLInputElement;
+            if (searchInput) {
+              searchInput.focus();
+            }
+          }}
+          aria-label="Pesquisar veículos"
+        >
+          <Search className="h-7 w-7" />
+        </Button>
+
+        <Button
+          className="fixed bottom-6 right-6 h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110"
+          size="sm"
+          onClick={() => {
+            setEditingVehicle(null);
+            const defaultValues: VehicleFormData = {
+              customerId: null,
+              licensePlate: "",
+              brand: "",
+              model: "",
+              year: null,
+              color: "",
+              fuelType: null,
+              mileage: null,
+              observations: null,
+            };
+            setFormInitialValues(defaultValues);
+            form.reset(defaultValues);
+            setCurrentVehiclePhotos([]);
+            setTemporaryPhotos([]);
+            setIsModalOpen(true);
+          }}
+        >
+          <Plus className="h-8 w-8" />
+        </Button>
 
         {/* Dialog de confirmação de alterações não salvas */}
         <UnsavedChangesDialog

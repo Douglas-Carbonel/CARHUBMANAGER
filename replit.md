@@ -130,6 +130,7 @@ This is a comprehensive automotive service management system built as a full-sta
 Changelog:
 - June 29, 2025. Fixed PDF service order layout - replaced icons with CARHUB logo, simplified header to "Ordem de Serviço", changed "Tipo de Conserto" to "Serviços", improved vehicle description text wrapping with dynamic box height, added footer spacing
 - June 29, 2025. Added floating search buttons on schedule and services pages - equal size, same teal/emerald color scheme as main action buttons
+- June 29, 2025. Added floating action buttons (search and create) to customers and vehicles pages for UI consistency across all main pages
 - June 28, 2025. Completely redesigned schedule page with modern dark theme and improved UX based on user feedback
 - June 28, 2025. Reorganized schedule interface into two clear sections: calendar view and filtered appointments list
 - June 28, 2025. Implemented functional calendar view modes (Month/Week/Day) with proper Portuguese translations

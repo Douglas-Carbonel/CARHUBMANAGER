@@ -1260,6 +1260,46 @@ export default function CustomersPage() {
             </Dialog>
           </div>
         </main>
+
+        {/* Floating Action Buttons */}
+        <Button
+          className="fixed bottom-6 left-6 h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110"
+          size="sm"
+          onClick={() => {
+            const searchInput = document.querySelector('input[placeholder="Buscar clientes..."]') as HTMLInputElement;
+            if (searchInput) {
+              searchInput.focus();
+            }
+          }}
+          aria-label="Pesquisar clientes"
+        >
+          <Search className="h-7 w-7" />
+        </Button>
+
+        <Button
+          className="fixed bottom-6 right-6 h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110"
+          size="sm"
+          onClick={() => {
+            setEditingCustomer(null);
+            const defaultValues = {
+              code: "",
+              name: "",
+              email: "",
+              phone: "",
+              document: "",
+              documentType: "cpf" as const,
+              address: "",
+              observations: "",
+            };
+            setFormInitialValues(defaultValues);
+            form.reset(defaultValues);
+            setCurrentCustomerPhotos([]);
+            setTemporaryPhotos([]);
+            setIsModalOpen(true);
+          }}
+        >
+          <Plus className="h-8 w-8" />
+        </Button>
         
         {/* Dialog de confirmação de alterações não salvas */}
         <UnsavedChangesDialog
