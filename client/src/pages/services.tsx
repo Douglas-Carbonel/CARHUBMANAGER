@@ -20,6 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertServiceSchema, type Service, type Customer, type Vehicle, type ServiceType, type Photo } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import ServiceAnalytics from "@/components/dashboard/service-analytics";
 import { useLocation } from "wouter";
 import PhotoUpload from "@/components/photos/photo-upload";
@@ -148,6 +149,7 @@ export default function Services() {
   const [initialServiceExtras, setInitialServiceExtras] = useState<any[]>([]);
   const [isResumeModalOpen, setIsResumeModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState({
     pix: "",
     dinheiro: "",
@@ -1076,13 +1078,7 @@ export default function Services() {
               <Button
                 className="fixed bottom-24 right-6 h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110"
                 size="sm"
-                onClick={() => {
-                  // Foca no campo de pesquisa existente
-                  if (searchInputRef.current) {
-                    searchInputRef.current.focus();
-                    searchInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }
-                }}
+                onClick={() => setIsSearchModalOpen(true)}
               >
                 <Search className="h-7 w-7" />
               </Button>
@@ -2129,20 +2125,8 @@ export default function Services() {
             </Dialog>
           </div>
 
-          {/* Search and Filter */}
+          {/* Filters */}
           <div className="space-y-4 mb-6">
-            {/* Search Input - Full width on mobile */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-500 h-4 w-4" />
-              <Input
-                ref={searchInputRef}
-                placeholder="Buscar por cliente, veículo, tipo de serviço..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm bg-white/90 backdrop-blur-sm"
-              />
-            </div>
-
             {/* Filters Row - Responsive layout */}
             <div className={cn("grid gap-3", isMobile ? "grid-cols-2" : "flex flex-row gap-4")}>
               {/* Status Filter */}
@@ -2591,6 +2575,142 @@ export default function Services() {
           cancelText="Cancelar"
           variant="destructive"
         />
+
+        {/* Modal de Pesquisa */}
+        <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
+          <DialogContent className="sm:max-w-md mx-4 p-0 bg-white/95 backdrop-blur-sm border-teal-200">
+            <DialogHeader className="p-6 pb-4">
+              <DialogTitle className="flex items-center space-x-3 text-gray-800">
+                <div className="p-2 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-lg">
+                  <Search className="h-5 w-5 text-white" />
+                </div>
+                <span>Pesquisar Serviços</span>
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="p-6 pt-0">
+              {/* Campo de pesquisa */}
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-500 h-4 w-4" />
+                <Input
+                  placeholder="Digite o nome do cliente ou placa do veículo..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm"
+                  autoFocus
+                />
+              </div>
+
+              {/* Indicador de pesquisa */}
+              {searchTerm.length > 0 && searchTerm.length < 2 && (
+                <div className="text-center py-8">
+                  <div className="text-gray-500 text-sm">
+                    Digite pelo menos 2 caracteres para pesquisar
+                  </div>
+                </div>
+              )}
+
+              {/* Resultados da pesquisa */}
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {searchTerm.length >= 2 ? (
+                  services
+                    .filter(service => {
+                      const customerMatch = service.customer.name.toLowerCase().includes(searchTerm.toLowerCase());
+                      const plateMatch = (service.vehicleLicensePlate || service.vehicle?.licensePlate || "").toLowerCase().includes(searchTerm.toLowerCase());
+                      return customerMatch || plateMatch;
+                    })
+                    .slice(0, 10) // Limitar a 10 resultados
+                    .map(service => (
+                      <Card 
+                        key={service.id}
+                        className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          
+                          // Navegar para o serviço específico
+                          handleEdit(service);
+                          setIsSearchModalOpen(false);
+                          setSearchTerm("");
+                        }}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex-1">
+                              <h5 className="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
+                                {service.customer.name}
+                              </h5>
+                              <p className="text-sm text-gray-600 mt-1">
+                                {service.vehicleBrand} {service.vehicleModel} - {service.vehicleLicensePlate}
+                              </p>
+                            </div>
+                            <Badge 
+                              className={cn(
+                                "text-xs font-medium ml-2",
+                                service.status === 'completed' && "bg-green-100 text-green-700 border-green-200",
+                                service.status === 'in_progress' && "bg-blue-100 text-blue-700 border-blue-200",
+                                service.status === 'scheduled' && "bg-orange-100 text-orange-700 border-orange-200",
+                                service.status === 'cancelled' && "bg-red-100 text-red-700 border-red-200"
+                              )}
+                              variant="outline"
+                            >
+                              {service.status === 'completed' && 'Concluído'}
+                              {service.status === 'in_progress' && 'Em andamento'}
+                              {service.status === 'scheduled' && 'Agendado'}
+                              {service.status === 'cancelled' && 'Cancelado'}
+                            </Badge>
+                          </div>
+                          
+                          <div className="flex items-center justify-between text-xs text-gray-500">
+                            <div className="flex items-center space-x-4">
+                              <div className="flex items-center space-x-1">
+                                <Calendar className="h-3 w-3" />
+                                <span>
+                                  {service.scheduledDate ? 
+                                    format(new Date(service.scheduledDate), "dd/MM/yyyy", { locale: ptBR }) 
+                                    : 'Sem data'
+                                  }
+                                </span>
+                              </div>
+                              {service.scheduledTime && (
+                                <div className="flex items-center space-x-1">
+                                  <Clock className="h-3 w-3" />
+                                  <span>{service.scheduledTime}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="font-medium text-emerald-600">
+                              R$ {Number(service.estimatedValue || 0).toFixed(2)}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                ) : searchTerm.length >= 2 ? (
+                  <div className="text-center py-8">
+                    <div className="text-gray-500 text-sm">
+                      Nenhum resultado encontrado para "{searchTerm}"
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Botão para fechar */}
+              <div className="flex justify-end mt-6 pt-4 border-t border-gray-200">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsSearchModalOpen(false);
+                    setSearchTerm("");
+                  }}
+                  className="border-teal-200 text-teal-700 hover:bg-teal-50"
+                >
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

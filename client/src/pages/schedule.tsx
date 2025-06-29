@@ -2474,9 +2474,12 @@ export default function SchedulePage() {
                         <Card 
                           key={service.id}
                           className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
                             // Navegar para o agendamento
-                            const serviceDate = new Date(service.scheduledDate);
+                            const serviceDate = new Date(service.scheduledDate || service.createdAt);
                             setCurrentDate(serviceDate);
                             setSelectedDate(serviceDate);
                             setViewMode('Day');
@@ -2499,7 +2502,7 @@ export default function SchedulePage() {
                                   {service.customer.name}
                                 </h5>
                                 <p className="text-sm text-gray-600 mt-1">
-                                  {service.vehicle.brand} {service.vehicle.model} - {service.vehicle.licensePlate}
+                                  {service.vehicleBrand} {service.vehicleModel} - {service.vehicleLicensePlate}
                                 </p>
                               </div>
                               <Badge 
