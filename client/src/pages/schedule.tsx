@@ -2441,24 +2441,37 @@ export default function SchedulePage() {
 
           {/* Modal de Pesquisa */}
           <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-gradient-to-br from-slate-50 to-blue-50/30">
-              <DialogHeader className="pb-6">
-                <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-transparent">
-                  Pesquisar Agendamentos
+            <DialogContent className="sm:max-w-md mx-4 p-0 bg-white/95 backdrop-blur-sm border-teal-200">
+              <DialogHeader className="p-6 pb-4">
+                <DialogTitle className="flex items-center space-x-3 text-gray-800">
+                  <div className="p-2 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-lg">
+                    <Search className="h-5 w-5 text-white" />
+                  </div>
+                  <span>Pesquisar Agendamentos</span>
                 </DialogTitle>
               </DialogHeader>
               
-              <div className="space-y-4">
+              <div className="p-6 pt-0">
                 {/* Campo de pesquisa */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                <div className="relative mb-4">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-500 h-4 w-4" />
                   <Input
                     placeholder="Digite o nome do cliente ou placa do veículo..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 h-12 border-2 border-blue-200 focus:border-blue-400 rounded-lg bg-white"
+                    className="pl-10 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm"
+                    autoFocus
                   />
                 </div>
+
+                {/* Indicador de pesquisa */}
+                {searchTerm.length > 0 && searchTerm.length < 2 && (
+                  <div className="text-center py-8">
+                    <div className="text-gray-500 text-sm">
+                      Digite pelo menos 2 caracteres para pesquisar
+                    </div>
+                  </div>
+                )}
 
                 {/* Resultados da pesquisa */}
                 <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -2478,21 +2491,10 @@ export default function SchedulePage() {
                             e.preventDefault();
                             e.stopPropagation();
                             
-                            // Navegar para o agendamento
-                            const serviceDate = new Date(service.scheduledDate || service.createdAt);
-                            setCurrentDate(serviceDate);
-                            setSelectedDate(serviceDate);
-                            setViewMode('Day');
+                            // Navegar para o agendamento específico
+                            handleEdit(service);
                             setIsSearchModalOpen(false);
                             setSearchTerm("");
-                            
-                            // Scroll para o agendamento específico se necessário
-                            setTimeout(() => {
-                              const element = document.getElementById(`service-${service.id}`);
-                              if (element) {
-                                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                              }
-                            }, 300);
                           }}
                         >
                           <CardContent className="p-4">
@@ -2521,64 +2523,50 @@ export default function SchedulePage() {
                                 {service.status === 'cancelled' && 'Cancelado'}
                               </Badge>
                             </div>
-
-                            <div className="flex items-center justify-between text-sm text-gray-600">
-                              <div className="flex items-center">
-                                <Calendar className="h-4 w-4 mr-1 text-blue-500" />
-                                <span className="font-medium">
-                                  {format(new Date(service.scheduledDate), "dd/MM/yyyy", { locale: ptBR })}
-                                </span>
-                                {service.scheduledTime && (
-                                  <>
-                                    <Clock className="h-4 w-4 ml-2 mr-1 text-blue-500" />
-                                    <span className="font-medium">
-                                      {service.scheduledTime.substring(0, 5)}
-                                    </span>
-                                  </>
-                                )}
-                              </div>
-                              {service.estimatedValue && (
-                                <div className="flex items-center">
-                                  <span className="font-semibold text-green-600">
-                                    R$ {Number(service.estimatedValue).toFixed(2)}
+                            
+                            <div className="flex items-center justify-between text-xs text-gray-500">
+                              <div className="flex items-center space-x-4">
+                                <div className="flex items-center space-x-1">
+                                  <Calendar className="h-3 w-3" />
+                                  <span>
+                                    {service.scheduledDate ? 
+                                      format(new Date(service.scheduledDate), "dd/MM/yyyy", { locale: ptBR }) 
+                                      : 'Sem data'
+                                    }
                                   </span>
                                 </div>
-                              )}
-                            </div>
-
-                            {service.serviceType && (
-                              <div className="mt-2 text-xs">
-                                <span className="inline-flex items-center px-2 py-1 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                  <Wrench className="h-3 w-3 mr-1" />
-                                  {service.serviceType.name}
-                                </span>
+                                {service.scheduledTime && (
+                                  <div className="flex items-center space-x-1">
+                                    <Clock className="h-3 w-3" />
+                                    <span>{service.scheduledTime}</span>
+                                  </div>
+                                )}
                               </div>
-                            )}
+                              <div className="font-medium text-emerald-600">
+                                R$ {Number(service.estimatedValue || 0).toFixed(2)}
+                              </div>
+                            </div>
                           </CardContent>
                         </Card>
                       ))
-                  ) : searchTerm.length > 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <p className="text-sm">Digite pelo menos 2 caracteres para pesquisar</p>
+                  ) : searchTerm.length >= 2 ? (
+                    <div className="text-center py-8">
+                      <div className="text-gray-500 text-sm">
+                        Nenhum resultado encontrado para "{searchTerm}"
+                      </div>
                     </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <Search className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                      <p className="text-sm">Digite o nome do cliente ou placa do veículo para pesquisar</p>
-                    </div>
-                  )}
+                  ) : null}
                 </div>
 
-                {/* Botões de ação */}
-                <div className="flex justify-end space-x-3 pt-4 border-t">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
+                {/* Botão para fechar */}
+                <div className="flex justify-end mt-6 pt-4 border-t border-gray-200">
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       setIsSearchModalOpen(false);
                       setSearchTerm("");
                     }}
-                    className="px-6 py-2 font-medium"
+                    className="border-teal-200 text-teal-700 hover:bg-teal-50"
                   >
                     Fechar
                   </Button>
