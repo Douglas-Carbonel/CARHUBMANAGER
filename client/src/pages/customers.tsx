@@ -433,23 +433,8 @@ export default function CustomersPage() {
           <div className="p-4 sm:p-6 md:p-8">
             <div className={cn(
               "flex justify-between items-center gap-2 mb-4",
-              isMobile ? "flex-col space-y-3" : "flex-col sm:flex-row gap-6 mb-8"
+              isMobile ? "flex-col space-y-3" : "flex-row gap-6 mb-8"
             )}>
-              <div className={cn(isMobile ? "w-full space-y-2" : "flex-1 max-w-md space-y-3")}>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Buscar clientes..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className={cn(
-                      "pl-10 bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-xl shadow-sm focus:shadow-md transition-all duration-200",
-                      isMobile ? "h-10 text-sm" : "pl-12 h-12"
-                    )}
-                  />
-                </div>
-              </div>
-
               <div className={cn("flex items-center gap-2", isMobile ? "w-full justify-between" : "gap-4")}>
                 <Button
                   variant="outline"
@@ -492,32 +477,29 @@ export default function CustomersPage() {
                 }
               }}>
                 <DialogTrigger asChild>
-                  <Button 
-                    className={cn(
-                      "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200",
-                      isMobile ? "w-full h-10 text-sm" : ""
-                    )}
-                    onClick={() => {
-                      setEditingCustomer(null);
-                      const defaultValues = {
-                        code: "",
-                        name: "",
-                        email: "",
-                        phone: "",
-                        document: "",
-                        documentType: "cpf" as const,
-                        address: "",
-                        observations: "",
-                      };
-                      setFormInitialValues(defaultValues);
-                      form.reset(defaultValues);
-                      setCurrentCustomerPhotos([]);
-                      setTemporaryPhotos([]);
-                    }}
-                  >
-                    <Plus className={cn(isMobile ? "h-4 w-4 mr-1" : "h-5 w-5 mr-2")} />
-                    {isMobile ? "Novo Cliente" : "Novo Cliente"}
-                  </Button>
+                  <div style={{ display: 'none' }}>
+                    <Button 
+                      onClick={() => {
+                        setEditingCustomer(null);
+                        const defaultValues = {
+                          code: "",
+                          name: "",
+                          email: "",
+                          phone: "",
+                          document: "",
+                          documentType: "cpf" as const,
+                          address: "",
+                          observations: "",
+                        };
+                        setFormInitialValues(defaultValues);
+                        form.reset(defaultValues);
+                        setCurrentCustomerPhotos([]);
+                        setTemporaryPhotos([]);
+                      }}
+                    >
+                      Novo Cliente
+                    </Button>
+                  </div>
                 </DialogTrigger>
                 <DialogContent className={cn(
                   "bg-gradient-to-br from-slate-50 to-blue-50/30",
