@@ -138,6 +138,8 @@ export default function SchedulePage() {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isResumeModalOpen, setIsResumeModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const queryClient = useQueryClient();
 
@@ -1327,6 +1329,15 @@ export default function SchedulePage() {
               }
             }
           }}>
+            {/* Botão de Pesquisa Flutuante */}
+            <Button
+              className="fixed bottom-6 right-24 h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110"
+              size="sm"
+              onClick={() => setIsSearchModalOpen(true)}
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+
             <DialogTrigger asChild>
               <Button
                 className="fixed bottom-6 right-6 h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110"
@@ -2422,6 +2433,150 @@ export default function SchedulePage() {
                     }}
                   >
                     Aplicar Pagamento
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Modal de Pesquisa */}
+          <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-gradient-to-br from-slate-50 to-blue-50/30">
+              <DialogHeader className="pb-6">
+                <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-transparent">
+                  Pesquisar Agendamentos
+                </DialogTitle>
+              </DialogHeader>
+              
+              <div className="space-y-4">
+                {/* Campo de pesquisa */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                  <Input
+                    placeholder="Digite o nome do cliente ou placa do veículo..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 h-12 border-2 border-blue-200 focus:border-blue-400 rounded-lg bg-white"
+                  />
+                </div>
+
+                {/* Resultados da pesquisa */}
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {searchTerm.length >= 2 ? (
+                    services
+                      .filter(service => 
+                        service.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        service.vehicle.licensePlate.toLowerCase().includes(searchTerm.toLowerCase())
+                      )
+                      .slice(0, 10) // Limitar a 10 resultados
+                      .map(service => (
+                        <Card 
+                          key={service.id}
+                          className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group"
+                          onClick={() => {
+                            // Navegar para o agendamento
+                            const serviceDate = new Date(service.scheduledDate);
+                            setCurrentDate(serviceDate);
+                            setSelectedDate(serviceDate);
+                            setViewMode('Day');
+                            setIsSearchModalOpen(false);
+                            setSearchTerm("");
+                            
+                            // Scroll para o agendamento específico se necessário
+                            setTimeout(() => {
+                              const element = document.getElementById(`service-${service.id}`);
+                              if (element) {
+                                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                              }
+                            }, 300);
+                          }}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="flex-1">
+                                <h5 className="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
+                                  {service.customer.name}
+                                </h5>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {service.vehicle.brand} {service.vehicle.model} - {service.vehicle.licensePlate}
+                                </p>
+                              </div>
+                              <Badge 
+                                className={cn(
+                                  "text-xs font-medium ml-2",
+                                  service.status === 'completed' && "bg-green-100 text-green-700 border-green-200",
+                                  service.status === 'in_progress' && "bg-blue-100 text-blue-700 border-blue-200",
+                                  service.status === 'scheduled' && "bg-orange-100 text-orange-700 border-orange-200",
+                                  service.status === 'cancelled' && "bg-red-100 text-red-700 border-red-200"
+                                )}
+                                variant="outline"
+                              >
+                                {service.status === 'completed' && 'Concluído'}
+                                {service.status === 'in_progress' && 'Em andamento'}
+                                {service.status === 'scheduled' && 'Agendado'}
+                                {service.status === 'cancelled' && 'Cancelado'}
+                              </Badge>
+                            </div>
+
+                            <div className="flex items-center justify-between text-sm text-gray-600">
+                              <div className="flex items-center">
+                                <Calendar className="h-4 w-4 mr-1 text-blue-500" />
+                                <span className="font-medium">
+                                  {format(new Date(service.scheduledDate), "dd/MM/yyyy", { locale: ptBR })}
+                                </span>
+                                {service.scheduledTime && (
+                                  <>
+                                    <Clock className="h-4 w-4 ml-2 mr-1 text-blue-500" />
+                                    <span className="font-medium">
+                                      {service.scheduledTime.substring(0, 5)}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                              {service.estimatedValue && (
+                                <div className="flex items-center">
+                                  <span className="font-semibold text-green-600">
+                                    R$ {Number(service.estimatedValue).toFixed(2)}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+
+                            {service.serviceType && (
+                              <div className="mt-2 text-xs">
+                                <span className="inline-flex items-center px-2 py-1 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                  <Wrench className="h-3 w-3 mr-1" />
+                                  {service.serviceType.name}
+                                </span>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))
+                  ) : searchTerm.length > 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <p className="text-sm">Digite pelo menos 2 caracteres para pesquisar</p>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Search className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                      <p className="text-sm">Digite o nome do cliente ou placa do veículo para pesquisar</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Botões de ação */}
+                <div className="flex justify-end space-x-3 pt-4 border-t">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => {
+                      setIsSearchModalOpen(false);
+                      setSearchTerm("");
+                    }}
+                    className="px-6 py-2 font-medium"
+                  >
+                    Fechar
                   </Button>
                 </div>
               </div>

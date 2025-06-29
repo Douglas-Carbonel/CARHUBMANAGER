@@ -156,6 +156,7 @@ export default function Services() {
   });
   const [temporaryPhotos, setTemporaryPhotos] = useState<Array<{ photo: string; category: string }>>([]);
   const [formInitialValues, setFormInitialValues] = useState<z.infer<typeof serviceFormSchema> | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     title: string;
@@ -1071,6 +1072,21 @@ export default function Services() {
                 }
               }
             }}>
+              {/* Botão de Pesquisa Flutuante */}
+              <Button
+                className="fixed bottom-6 right-24 h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110"
+                size="sm"
+                onClick={() => {
+                  // Foca no campo de pesquisa existente
+                  if (searchInputRef.current) {
+                    searchInputRef.current.focus();
+                    searchInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }}
+              >
+                <Search className="h-5 w-5" />
+              </Button>
+
               <DialogTrigger asChild>
                 <Button
                     className="fixed bottom-6 right-6 h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110"
@@ -2119,6 +2135,7 @@ export default function Services() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-500 h-4 w-4" />
               <Input
+                ref={searchInputRef}
                 placeholder="Buscar por cliente, veículo, tipo de serviço..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
