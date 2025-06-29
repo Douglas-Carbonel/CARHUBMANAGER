@@ -970,10 +970,10 @@ app.get("/api/analytics/vehicles", requireAdmin, async (req, res) => {
           s.status,
           s.estimated_value,
           c.name as customer_name,
-          us.name as service_type_name
+          st.name as service_type_name
         FROM services s
         JOIN customers c ON s.customer_id = c.id
-        LEFT JOIN unified_services us ON s.unified_service_id = us.id
+        LEFT JOIN service_types st ON s.service_type_id = st.id
         WHERE s.scheduled_date = ${todayStr}
         ORDER BY s.id
       `);

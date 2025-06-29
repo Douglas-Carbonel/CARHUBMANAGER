@@ -448,6 +448,8 @@ export class DatabaseStorage implements IStorage {
         }
 
         for (const batch of batches) {
+          // Create placeholder string for the IN clause
+          const placeholders = batch.map(() => '?').join(',');
           const serviceItemsResult = await db.execute(sql`
             SELECT 
               si.service_id,
@@ -460,7 +462,7 @@ export class DatabaseStorage implements IStorage {
               st.name as service_type_name
             FROM service_items si
             LEFT JOIN service_types st ON si.service_type_id = st.id
-            WHERE si.service_id = ANY(${batch})
+            WHERE si.service_id IN (${sql.raw(batch.map(id => `${id}`).join(','))})
             ORDER BY si.created_at ASC
           `);
 
