@@ -1074,7 +1074,7 @@ export default function Services() {
             }}>
               {/* Botão de Pesquisa Flutuante */}
               <Button
-                className="fixed bottom-6 right-24 h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110"
+                className="fixed bottom-6 right-24 h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110"
                 size="sm"
                 onClick={() => {
                   // Foca no campo de pesquisa existente
@@ -1084,7 +1084,7 @@ export default function Services() {
                   }
                 }}
               >
-                <Search className="h-5 w-5" />
+                <Search className="h-7 w-7" />
               </Button>
 
               <DialogTrigger asChild>
