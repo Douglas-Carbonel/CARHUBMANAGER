@@ -1031,12 +1031,7 @@ export default function Services() {
 
         <main className="flex-1 overflow-auto p-8">
           <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-700 via-emerald-600 to-cyan-600 bg-clip-text text-transparent tracking-tight">
-                Gestão de Serviços
-              </h1>
-              <p className="text-teal-700 mt-2 font-medium">Controle completo de ordens de serviço</p>
-            </div>
+            <div></div>
 
             <Dialog open={isDialogOpen} onOpenChange={(open) => {
               if (!open && (hasUnsavedChanges || temporaryPhotos.length > 0 || serviceExtras.length > 0)) {
