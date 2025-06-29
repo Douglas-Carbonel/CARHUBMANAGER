@@ -797,6 +797,7 @@ export default function Services() {
 
     // Prepare service data in the format expected by generateServicePDF
     const serviceData = {
+      id: editingService?.id,
       customer: { name: selectedCustomer.name },
       vehicle: {
         brand: selectedVehicle.brand,

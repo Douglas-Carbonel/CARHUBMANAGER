@@ -673,7 +673,7 @@ export default function SchedulePage() {
       const selectedCustomerId = form.watch("customerId");
       const selectedVehicleId = form.watch("vehicleId");
       const selectedTechnicianId = form.watch("technicianId");
-      
+
       const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
       const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);
       const selectedTechnician = users.find(u => u.id === selectedTechnicianId);
@@ -715,7 +715,7 @@ export default function SchedulePage() {
       };
 
       await generateServicePDF(serviceData, true); // true indica que é um agendamento
-      
+
       toast({
         title: "PDF Gerado",
         description: "O PDF do agendamento foi gerado e baixado com sucesso!",
@@ -1492,7 +1492,7 @@ export default function SchedulePage() {
                           <div className="py-8">
                             <LoadingSpinner size="md" text="Carregando técnicos..." />
                           </div>
-                        ) : (
+                          ) : (
                           <Select 
                             onValueChange={(value) => field.onChange(Number(value))} 
                             value={field.value > 0 ? field.value.toString() : ""}
@@ -2248,9 +2248,10 @@ export default function SchedulePage() {
                               </div>
                             );
                           })}
-                        </div>
-                      </div>
-                    )}
+                        ```tool_code
+
+                    </div>
+                  )}
 
                     <div className="border-t border-emerald-300 pt-2">
                       <div className="flex justify-between items-center">
@@ -2286,7 +2287,7 @@ export default function SchedulePage() {
                   </div>
                 )}
               </div>
-              
+
               <div className="flex justify-center gap-3 pt-6 border-t border-gray-200">
                 <Button
                   type="button"
@@ -2450,7 +2451,7 @@ export default function SchedulePage() {
                   <span>Pesquisar Agendamentos</span>
                 </DialogTitle>
               </DialogHeader>
-              
+
               <div className="p-6 pt-0">
                 {/* Campo de pesquisa */}
                 <div className="relative mb-4">
@@ -2490,7 +2491,7 @@ export default function SchedulePage() {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            
+
                             // Navegar para o agendamento específico
                             handleEdit(service);
                             setIsSearchModalOpen(false);
@@ -2523,7 +2524,7 @@ export default function SchedulePage() {
                                 {service.status === 'cancelled' && 'Cancelado'}
                               </Badge>
                             </div>
-                            
+
                             <div className="flex items-center justify-between text-xs text-gray-500">
                               <div className="flex items-center space-x-4">
                                 <div className="flex items-center space-x-1">

@@ -3,6 +3,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
 interface ServiceData {
+  id?: number;
   customer: { name: string };
   vehicle: { brand: string; model: string; licensePlate: string };
   scheduledDate?: string;
@@ -74,7 +75,7 @@ export const generateServicePDF = async (serviceData: ServiceData, isSchedule: b
   pdf.text('Nº da Ordem', 25, yPosition + 2);
 
   pdf.setFont('helvetica', 'normal');
-  const orderNumber = `OS${Date.now().toString().slice(-6)}`;
+  const orderNumber = serviceData.id ? `OS${String(serviceData.id).padStart(6, '0')}` : `OS${Date.now().toString().slice(-6)}`;
   pdf.text(orderNumber, 25, yPosition + 8);
 
   yPosition += 30;
