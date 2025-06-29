@@ -260,6 +260,8 @@ export default function VehiclesPage() {
     description: "",
     onConfirm: () => {},
   });
+  
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleFormSchema),
@@ -581,57 +583,8 @@ export default function VehiclesPage() {
           <div className={cn(isMobile ? "p-2" : "p-8")}>
             <div className={cn(
               "flex justify-between items-center gap-2 mb-4",
-              isMobile ? "flex-col space-y-3" : "flex-col sm:flex-row gap-6 mb-8"
+              isMobile ? "flex-col space-y-3" : "flex-row gap-6 mb-8"
             )}>
-              <div className={cn(isMobile ? "w-full space-y-2" : "flex-1 max-w-md space-y-3")}>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Buscar veículos..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className={cn(
-                      "pl-10 bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-xl shadow-sm focus:shadow-md transition-all duration-200",
-                      isMobile ? "h-10 text-sm" : "pl-12 h-12"
-                    )}
-                  />
-                </div>
-
-                {/* Customer Filter */}
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-gray-500" />
-                  <Select 
-                    value={customerFilter?.toString() || "all"} 
-                    onValueChange={(value) => setCustomerFilter(value === "all" ? null : parseInt(value))}
-                  >
-                    <SelectTrigger className={cn(
-                      "bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-lg",
-                      isMobile ? "h-8 text-sm" : "h-10"
-                    )}>
-                      <SelectValue placeholder={isMobile ? "Cliente" : "Filtrar por cliente"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os clientes</SelectItem>
-                      {customers.map((customer: Customer) => (
-                        <SelectItem key={customer.id} value={customer.id.toString()}>
-                          {customer.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {customerFilter && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCustomerFilter(null)}
-                      className={cn("px-2", isMobile ? "h-8 text-xs" : "h-10")}
-                    >
-                      ×
-                    </Button>
-                  )}
-                </div>
-              </div>
-
               <div className={cn("flex items-center", isMobile ? "gap-2 w-full justify-between" : "gap-3")}>
                 {!isMobile && (
                   <Button
@@ -669,34 +622,31 @@ export default function VehiclesPage() {
                     }
                   }}>
                     <DialogTrigger asChild>
-                      <Button 
-                        className={cn(
-                          "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl",
-                          isMobile ? "w-full h-10 text-sm px-4" : "px-6"
-                        )}
-                        onClick={() => {
-                          setEditingVehicle(null);
-                          const defaultValues = {
-                            customerId: customerFilter || 0,
-                            licensePlate: "",
-                            brand: "",
-                            model: "",
-                            year: new Date().getFullYear(),
-                            color: "",
-                            chassis: "",
-                            engine: "",
-                            fuelType: "gasoline",
-                            notes: "",
-                          };
-                          form.reset(defaultValues);
-                          setFormInitialValues(defaultValues);
-                          setTemporaryPhotos([]);
-                          setCurrentVehiclePhotos([]);
-                        }}
-                      >
-                        <Plus className={cn(isMobile ? "h-4 w-4 mr-1" : "h-5 w-5 mr-2")} />
-                        {isMobile ? "Novo" : "Novo Veículo"}
-                      </Button>
+                      <div style={{ display: 'none' }}>
+                        <Button 
+                          onClick={() => {
+                            setEditingVehicle(null);
+                            const defaultValues = {
+                              customerId: customerFilter || 0,
+                              licensePlate: "",
+                              brand: "",
+                              model: "",
+                              year: new Date().getFullYear(),
+                              color: "",
+                              chassis: "",
+                              engine: "",
+                              fuelType: "gasoline",
+                              notes: "",
+                            };
+                            form.reset(defaultValues);
+                            setFormInitialValues(defaultValues);
+                            setTemporaryPhotos([]);
+                            setCurrentVehiclePhotos([]);
+                          }}
+                        >
+                          Novo Veículo
+                        </Button>
+                      </div>
                     </DialogTrigger>
                   <DialogContent className={cn(
                     "bg-gradient-to-br from-slate-50 to-blue-50/30",
@@ -1744,16 +1694,140 @@ export default function VehiclesPage() {
           </DialogContent>
         </Dialog>
 
+        {/* Modal de Pesquisa */}
+        <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
+          <DialogContent className={cn(
+            "bg-gradient-to-br from-slate-50 to-blue-50/30",
+            isMobile ? "max-w-[95vw] max-h-[90vh] overflow-y-auto" : "max-w-2xl"
+          )}>
+            <DialogHeader className="pb-6">
+              <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent flex items-center">
+                <Search className="h-6 w-6 mr-3 text-teal-600" />
+                Pesquisar Veículos
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Buscar por placa, marca, modelo ou cor..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-xl shadow-sm focus:shadow-md transition-all duration-200 h-12"
+                    autoFocus
+                  />
+                </div>
+
+                {/* Customer Filter */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 flex items-center">
+                    <User className="h-4 w-4 mr-2 text-teal-600" />
+                    Filtrar por Cliente
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Select 
+                      value={customerFilter?.toString() || "all"} 
+                      onValueChange={(value) => setCustomerFilter(value === "all" ? null : parseInt(value))}
+                    >
+                      <SelectTrigger className="bg-white/90 backdrop-blur-sm border-gray-200/50 rounded-lg h-11">
+                        <SelectValue placeholder="Todos os clientes" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos os clientes</SelectItem>
+                        {customers.map((customer: Customer) => (
+                          <SelectItem key={customer.id} value={customer.id.toString()}>
+                            {customer.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {customerFilter && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCustomerFilter(null)}
+                        className="px-2 h-11"
+                      >
+                        <span className="sr-only">Limpar filtro</span>
+                        ×
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Resultados da pesquisa */}
+                {(searchTerm || customerFilter) && (
+                  <div className="bg-white/50 rounded-lg p-4 border border-gray-200">
+                    <p className="text-sm text-gray-600 mb-2">
+                      {filteredVehicles.length === 0 
+                        ? "Nenhum veículo encontrado com os critérios de busca."
+                        : `${filteredVehicles.length} veículo(s) encontrado(s).`
+                      }
+                    </p>
+                    {filteredVehicles.length > 0 && (
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {filteredVehicles.slice(0, 5).map((vehicle: Vehicle) => {
+                          const customer = customers.find((c: Customer) => c.id === vehicle.customerId);
+                          return (
+                            <div key={vehicle.id} className="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-100">
+                              <div>
+                                <p className="font-medium text-sm">{vehicle.brand} {vehicle.model}</p>
+                                <p className="text-xs text-gray-500">{vehicle.licensePlate} • {customer?.name}</p>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  handleEdit(vehicle);
+                                  setIsSearchModalOpen(false);
+                                }}
+                                className="text-xs"
+                              >
+                                Editar
+                              </Button>
+                            </div>
+                          );
+                        })}
+                        {filteredVehicles.length > 5 && (
+                          <p className="text-xs text-gray-500 text-center">
+                            E mais {filteredVehicles.length - 5} veículo(s)...
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex justify-end gap-3 pt-4">
+                <Button 
+                  variant="outline"
+                  onClick={() => setIsSearchModalOpen(false)}
+                >
+                  Fechar
+                </Button>
+                <Button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setCustomerFilter(null);
+                  }}
+                  variant="outline"
+                  className="text-gray-600"
+                >
+                  Limpar Filtros
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Floating Action Buttons */}
         <Button
           className="fixed bottom-24 right-6 h-16 w-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 z-50 transform hover:scale-110"
           size="sm"
-          onClick={() => {
-            const searchInput = document.querySelector('input[placeholder="Buscar veículos..."]') as HTMLInputElement;
-            if (searchInput) {
-              searchInput.focus();
-            }
-          }}
+          onClick={() => setIsSearchModalOpen(true)}
           aria-label="Pesquisar veículos"
         >
           <Search className="h-7 w-7" />
