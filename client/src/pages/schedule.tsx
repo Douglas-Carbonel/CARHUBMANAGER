@@ -813,7 +813,7 @@ export default function SchedulePage() {
                           {day}
                         </div>
                       ))}
-                      {calendarDays.map((day, index) => (
+                                            {calendarDays.map((day, index) => (
                         <div
                           key={`day-${index}-${day.date.getTime()}`}
                           onClick={() => handleDayClick(day.date)}
@@ -1631,23 +1631,19 @@ export default function SchedulePage() {
                             <div className="text-sm font-bold text-slate-800 mb-3">Serviços:</div>
                             <div className="space-y-2">
                               {/* Serviços selecionados */}
-                              {serviceExtras.length > 0 ? serviceExtras.map((extra, index) => {
+                              {serviceExtras.length > 0 && serviceExtras.map((extra, index) => {
                                 // Buscar o nome do tipo de serviço no array serviceTypes
                                 const serviceType = serviceTypes.find(st => st.id === extra.serviceTypeId);
                                 const serviceName = serviceType?.name || `Serviço ${index + 1}`;
                                 const servicePrice = extra.totalPrice || extra.unitPrice || "0.00";
 
                                 return (
-                                  <div key={extra.tempId || index} className="flex justify-between items-center text-sm">
-                                    <span className="text-slate-700">{serviceName}</span>
-                                    <span className="font-medium text-slate-800">R$ {Number(servicePrice).toFixed(2)}</span>
+                                  <div key={extra.tempId || index} className="flex justify-between items-center text-xs">
+                                    <span className="text-emerald-700">{serviceName}:</span>
+                                    <span className="font-medium text-emerald-800">R$ {Number(servicePrice).toFixed(2)}</span>
                                   </div>
                                 );
-                              }) : (
-                                <div className="text-sm text-slate-500 italic">
-                                  Nenhum serviço selecionado
-                                </div>
-                              )}
+                              })}
                             </div>
                           </div>
 
@@ -2248,10 +2244,9 @@ export default function SchedulePage() {
                               </div>
                             );
                           })}
-                        ```tool_code
-
-                    </div>
-                  )}
+                        </div>
+                      </div>
+                    )}
 
                     <div className="border-t border-emerald-300 pt-2">
                       <div className="flex justify-between items-center">
