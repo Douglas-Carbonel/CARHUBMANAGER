@@ -1029,8 +1029,8 @@ export default function Services() {
           subtitle="Gerencie os serviços da sua oficina"
         />
 
-        <main className="flex-1 overflow-auto px-8 py-4">
-          <div className="flex justify-between items-center mb-4">
+        <main className="flex-1 overflow-auto px-8 py-2">
+          <div className="flex justify-between items-center mb-2">
             <div></div>
 
             <Dialog open={isDialogOpen} onOpenChange={(open) => {
@@ -2121,7 +2121,7 @@ export default function Services() {
           </div>
 
           {/* Filters */}
-          <div className="space-y-4 mb-6">
+          <div className="space-y-4 mb-4">
             {/* Filters Container */}
             <div className={cn(
               isMobile 
