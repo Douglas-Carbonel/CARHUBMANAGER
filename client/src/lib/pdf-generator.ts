@@ -30,42 +30,30 @@ export const generateServicePDF = async (serviceData: ServiceData, isSchedule: b
   const lightGray = [245, 245, 245]; // #F5F5F5
   const mediumGray = [224, 224, 224]; // #E0E0E0
 
-  // ===== CABEÇALHO COM ÍCONES E TÍTULO =====
+  // ===== CABEÇALHO COM LOGO E TÍTULO =====
   
   // Fundo cinza escuro no topo
   pdf.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
   pdf.rect(0, 0, pageWidth, 50, 'F');
 
-  // Ícones de ferramentas (usando formas geométricas simples)
+  // Logo CARHUB (texto estilizado)
   pdf.setFillColor(255, 255, 255);
-  
-  // Chave inglesa (forma simplificada)
-  pdf.rect(20, 20, 3, 15, 'F');
-  pdf.rect(15, 25, 13, 3, 'F');
-  
-  // Chave de fenda
-  pdf.rect(40, 20, 2, 15, 'F');
-  pdf.rect(38, 32, 6, 2, 'F');
-  
-  // Carro (forma simplificada)
-  pdf.rect(60, 25, 20, 8, 'F');
-  pdf.circle(65, 35, 3, 'F');
-  pdf.circle(75, 35, 3, 'F');
+  pdf.setFontSize(24);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(255, 255, 255);
+  pdf.text('CARHUB', 20, 32);
 
-  // Título principal
+  // Título principal simplificado
   pdf.setFontSize(18);
   pdf.setFont('helvetica', 'bold');
   pdf.setTextColor(255, 255, 255);
-  const mainTitle = 'Ordem de Serviço para\nOficina Mecânica';
-  const titleLines = mainTitle.split('\n');
-  pdf.text(titleLines[0], pageWidth - 20, 20, { align: 'right' });
-  pdf.text(titleLines[1], pageWidth - 20, 32, { align: 'right' });
+  pdf.text('Ordem de Serviço', pageWidth - 20, 25, { align: 'right' });
 
   // Data da ordem
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'normal');
   const currentDate = new Date().toLocaleDateString('pt-BR');
-  pdf.text(`Data da Ordem: ${currentDate}`, pageWidth - 20, 42, { align: 'right' });
+  pdf.text(`Data da Ordem: ${currentDate}`, pageWidth - 20, 38, { align: 'right' });
 
   // ===== FAIXA VERDE =====
   pdf.setFillColor(primaryGreen[0], primaryGreen[1], primaryGreen[2]);
@@ -176,11 +164,14 @@ export const generateServicePDF = async (serviceData: ServiceData, isSchedule: b
   pdf.text(currentYear.toString(), 25, yPosition + 10);
   pdf.text(`${serviceData.vehicle.brand} ${serviceData.vehicle.model}`, 80, yPosition + 10);
 
-  // Tipos de conserto (baseado nos serviços) - usando símbolos normais
+  // Tipos de conserto (baseado nos serviços) - usando símbolos normais com controle de largura
   let serviceTypeY = yPosition + 10;
   serviceData.serviceExtras.forEach((service, index) => {
-    if (index < 4) { // Máximo 4 serviços para não ultrapassar o espaço
-      pdf.text(`& ${service.serviceName}`, 130, serviceTypeY);
+    if (index < 3) { // Máximo 3 serviços para não ultrapassar o espaço
+      const serviceName = service.serviceName.length > 15 ? 
+        service.serviceName.substring(0, 15) + '...' : 
+        service.serviceName;
+      pdf.text(`& ${serviceName}`, 130, serviceTypeY);
       serviceTypeY += 8;
     }
   });
@@ -301,10 +292,10 @@ export const generateServicePDF = async (serviceData: ServiceData, isSchedule: b
     pdf.text(`Horário: ${serviceData.scheduledTime}`, 20, yPosition + 16);
   }
 
-  // Rodapé
+  // Rodapé com mais espaçamento
   pdf.setFontSize(8);
   pdf.setTextColor(128, 128, 128);
-  pdf.text(`Documento gerado automaticamente em ${new Date().toLocaleString('pt-BR')}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+  pdf.text(`Documento gerado automaticamente em ${new Date().toLocaleString('pt-BR')}`, pageWidth / 2, pageHeight - 25, { align: 'center' });
 
   // Salvar o PDF
   const filename = isSchedule 
