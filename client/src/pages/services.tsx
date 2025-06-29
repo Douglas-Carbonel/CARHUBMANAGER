@@ -2127,10 +2127,11 @@ export default function Services() {
 
           {/* Filters */}
           <div className="space-y-4 mb-6">
-            {/* Mobile: Stack filters vertically, Desktop: Side by side */}
+            {/* Filters Container */}
             <div className={cn(
-              "gap-3",
-              isMobile ? "space-y-3" : "flex flex-row gap-4"
+              isMobile 
+                ? "bg-white/90 backdrop-blur-sm rounded-xl border border-teal-100 p-4 space-y-4 shadow-sm" 
+                : "flex flex-row gap-4"
             )}>
               {/* Status Filter */}
               <div className="relative">
@@ -2180,39 +2181,49 @@ export default function Services() {
                   </div>
                 )}
               </div>
+
+              {/* Mobile: Actions row inside container */}
+              {isMobile && (
+                <div className="flex items-center justify-between pt-2 border-t border-teal-100">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsAnalyticsModalOpen(true)}
+                    className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 transition-all px-4 py-2.5 h-11 flex-1 mr-3"
+                  >
+                    <BarChart3 className="h-4 w-4" />
+                    <span className="text-sm font-medium">Ver Relatórios</span>
+                  </Button>
+                  
+                  <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg shadow-md flex items-center justify-center px-4 py-2.5 h-11 min-w-fit">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-lg">{filteredServices.length}</span>
+                      <span className="font-medium text-sm">OS</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Reports and Counter Row - Better mobile organization */}
-            <div className={cn(
-              "flex items-center gap-3",
-              isMobile ? "justify-between px-1" : "justify-end gap-4"
-            )}>
-              <Button
-                variant="outline"
-                onClick={() => setIsAnalyticsModalOpen(true)}
-                className={cn(
-                  "border-emerald-200 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 transition-all",
-                  isMobile ? "px-3 py-2 text-sm h-10" : "px-4 py-2"
-                )}
-              >
-                <BarChart3 className={cn("h-4 w-4", isMobile && "h-3 w-3")} />
-                <span className={isMobile ? "text-xs font-medium" : "text-sm"}>
-                  {isMobile ? "Relatórios" : "Ver Relatórios"}
-                </span>
-              </Button>
-              
-              <div className={cn(
-                "bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg shadow-md flex items-center justify-center min-w-0",
-                isMobile ? "px-3 py-2 h-10" : "px-4 py-2"
-              )}>
-                <div className="flex items-center space-x-1">
-                  <span className="font-bold text-lg">{filteredServices.length}</span>
-                  <span className={cn("font-medium", isMobile ? "text-xs" : "text-sm")}>
-                    {isMobile ? "OS" : "serviços"}
-                  </span>
+            {/* Desktop: Reports and Counter Row */}
+            {!isMobile && (
+              <div className="flex items-center justify-end gap-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsAnalyticsModalOpen(true)}
+                  className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 transition-all px-4 py-2"
+                >
+                  <BarChart3 className="h-4 w-4" />
+                  <span className="text-sm">Ver Relatórios</span>
+                </Button>
+                
+                <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg shadow-md flex items-center justify-center px-4 py-2">
+                  <div className="flex items-center space-x-1">
+                    <span className="font-bold text-lg">{filteredServices.length}</span>
+                    <span className="font-medium text-sm">serviços</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Services Grid */}
