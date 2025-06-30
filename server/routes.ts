@@ -556,7 +556,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const serviceData = insertServiceSchema.partial().parse(req.body);
       const service = await storage.updateService(serviceId, serviceData);
 
-
+      // Create reminder if enabled
+      if (serviceData.reminderEnabled && serviceId) {
+        const reminderMinutes = serviceData.reminderMinutes || 30;
+        await notificationService.createServiceReminder(serviceId, reminderMinutes);
+        console.log(`Service reminder created for service ${serviceId} - ${reminderMinutes} minutes before`);
+      }
 
       res.json(service);
     } catch (error: any) {

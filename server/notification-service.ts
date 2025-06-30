@@ -76,9 +76,31 @@ export class NotificationService {
     }
   }
 
+  // Create service_reminders table if it doesn't exist
+  async ensureServiceRemindersTable() {
+    try {
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS service_reminders (
+          id SERIAL PRIMARY KEY,
+          service_id INTEGER NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+          reminder_minutes INTEGER NOT NULL,
+          scheduled_for TIMESTAMP NOT NULL,
+          notification_sent BOOLEAN DEFAULT FALSE,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      console.log('service_reminders table ensured');
+    } catch (error) {
+      console.error('Error ensuring service_reminders table:', error);
+    }
+  }
+
   // Create a service reminder
   async createServiceReminder(serviceId: number, reminderMinutes: number) {
     try {
+      // Ensure table exists
+      await this.ensureServiceRemindersTable();
+
       // Get service details
       const service = await db.query.services.findFirst({
         where: eq(services.id, serviceId),
@@ -99,6 +121,12 @@ export class NotificationService {
 
       // Only create reminder if it's in the future
       if (reminderTime > new Date()) {
+        // First delete any existing reminders for this service
+        await db.execute(sql`
+          DELETE FROM service_reminders WHERE service_id = ${serviceId}
+        `);
+
+        // Create new reminder
         await db.execute(sql`
           INSERT INTO service_reminders (service_id, reminder_minutes, scheduled_for, notification_sent)
           VALUES (${serviceId}, ${reminderMinutes}, ${reminderTime}, false)
