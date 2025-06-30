@@ -618,8 +618,27 @@ export default function Services() {
     }
   };
 
-  const handleEdit = (service: Service) => {
+  const handleEdit = async (service: Service) => {
     setEditingService(service);
+    
+    // First, check for existing reminders
+    let reminderEnabled = false;
+    let reminderMinutes = 30;
+    
+    try {
+      const reminderResponse = await fetch(`/api/services/${service.id}/reminders`, {
+        credentials: "include",
+      });
+      if (reminderResponse.ok) {
+        const reminderData = await reminderResponse.json();
+        reminderEnabled = reminderData.hasReminder;
+        reminderMinutes = reminderData.reminderMinutes || 30;
+        console.log('Loaded reminder data:', reminderData);
+      }
+    } catch (error) {
+      console.error('Error loading service reminders:', error);
+    }
+    
     const editValues = {
       customerId: service.customerId,
       vehicleId: service.vehicleId,
@@ -634,6 +653,8 @@ export default function Services() {
       dinheiroPago: service.dinheiroPago || "0.00",
       chequePago: service.chequePago || "0.00",
       cartaoPago: service.cartaoPago || "0.00",
+      reminderEnabled: reminderEnabled,
+      reminderMinutes: reminderMinutes,
     };
 
     setFormInitialValues(editValues);
@@ -644,7 +665,9 @@ export default function Services() {
       pixPago: service.pixPago,
       dinheiroPago: service.dinheiroPago, 
       chequePago: service.chequePago,
-      cartaoPago: service.cartaoPago
+      cartaoPago: service.cartaoPago,
+      reminderEnabled: reminderEnabled,
+      reminderMinutes: reminderMinutes
     });
 
     setPaymentMethods({

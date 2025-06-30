@@ -598,6 +598,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get service reminders
+  app.get("/api/services/:id/reminders", requireAuth, async (req, res) => {
+    try {
+      const serviceId = parseInt(req.params.id);
+      const reminder = await db.execute(sql`
+        SELECT * FROM service_reminders 
+        WHERE service_id = ${serviceId} 
+        AND notification_sent = false
+        ORDER BY created_at DESC 
+        LIMIT 1
+      `);
+      
+      if (reminder.rows.length > 0) {
+        res.json({
+          hasReminder: true,
+          reminderMinutes: reminder.rows[0].reminder_minutes,
+          scheduledFor: reminder.rows[0].scheduled_for
+        });
+      } else {
+        res.json({
+          hasReminder: false,
+          reminderMinutes: 30
+        });
+      }
+    } catch (error: any) {
+      console.error('Error fetching service reminders:', error);
+      res.status(500).json({ message: "Failed to fetch reminders" });
+    }
+  });
+
   app.delete("/api/services/:id", requireAuth, async (req, res) => {
     try {
       const serviceId = parseInt(req.params.id);
