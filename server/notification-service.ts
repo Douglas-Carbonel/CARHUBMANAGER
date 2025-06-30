@@ -118,25 +118,35 @@ export class NotificationService {
       // Calculate when to send the reminder
       const scheduledDateTime = new Date(`${service.scheduledDate}T${service.scheduledTime}`);
       const reminderTime = new Date(scheduledDateTime.getTime() - (reminderMinutes * 60 * 1000));
+      const now = new Date();
 
-      // Only create reminder if it's in the future
-      if (reminderTime > new Date()) {
-        // First delete any existing reminders for this service
-        await db.execute(sql`
-          DELETE FROM service_reminders WHERE service_id = ${serviceId}
-        `);
+      console.log(`Service ${serviceId} details:`);
+      console.log(`  Scheduled: ${service.scheduledDate}T${service.scheduledTime}`);
+      console.log(`  Scheduled DateTime: ${scheduledDateTime}`);
+      console.log(`  Reminder Time: ${reminderTime}`);
+      console.log(`  Current Time: ${now}`);
+      console.log(`  Reminder is in future: ${reminderTime > now}`);
 
-        // Create new reminder
-        await db.execute(sql`
-          INSERT INTO service_reminders (service_id, reminder_minutes, scheduled_for, notification_sent)
-          VALUES (${serviceId}, ${reminderMinutes}, ${reminderTime}, false)
-        `);
+      // First delete any existing reminders for this service
+      await db.execute(sql`
+        DELETE FROM service_reminders WHERE service_id = ${serviceId}
+      `);
 
-        console.log(`Service reminder created for service ${serviceId} at ${reminderTime}`);
-        return true;
-      }
+      // Create new reminder (allowing past dates for testing)
+      await db.execute(sql`
+        INSERT INTO service_reminders (service_id, reminder_minutes, scheduled_for, notification_sent)
+        VALUES (${serviceId}, ${reminderMinutes}, ${reminderTime}, false)
+      `);
 
-      return false;
+      console.log(`Service reminder created for service ${serviceId} at ${reminderTime}`);
+      
+      // Verify insertion
+      const insertedReminder = await db.execute(sql`
+        SELECT * FROM service_reminders WHERE service_id = ${serviceId}
+      `);
+      console.log('Inserted reminder verification:', insertedReminder.rows);
+      
+      return true;
     } catch (error) {
       console.error('Error creating service reminder:', error);
       return false;
