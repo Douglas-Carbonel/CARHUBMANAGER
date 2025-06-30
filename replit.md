@@ -128,6 +128,9 @@ This is a comprehensive automotive service management system built as a full-sta
 
 ```
 Changelog:
+- June 30, 2025. Fixed notification timezone handling for Brazil/São Paulo timezone - reminders now properly calculate timing and show accurate "em X minutos" messages
+- June 30, 2025. Added immediate notification sending for past reminder times - when creating a service with a reminder time that has already passed, notification is sent immediately with correct time remaining
+- June 30, 2025. Migrated project from Replit Agent to standard Replit environment with proper security and client/server separation
 - June 29, 2025. Fixed PDF service order layout - replaced icons with CARHUB logo, simplified header to "Ordem de Serviço", changed "Tipo de Conserto" to "Serviços", improved vehicle description text wrapping with dynamic box height, added footer spacing
 - June 29, 2025. Added floating search buttons on schedule and services pages - equal size, same teal/emerald color scheme as main action buttons
 - June 29, 2025. Added floating action buttons (search and create) to customers and vehicles pages for UI consistency across all main pages

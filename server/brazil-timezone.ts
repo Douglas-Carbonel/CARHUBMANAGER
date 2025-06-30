@@ -34,8 +34,27 @@ export class BrazilTimezone {
   
   // Parse a date string as if it's in Brazil timezone
   static parseDateTime(dateStr: string, timeStr: string): Date {
-    // Add Brazil timezone offset to force correct interpretation
-    return new Date(`${dateStr}T${timeStr}-03:00`);
+    // For a date/time that represents a Brazil local time, we need to interpret it correctly
+    // The input is a local Brazil time, we need to convert it to UTC for storage
+    
+    // First create the date as if it were UTC
+    const dateTimeStr = `${dateStr}T${timeStr}`;
+    const tempDate = new Date(dateTimeStr + 'Z'); // Z indicates UTC
+    
+    // Now get Brazil's current offset from UTC
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: this.TIMEZONE,
+      timeZoneName: 'short'
+    });
+    
+    const parts = formatter.formatToParts(tempDate);
+    const timeZoneName = parts.find(part => part.type === 'timeZoneName')?.value || '';
+    
+    // Brazil is UTC-3 (BRT) or UTC-2 (BRST during daylight saving)
+    const offset = timeZoneName.includes('GMT-2') ? 2 : 3;
+    
+    // Adjust the date by the offset to get the correct UTC time
+    return new Date(tempDate.getTime() + (offset * 60 * 60 * 1000));
   }
   
   // Format a date to Brazil timezone string

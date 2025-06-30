@@ -120,12 +120,14 @@ export class NotificationService {
       const scheduledDateTime = BrazilTimezone.parseDateTime(service.scheduledDate, service.scheduledTime);
       const reminderTime = new Date(scheduledDateTime.getTime() - (reminderMinutes * 60 * 1000));
       const now = new Date();
+      const nowBrazil = BrazilTimezone.getCurrentDateTime();
 
       console.log(`Service ${serviceId} details:`);
-      console.log(`  Scheduled: ${service.scheduledDate}T${service.scheduledTime}`);
-      console.log(`  Scheduled DateTime: ${scheduledDateTime}`);
-      console.log(`  Reminder Time: ${reminderTime}`);
-      console.log(`  Current Time: ${now}`);
+      console.log(`  Scheduled: ${service.scheduledDate}T${service.scheduledTime} (Brazil local time)`);
+      console.log(`  Scheduled DateTime UTC: ${scheduledDateTime.toISOString()}`);
+      console.log(`  Reminder Time UTC: ${reminderTime.toISOString()}`);
+      console.log(`  Current Time UTC: ${now.toISOString()}`);
+      console.log(`  Current Time Brazil: ${nowBrazil.toISOString()}`);
       console.log(`  Reminder is in future: ${reminderTime > now}`);
 
       // First delete any existing reminders for this service
@@ -133,11 +135,64 @@ export class NotificationService {
         DELETE FROM service_reminders WHERE service_id = ${serviceId}
       `);
 
-      // Create new reminder (allowing past dates for testing)
-      await db.execute(sql`
-        INSERT INTO service_reminders (service_id, reminder_minutes, scheduled_for, notification_sent)
-        VALUES (${serviceId}, ${reminderMinutes}, ${reminderTime}, false)
-      `);
+      // Check if the reminder time has already passed
+      const shouldSendImmediately = reminderTime <= now;
+      
+      if (shouldSendImmediately) {
+        console.log(`Reminder time has already passed. Sending notification immediately.`);
+        
+        // Calculate actual time until service
+        const minutesUntilService = Math.round((scheduledDateTime.getTime() - now.getTime()) / (1000 * 60));
+        
+        // Only send if service hasn't happened yet
+        if (minutesUntilService > 0) {
+          // Create reminder record as already sent
+          await db.execute(sql`
+            INSERT INTO service_reminders (service_id, reminder_minutes, scheduled_for, notification_sent)
+            VALUES (${serviceId}, ${reminderMinutes}, ${reminderTime}, true)
+          `);
+          
+          // Send notification immediately
+          const customer = service.customer;
+          const vehicle = service.vehicle;
+          
+          let timeMessage = '';
+          if (minutesUntilService < 60) {
+            timeMessage = `em ${minutesUntilService} minuto${minutesUntilService > 1 ? 's' : ''}`;
+          } else {
+            const hours = Math.floor(minutesUntilService / 60);
+            const mins = minutesUntilService % 60;
+            timeMessage = `em ${hours} hora${hours > 1 ? 's' : ''}`;
+            if (mins > 0) {
+              timeMessage += ` e ${mins} minuto${mins > 1 ? 's' : ''}`;
+            }
+          }
+          
+          const payload = {
+            title: 'Lembrete de Serviço - CarHub',
+            body: `${customer?.name || 'Cliente'} - ${vehicle?.brand || ''} ${vehicle?.model || ''} (${vehicle?.licensePlate || ''}) - Serviço ${timeMessage}`,
+            icon: '/icon-192x192.png',
+            badge: '/icon-192x192.png',
+            data: {
+              serviceId: serviceId,
+              type: 'service-reminder'
+            }
+          };
+          
+          // Send to admin users
+          await this.sendNotificationToUser(1, payload);
+          console.log(`Immediate notification sent for service ${serviceId}`);
+        } else {
+          console.log(`Service has already passed, not sending notification.`);
+        }
+      } else {
+        // Create reminder for future sending
+        await db.execute(sql`
+          INSERT INTO service_reminders (service_id, reminder_minutes, scheduled_for, notification_sent)
+          VALUES (${serviceId}, ${reminderMinutes}, ${reminderTime}, false)
+        `);
+        console.log(`Future reminder scheduled for ${reminderTime.toISOString()}`);
+      }
 
       console.log(`Service reminder created for service ${serviceId} at ${reminderTime}`);
       
@@ -229,6 +284,9 @@ export class NotificationService {
     try {
       // Use Brazil timezone for current time comparison
       const now = new Date();
+      const nowBrazil = BrazilTimezone.getCurrentDateTime();
+      
+      console.log(`Checking for reminders at: ${now.toISOString()} (UTC) / ${nowBrazil.toISOString()} (Brazil local)`);
       
       // Check if tables exist before querying
       const tableCheck = await db.execute(sql`
@@ -251,6 +309,8 @@ export class NotificationService {
           s.customer_id,
           s.vehicle_id,
           s.service_type_id,
+          s.scheduled_date,
+          s.scheduled_time,
           c.name as customer_name,
           v.brand as vehicle_brand,
           v.model as vehicle_model,
@@ -267,9 +327,31 @@ export class NotificationService {
       console.log(`Found ${reminders.rows.length} reminders to send`);
 
       for (const reminder of reminders.rows) {
+        // Calculate actual minutes until service
+        const serviceDateTime = BrazilTimezone.parseDateTime(
+          reminder.scheduled_date as string, 
+          reminder.scheduled_time as string
+        );
+        const minutesUntilService = Math.round((serviceDateTime.getTime() - nowBrazil.getTime()) / (1000 * 60));
+        
+        // Format the message based on time remaining
+        let timeMessage = '';
+        if (minutesUntilService <= 0) {
+          timeMessage = 'agora';
+        } else if (minutesUntilService < 60) {
+          timeMessage = `em ${minutesUntilService} minuto${minutesUntilService > 1 ? 's' : ''}`;
+        } else {
+          const hours = Math.floor(minutesUntilService / 60);
+          const mins = minutesUntilService % 60;
+          timeMessage = `em ${hours} hora${hours > 1 ? 's' : ''}`;
+          if (mins > 0) {
+            timeMessage += ` e ${mins} minuto${mins > 1 ? 's' : ''}`;
+          }
+        }
+        
         const payload = {
           title: 'Lembrete de Serviço - CarHub',
-          body: `${reminder.customer_name} - ${reminder.vehicle_brand} ${reminder.vehicle_model} (${reminder.vehicle_plate}) - ${reminder.service_type_name} em ${reminder.reminder_minutes} minutos`,
+          body: `${reminder.customer_name} - ${reminder.vehicle_brand} ${reminder.vehicle_model} (${reminder.vehicle_plate}) - ${reminder.service_type_name || 'Serviço'} ${timeMessage}`,
           icon: '/icon-192x192.png',
           badge: '/icon-192x192.png',
           data: {
@@ -292,7 +374,7 @@ export class NotificationService {
           WHERE id = ${reminder.id}
         `);
 
-        console.log(`Reminder sent for service ${reminder.service_id}`);
+        console.log(`Reminder sent for service ${reminder.service_id} - ${timeMessage}`);
       }
       
       return true;
