@@ -1673,7 +1673,7 @@ export default function VehiclesPage() {
         <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
           <DialogContent className={cn(
             "bg-gradient-to-br from-slate-50 to-blue-50/30",
-            isMobile ? "max-w-[95vw] max-h-[90vh] overflow-y-auto" : "max-w-2xl"
+            isMobile ? "max-w-[95vw] max-h-[90vh] overflow-y-auto" : "max-w-5xl max-h-[90vh] overflow-y-auto"
           )}>
             <DialogHeader className="pb-6">
               <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent flex items-center">
@@ -1735,41 +1735,157 @@ export default function VehiclesPage() {
                 {/* Resultados da pesquisa */}
                 {(searchTerm || customerFilter) && (
                   <div className="bg-white/50 rounded-lg p-4 border border-gray-200">
-                    <p className="text-sm text-gray-600 mb-2">
-                      {filteredVehicles.length === 0 
-                        ? "Nenhum veículo encontrado com os critérios de busca."
-                        : `${filteredVehicles.length} veículo(s) encontrado(s).`
-                      }
-                    </p>
-                    {filteredVehicles.length > 0 && (
-                      <div className="space-y-2 max-h-48 overflow-y-auto">
-                        {filteredVehicles.slice(0, 5).map((vehicle: Vehicle) => {
+                    <div className="text-sm text-gray-600 mb-4 flex items-center justify-between">
+                      <span>
+                        {filteredVehicles.length === 0 
+                          ? "Nenhum veículo encontrado com os critérios de busca."
+                          : `${filteredVehicles.length} veículo(s) encontrado(s).`
+                        }
+                      </span>
+                      {filteredVehicles.length > 0 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSearchTerm("");
+                            setCustomerFilter(null);
+                          }}
+                          className="text-xs"
+                        >
+                          Limpar filtros
+                        </Button>
+                      )}
+                    </div>
+                    
+                    {filteredVehicles.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+                        {filteredVehicles.map((vehicle: Vehicle) => {
                           const customer = customers.find((c: Customer) => c.id === vehicle.customerId);
                           return (
-                            <div key={vehicle.id} className="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-100">
-                              <div>
-                                <p className="font-medium text-sm">{vehicle.brand} {vehicle.model}</p>
-                                <p className="text-xs text-gray-500">{vehicle.licensePlate} • {customer?.name}</p>
-                              </div>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  handleEdit(vehicle);
-                                  setIsSearchModalOpen(false);
-                                }}
-                                className="text-xs"
-                              >
-                                Editar
-                              </Button>
-                            </div>
+                            <Card 
+                              key={vehicle.id}
+                              className="bg-gradient-to-r from-white to-blue-50/30 border-0 shadow-lg hover:shadow-xl transition-all duration-300 group"
+                            >
+                              <CardContent className="p-4">
+                                <div className="flex items-start justify-between mb-3">
+                                  <div className="flex items-center space-x-3">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                      <Car className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                      <h3 className="font-bold text-gray-900 text-sm group-hover:text-teal-700 transition-colors">
+                                        {vehicle.brand} {vehicle.model}
+                                      </h3>
+                                      <p className="text-xs text-gray-500">
+                                        {vehicle.year} • {vehicle.color}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <Badge className="bg-teal-100 text-teal-800 text-xs font-mono">
+                                    {vehicle.licensePlate}
+                                  </Badge>
+                                </div>
+
+                                <div className="space-y-2 mb-4">
+                                  <div className="flex items-center text-xs text-gray-600">
+                                    <User className="h-3 w-3 mr-2 text-emerald-500" />
+                                    <span>{customer?.name}</span>
+                                  </div>
+                                  <div className="flex items-center text-xs text-gray-600">
+                                    <div className="h-3 w-3 mr-2 text-purple-500">⛽</div>
+                                    <span className="capitalize">{fuelTypes.find(f => f.value === vehicle.fuelType)?.label || vehicle.fuelType}</span>
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setIsSearchModalOpen(false);
+                                      setLocation(`/services?vehicleId=${vehicle.id}&vehiclePlate=${encodeURIComponent(vehicle.licensePlate)}`);
+                                    }}
+                                    className="text-xs border-green-200 text-green-700 hover:bg-green-50"
+                                  >
+                                    <Wrench className="h-3 w-3 mr-1" />
+                                    Serviços
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setIsSearchModalOpen(false);
+                                      setLocation(`/vehicle-history?vehicleId=${vehicle.id}&vehiclePlate=${encodeURIComponent(vehicle.licensePlate)}`);
+                                    }}
+                                    className="text-xs border-blue-200 text-blue-700 hover:bg-blue-50"
+                                  >
+                                    <FileText className="h-3 w-3 mr-1" />
+                                    Histórico
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setIsSearchModalOpen(false);
+                                      handleEdit(vehicle);
+                                    }}
+                                    className="text-xs border-orange-200 text-orange-700 hover:bg-orange-50"
+                                  >
+                                    <Edit className="h-3 w-3 mr-1" />
+                                    Editar
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setIsSearchModalOpen(false);
+                                      setLocation(`/vehicle-photos?vehicleId=${vehicle.id}&vehiclePlate=${encodeURIComponent(vehicle.licensePlate)}`);
+                                    }}
+                                    className="text-xs border-purple-200 text-purple-700 hover:bg-purple-50"
+                                  >
+                                    <Camera className="h-3 w-3 mr-1" />
+                                    Fotos
+                                  </Button>
+                                </div>
+                              </CardContent>
+                            </Card>
                           );
                         })}
-                        {filteredVehicles.length > 5 && (
-                          <p className="text-xs text-gray-500 text-center">
-                            E mais {filteredVehicles.length - 5} veículo(s)...
-                          </p>
-                        )}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <div className="bg-gray-100 p-4 rounded-full w-16 h-16 mx-auto mb-3 flex items-center justify-center">
+                          <Car className="h-8 w-8 text-gray-400" />
+                        </div>
+                        <p className="text-sm text-gray-500 mb-4">Nenhum veículo encontrado</p>
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setIsSearchModalOpen(false);
+                            setEditingVehicle(null);
+                            const defaultValues = {
+                              customerId: customerFilter || 0,
+                              licensePlate: searchTerm.toUpperCase(),
+                              brand: "",
+                              model: "",
+                              year: new Date().getFullYear(),
+                              color: "",
+                              chassis: "",
+                              engine: "",
+                              fuelType: "gasoline",
+                              notes: "",
+                            };
+                            form.reset(defaultValues);
+                            setFormInitialValues(defaultValues);
+                            setTemporaryPhotos([]);
+                            setCurrentVehiclePhotos([]);
+                            setIsModalOpen(true);
+                          }}
+                          className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Criar veículo
+                        </Button>
                       </div>
                     )}
                   </div>
@@ -1782,16 +1898,6 @@ export default function VehiclesPage() {
                   onClick={() => setIsSearchModalOpen(false)}
                 >
                   Fechar
-                </Button>
-                <Button
-                  onClick={() => {
-                    setSearchTerm("");
-                    setCustomerFilter(null);
-                  }}
-                  variant="outline"
-                  className="text-gray-600"
-                >
-                  Limpar Filtros
                 </Button>
               </div>
             </div>

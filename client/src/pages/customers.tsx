@@ -1148,7 +1148,7 @@ export default function CustomersPage() {
 
             {/* Search Modal */}
             <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
-              <DialogContent className="max-w-md bg-gradient-to-br from-slate-50 to-blue-50/30 border-0 shadow-2xl">
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-slate-50 to-blue-50/30 border-0 shadow-2xl">
                 <DialogHeader className="pb-4 border-b border-gray-100/50">
                   <DialogTitle className="text-xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent flex items-center">
                     <Search className="h-6 w-6 mr-3 text-teal-600" />
@@ -1169,40 +1169,177 @@ export default function CustomersPage() {
                   
                   {searchTerm && (
                     <div className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm">
-                      <div className="text-sm text-gray-600 mb-2">
-                        {filteredCustomers.length} cliente{filteredCustomers.length !== 1 ? 's' : ''} encontrado{filteredCustomers.length !== 1 ? 's' : ''}
+                      <div className="text-sm text-gray-600 mb-4 flex items-center justify-between">
+                        <span>{filteredCustomers.length} cliente{filteredCustomers.length !== 1 ? 's' : ''} encontrado{filteredCustomers.length !== 1 ? 's' : ''}</span>
+                        {filteredCustomers.length > 0 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSearchTerm("");
+                              setIsSearchModalOpen(false);
+                            }}
+                            className="text-xs"
+                          >
+                            Limpar busca
+                          </Button>
+                        )}
                       </div>
                       
                       {filteredCustomers.length > 0 ? (
-                        <div className="space-y-2 max-h-40 overflow-y-auto">
-                          {filteredCustomers.slice(0, 5).map((customer) => (
-                            <div
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                          {filteredCustomers.map((customer) => (
+                            <Card 
                               key={customer.id}
-                              className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
-                              onClick={() => {
-                                setIsSearchModalOpen(false);
-                                handleEdit(customer);
-                              }}
+                              className="bg-gradient-to-r from-white to-blue-50/30 border-0 shadow-lg hover:shadow-xl transition-all duration-300 group"
                             >
-                              <div className="flex-1">
-                                <div className="font-medium text-gray-900 text-sm">{customer.name}</div>
-                                <div className="text-xs text-gray-500">
-                                  {customer.document && (customer.documentType === 'cpf' ? formatCPF(customer.document) : formatCNPJ(customer.document))}
+                              <CardContent className="p-4">
+                                <div className="flex items-start justify-between mb-3">
+                                  <div className="flex items-center space-x-3">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                      {customer.name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div>
+                                      <h3 className="font-bold text-gray-900 text-sm group-hover:text-teal-700 transition-colors">
+                                        {customer.name}
+                                      </h3>
+                                      <p className="text-xs text-gray-500">
+                                        Código: {customer.code}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <Badge className="bg-emerald-100 text-emerald-800 text-xs">
+                                    {customer.documentType?.toUpperCase()}
+                                  </Badge>
                                 </div>
-                              </div>
-                              <Edit className="h-4 w-4 text-gray-400" />
-                            </div>
+
+                                <div className="space-y-2 mb-4">
+                                  {customer.document && (
+                                    <div className="flex items-center text-xs text-gray-600">
+                                      <User className="h-3 w-3 mr-2 text-teal-500" />
+                                      <span className="font-mono">{customer.documentType === 'cpf' ? formatCPF(customer.document) : formatCNPJ(customer.document)}</span>
+                                    </div>
+                                  )}
+                                  {customer.phone && (
+                                    <div className="flex items-center text-xs text-gray-600">
+                                      <Phone className="h-3 w-3 mr-2 text-teal-500" />
+                                      <span className="font-mono">{customer.phone}</span>
+                                    </div>
+                                  )}
+                                  {customer.email && (
+                                    <div className="flex items-center text-xs text-gray-600">
+                                      <Mail className="h-3 w-3 mr-2 text-teal-500" />
+                                      <span className="truncate">{customer.email}</span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setIsSearchModalOpen(false);
+                                      setLocation(`/vehicles?customerId=${customer.id}`);
+                                    }}
+                                    className="text-xs border-teal-200 text-teal-700 hover:bg-teal-50"
+                                  >
+                                    <Car className="h-3 w-3 mr-1" />
+                                    Veículos
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={async () => {
+                                      try {
+                                        const res = await fetch("/api/customers/" + customer.id + "/vehicles", {
+                                          credentials: 'include',
+                                        });
+                                        if (res.ok) {
+                                          const customerVehicles = await res.json();
+                                          if (customerVehicles && customerVehicles.length > 0) {
+                                            setIsSearchModalOpen(false);
+                                            setLocation("/services?customerId=" + customer.id);
+                                          } else {
+                                            setCustomerForVehicleWarning(customer);
+                                            setIsVehicleWarningOpen(true);
+                                            setIsSearchModalOpen(false);
+                                          }
+                                        }
+                                      } catch (error) {
+                                        toast({
+                                          title: "Erro",
+                                          description: "Erro ao verificar veículos do cliente.",
+                                          variant: "destructive",
+                                        });
+                                      }
+                                    }}
+                                    className="text-xs border-green-200 text-green-700 hover:bg-green-50"
+                                  >
+                                    <Wrench className="h-3 w-3 mr-1" />
+                                    Serviços
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setIsSearchModalOpen(false);
+                                      handleEdit(customer);
+                                    }}
+                                    className="text-xs border-blue-200 text-blue-700 hover:bg-blue-50"
+                                  >
+                                    <Edit className="h-3 w-3 mr-1" />
+                                    Editar
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setIsSearchModalOpen(false);
+                                      handleViewPhotos(customer);
+                                    }}
+                                    className="text-xs border-purple-200 text-purple-700 hover:bg-purple-50"
+                                  >
+                                    <Camera className="h-3 w-3 mr-1" />
+                                    Fotos
+                                  </Button>
+                                </div>
+                              </CardContent>
+                            </Card>
                           ))}
-                          {filteredCustomers.length > 5 && (
-                            <div className="text-xs text-gray-500 text-center py-2">
-                              +{filteredCustomers.length - 5} cliente{filteredCustomers.length - 5 !== 1 ? 's' : ''} a mais...
-                            </div>
-                          )}
                         </div>
                       ) : (
-                        <div className="text-center py-4">
-                          <User className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                          <p className="text-sm text-gray-500">Nenhum cliente encontrado</p>
+                        <div className="text-center py-8">
+                          <div className="bg-gray-100 p-4 rounded-full w-16 h-16 mx-auto mb-3 flex items-center justify-center">
+                            <User className="h-8 w-8 text-gray-400" />
+                          </div>
+                          <p className="text-sm text-gray-500 mb-4">Nenhum cliente encontrado</p>
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setIsSearchModalOpen(false);
+                              setEditingCustomer(null);
+                              const defaultValues = {
+                                code: "",
+                                name: searchTerm, // Pre-fill with search term
+                                email: "",
+                                phone: "",
+                                document: "",
+                                documentType: "cpf" as const,
+                                address: "",
+                                observations: "",
+                              };
+                              setFormInitialValues(defaultValues);
+                              form.reset(defaultValues);
+                              setCurrentCustomerPhotos([]);
+                              setTemporaryPhotos([]);
+                              setIsModalOpen(true);
+                            }}
+                            className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white"
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Criar cliente "{searchTerm}"
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -1216,12 +1353,6 @@ export default function CustomersPage() {
                         setIsSearchModalOpen(false);
                       }}
                       className="flex-1"
-                    >
-                      Limpar
-                    </Button>
-                    <Button
-                      onClick={() => setIsSearchModalOpen(false)}
-                      className="flex-1 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700"
                     >
                       Fechar
                     </Button>

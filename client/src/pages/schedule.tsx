@@ -2436,134 +2436,238 @@ export default function SchedulePage() {
             </DialogContent>
           </Dialog>
 
-          {/* Modal de Pesquisa */}
+          
           <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
-            <DialogContent className="sm:max-w-md mx-4 p-0 bg-white/95 backdrop-blur-sm border-teal-200">
-              <DialogHeader className="p-6 pb-4">
-                <DialogTitle className="flex items-center space-x-3 text-gray-800">
-                  <div className="p-2 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-lg">
-                    <Search className="h-5 w-5 text-white" />
-                  </div>
-                  <span>Pesquisar Agendamentos</span>
+            <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-slate-50 to-blue-50/30 border-0 shadow-2xl">
+              <DialogHeader className="pb-4 border-b border-gray-100/50">
+                <DialogTitle className="text-xl font-bold bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent flex items-center">
+                  <Search className="h-6 w-6 mr-3 text-teal-600" />
+                  Pesquisar Agendamentos
                 </DialogTitle>
               </DialogHeader>
-
-              <div className="p-6 pt-0">
-                {/* Campo de pesquisa */}
-                <div className="relative mb-4">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-500 h-4 w-4" />
+              <div className="space-y-4 pt-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <Input
-                    placeholder="Digite o nome do cliente ou placa do veículo..."
+                    placeholder="Buscar por cliente, veículo ou placa..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 h-12 border-2 border-teal-200 focus:border-emerald-400 rounded-xl shadow-sm"
+                    className="pl-10 h-12 border-2 border-gray-200 focus:border-teal-400 rounded-xl shadow-sm bg-white transition-all duration-200"
                     autoFocus
                   />
                 </div>
 
-                {/* Indicador de pesquisa */}
-                {searchTerm.length > 0 && searchTerm.length < 2 && (
-                  <div className="text-center py-8">
-                    <div className="text-gray-500 text-sm">
-                      Digite pelo menos 2 caracteres para pesquisar
-                    </div>
-                  </div>
-                )}
-
-                {/* Resultados da pesquisa */}
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {searchTerm.length >= 2 ? (
-                    services
-                      .filter(service => {
-                        const customerMatch = service.customer.name.toLowerCase().includes(searchTerm.toLowerCase());
-                        const plateMatch = (service.vehicleLicensePlate || service.vehicle?.licensePlate || "").toLowerCase().includes(searchTerm.toLowerCase());
-                        return customerMatch || plateMatch;
-                      })
-                      .slice(0, 10) // Limitar a 10 resultados
-                      .map(service => (
-                        <Card 
-                          key={service.id}
-                          className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-
-                            // Navegar para o agendamento específico
-                            handleEdit(service);
-                            setIsSearchModalOpen(false);
+                {searchTerm && (
+                  <div className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm">
+                    <div className="text-sm text-gray-600 mb-4 flex items-center justify-between">
+                      <span>
+                        {filteredServices.length === 0 
+                          ? "Nenhum agendamento encontrado."
+                          : `${filteredServices.length} agendamento(s) encontrado(s).`
+                        }
+                      </span>
+                      {filteredServices.length > 0 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
                             setSearchTerm("");
+                            setIsSearchModalOpen(false);
                           }}
+                          className="text-xs"
                         >
-                          <CardContent className="p-4">
-                            <div className="flex items-start justify-between mb-2">
-                              <div className="flex-1">
-                                <h5 className="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
-                                  {service.customer.name}
-                                </h5>
-                                <p className="text-sm text-gray-600 mt-1">
-                                  {service.vehicleBrand} {service.vehicleModel} - {service.vehicleLicensePlate}
-                                </p>
-                              </div>
-                              <Badge 
-                                className={cn(
-                                  "text-xs font-medium ml-2",
+                          Limpar busca
+                        </Button>
+                      )}
+                    </div>
+
+                    {filteredServices.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                        {filteredServices.map((service) => (
+                          <Card 
+                            key={service.id}
+                            className="bg-gradient-to-r from-white to-blue-50/30 border-0 shadow-lg hover:shadow-xl transition-all duration-300 group"
+                          >
+                            <CardContent className="p-4">
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                    <Calendar className="h-5 w-5" />
+                                  </div>
+                                  <div>
+                                    <h3 className="font-bold text-gray-900 text-sm group-hover:text-teal-700 transition-colors">
+                                      {service.customer.name}
+                                    </h3>
+                                    <p className="text-xs text-gray-500">
+                                      {service.vehicle.brand} {service.vehicle.model}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Badge className={cn(
+                                  "text-xs font-semibold",
                                   service.status === 'completed' && "bg-green-100 text-green-700 border-green-200",
                                   service.status === 'in_progress' && "bg-blue-100 text-blue-700 border-blue-200",
                                   service.status === 'scheduled' && "bg-orange-100 text-orange-700 border-orange-200",
                                   service.status === 'cancelled' && "bg-red-100 text-red-700 border-red-200"
-                                )}
-                                variant="outline"
-                              >
-                                {service.status === 'completed' && 'Concluído'}
-                                {service.status === 'in_progress' && 'Em andamento'}
-                                {service.status === 'scheduled' && 'Agendado'}
-                                {service.status === 'cancelled' && 'Cancelado'}
-                              </Badge>
-                            </div>
+                                )} variant="outline">
+                                  {translateStatus(service.status)}
+                                </Badge>
+                              </div>
 
-                            <div className="flex items-center justify-between text-xs text-gray-500">
-                              <div className="flex items-center space-x-4">
-                                <div className="flex items-center space-x-1">
-                                  <Calendar className="h-3 w-3" />
+                              <div className="space-y-2 mb-4">
+                                <div className="flex items-center text-xs text-gray-600">
+                                  <Car className="h-3 w-3 mr-2 text-teal-500" />
+                                  <span className="font-mono">{service.vehicle.licensePlate}</span>
+                                </div>
+                                <div className="flex items-center text-xs text-gray-600">
+                                  <Clock className="h-3 w-3 mr-2 text-teal-500" />
                                   <span>
-                                    {service.scheduledDate ? 
-                                      format(new Date(service.scheduledDate), "dd/MM/yyyy", { locale: ptBR }) 
-                                      : 'Sem data'
-                                    }
+                                    {service.scheduledDate && format(parseISO(service.scheduledDate), "dd/MM/yyyy", { locale: ptBR })} 
+                                    {service.scheduledTime && ` às ${service.scheduledTime.substring(0, 5)}`}
                                   </span>
                                 </div>
-                                {service.scheduledTime && (
-                                  <div className="flex items-center space-x-1">
-                                    <Clock className="h-3 w-3" />
-                                    <span>{service.scheduledTime}</span>
+                                {service.estimatedValue && (
+                                  <div className="flex items-center text-xs text-gray-600">
+                                    <DollarSign className="h-3 w-3 mr-2 text-green-500" />
+                                    <span className="font-semibold text-green-600">
+                                      R$ {Number(service.estimatedValue).toFixed(2)}
+                                    </span>
                                   </div>
                                 )}
                               </div>
-                              <div className="font-medium text-emerald-600">
-                                R$ {Number(service.estimatedValue || 0).toFixed(2)}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))
-                  ) : searchTerm.length >= 2 ? (
-                    <div className="text-center py-8">
-                      <div className="text-gray-500 text-sm">
-                        Nenhum resultado encontrado para "{searchTerm}"
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
 
-                {/* Botão para fechar */}
-                <div className="flex justify-end mt-6 pt-4 border-t border-gray-200">
+                              <div className="grid grid-cols-2 gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setIsSearchModalOpen(false);
+                                    handleEdit(service);
+                                  }}
+                                  className="text-xs border-blue-200 text-blue-700 hover:bg-blue-50"
+                                >
+                                  <Edit className="h-3 w-3 mr-1" />
+                                  Editar
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={async () => {
+                                    setIsSearchModalOpen(false);
+
+                                    try {
+                                      const selectedCustomer = customers.find(c => c.id === service.customerId);
+                                      const selectedVehicle = vehicles.find(v => v.id === service.vehicleId);
+                                      const selectedTechnician = users.find(u => u.id === service.technicianId);
+
+                                      if (!selectedCustomer || !selectedVehicle || !selectedTechnician) {
+                                        toast({
+                                          title: "Erro",
+                                          description: "Dados incompletos para gerar o PDF.",
+                                          variant: "destructive",
+                                        });
+                                        return;
+                                      }
+
+                                      const serviceData = {
+                                        id: service.id,
+                                        customer: { name: selectedCustomer.name },
+                                        vehicle: { 
+                                          brand: selectedVehicle.brand, 
+                                          model: selectedVehicle.model, 
+                                          licensePlate: selectedVehicle.licensePlate 
+                                        },
+                                        scheduledDate: service.scheduledDate,
+                                        scheduledTime: service.scheduledTime,
+                                        status: service.status,
+                                        technician: { 
+                                          firstName: selectedTechnician.firstName, 
+                                          lastName: selectedTechnician.lastName 
+                                        },
+                                        serviceExtras: [],
+                                        totalValue: service.estimatedValue || "0.00",
+                                        valorPago: service.valorPago || "0",
+                                        notes: service.notes,
+                                      };
+
+                                      await generateServicePDF(serviceData, true);
+
+                                      toast({
+                                        title: "PDF Gerado",
+                                        description: "O PDF do agendamento foi gerado com sucesso!",
+                                      });
+                                    } catch (error) {
+                                      console.error('Error generating PDF:', error);
+                                      toast({
+                                        title: "Erro ao gerar PDF",
+                                        description: "Ocorreu um erro ao gerar o PDF.",
+                                        variant: "destructive",
+                                      });
+                                    }
+                                  }}
+                                  className="text-xs border-green-200 text-green-700 hover:bg-green-50"
+                                >
+                                  <FileText className="h-3 w-3 mr-1" />
+                                  Gerar PDF
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <div className="bg-gray-100 p-4 rounded-full w-16 h-16 mx-auto mb-3 flex items-center justify-center">
+                          <Calendar className="h-8 w-8 text-gray-400" />
+                        </div>
+                        <p className="text-sm text-gray-500 mb-4">Nenhum agendamento encontrado</p>
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setIsSearchModalOpen(false);
+                            setEditingService(null);
+                            const defaultValues = {
+                              customerId: 0,
+                              vehicleId: 0,
+                              serviceTypeId: undefined,
+                              technicianId: 0,
+                              scheduledDate: "",
+                              scheduledTime: "",
+                              status: "scheduled" as "scheduled" | "in_progress" | "completed" | "cancelled",
+                              notes: "",
+                              valorPago: "0",
+                              pixPago: "0.00",
+                              dinheiroPago: "0.00",
+                              chequePago: "0.00",
+                              cartaoPago: "0.00",
+                            };
+                            form.reset(defaultValues);
+                            setServiceExtras([]);
+                            setInitialServiceExtras([]);
+                            setFormInitialValues(defaultValues);
+                            setPaymentMethods({
+                              pix: "",
+                              dinheiro: "",
+                              cheque: "",
+                              cartao: ""
+                            });
+                            setIsAddModalOpen(true);
+                          }}
+                          className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Criar agendamento
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex gap-2 pt-4 border-t border-gray-100">
                   <Button
                     variant="outline"
-                    onClick={() => {
-                      setIsSearchModalOpen(false);
-                      setSearchTerm("");
-                    }}
-                    className="border-teal-200 text-teal-700 hover:bg-teal-50"
+                    onClick={() => setIsSearchModalOpen(false)}
+                    className="flex-1"
                   >
                     Fechar
                   </Button>

@@ -1001,7 +1001,7 @@ export default function Services() {
                               >
                                 <FormControl>
                                   <SelectTrigger className="h-11 border-2 border-slate-200 focus:border-teal-400 rounded-lg shadow-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
-                                    <SelectValue placeholder="Selecione um cliente" />
+                                  <SelectValue placeholder="Selecione um cliente" />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
@@ -1654,7 +1654,8 @@ export default function Services() {
                       </div>
                     </div>
 
-                    <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                    <div className="bg-indigo-50 border border-indigo-200```text
+rounded-lg p-4">
                       <div className="flex items-center mb-3">
                         <Car className="h-5 w-5 text-indigo-600 mr-2" />
                         <span className="font-medium text-indigo-800">Veículo</span>
@@ -2023,7 +2024,7 @@ export default function Services() {
                   {isMobile ? "Relatórios" : "Ver Relatórios"}
                 </span>
               </Button>
-              
+
               <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg shadow-md flex items-center justify-center px-4 py-2.5 h-11">
                 <div className="flex items-center space-x-1">
                   <span className="font-bold text-lg">{filteredServices.length}</span>
@@ -2428,7 +2429,7 @@ export default function Services() {
                 <span>Pesquisar Serviços</span>
               </DialogTitle>
             </DialogHeader>
-            
+
             <div className="p-6 pt-0">
               {/* Campo de pesquisa */}
               <div className="relative mb-4">
@@ -2468,7 +2469,7 @@ export default function Services() {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          
+
                           // Navegar para o serviço específico
                           handleEdit(service);
                           setIsSearchModalOpen(false);
@@ -2501,7 +2502,7 @@ export default function Services() {
                               {service.status === 'cancelled' && 'Cancelado'}
                             </Badge>
                           </div>
-                          
+
                           <div className="flex items-center justify-between text-xs text-gray-500">
                             <div className="flex items-center space-x-4">
                               <div className="flex items-center space-x-1">
