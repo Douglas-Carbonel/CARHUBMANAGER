@@ -133,7 +133,7 @@ export default function ServiceItems({ serviceId, onChange, initialItems = [] }:
       quantity: 1,
       notes: "",
     };
-    setItems([...items, newItem]);
+    setItems([newItem, ...items]);
   };
 
   const removeItem = (tempId: string) => {
