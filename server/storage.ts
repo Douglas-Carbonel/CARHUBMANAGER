@@ -792,10 +792,14 @@ export class DatabaseStorage implements IStorage {
   }> {
     console.log("Getting dashboard stats...", technicianId ? `for technician ${technicianId}` : "for admin");
 
-    // Use Brazilian timezone (UTC-3)
+    // Use Brazilian timezone consistently
     const today = new Date();
-    const brazilTime = new Date(today.getTime() - (3 * 60 * 60 * 1000));
-    const todayStr = brazilTime.toISOString().split('T')[0];
+    const todayStr = new Intl.DateTimeFormat('en-CA', { 
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit', 
+      day: '2-digit'
+    }).format(today);
     console.log("Today date (Brazilian timezone):", todayStr);
 
     try {
@@ -833,10 +837,18 @@ export class DatabaseStorage implements IStorage {
       const uniqueCustomers = new Set();
 
       // Calculate actual week start (Monday) in Brazilian timezone
-      const currentDay = brazilTime.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const brazilToday = new Date(today.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+      const currentDay = brazilToday.getDay(); // 0 = Sunday, 1 = Monday, etc.
       const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1; // If Sunday, go back 6 days
-      const weekStart = new Date(brazilTime.getTime() - (daysFromMonday * 24 * 60 * 60 * 1000));
-      const weekStartStr = weekStart.toISOString().split('T')[0];
+      const weekStart = new Date(brazilToday);
+      weekStart.setDate(brazilToday.getDate() - daysFromMonday);
+      
+      const weekStartStr = new Intl.DateTimeFormat('en-CA', { 
+        timeZone: 'America/Sao_Paulo',
+        year: 'numeric',
+        month: '2-digit', 
+        day: '2-digit'
+      }).format(weekStart);
 
       allServicesResult.rows.forEach((service: any) => {
         const estimatedValue = parseValue(service.estimated_value);
@@ -1625,18 +1637,31 @@ export class DatabaseStorage implements IStorage {
   // Schedule-specific analytics
   async getScheduleStats(technicianId?: number | null) {
     try {
-      // Use current date in Brazilian timezone (UTC-3)
+      // Use Brazilian timezone consistently
       const now = new Date();
-      const brazilianTime = new Date(now.getTime() - (3 * 60 * 60 * 1000)); // UTC-3
-      const today = brazilianTime.toISOString().split('T')[0];
+      const today = new Intl.DateTimeFormat('en-CA', { 
+        timeZone: 'America/Sao_Paulo',
+        year: 'numeric',
+        month: '2-digit', 
+        day: '2-digit'
+      }).format(now);
+      
       // Calculate actual week start (Monday) in Brazilian timezone
-      const currentDay = brazilianTime.getDay(); // 0 = Sunday, 1 = Monday, etc.
-      const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1; // If Sunday, go back 6 days
-      const weekStart = new Date(brazilianTime.getTime() - (daysFromMonday * 24 * 60 * 60 * 1000));
-      const weekStartStr = weekStart.toISOString().split('T')[0];
+      const brazilToday = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+      const currentDay = brazilToday.getDay();
+      const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1;
+      const weekStart = new Date(brazilToday);
+      weekStart.setDate(brazilToday.getDate() - daysFromMonday);
+      
+      const weekStartStr = new Intl.DateTimeFormat('en-CA', { 
+        timeZone: 'America/Sao_Paulo',
+        year: 'numeric',
+        month: '2-digit', 
+        day: '2-digit'
+      }).format(weekStart);
 
       console.log('Schedule stats - Today date:', today);
-      console.log('Schedule stats - Week ago date:', weekAgoStr);
+      console.log('Schedule stats - Week start date:', weekStartStr);
 
       const technicianCondition = technicianId ? sql`AND technician_id = ${technicianId}` : sql``;
 

@@ -50,7 +50,7 @@ import { sql } from "drizzle-orm";
 async function ensureServiceItemsTable() {
   try {
     console.log('Checking if service_items table exists...');
-    
+
     // Check if table exists first
     const tableExists = await db.execute(sql`
       SELECT EXISTS (
@@ -58,14 +58,14 @@ async function ensureServiceItemsTable() {
         WHERE table_name = 'service_items'
       )
     `);
-    
+
     if (tableExists.rows[0]?.exists) {
       console.log('service_items table already exists - skipping creation');
       return;
     }
-    
+
     console.log('Creating service_items table...');
-    
+
     // Create table only if it doesn't exist
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS service_items (
@@ -87,7 +87,7 @@ async function ensureServiceItemsTable() {
     await db.execute(sql`
       CREATE INDEX IF NOT EXISTS idx_service_items_service_type_id ON service_items(service_type_id)
     `);
-    
+
     console.log('service_items table created successfully');
   } catch (error) {
     console.error('Error ensuring service_items table:', error);
@@ -448,7 +448,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Handle both serviceExtras (legacy) and serviceItems formats
       const serviceItems: any[] = [];
-      
+
       // Handle serviceExtras format (from service creation form)
       if (req.body.serviceExtras && Array.isArray(req.body.serviceExtras)) {
         req.body.serviceExtras.forEach((extra: any) => {
@@ -463,7 +463,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         });
       }
-      
+
       // Handle serviceItems format (from services page)
       if (req.body.serviceItems && Array.isArray(req.body.serviceItems)) {
         req.body.serviceItems.forEach((item: any) => {
@@ -536,6 +536,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         serviceData.scheduledTime = `${hour}:${minute}:${second}`;
       }
 
+      // IMPORTANTE: Todos os horários são interpretados como horário brasileiro (UTC-3)
+      console.log(`Service scheduled for: ${serviceData.scheduledDate}T${serviceData.scheduledTime} (Brazil timezone UTC-3)`);
       console.log('Creating service with data:', JSON.stringify(serviceData, null, 2));
       const service = await storage.createService(serviceData);
       console.log('Service created successfully:', service);
@@ -566,16 +568,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const serviceId = parseInt(req.params.id);
       console.log('PUT /api/services/:id - Raw body:', JSON.stringify(req.body, null, 2));
-      
+
       // Extract reminder fields before validation
       const reminderEnabled = req.body.reminderEnabled;
       const reminderMinutes = req.body.reminderMinutes || 30;
       console.log('PUT /api/services/:id - reminderEnabled:', reminderEnabled);
       console.log('PUT /api/services/:id - reminderMinutes:', reminderMinutes);
-      
+
       // Remove reminder fields from the data that goes to the database
       const { reminderEnabled: _, reminderMinutes: __, ...serviceDataForDB } = req.body;
-      
+
       const serviceData = insertServiceSchema.partial().parse(serviceDataForDB);
       const service = await storage.updateService(serviceId, serviceData);
 
@@ -609,7 +611,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ORDER BY created_at DESC 
         LIMIT 1
       `);
-      
+
       if (reminder.rows.length > 0) {
         res.json({
           hasReminder: true,
@@ -632,10 +634,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const serviceId = parseInt(req.params.id);
       console.log(`API: Attempting to delete service with ID: ${serviceId}`);
-      
+
       await storage.deleteService(serviceId);
       console.log(`API: Successfully deleted service ${serviceId}`);
-      
+
       res.status(204).send();
     } catch (error) {
       console.error(`API: Error deleting service ${req.params.id}:`, error);
@@ -651,7 +653,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const serviceId = parseInt(req.params.serviceId);
       console.log('API: Getting service items for service:', serviceId);
-      
+
       const result = await db.execute(sql`
         SELECT 
           si.id,

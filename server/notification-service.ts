@@ -3,6 +3,7 @@ import cron from 'node-cron';
 import { db } from './db.js';
 import { serviceReminders, services, customers, vehicles, pushSubscriptions, users } from '../shared/schema.js';
 import { eq, and, lte, sql } from 'drizzle-orm';
+import { BrazilTimezone } from './brazil-timezone.js';
 
 // Generate or use VAPID keys
 let vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
@@ -115,8 +116,8 @@ export class NotificationService {
         return false;
       }
 
-      // Calculate when to send the reminder
-      const scheduledDateTime = new Date(`${service.scheduledDate}T${service.scheduledTime}`);
+      // Calculate when to send the reminder (using Brazil timezone)
+      const scheduledDateTime = BrazilTimezone.parseDateTime(service.scheduledDate, service.scheduledTime);
       const reminderTime = new Date(scheduledDateTime.getTime() - (reminderMinutes * 60 * 1000));
       const now = new Date();
 
@@ -226,6 +227,7 @@ export class NotificationService {
   // Send reminder notifications  
   async sendServiceReminders() {
     try {
+      // Use Brazil timezone for current time comparison
       const now = new Date();
       
       // Check if tables exist before querying
