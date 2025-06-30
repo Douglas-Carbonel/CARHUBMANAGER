@@ -425,7 +425,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Received service data:', JSON.stringify(req.body, null, 2));
 
-      // Prepare the data for validation
+      // Extract reminder fields before validation
+      const reminderEnabled = req.body.reminderEnabled;
+      const reminderMinutes = req.body.reminderMinutes || 30;
+      console.log('POST /api/services - reminderEnabled:', reminderEnabled);
+      console.log('POST /api/services - reminderMinutes:', reminderMinutes);
+
+      // Prepare the data for validation (without reminder fields)
       const cleanedData = {
         ...req.body,
         customerId: Number(req.body.customerId),
@@ -435,6 +441,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notes: req.body.notes || undefined,
         scheduledTime: req.body.scheduledTime || undefined,
       };
+
+      // Remove reminder fields from the data that goes to the database
+      delete cleanedData.reminderEnabled;
+      delete cleanedData.reminderMinutes;
 
       // Handle both serviceExtras (legacy) and serviceItems formats
       const serviceItems: any[] = [];
@@ -531,10 +541,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Service created successfully:', service);
 
       // Create reminder if enabled
-      if (serviceData.reminderEnabled && service.id) {
-        const reminderMinutes = serviceData.reminderMinutes || 30;
+      if (reminderEnabled && service.id) {
+        console.log(`Creating reminder for service ${service.id} with ${reminderMinutes} minutes`);
         await notificationService.createServiceReminder(service.id, reminderMinutes);
         console.log(`Service reminder created for service ${service.id} - ${reminderMinutes} minutes before`);
+      } else {
+        console.log(`No reminder created - reminderEnabled: ${reminderEnabled}, serviceId: ${service.id}`);
       }
 
 
@@ -553,14 +565,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/services/:id", requireAuth, async (req, res) => {
     try {
       const serviceId = parseInt(req.params.id);
-      const serviceData = insertServiceSchema.partial().parse(req.body);
+      console.log('PUT /api/services/:id - Raw body:', JSON.stringify(req.body, null, 2));
+      
+      // Extract reminder fields before validation
+      const reminderEnabled = req.body.reminderEnabled;
+      const reminderMinutes = req.body.reminderMinutes || 30;
+      console.log('PUT /api/services/:id - reminderEnabled:', reminderEnabled);
+      console.log('PUT /api/services/:id - reminderMinutes:', reminderMinutes);
+      
+      // Remove reminder fields from the data that goes to the database
+      const { reminderEnabled: _, reminderMinutes: __, ...serviceDataForDB } = req.body;
+      
+      const serviceData = insertServiceSchema.partial().parse(serviceDataForDB);
       const service = await storage.updateService(serviceId, serviceData);
 
       // Create reminder if enabled
-      if (serviceData.reminderEnabled && serviceId) {
-        const reminderMinutes = serviceData.reminderMinutes || 30;
+      if (reminderEnabled && serviceId) {
+        console.log(`Creating reminder for service ${serviceId} with ${reminderMinutes} minutes`);
         await notificationService.createServiceReminder(serviceId, reminderMinutes);
         console.log(`Service reminder created for service ${serviceId} - ${reminderMinutes} minutes before`);
+      } else {
+        console.log(`No reminder created - reminderEnabled: ${reminderEnabled}, serviceId: ${serviceId}`);
       }
 
       res.json(service);
