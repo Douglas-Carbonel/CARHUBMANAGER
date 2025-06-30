@@ -1535,6 +1535,73 @@ export default function VehiclesPage() {
                   </Dialog>
                 )}
               </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredVehicles.map((vehicle: Vehicle) => {
+                  const customer = customers.find((c: Customer) => c.id === vehicle.customerId);
+                  return (
+                    <Card 
+                      key={vehicle.id}
+                      className="bg-gradient-to-r from-white to-blue-50/30 border-0 shadow-lg hover:shadow-xl transition-all duration-300 group"
+                    >
+                      <CardContent className="p-5">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold">
+                              <Car className="h-6 w-6" />
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-gray-900 group-hover:text-teal-700 transition-colors">
+                                {vehicle.brand} {vehicle.model}
+                              </h3>
+                              <p className="text-sm text-gray-500">
+                                {vehicle.year} • {vehicle.color}
+                              </p>
+                            </div>
+                          </div>
+                          <Badge className="bg-teal-100 text-teal-800 text-xs">
+                            {vehicle.licensePlate}
+                          </Badge>
+                        </div>
+
+                        <div className="space-y-2 mb-4">
+                          <div className="flex items-center text-sm text-gray-600">
+                            <User className="h-4 w-4 mr-2 text-emerald-500" />
+                            <span>{customer?.name}</span>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-600">
+                            <div className="h-4 w-4 mr-2 text-purple-500">⛽</div>
+                            <span className="capitalize">{fuelTypes.find(f => f.value === vehicle.fuelType)?.label || vehicle.fuelType}</span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setLocation(`/services?vehicleId=${vehicle.id}&vehiclePlate=${encodeURIComponent(vehicle.licensePlate)}`);
+                            }}
+                            className="text-xs border-green-200 text-green-700 hover:bg-green-50"
+                          >
+                            <Wrench className="h-3 w-3 mr-1" />
+                            Serviços
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEdit(vehicle)}
+                            className="text-xs border-orange-200 text-orange-700 hover:bg-orange-50"
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            Editar
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
             )}
           </div>
         </main>
