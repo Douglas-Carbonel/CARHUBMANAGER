@@ -260,7 +260,7 @@ export default function VehiclesPage() {
     description: "",
     onConfirm: () => {},
   });
-  
+
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   const form = useForm<VehicleFormData>({
@@ -609,6 +609,14 @@ export default function VehiclesPage() {
                         setTemporaryPhotos([]);
                         setEditingVehicle(null);
                         form.reset();
+
+                        // Clear URL parameters to prevent reopening
+                        const urlParams = new URLSearchParams(window.location.search);
+                        if (urlParams.get('openModal')) {
+                          const newUrl = new URL(window.location.href);
+                          newUrl.searchParams.delete('openModal');
+                          window.history.replaceState({}, '', newUrl.toString());
+                        }
                       });
                     } else {
                       setIsModalOpen(open);
@@ -618,6 +626,14 @@ export default function VehiclesPage() {
                         setTemporaryPhotos([]);
                         setEditingVehicle(null);
                         form.reset();
+
+                        // Clear URL parameters to prevent reopening
+                        const urlParams = new URLSearchParams(window.location.search);
+                        if (urlParams.get('openModal')) {
+                          const newUrl = new URL(window.location.href);
+                          newUrl.searchParams.delete('openModal');
+                          window.history.replaceState({}, '', newUrl.toString());
+                        }
                       }
                     }
                   }}>
@@ -877,7 +893,7 @@ export default function VehiclesPage() {
                               </div>
                             </div>
 
-                            {/* Exibir fotos existentes do veículo em edição */}
+                            {/* Exibir fotos existentes do veículo em edição*/}
                             {editingVehicle && currentVehiclePhotos.length > 0 && (
                               <div className="mt-4 space-y-2">
                                 <h5 className="text-sm font-medium text-gray-600">Fotos do veículo:</h5>
@@ -984,6 +1000,14 @@ export default function VehiclesPage() {
                               setTemporaryPhotos([]);
                               setEditingVehicle(null);
                               form.reset();
+
+                                // Clear URL parameters to prevent reopening
+                                const urlParams = new URLSearchParams(window.location.search);
+                                if (urlParams.get('openModal')) {
+                                  const newUrl = new URL(window.location.href);
+                                  newUrl.searchParams.delete('openModal');
+                                  window.history.replaceState({}, '', newUrl.toString());
+                                }
                             }}
                           >
                             Cancelar
@@ -1071,6 +1095,14 @@ export default function VehiclesPage() {
                         setTemporaryPhotos([]);
                         setEditingVehicle(null);
                         form.reset();
+
+                        // Clear URL parameters to prevent reopening
+                        const urlParams = new URLSearchParams(window.location.search);
+                        if (urlParams.get('openModal')) {
+                          const newUrl = new URL(window.location.href);
+                          newUrl.searchParams.delete('openModal');
+                          window.history.replaceState({}, '', newUrl.toString());
+                        }
                       });
                     } else {
                       setIsModalOpen(open);
@@ -1080,6 +1112,14 @@ export default function VehiclesPage() {
                         setTemporaryPhotos([]);
                         setEditingVehicle(null);
                         form.reset();
+
+                        // Clear URL parameters to prevent reopening
+                        const urlParams = new URLSearchParams(window.location.search);
+                        if (urlParams.get('openModal')) {
+                          const newUrl = new URL(window.location.href);
+                          newUrl.searchParams.delete('openModal');
+                          window.history.replaceState({}, '', newUrl.toString());
+                        }
                       }
                     }
                   }}>
@@ -1452,6 +1492,14 @@ export default function VehiclesPage() {
                                     setTemporaryPhotos([]);
                                     setEditingVehicle(null);
                                     form.reset();
+
+                                      // Clear URL parameters to prevent reopening
+                                      const urlParams = new URLSearchParams(window.location.search);
+                                      if (urlParams.get('openModal')) {
+                                        const newUrl = new URL(window.location.href);
+                                        newUrl.searchParams.delete('openModal');
+                                        window.history.replaceState({}, '', newUrl.toString());
+                                      }
                                   });
                                 } else {
                                   setIsModalOpen(false);
@@ -1460,6 +1508,14 @@ export default function VehiclesPage() {
                                   setTemporaryPhotos([]);
                                   setEditingVehicle(null);
                                   form.reset();
+
+                                    // Clear URL parameters to prevent reopening
+                                    const urlParams = new URLSearchParams(window.location.search);
+                                    if (urlParams.get('openModal')) {
+                                      const newUrl = new URL(window.location.href);
+                                      newUrl.searchParams.delete('openModal');
+                                      window.history.replaceState({}, '', newUrl.toString());
+                                    }
                                 }
                               }}
                             >
@@ -1478,141 +1534,6 @@ export default function VehiclesPage() {
                     </DialogContent>
                   </Dialog>
                 )}
-              </div>
-            ) : (
-              <div className={cn(
-                "grid gap-4",
-                isMobile 
-                  ? "grid-cols-1" 
-                  : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-              )}>
-                {filteredVehicles.map((vehicle: Vehicle) => {
-                  const customer = customers.find((c: Customer) => c.id === vehicle.customerId);
-                  return (
-                    <div key={vehicle.id} className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-teal-200 overflow-hidden">
-                      {/* Background gradient sutil */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-teal-50/30 to-emerald-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                      {/* Header colorido */}
-                      <div className="relative h-20 bg-gradient-to-r from-teal-500 to-emerald-600 p-4 flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white font-bold text-lg border border-white/30">
-                            <Car className="h-6 w-6" />
-                          </div>
-                          <div>
-                            <h3 className="text-white font-semibold truncate max-w-32">
-                              {vehicle.brand} {vehicle.model}
-                            </h3>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <span className="text-xs text-teal-100 bg-white/20 px-2 py-0.5 rounded-full font-mono">
-                                {vehicle.licensePlate}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Actions no header */}
-                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleEdit(vehicle)}
-                            className="h-8 w-8 p-0 text-white hover:bg-white/20 border-0"
-                            title="Editar"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDelete(vehicle.id)}
-                            className="h-8 w-8 p-0 text-white hover:bg-red-500/20 border-0"
-                            title="Excluir"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* Conteúdo */}
-                      <div className="relative p-5">
-                        {/* Informações do cliente */}
-                        <div className="mb-4">
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                            <User className="h-3 w-3 mr-1" />
-                            {customer?.name || 'Cliente não encontrado'}
-                          </span>
-                        </div>
-
-                        {/* Informações do veículo */}
-                        <div className="space-y-3 mb-6">
-                          <div className="flex items-center text-sm">
-                            <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
-                              <span className="text-gray-500 text-xs">📅</span>
-                            </div>
-                            <span className="text-gray-900 text-xs font-semibold">
-                              {vehicle.year}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center text-sm">
-                            <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
-                              <span className="text-gray-500 text-xs">🎨</span>
-                            </div>
-                            <span className="text-gray-700 text-xs">
-                              {vehicle.color}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center text-sm">
-                            <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
-                              <span className="text-gray-500 text-xs">⛽</span>
-                            </div>
-                            <span className="text-gray-700 text-xs capitalize">
-                              {fuelTypes.find(f => f.value === vehicle.fuelType)?.label || vehicle.fuelType}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Ações */}
-                        <div className="space-y-2">
-                          <Button
-                            onClick={() => {
-                              setLocation(`/services?vehicleId=${vehicle.id}&vehiclePlate=${encodeURIComponent(vehicle.licensePlate)}`);
-                            }}
-                            className="w-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-sm rounded-xl h-10"
-                            size="sm"
-                          >
-                            <Wrench className="h-4 w-4 mr-2" />
-                            Serviços
-                          </Button>
-
-                          <div className="grid grid-cols-2 gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setLocation(`/vehicle-photos?vehicleId=${vehicle.id}&vehiclePlate=${encodeURIComponent(vehicle.licensePlate)}`)}
-                              className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl h-9"
-                            >
-                              <Camera className="h-3 w-3 mr-1" />
-                              <span className="text-xs">Fotos</span>
-                            </Button>
-
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setLocation(`/vehicle-history?vehicleId=${vehicle.id}&vehiclePlate=${encodeURIComponent(vehicle.licensePlate)}`)}
-                              className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl h-9"
-                            >
-                              <FileText className="h-3 w-3 mr-2" />
-                              <span className="text-xs">Histórico</span>
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
               </div>
             )}
           </div>
@@ -1681,7 +1602,7 @@ export default function VehiclesPage() {
                 Pesquisar Veículos
               </DialogTitle>
             </DialogHeader>
-            
+
             <div className="space-y-6">
               <div className="space-y-4">
                 <div className="relative">
@@ -1731,7 +1652,7 @@ export default function VehiclesPage() {
                     )}
                   </div>
                 </div>
-                
+
                 {/* Resultados da pesquisa */}
                 {(searchTerm || customerFilter) && (
                   <div className="bg-white/50 rounded-lg p-4 border border-gray-200">
@@ -1756,7 +1677,7 @@ export default function VehiclesPage() {
                         </Button>
                       )}
                     </div>
-                    
+
                     {filteredVehicles.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
                         {filteredVehicles.map((vehicle: Vehicle) => {
@@ -1891,7 +1812,7 @@ export default function VehiclesPage() {
                   </div>
                 )}
               </div>
-              
+
               <div className="flex justify-end gap-3 pt-4">
                 <Button 
                   variant="outline"
