@@ -159,6 +159,8 @@ export default function SchedulePage() {
       dinheiroPago: "0.00",
       chequePago: "0.00",
       cartaoPago: "0.00",
+      reminderEnabled: false,
+      reminderMinutes: 30,
     },
   });
 
@@ -1066,6 +1068,8 @@ export default function SchedulePage() {
                                             dinheiroPago: "0.00",
                                             chequePago: "0.00",
                                             cartaoPago: "0.00",
+                                            reminderEnabled: false,
+                                            reminderMinutes: 30,
                                           };
 
                                           form.reset(defaultValues);
@@ -1205,6 +1209,8 @@ export default function SchedulePage() {
                             dinheiroPago: "0.00",
                             chequePago: "0.00",
                             cartaoPago: "0.00",
+                            reminderEnabled: false,
+                            reminderMinutes: 30,
                           };
 
                           form.reset(defaultValues);
@@ -1359,6 +1365,8 @@ export default function SchedulePage() {
                     dinheiroPago: "0.00",
                     chequePago: "0.00",
                     cartaoPago: "0.00",
+                    reminderEnabled: false,
+                    reminderMinutes: 30,
                   };
 
                   // Reset form with correct values FIRST

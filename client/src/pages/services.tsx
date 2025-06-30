@@ -188,6 +188,8 @@ export default function Services() {
       dinheiroPago: "0.00",
       chequePago: "0.00",
       cartaoPago: "0.00",
+      reminderEnabled: false,
+      reminderMinutes: 30,
     },
   });
 
@@ -928,6 +930,8 @@ export default function Services() {
                         dinheiroPago: "0.00",
                         chequePago: "0.00",
                         cartaoPago: "0.00",
+                        reminderEnabled: false,
+                        reminderMinutes: 30,
                       };
 
                       // Check URL params to pre-select values
