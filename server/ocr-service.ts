@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { freeOCRService } from './free-ocr-service.js';
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -14,6 +15,18 @@ export interface LicensePlateResult {
 
 export class OCRService {
   async readLicensePlate(base64Image: string): Promise<LicensePlateResult> {
+    // Try free OCR.Space API first
+    if (freeOCRService.isConfigured()) {
+      try {
+        console.log('Using free OCR.Space API for license plate recognition');
+        return await freeOCRService.readLicensePlate(base64Image);
+      } catch (error) {
+        console.error('Free OCR service failed, falling back to OpenAI:', error);
+        // Fall through to OpenAI if free service fails
+      }
+    }
+
+    // Fallback to OpenAI if free service is not available or fails
     try {
       const response = await openai.chat.completions.create({
         model: "gpt-4o",

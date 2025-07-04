@@ -215,10 +215,10 @@ export default function OCRPlateReader() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Camera className="h-5 w-5" />
-                  Capturar Imagem (IA)
+                  Capturar Imagem (OCR Gratuito)
                 </CardTitle>
                 <CardDescription>
-                  Faça upload ou tire uma foto da placa do veículo
+                  Faça upload ou tire uma foto - usando OCR.Space API gratuita (25.000 usos/mês)
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -425,7 +425,7 @@ export default function OCRPlateReader() {
               <div>
                 <h4 className="font-medium mb-2">2. Captura de Imagem</h4>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Use a câmera ou faça upload para reconhecimento automático
+                  Use a câmera ou faça upload para reconhecimento automático gratuito
                 </p>
               </div>
               <div>
