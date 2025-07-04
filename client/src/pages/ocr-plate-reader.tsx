@@ -454,6 +454,7 @@ export default function OCRPlateReader() {
           isOpen={isCameraOpen}
           onClose={() => setIsCameraOpen(false)}
           onPhotoTaken={handleCameraPhoto}
+          enableOCR={true}
         />
       </div>
     </div>

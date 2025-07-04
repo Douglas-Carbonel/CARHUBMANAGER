@@ -5,8 +5,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Camera, X, RotateCcw, Check } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Camera, X, RotateCcw, Check, Loader2, Eye, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+
+interface LicensePlateResult {
+  plate: string;
+  confidence: number;
+  country: string;
+  state?: string;
+  isValid: boolean;
+  format: string;
+}
 
 interface CameraCaptureProps {
   isOpen: boolean;
@@ -21,6 +32,7 @@ interface CameraCaptureProps {
   customerId?: number;
   vehicleId?: number;
   serviceId?: number;
+  enableOCR?: boolean;
 }
 
 export default function CameraCapture({
@@ -29,7 +41,8 @@ export default function CameraCapture({
   onPhotoTaken,
   customerId,
   vehicleId,
-  serviceId
+  serviceId,
+  enableOCR = false
 }: CameraCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -39,6 +52,9 @@ export default function CameraCapture({
   const [category, setCategory] = useState('other');
   const [description, setDescription] = useState('');
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+  const [ocrResult, setOcrResult] = useState<LicensePlateResult | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [ocrError, setOcrError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const startCamera = useCallback(async () => {
@@ -98,8 +114,51 @@ export default function CameraCapture({
     stopCamera();
   }, [stopCamera]);
 
+  const processImageOCR = useCallback(async () => {
+    if (!capturedImage || !enableOCR) return;
+    
+    setIsProcessing(true);
+    setOcrError(null);
+    
+    try {
+      const response = await fetch('/api/ocr/read-plate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ base64Image: capturedImage }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 500 && errorData.message?.includes('quota')) {
+          setOcrError('Limite de uso da API atingido. Use a entrada manual.');
+        } else {
+          throw new Error('Erro ao processar a imagem');
+        }
+        return;
+      }
+
+      const data = await response.json();
+      setOcrResult(data);
+      
+      if (data.plate) {
+        toast({
+          title: "Placa detectada!",
+          description: `Placa ${data.plate} foi identificada com ${Math.round(data.confidence * 100)}% de confiança`,
+        });
+      }
+    } catch (err) {
+      setOcrError('API temporariamente indisponível.');
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [capturedImage, enableOCR, toast]);
+
   const retakePhoto = useCallback(() => {
     setCapturedImage(null);
+    setOcrResult(null);
+    setOcrError(null);
     startCamera();
   }, [startCamera]);
 
@@ -116,8 +175,17 @@ export default function CameraCapture({
     setCapturedImage(null);
     setDescription('');
     setCategory('other');
+    setOcrResult(null);
+    setOcrError(null);
+    setIsProcessing(false);
     onClose();
   }, [stopCamera, onClose]);
+
+  const getConfidenceColor = (confidence: number) => {
+    if (confidence >= 0.8) return "bg-green-500";
+    if (confidence >= 0.6) return "bg-yellow-500";
+    return "bg-red-500";
+  };
 
   const handleSavePhoto = useCallback(async () => {
     if (!capturedImage) return;
@@ -253,6 +321,93 @@ export default function CameraCapture({
                   className="w-full h-full object-cover"
                 />
               </div>
+
+              {/* OCR Processing Section */}
+              {enableOCR && (
+                <div className="space-y-3">
+                  {!ocrResult && !ocrError && !isProcessing && (
+                    <Button
+                      onClick={processImageOCR}
+                      className="w-full"
+                      variant="outline"
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Processar Placa (OCR)
+                    </Button>
+                  )}
+
+                  {isProcessing && (
+                    <div className="flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                      <span>Processando imagem...</span>
+                    </div>
+                  )}
+
+                  {ocrError && (
+                    <Alert>
+                      <X className="h-4 w-4" />
+                      <AlertDescription>{ocrError}</AlertDescription>
+                    </Alert>
+                  )}
+
+                  {ocrResult && (
+                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                          Placa Identificada
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setOcrResult(null)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="text-xl font-bold font-mono text-gray-900 dark:text-white">
+                        {ocrResult.plate}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                            Confiança
+                          </label>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                              <div
+                                className={`h-2 rounded-full transition-all ${getConfidenceColor(ocrResult.confidence)}`}
+                                style={{ width: `${ocrResult.confidence * 100}%` }}
+                              />
+                            </div>
+                            <span className="text-xs font-medium">
+                              {Math.round(ocrResult.confidence * 100)}%
+                            </span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                            Formato
+                          </label>
+                          <p className="text-xs text-gray-900 dark:text-white mt-1">
+                            {ocrResult.format}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Badge variant={ocrResult.isValid ? "default" : "destructive"} className="text-xs">
+                          {ocrResult.isValid ? "Válida" : "Inválida"}
+                        </Badge>
+                        {ocrResult.confidence >= 0.8 && (
+                          <Badge variant="secondary" className="text-xs">Alta Confiança</Badge>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="space-y-3">
                 <div>

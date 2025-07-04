@@ -327,6 +327,7 @@ export default function PlateScanner({ onPlateDetected, trigger }: PlateScannerP
         isOpen={isCameraOpen}
         onClose={() => setIsCameraOpen(false)}
         onPhotoTaken={handleCameraPhoto}
+        enableOCR={true}
       />
     </Dialog>
   );
