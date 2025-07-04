@@ -1675,7 +1675,7 @@ app.post("/api/notifications/subscribe", requireAuth, async (req, res) => {
       });
     } catch (error) {
       console.error("Error validating license plate:", error);
-      res.status(500:json({ 
+      res.status(500).json({ 
         message: "Erro ao validar a placa", 
         error: error instanceof Error ? error.message : "Erro desconhecido"
       });
