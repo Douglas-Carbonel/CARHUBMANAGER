@@ -6,6 +6,7 @@ import { photosStorage } from "./photos-storage.js";
 import { notificationService } from "./notification-service.js";
 import { ocrService } from "./ocr-service.js";
 import { localOCRService } from "./local-ocr-service.js";
+import { plateRecognizerService } from "./plate-recognizer-service.js";
 import type { User } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
