@@ -19,7 +19,16 @@ export class OCRService {
     if (freeOCRService.isConfigured()) {
       try {
         console.log('Using free OCR.Space API for license plate recognition');
-        return await freeOCRService.readLicensePlate(base64Image);
+        const freeResult = await freeOCRService.readLicensePlate(base64Image);
+        
+        // If OCR.Space returned a valid result with good confidence, use it
+        if (freeResult.isValid && freeResult.confidence >= 0.8) {
+          console.log('OCR.Space returned valid result:', freeResult);
+          return freeResult;
+        } else {
+          console.log('OCR.Space result has low confidence or invalid, trying OpenAI:', freeResult);
+          // Fall through to OpenAI for better accuracy
+        }
       } catch (error) {
         console.error('Free OCR service failed, falling back to OpenAI:', error);
         // Fall through to OpenAI if free service fails
