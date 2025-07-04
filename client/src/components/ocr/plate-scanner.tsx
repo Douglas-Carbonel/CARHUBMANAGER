@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Camera, Upload, CheckCircle, XCircle, Loader2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import CameraCapture from "@/components/camera/camera-capture";
 
 interface LicensePlateResult {
   plate: string;
@@ -27,6 +28,7 @@ export default function PlateScanner({ onPlateDetected, trigger }: PlateScannerP
   const [result, setResult] = useState<LicensePlateResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -107,6 +109,15 @@ export default function PlateScanner({ onPlateDetected, trigger }: PlateScannerP
     if (cameraInputRef.current) cameraInputRef.current.value = '';
   };
 
+  const handleCameraPhoto = (photoData: string) => {
+    if (typeof photoData === 'string') {
+      setImage(photoData);
+      setResult(null);
+      setError(null);
+      setIsCameraOpen(false);
+    }
+  };
+
   const getConfidenceColor = (confidence: number) => {
     if (confidence >= 0.8) return "bg-green-500";
     if (confidence >= 0.6) return "bg-yellow-500";
@@ -153,7 +164,7 @@ export default function PlateScanner({ onPlateDetected, trigger }: PlateScannerP
                   Upload
                 </Button>
                 <Button
-                  onClick={() => cameraInputRef.current?.click()}
+                  onClick={() => setIsCameraOpen(true)}
                   className="flex-1"
                   variant="outline"
                 >
@@ -174,7 +185,7 @@ export default function PlateScanner({ onPlateDetected, trigger }: PlateScannerP
                 ref={cameraInputRef}
                 type="file"
                 accept="image/*"
-                capture="environment"
+                capture="camera"
                 onChange={handleCameraCapture}
                 className="hidden"
               />
@@ -310,6 +321,13 @@ export default function PlateScanner({ onPlateDetected, trigger }: PlateScannerP
           )}
         </div>
       </DialogContent>
+
+      {/* Camera Capture Modal */}
+      <CameraCapture
+        isOpen={isCameraOpen}
+        onClose={() => setIsCameraOpen(false)}
+        onPhotoTaken={handleCameraPhoto}
+      />
     </Dialog>
   );
 }

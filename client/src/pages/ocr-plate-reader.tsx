@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Camera, Upload, CheckCircle, XCircle, Loader2, Copy, ArrowLeft, Type } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import CameraCapture from "@/components/camera/camera-capture";
 
 interface LicensePlateResult {
   plate: string;
@@ -25,6 +26,7 @@ export default function OCRPlateReader() {
   const [error, setError] = useState<string | null>(null);
   const [manualPlate, setManualPlate] = useState("");
   const [isProcessingManual, setIsProcessingManual] = useState(false);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [location, setLocation] = useLocation();
@@ -117,6 +119,15 @@ export default function OCRPlateReader() {
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
     } finally {
       setIsProcessingManual(false);
+    }
+  };
+
+  const handleCameraPhoto = (photoData: string) => {
+    if (typeof photoData === 'string') {
+      setImage(photoData);
+      setResult(null);
+      setError(null);
+      setIsCameraOpen(false);
     }
   };
 
@@ -232,7 +243,7 @@ export default function OCRPlateReader() {
                     Upload
                   </Button>
                   <Button
-                    onClick={() => cameraInputRef.current?.click()}
+                    onClick={() => setIsCameraOpen(true)}
                     className="flex-1"
                     variant="outline"
                   >
@@ -253,7 +264,7 @@ export default function OCRPlateReader() {
                   ref={cameraInputRef}
                   type="file"
                   accept="image/*"
-                  capture="environment"
+                  capture="camera"
                   onChange={handleCameraCapture}
                   className="hidden"
                 />
@@ -437,6 +448,13 @@ export default function OCRPlateReader() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Camera Capture Modal */}
+        <CameraCapture
+          isOpen={isCameraOpen}
+          onClose={() => setIsCameraOpen(false)}
+          onPhotoTaken={handleCameraPhoto}
+        />
       </div>
     </div>
   );
