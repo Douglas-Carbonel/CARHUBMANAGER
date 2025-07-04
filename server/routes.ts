@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { photosStorage } from "./photos-storage.js";
 import { notificationService } from "./notification-service.js";
 import { ocrService } from "./ocr-service.js";
+import { localOCRService } from "./local-ocr-service.js";
 import type { User } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -1662,8 +1663,8 @@ app.post("/api/notifications/subscribe", requireAuth, async (req, res) => {
         return res.status(400).json({ message: "Placa é obrigatória" });
       }
 
-      const isValid = await ocrService.validateBrazilianPlate(plate);
-      const formattedPlate = ocrService.formatPlateDisplay(plate);
+      const isValid = await localOCRService.validateBrazilianPlate(plate);
+      const formattedPlate = localOCRService.formatPlateDisplay(plate);
       
       res.json({
         isValid,
@@ -1674,6 +1675,26 @@ app.post("/api/notifications/subscribe", requireAuth, async (req, res) => {
       console.error("Error validating license plate:", error);
       res.status(500).json({ 
         message: "Erro ao validar a placa", 
+        error: error instanceof Error ? error.message : "Erro desconhecido"
+      });
+    }
+  });
+
+  // Local OCR route for manual plate entry (fallback when OpenAI is not available)
+  app.post("/api/ocr/read-plate-local", requireAuth, async (req, res) => {
+    try {
+      const { plateText } = req.body;
+      
+      if (!plateText) {
+        return res.status(400).json({ message: "Texto da placa é obrigatório" });
+      }
+
+      const result = await localOCRService.readLicensePlateLocal(plateText);
+      res.json(result);
+    } catch (error) {
+      console.error("Error processing local plate:", error);
+      res.status(500).json({ 
+        message: "Erro ao processar a placa", 
         error: error instanceof Error ? error.message : "Erro desconhecido"
       });
     }
