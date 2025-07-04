@@ -16,7 +16,7 @@ import {
   Menu,
   X,
   Bell,
-
+  ScanLine,
 } from "lucide-react";
 
 const getNavigation = (userRole: string | null) => {
@@ -50,6 +50,11 @@ const getNavigation = (userRole: string | null) => {
       name: "Notificações",
       href: "/notifications",
       icon: Bell,
+    },
+    {
+      name: "Leitor de Placas",
+      href: "/ocr-plate-reader",
+      icon: ScanLine,
     },
   ];
 

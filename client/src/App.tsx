@@ -19,6 +19,7 @@ import ServicePhotos from "@/pages/service-photos";
 
 import Admin from "@/pages/admin";
 import Notifications from "@/pages/notifications";
+import OCRPlateReader from "@/pages/ocr-plate-reader";
 import NotFoundPage from "@/pages/not-found";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { AuthGuard } from "@/lib/auth-guard";
@@ -120,6 +121,11 @@ function App() {
           <Route path="/notifications">
             <ProtectedRoute>
               <Notifications />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/ocr-plate-reader">
+            <ProtectedRoute>
+              <OCRPlateReader />
             </ProtectedRoute>
           </Route>
           <Route component={NotFoundPage} />

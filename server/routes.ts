@@ -4,6 +4,7 @@ import passport from "passport";
 import { storage } from "./storage";
 import { photosStorage } from "./photos-storage.js";
 import { notificationService } from "./notification-service.js";
+import { ocrService } from "./ocr-service.js";
 import type { User } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -1627,6 +1628,54 @@ app.post("/api/notifications/subscribe", requireAuth, async (req, res) => {
     } catch (error) {
       console.error("Error sending test notification:", error);
       res.status(500).json({ message: "Failed to send test notification" });
+    }
+  });
+
+  // OCR routes for license plate reading
+  app.post("/api/ocr/read-plate", requireAuth, async (req, res) => {
+    try {
+      const { base64Image } = req.body;
+      
+      if (!base64Image) {
+        return res.status(400).json({ message: "Imagem é obrigatória" });
+      }
+
+      // Remove data URL prefix if present
+      const imageData = base64Image.replace(/^data:image\/[a-z]+;base64,/, '');
+      
+      const result = await ocrService.readLicensePlate(imageData);
+      res.json(result);
+    } catch (error) {
+      console.error("Error reading license plate:", error);
+      res.status(500).json({ 
+        message: "Erro ao processar a imagem", 
+        error: error instanceof Error ? error.message : "Erro desconhecido"
+      });
+    }
+  });
+
+  app.post("/api/ocr/validate-plate", requireAuth, async (req, res) => {
+    try {
+      const { plate } = req.body;
+      
+      if (!plate) {
+        return res.status(400).json({ message: "Placa é obrigatória" });
+      }
+
+      const isValid = await ocrService.validateBrazilianPlate(plate);
+      const formattedPlate = ocrService.formatPlateDisplay(plate);
+      
+      res.json({
+        isValid,
+        formattedPlate,
+        plate: plate.toUpperCase()
+      });
+    } catch (error) {
+      console.error("Error validating license plate:", error);
+      res.status(500).json({ 
+        message: "Erro ao validar a placa", 
+        error: error instanceof Error ? error.message : "Erro desconhecido"
+      });
     }
   });
 

@@ -128,6 +128,11 @@ This is a comprehensive automotive service management system built as a full-sta
 
 ```
 Changelog:
+- July 4, 2025. Added OCR license plate reading functionality using OpenAI GPT-4o vision model - users can now automatically extract license plate information from photos
+- July 4, 2025. Implemented comprehensive OCR system with Brazilian license plate validation (old format ABC1234 and Mercosul format ABC1D23)
+- July 4, 2025. Added OCR plate reader page with camera capture, file upload, confidence scoring, and clipboard integration
+- July 4, 2025. Integrated OCR functionality into dashboard quick actions and sidebar navigation for easy access
+- July 4, 2025. Successfully completed migration from Replit Agent to standard Replit environment with proper dependencies and workflow setup
 - June 30, 2025. Fixed notification timezone handling for Brazil/São Paulo timezone - reminders now properly calculate timing and show accurate "em X minutos" messages
 - June 30, 2025. Added immediate notification sending for past reminder times - when creating a service with a reminder time that has already passed, notification is sent immediately with correct time remaining
 - June 30, 2025. Migrated project from Replit Agent to standard Replit environment with proper security and client/server separation

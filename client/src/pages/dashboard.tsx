@@ -27,7 +27,8 @@ import {
   Eye,
   Zap,
   Plus,
-  Activity
+  Activity,
+  ScanLine
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -56,6 +57,12 @@ export default function Dashboard() {
       description: "Criar nova ordem de serviço",
       icon: Wrench,
       route: "/services?action=new"
+    },
+    {
+      title: "Leitor de Placas",
+      description: "Reconhecimento automático de placas",
+      icon: ScanLine,
+      route: "/ocr-plate-reader"
     }
   ];
 
