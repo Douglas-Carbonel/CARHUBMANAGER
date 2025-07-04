@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { plateRecognizerService } from './plate-recognizer-service.js';
 import { freeOCRService } from './free-ocr-service.js';
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
@@ -15,10 +16,30 @@ export interface LicensePlateResult {
 
 export class OCRService {
   async readLicensePlate(base64Image: string): Promise<LicensePlateResult> {
-    // Try free OCR.Space API first
+    // Try Plate Recognizer API first (best accuracy for license plates)
+    if (plateRecognizerService.isConfigured()) {
+      try {
+        console.log('Using Plate Recognizer API for license plate recognition');
+        const plateResult = await plateRecognizerService.readLicensePlate(base64Image);
+        
+        // If Plate Recognizer returned a valid result with good confidence, use it
+        if (plateResult.isValid && plateResult.confidence >= 0.7) {
+          console.log('Plate Recognizer returned valid result:', plateResult);
+          return plateResult;
+        } else {
+          console.log('Plate Recognizer result has low confidence or invalid, trying fallback:', plateResult);
+          // Fall through to backup services
+        }
+      } catch (error) {
+        console.error('Plate Recognizer service failed, falling back:', error);
+        // Fall through to backup services
+      }
+    }
+
+    // Try free OCR.Space API as fallback
     if (freeOCRService.isConfigured()) {
       try {
-        console.log('Using free OCR.Space API for license plate recognition');
+        console.log('Using free OCR.Space API as fallback');
         const freeResult = await freeOCRService.readLicensePlate(base64Image);
         
         // If OCR.Space returned a valid result with good confidence, use it
