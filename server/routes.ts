@@ -814,8 +814,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         completedRevenue: Math.round(receitaRealizada * 100) / 100,
         predictedRevenue: Math.round((receitaRealizada + receitaPendente) * 100) / 100,
         activeCustomers: pagamentosPendentes,
-        weeklyServices```python
-: servicosConcluidos
+        weeklyServices: servicosConcluidos
       };
 
       console.log("Dashboard stats (nova lógica):", stats);
